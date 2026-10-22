@@ -1,0 +1,18 @@
+# Python virtual environments (the working venv lives OUTSIDE this repo at
+# /projects/sandbox/.venv; this guards against one ever being created inside).
+.venv/
+venv/
+env/
+
+# Python caches / bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Scratch / temporary extraction artifacts (NOT the committed fixtures)
+tools/fixtures/*.tmp
+*.tmp
+
+# OS cruft
+.DS_Store
+Thumbs.db

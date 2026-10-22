@@ -1,0 +1,14 @@
+{
+  "_note": "Validation figures read from the reference HTML 'Hong Seh - Yong Wen and Venus EV Fleet Simulations - 04-Oct-2026.html'. These are whole-dollar display roundings (SGD) of each simulation's headline TCO, used for parity checks in later features (FEAT-002+). full_ev = full electric fleet TCO; keep_ice = keep-then-replace diesel baseline TCO.",
+  "targets": {
+    "yong_wen": {
+      "full_ev": 1498134,
+      "keep_ice": 1497888
+    },
+    "venus": {
+      "full_ev": 904045,
+      "keep_ice": 815856
+    }
+  },
+  "tolerance_note": "Compare against the engine's whole-dollar rounded display value; HTML shows rounded S$ amounts, not raw floats."
+}
