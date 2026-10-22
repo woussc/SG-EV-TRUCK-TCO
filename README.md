@@ -51,19 +51,42 @@ re-run the command.
 Open the page and the **Prospects** section (first section, above the Decision
 snapshot) lists the seeded customer cases ranked by the current sort mode:
 
+- **Evergreen Logistics (illustrative, fully specified)** - a clearly-labelled
+  **Illustrative** assumption case (NOT a real customer). It is the one seed
+  whose inputs are complete enough to clear every gate the model enforces:
+  vehicle service/evidence "Within entered limits", charging-site "Complete"
+  with an itemised depot quote, "Within entered site limits", a **numeric Total
+  economic TCO** and a **positive Saving vs Keep ICE**. It therefore shows what
+  a **confirmed win** looks like and leads both sort modes. Best plan Plan B:
+  Saving ~22.8% (~S$338,988) vs Keep ICE, Total economic TCO ~S$1,147,129 over
+  the 4-truck fleet. Every figure is a realistic Singapore-market illustration
+  picked so the gates pass; depot-only charging keeps the capacity screen
+  transparent.
 - **DEMONSTRATION 6-truck case** - the workbook's saved demonstration data.
 - **Yong Wen (5-truck ambient cohort)** - a documented reconstruction of the
   reference-HTML simulation, labelled **Assumption**.
 - **Venus (3-truck replenishment)** - a documented reconstruction, labelled
   **Assumption**.
 
+**Illustrative confirmed win vs diagnostic-only reconstructions.** The contrast
+is deliberate. Evergreen is fully specified, so the engine returns a numeric
+Total and a confirmed saving and it ranks as a real confirmed win. The
+DEMONSTRATION, Yong Wen and Venus cases have **no itemised charging-site quote**
+(the public source never breaks it out), so their site cost and Total economic
+TCO stay `n.a.`, they fall into the **vehicle-only diagnostic fallback**, and
+they are flagged (`gatePass = false`, "Diagnostic only") rather than presented
+as wins. Enter the charging-site quote and the verification evidence for any of
+them and the same engine will produce a confirmed Total exactly as it does for
+Evergreen.
+
 Each case is a full engine input set. You can **duplicate the currently edited
 case** as a new prospect (persisted in-memory, and optionally cached in
 `localStorage` so it survives a reload), **Load** any prospect's inputs into the
 editable sections below to inspect or adjust them, and toggle between the two
 sort modes. Every row expands to show the exact model figures that drove its
-rank (so the ranking is auditable), and reconstructed inputs are tagged as
-assumptions, not confirmed customer figures.
+rank (so the ranking is auditable). The illustrative case is tagged
+**Illustrative** and the reconstructions are tagged **Assumption**; neither is a
+confirmed customer figure.
 
 **"Meets entered 15% target" is conditional on the supplied figures. It is not
 an adoption probability and not independent proof of future savings** (mirrors
@@ -216,6 +239,14 @@ documented reconstruction in `tools/html_scenarios.py`:
   table and are ranked by their indicative vehicle-only benefit, not as
   confirmed wins.
 
+**Illustrative confirmed-win seed (Evergreen Logistics).** To show the opposite
+case - a prospect that *does* clear every gate - the seed set includes one
+fully-specified illustrative case. The headless `tools/check_index.mjs` harness
+asserts it is `gatePass = true` with a numeric Total economic TCO and a positive
+saving, and that it leads both sort modes. It is an illustration (realistic SG
+figures chosen so the gates pass), not a real customer, and it does not change
+any engine math - the 19 strict demo/Review assertions are untouched.
+
 The `validate.py` run reports these HTML figures and keeps the strict demo
 tolerance intact (19 passed, 0 failed).
 
@@ -238,7 +269,9 @@ tools/fixtures/                demo_case.json, prospect_seeds.json.
 ## Assumptions and limitations
 
 - **Demonstration defaults are not customer claims.** The seeded demo and the
-  Yong Wen / Venus reconstructions are assumptions pending verified inputs.
+  Yong Wen / Venus reconstructions are assumptions pending verified inputs, and
+  the Evergreen Logistics case is an illustrative, fully-specified demonstrator
+  (realistic figures chosen so the gates pass), not a real customer.
 - **`n.a.` is never zero**; blanks are not measured zeros. Unknowns are not
   auto-filled.
 - **Single depot / charger bank per plan.** The charging site is costed once per

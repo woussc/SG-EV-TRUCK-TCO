@@ -85,15 +85,36 @@ checks.push(['sensitivity rendered', byId['sens-body'].innerHTML.indexOf('Keep I
 
 // ---- Prospects view checks -------------------------------------------------
 const seeds = windowObj.HSProspectSeeds;
-checks.push(['prospect seeds embedded (3)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 3]);
+checks.push(['prospect seeds embedded (4)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 4]);
 checks.push(['scoreProspect exposed', typeof windowObj.HSEngine.scoreProspect === 'function']);
 
 const pbodyBenefit = byId['prospect-body'].innerHTML;
 checks.push(['prospect table rendered', pbodyBenefit.indexOf('Why this rank') !== -1]);
+checks.push(['prospect lists Evergreen (illustrative)', pbodyBenefit.indexOf('Evergreen Logistics') !== -1]);
 checks.push(['prospect lists demo', pbodyBenefit.indexOf('DEMONSTRATION 6-truck case') !== -1]);
 checks.push(['prospect lists Yong Wen', pbodyBenefit.indexOf('Yong Wen') !== -1]);
 checks.push(['prospect lists Venus', pbodyBenefit.indexOf('Venus') !== -1]);
 checks.push(['prospect exposes components', pbodyBenefit.indexOf('Account key') !== -1 && pbodyBenefit.indexOf('Benefit key') !== -1]);
+
+// ---- Confirmed-win assertion (review finding #2) ---------------------------
+// At least one seeded prospect must be a gate-passing confirmed win: gatePass
+// true, a numeric Total economic TCO (not n.a.), a positive saving, and it must
+// lead at least one of the two sort modes.
+const scoredSeeds = seeds.cases.map((c) => ({
+  id: c.id, s: windowObj.HSEngine.scoreProspect(windowObj.HSEngine.computeFleet(c.inputs)),
+}));
+const confirmedWins = scoredSeeds.filter((x) =>
+  x.s.gatePass === true &&
+  typeof x.s.totalEconomicTco === 'number' && isFinite(x.s.totalEconomicTco) &&
+  typeof x.s.savingAbs === 'number' && x.s.savingAbs > 0 &&
+  typeof x.s.savingPct === 'number' && x.s.savingPct > 0);
+checks.push(['at least one confirmed-win seed', confirmedWins.length >= 1]);
+checks.push(['confirmed win is Evergreen', confirmedWins.some((x) => x.id === 'evergreen')]);
+const evergreen = scoredSeeds.find((x) => x.id === 'evergreen');
+checks.push(['Evergreen gatePass true', evergreen && evergreen.s.gatePass === true]);
+checks.push(['Evergreen numeric Total', evergreen && typeof evergreen.s.totalEconomicTco === 'number']);
+checks.push(['Evergreen positive saving S$', evergreen && evergreen.s.savingAbs > 0]);
+checks.push(['Evergreen meets 15% target label', evergreen && evergreen.s.fifteenTargetMet === 'Meets entered 15% target']);
 
 // Direct score check on the seeds through the inlined engine.
 function orderFor(mode) {
@@ -109,9 +130,14 @@ function orderFor(mode) {
     .map((x) => x.id);
 }
 const accountOrder = orderFor('account');
-// Account ranking should surface the 5-truck Yong Wen ahead of the 3-truck Venus
-// (larger absolute vehicle-only benefit) and both ahead of the demo.
-checks.push(['account order yong_wen first', accountOrder[0] === 'yong_wen']);
+const benefitOrder = orderFor('benefit');
+// The confirmed-win illustrative case (Evergreen) leads BOTH sort modes: it has
+// the largest absolute saving and it is the only gate-passing benefit figure.
+checks.push(['account order evergreen first', accountOrder[0] === 'evergreen']);
+checks.push(['benefit order evergreen first', benefitOrder[0] === 'evergreen']);
+// Among the flagged reconstructions the 5-truck Yong Wen still ranks ahead of
+// the 3-truck Venus (larger vehicle-only benefit), and both ahead of the demo.
+checks.push(['account order yong_wen before venus', accountOrder.indexOf('yong_wen') < accountOrder.indexOf('venus')]);
 checks.push(['account order venus before demo', accountOrder.indexOf('venus') < accountOrder.indexOf('demo')]);
 
 // Toggle the live sort control and confirm the rendered order changes.
@@ -121,8 +147,12 @@ sel.value = 'account';
 sel.fire('change');
 const afterHtml = byId['prospect-body'].innerHTML;
 checks.push(['sort toggle reorders table', beforeHtml !== afterHtml]);
-// In account order the first data row should name Yong Wen.
-checks.push(['account sort puts Yong Wen on top', afterHtml.indexOf('Yong Wen') < afterHtml.indexOf('DEMONSTRATION')]);
+// In account order the confirmed-win Evergreen case leads, and among the
+// flagged reconstructions Yong Wen precedes the demonstration case.
+checks.push(['account sort puts Evergreen on top',
+  afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('Yong Wen') &&
+  afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('DEMONSTRATION')]);
+checks.push(['account sort Yong Wen before demo', afterHtml.indexOf('Yong Wen') < afterHtml.indexOf('DEMONSTRATION')]);
 
 let ok = true;
 for (const [name, pass] of checks) {

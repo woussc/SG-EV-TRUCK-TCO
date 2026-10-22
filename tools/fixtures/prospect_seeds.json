@@ -5,6 +5,3205 @@
   },
   "cases": [
     {
+      "id": "evergreen",
+      "name": "Evergreen Logistics (illustrative, fully specified)",
+      "evidence": "illustrative",
+      "note": "ILLUSTRATIVE assumption case, NOT a real customer. Every input is a realistic Singapore-market figure chosen so the model passes all gates: vehicle service/evidence 'Within entered limits', charging-site 'Complete' with an itemised depot quote, 'Within entered site limits', a numeric Total economic TCO and a positive Saving vs Keep ICE. It shows what a confirmed-win prospect looks like once the charging-site quote and verification evidence are supplied, in contrast to the reconstruction cases below that stay diagnostic-only pending their site quotes.",
+      "inputs": {
+        "fleet_register": {
+          "range": "A7:S106",
+          "rows": [
+            {
+              "_row": 7,
+              "A": "EL-01",
+              "B": 1,
+              "C": "Illustrative",
+              "D": "Box",
+              "E": 120.0,
+              "F": 300,
+              "G": 150,
+              "H": 1200,
+              "I": 20,
+              "J": 18,
+              "K": 28000,
+              "L": 3000,
+              "M": 500,
+              "N": 120,
+              "O": 0,
+              "P": 0,
+              "Q": "ILLUS",
+              "R": 9,
+              "S": null
+            },
+            {
+              "_row": 8,
+              "A": "EL-02",
+              "B": 1,
+              "C": "Illustrative",
+              "D": "Box",
+              "E": 120.0,
+              "F": 300,
+              "G": 150,
+              "H": 1200,
+              "I": 20,
+              "J": 30,
+              "K": 34000,
+              "L": 3000,
+              "M": 500,
+              "N": 120,
+              "O": 0,
+              "P": 0,
+              "Q": "ILLUS",
+              "R": 9,
+              "S": null
+            },
+            {
+              "_row": 9,
+              "A": "EL-03",
+              "B": 1,
+              "C": "Illustrative",
+              "D": "Box",
+              "E": 120.0,
+              "F": 300,
+              "G": 150,
+              "H": 1200,
+              "I": 20,
+              "J": 42,
+              "K": 40000,
+              "L": 3000,
+              "M": 500,
+              "N": 120,
+              "O": 0,
+              "P": 0,
+              "Q": "ILLUS",
+              "R": 9,
+              "S": null
+            },
+            {
+              "_row": 10,
+              "A": "EL-04",
+              "B": 1,
+              "C": "Illustrative",
+              "D": "Box",
+              "E": 120.0,
+              "F": 300,
+              "G": 150,
+              "H": 1200,
+              "I": 20,
+              "J": 54,
+              "K": 46000,
+              "L": 3000,
+              "M": 500,
+              "N": 120,
+              "O": 0,
+              "P": 0,
+              "Q": "ILLUS",
+              "R": 9,
+              "S": null
+            },
+            {
+              "_row": 11,
+              "A": "X005",
+              "B": 0
+            },
+            {
+              "_row": 12,
+              "A": "X006",
+              "B": 0
+            },
+            {
+              "_row": 13,
+              "A": "X007",
+              "B": 0
+            },
+            {
+              "_row": 14,
+              "A": "X008",
+              "B": 0
+            },
+            {
+              "_row": 15,
+              "A": "X009",
+              "B": 0
+            },
+            {
+              "_row": 16,
+              "A": "X010",
+              "B": 0
+            },
+            {
+              "_row": 17,
+              "A": "X011",
+              "B": 0
+            },
+            {
+              "_row": 18,
+              "A": "X012",
+              "B": 0
+            },
+            {
+              "_row": 19,
+              "A": "X013",
+              "B": 0
+            },
+            {
+              "_row": 20,
+              "A": "X014",
+              "B": 0
+            },
+            {
+              "_row": 21,
+              "A": "X015",
+              "B": 0
+            },
+            {
+              "_row": 22,
+              "A": "X016",
+              "B": 0
+            },
+            {
+              "_row": 23,
+              "A": "X017",
+              "B": 0
+            },
+            {
+              "_row": 24,
+              "A": "X018",
+              "B": 0
+            },
+            {
+              "_row": 25,
+              "A": "X019",
+              "B": 0
+            },
+            {
+              "_row": 26,
+              "A": "X020",
+              "B": 0
+            },
+            {
+              "_row": 27,
+              "A": "X021",
+              "B": 0
+            },
+            {
+              "_row": 28,
+              "A": "X022",
+              "B": 0
+            },
+            {
+              "_row": 29,
+              "A": "X023",
+              "B": 0
+            },
+            {
+              "_row": 30,
+              "A": "X024",
+              "B": 0
+            },
+            {
+              "_row": 31,
+              "A": "X025",
+              "B": 0
+            },
+            {
+              "_row": 32,
+              "A": "X026",
+              "B": 0
+            },
+            {
+              "_row": 33,
+              "A": "X027",
+              "B": 0
+            },
+            {
+              "_row": 34,
+              "A": "X028",
+              "B": 0
+            },
+            {
+              "_row": 35,
+              "A": "X029",
+              "B": 0
+            },
+            {
+              "_row": 36,
+              "A": "X030",
+              "B": 0
+            },
+            {
+              "_row": 37,
+              "A": "X031",
+              "B": 0
+            },
+            {
+              "_row": 38,
+              "A": "X032",
+              "B": 0
+            },
+            {
+              "_row": 39,
+              "A": "X033",
+              "B": 0
+            },
+            {
+              "_row": 40,
+              "A": "X034",
+              "B": 0
+            },
+            {
+              "_row": 41,
+              "A": "X035",
+              "B": 0
+            },
+            {
+              "_row": 42,
+              "A": "X036",
+              "B": 0
+            },
+            {
+              "_row": 43,
+              "A": "X037",
+              "B": 0
+            },
+            {
+              "_row": 44,
+              "A": "X038",
+              "B": 0
+            },
+            {
+              "_row": 45,
+              "A": "X039",
+              "B": 0
+            },
+            {
+              "_row": 46,
+              "A": "X040",
+              "B": 0
+            },
+            {
+              "_row": 47,
+              "A": "X041",
+              "B": 0
+            },
+            {
+              "_row": 48,
+              "A": "X042",
+              "B": 0
+            },
+            {
+              "_row": 49,
+              "A": "X043",
+              "B": 0
+            },
+            {
+              "_row": 50,
+              "A": "X044",
+              "B": 0
+            },
+            {
+              "_row": 51,
+              "A": "X045",
+              "B": 0
+            },
+            {
+              "_row": 52,
+              "A": "X046",
+              "B": 0
+            },
+            {
+              "_row": 53,
+              "A": "X047",
+              "B": 0
+            },
+            {
+              "_row": 54,
+              "A": "X048",
+              "B": 0
+            },
+            {
+              "_row": 55,
+              "A": "X049",
+              "B": 0
+            },
+            {
+              "_row": 56,
+              "A": "X050",
+              "B": 0
+            },
+            {
+              "_row": 57,
+              "A": "X051",
+              "B": 0
+            },
+            {
+              "_row": 58,
+              "A": "X052",
+              "B": 0
+            },
+            {
+              "_row": 59,
+              "A": "X053",
+              "B": 0
+            },
+            {
+              "_row": 60,
+              "A": "X054",
+              "B": 0
+            },
+            {
+              "_row": 61,
+              "A": "X055",
+              "B": 0
+            },
+            {
+              "_row": 62,
+              "A": "X056",
+              "B": 0
+            },
+            {
+              "_row": 63,
+              "A": "X057",
+              "B": 0
+            },
+            {
+              "_row": 64,
+              "A": "X058",
+              "B": 0
+            },
+            {
+              "_row": 65,
+              "A": "X059",
+              "B": 0
+            },
+            {
+              "_row": 66,
+              "A": "X060",
+              "B": 0
+            },
+            {
+              "_row": 67,
+              "A": "X061",
+              "B": 0
+            },
+            {
+              "_row": 68,
+              "A": "X062",
+              "B": 0
+            },
+            {
+              "_row": 69,
+              "A": "X063",
+              "B": 0
+            },
+            {
+              "_row": 70,
+              "A": "X064",
+              "B": 0
+            },
+            {
+              "_row": 71,
+              "A": "X065",
+              "B": 0
+            },
+            {
+              "_row": 72,
+              "A": "X066",
+              "B": 0
+            },
+            {
+              "_row": 73,
+              "A": "X067",
+              "B": 0
+            },
+            {
+              "_row": 74,
+              "A": "X068",
+              "B": 0
+            },
+            {
+              "_row": 75,
+              "A": "X069",
+              "B": 0
+            },
+            {
+              "_row": 76,
+              "A": "X070",
+              "B": 0
+            },
+            {
+              "_row": 77,
+              "A": "X071",
+              "B": 0
+            },
+            {
+              "_row": 78,
+              "A": "X072",
+              "B": 0
+            },
+            {
+              "_row": 79,
+              "A": "X073",
+              "B": 0
+            },
+            {
+              "_row": 80,
+              "A": "X074",
+              "B": 0
+            },
+            {
+              "_row": 81,
+              "A": "X075",
+              "B": 0
+            },
+            {
+              "_row": 82,
+              "A": "X076",
+              "B": 0
+            },
+            {
+              "_row": 83,
+              "A": "X077",
+              "B": 0
+            },
+            {
+              "_row": 84,
+              "A": "X078",
+              "B": 0
+            },
+            {
+              "_row": 85,
+              "A": "X079",
+              "B": 0
+            },
+            {
+              "_row": 86,
+              "A": "X080",
+              "B": 0
+            },
+            {
+              "_row": 87,
+              "A": "X081",
+              "B": 0
+            },
+            {
+              "_row": 88,
+              "A": "X082",
+              "B": 0
+            },
+            {
+              "_row": 89,
+              "A": "X083",
+              "B": 0
+            },
+            {
+              "_row": 90,
+              "A": "X084",
+              "B": 0
+            },
+            {
+              "_row": 91,
+              "A": "X085",
+              "B": 0
+            },
+            {
+              "_row": 92,
+              "A": "X086",
+              "B": 0
+            },
+            {
+              "_row": 93,
+              "A": "X087",
+              "B": 0
+            },
+            {
+              "_row": 94,
+              "A": "X088",
+              "B": 0
+            },
+            {
+              "_row": 95,
+              "A": "X089",
+              "B": 0
+            },
+            {
+              "_row": 96,
+              "A": "X090",
+              "B": 0
+            },
+            {
+              "_row": 97,
+              "A": "X091",
+              "B": 0
+            },
+            {
+              "_row": 98,
+              "A": "X092",
+              "B": 0
+            },
+            {
+              "_row": 99,
+              "A": "X093",
+              "B": 0
+            },
+            {
+              "_row": 100,
+              "A": "X094",
+              "B": 0
+            },
+            {
+              "_row": 101,
+              "A": "X095",
+              "B": 0
+            },
+            {
+              "_row": 102,
+              "A": "X096",
+              "B": 0
+            },
+            {
+              "_row": 103,
+              "A": "X097",
+              "B": 0
+            },
+            {
+              "_row": 104,
+              "A": "X098",
+              "B": 0
+            },
+            {
+              "_row": 105,
+              "A": "X099",
+              "B": 0
+            },
+            {
+              "_row": 106,
+              "A": "X100",
+              "B": 0
+            }
+          ]
+        },
+        "replacement_plan": {
+          "range": "A7:AI106",
+          "rows": [
+            {
+              "_row": 7,
+              "A": "EL-01",
+              "B": "ChengLong L2EV",
+              "C": 150000,
+              "D": 205000,
+              "E": "",
+              "F": "",
+              "G": "Battery",
+              "H": 2000,
+              "I": "Yes",
+              "J": 22,
+              "K": "AC",
+              "L": 22,
+              "M": "",
+              "N": 22000,
+              "O": "EV",
+              "P": "",
+              "Q": 22000,
+              "R": "EV",
+              "S": "",
+              "T": 24000,
+              "U": "",
+              "V": "",
+              "W": 0,
+              "X": 0,
+              "Y": 0,
+              "Z": 0,
+              "AA": 0,
+              "AB": "Yes",
+              "AC": 120,
+              "AD": 120,
+              "AE": "Verified",
+              "AF": "EL-01"
+            },
+            {
+              "_row": 8,
+              "A": "EL-02",
+              "B": "ChengLong L2EV",
+              "C": 150000,
+              "D": 205000,
+              "E": "",
+              "F": "",
+              "G": "Battery",
+              "H": 2000,
+              "I": "Yes",
+              "J": 22,
+              "K": "AC",
+              "L": 22,
+              "M": "",
+              "N": 30000,
+              "O": "EV",
+              "P": "",
+              "Q": 30000,
+              "R": "EV",
+              "S": "",
+              "T": 33000,
+              "U": "",
+              "V": "",
+              "W": 0,
+              "X": 0,
+              "Y": 0,
+              "Z": 0,
+              "AA": 0,
+              "AB": "Yes",
+              "AC": 120,
+              "AD": 120,
+              "AE": "Verified",
+              "AF": "EL-02"
+            },
+            {
+              "_row": 9,
+              "A": "EL-03",
+              "B": "ChengLong L2EV",
+              "C": 150000,
+              "D": 205000,
+              "E": "",
+              "F": "",
+              "G": "Battery",
+              "H": 2000,
+              "I": "Yes",
+              "J": 22,
+              "K": "AC",
+              "L": 22,
+              "M": "",
+              "N": 38000,
+              "O": "EV",
+              "P": "",
+              "Q": 38000,
+              "R": "EV",
+              "S": "",
+              "T": 42000,
+              "U": "",
+              "V": "",
+              "W": 0,
+              "X": 0,
+              "Y": 0,
+              "Z": 0,
+              "AA": 0,
+              "AB": "Yes",
+              "AC": 120,
+              "AD": 120,
+              "AE": "Verified",
+              "AF": "EL-03"
+            },
+            {
+              "_row": 10,
+              "A": "EL-04",
+              "B": "ChengLong L2EV",
+              "C": 150000,
+              "D": 205000,
+              "E": "",
+              "F": "",
+              "G": "Battery",
+              "H": 2000,
+              "I": "Yes",
+              "J": 22,
+              "K": "AC",
+              "L": 22,
+              "M": "",
+              "N": 46000,
+              "O": "EV",
+              "P": "",
+              "Q": 46000,
+              "R": "EV",
+              "S": "",
+              "T": 51000,
+              "U": "",
+              "V": "",
+              "W": 0,
+              "X": 0,
+              "Y": 0,
+              "Z": 0,
+              "AA": 0,
+              "AB": "Yes",
+              "AC": 120,
+              "AD": 120,
+              "AE": "Verified",
+              "AF": "EL-04"
+            },
+            {
+              "_row": 11,
+              "A": "X005",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 12,
+              "A": "X006",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 13,
+              "A": "X007",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 14,
+              "A": "X008",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 15,
+              "A": "X009",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 16,
+              "A": "X010",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 17,
+              "A": "X011",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 18,
+              "A": "X012",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 19,
+              "A": "X013",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 20,
+              "A": "X014",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 21,
+              "A": "X015",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 22,
+              "A": "X016",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 23,
+              "A": "X017",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 24,
+              "A": "X018",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 25,
+              "A": "X019",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 26,
+              "A": "X020",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 27,
+              "A": "X021",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 28,
+              "A": "X022",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 29,
+              "A": "X023",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 30,
+              "A": "X024",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 31,
+              "A": "X025",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 32,
+              "A": "X026",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 33,
+              "A": "X027",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 34,
+              "A": "X028",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 35,
+              "A": "X029",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 36,
+              "A": "X030",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 37,
+              "A": "X031",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 38,
+              "A": "X032",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 39,
+              "A": "X033",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 40,
+              "A": "X034",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 41,
+              "A": "X035",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 42,
+              "A": "X036",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 43,
+              "A": "X037",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 44,
+              "A": "X038",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 45,
+              "A": "X039",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 46,
+              "A": "X040",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 47,
+              "A": "X041",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 48,
+              "A": "X042",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 49,
+              "A": "X043",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 50,
+              "A": "X044",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 51,
+              "A": "X045",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 52,
+              "A": "X046",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 53,
+              "A": "X047",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 54,
+              "A": "X048",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 55,
+              "A": "X049",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 56,
+              "A": "X050",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 57,
+              "A": "X051",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 58,
+              "A": "X052",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 59,
+              "A": "X053",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 60,
+              "A": "X054",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 61,
+              "A": "X055",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 62,
+              "A": "X056",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 63,
+              "A": "X057",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 64,
+              "A": "X058",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 65,
+              "A": "X059",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 66,
+              "A": "X060",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 67,
+              "A": "X061",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 68,
+              "A": "X062",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 69,
+              "A": "X063",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 70,
+              "A": "X064",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 71,
+              "A": "X065",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 72,
+              "A": "X066",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 73,
+              "A": "X067",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 74,
+              "A": "X068",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 75,
+              "A": "X069",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 76,
+              "A": "X070",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 77,
+              "A": "X071",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 78,
+              "A": "X072",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 79,
+              "A": "X073",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 80,
+              "A": "X074",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 81,
+              "A": "X075",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 82,
+              "A": "X076",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 83,
+              "A": "X077",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 84,
+              "A": "X078",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 85,
+              "A": "X079",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 86,
+              "A": "X080",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 87,
+              "A": "X081",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 88,
+              "A": "X082",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 89,
+              "A": "X083",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 90,
+              "A": "X084",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 91,
+              "A": "X085",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 92,
+              "A": "X086",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 93,
+              "A": "X087",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 94,
+              "A": "X088",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 95,
+              "A": "X089",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 96,
+              "A": "X090",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 97,
+              "A": "X091",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 98,
+              "A": "X092",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 99,
+              "A": "X093",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 100,
+              "A": "X094",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 101,
+              "A": "X095",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 102,
+              "A": "X096",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 103,
+              "A": "X097",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 104,
+              "A": "X098",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 105,
+              "A": "X099",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            },
+            {
+              "_row": 106,
+              "A": "X100",
+              "B": "ChengLong L2EV",
+              "O": "Keep ICE",
+              "R": "Keep ICE",
+              "AB": "No",
+              "AC": 120,
+              "AD": 120
+            }
+          ]
+        },
+        "operating_costs": {
+          "range": "A7:D68",
+          "rows": [
+            {
+              "_row": 7,
+              "label": "ICE fuel consumption",
+              "values": {
+                "B": 0.14,
+                "C": "litres/km",
+                "D": "Stock-balanced fuel / total km"
+              }
+            },
+            {
+              "_row": 8,
+              "label": "Diesel refill per visit",
+              "values": {
+                "B": 80,
+                "C": "litres/visit",
+                "D": "Refill, not tank capacity"
+              }
+            },
+            {
+              "_row": 9,
+              "label": "Fuel-station detour",
+              "values": {
+                "B": 4,
+                "C": "km/visit",
+                "D": "Extra round trip only"
+              }
+            },
+            {
+              "_row": 10,
+              "label": "Fuel queue and service",
+              "values": {
+                "B": 17,
+                "C": "min/visit",
+                "D": "Queue and refuelling"
+              }
+            },
+            {
+              "_row": 11,
+              "label": "Detour driving speed",
+              "values": {
+                "B": 25,
+                "C": "km/hour",
+                "D": "Detour speed"
+              }
+            },
+            {
+              "_row": 12,
+              "label": "Public-charger detour",
+              "values": {
+                "B": 8,
+                "C": "km/visit",
+                "D": "Extra public-charger round trip"
+              }
+            },
+            {
+              "_row": 13,
+              "label": "Charging queue",
+              "values": {
+                "B": 15,
+                "C": "min/visit",
+                "D": "Observed site/period queue"
+              }
+            },
+            {
+              "_row": 14,
+              "label": "Public plug handling",
+              "values": {
+                "B": 5,
+                "C": "min/visit",
+                "D": "Public handling"
+              }
+            },
+            {
+              "_row": 15,
+              "label": "Public session fee",
+              "values": {
+                "B": 2,
+                "C": "SGD/visit",
+                "D": "Exclude if tariff already includes it"
+              }
+            },
+            {
+              "_row": 16,
+              "label": "Depot handling time",
+              "values": {
+                "B": 4,
+                "C": "min/day",
+                "D": "Depot handling"
+              }
+            },
+            {
+              "_row": 17,
+              "label": "Other EV paid time",
+              "values": {
+                "B": 0,
+                "C": "min/day",
+                "D": "Distinct EV paid time"
+              }
+            },
+            {
+              "_row": 18,
+              "label": "Maximum public stop",
+              "values": {
+                "B": 90,
+                "C": "min/visit",
+                "D": "Operating limit"
+              }
+            },
+            {
+              "_row": 19,
+              "label": "Avoidable paid time rate",
+              "values": {
+                "B": 25,
+                "C": "SGD/hour",
+                "D": "Incremental avoidable paid time"
+              }
+            },
+            {
+              "_row": 20,
+              "label": "Paid EV-time share",
+              "values": {
+                "B": 1,
+                "C": "fraction",
+                "D": "Avoidable paid EV time share"
+              }
+            },
+            {
+              "_row": 21,
+              "label": "Paid ICE-time share",
+              "values": {
+                "B": 1,
+                "C": "fraction",
+                "D": "Avoidable paid ICE time share"
+              }
+            },
+            {
+              "_row": 22,
+              "label": "Buyer electricity share",
+              "values": {
+                "B": 1,
+                "C": "fraction",
+                "D": "Electricity paid by buyer"
+              }
+            },
+            {
+              "_row": 23,
+              "label": "Buyer diesel share",
+              "values": {
+                "B": 1,
+                "C": "fraction",
+                "D": "Diesel paid by buyer"
+              }
+            },
+            {
+              "_row": 24,
+              "label": "Old ICE maintenance",
+              "values": {
+                "B": 3200,
+                "C": "SGD/year",
+                "D": "Current ICE maintenance"
+              }
+            },
+            {
+              "_row": 25,
+              "label": "New ICE maintenance",
+              "values": {
+                "B": 2600,
+                "C": "SGD/year",
+                "D": "New ICE maintenance"
+              }
+            },
+            {
+              "_row": 26,
+              "label": "EV maintenance annual override",
+              "values": {
+                "B": 1500,
+                "C": "SGD/year",
+                "D": "Used only when EV servicing basis is Annual override. Include the same scope as the Hong Seh schedule or explain the difference."
+              }
+            },
+            {
+              "_row": 27,
+              "label": "ICE tyres",
+              "values": {
+                "B": 600,
+                "C": "SGD/year",
+                "D": "Separate tyres"
+              }
+            },
+            {
+              "_row": 28,
+              "label": "EV tyres",
+              "values": {
+                "B": 600,
+                "C": "SGD/year",
+                "D": "Separate tyres"
+              }
+            },
+            {
+              "_row": 29,
+              "label": "ICE insurance",
+              "values": {
+                "B": 3500,
+                "C": "SGD/year",
+                "D": "Matched coverage"
+              }
+            },
+            {
+              "_row": 30,
+              "label": "EV insurance",
+              "values": {
+                "B": 3500,
+                "C": "SGD/year",
+                "D": "Matched coverage"
+              }
+            },
+            {
+              "_row": 31,
+              "label": "ICE road tax",
+              "values": {
+                "B": 524,
+                "C": "SGD/year",
+                "D": "Verify tax"
+              }
+            },
+            {
+              "_row": 32,
+              "label": "EV road tax / AFC",
+              "values": {
+                "B": 530,
+                "C": "SGD/year",
+                "D": "Verify tax/AFC"
+              }
+            },
+            {
+              "_row": 33,
+              "label": "Inspection",
+              "values": {
+                "B": 150,
+                "C": "SGD/year",
+                "D": "Inspection"
+              }
+            },
+            {
+              "_row": 34,
+              "label": "Old ICE other cost",
+              "values": {
+                "B": 1200,
+                "C": "SGD/year",
+                "D": "Current ICE other"
+              }
+            },
+            {
+              "_row": 35,
+              "label": "New ICE other cost",
+              "values": {
+                "B": 1200,
+                "C": "SGD/year",
+                "D": "New ICE other"
+              }
+            },
+            {
+              "_row": 36,
+              "label": "EV other cost",
+              "values": {
+                "B": 1200,
+                "C": "SGD/year",
+                "D": "EV other"
+              }
+            },
+            {
+              "_row": 37,
+              "label": "ICE contract surcharge",
+              "values": {
+                "B": 0,
+                "C": "SGD/year",
+                "D": "Distinct contract surcharge"
+              }
+            },
+            {
+              "_row": 38,
+              "label": "EV contract surcharge",
+              "values": {
+                "B": 0,
+                "C": "SGD/year",
+                "D": "Distinct contract surcharge"
+              }
+            },
+            {
+              "_row": 39,
+              "label": "Old ICE unavailable days",
+              "values": {
+                "B": 0,
+                "C": "days/year",
+                "D": "Unknown is not measured zero"
+              }
+            },
+            {
+              "_row": 40,
+              "label": "New ICE unavailable days",
+              "values": {
+                "B": 0,
+                "C": "days/year",
+                "D": "Unavailable days"
+              }
+            },
+            {
+              "_row": 41,
+              "label": "EV unavailable days",
+              "values": {
+                "B": 0,
+                "C": "days/year",
+                "D": "Unavailable days"
+              }
+            },
+            {
+              "_row": 42,
+              "label": "ICE all-in backup rate",
+              "values": {
+                "B": 200,
+                "C": "SGD/day",
+                "D": "All-in service replacement; no duplicate fuel"
+              }
+            },
+            {
+              "_row": 43,
+              "label": "EV all-in backup rate",
+              "values": {
+                "B": 200,
+                "C": "SGD/day",
+                "D": "All-in service replacement"
+              }
+            },
+            {
+              "_row": 44,
+              "label": "Charging loss",
+              "values": {
+                "B": 0.1,
+                "C": "fraction",
+                "D": "Apply once to battery-side consumption"
+              }
+            },
+            {
+              "_row": 45,
+              "label": "Battery reserve",
+              "values": {
+                "B": 0.2,
+                "C": "fraction",
+                "D": "Battery reserve"
+              }
+            },
+            {
+              "_row": 46,
+              "label": "Annual battery fade",
+              "values": {
+                "B": 0.02,
+                "C": "fraction/year",
+                "D": "Explicit capacity stress assumption"
+              }
+            },
+            {
+              "_row": 47,
+              "label": "Public refill fraction",
+              "values": {
+                "B": 0.6,
+                "C": "fraction",
+                "D": "Typical public refill"
+              }
+            },
+            {
+              "_row": 48,
+              "label": "Extra auxiliary energy",
+              "values": {
+                "B": 0,
+                "C": "battery kWh/day",
+                "D": "Only auxiliary demand not already in consumption"
+              }
+            },
+            {
+              "_row": 49,
+              "label": "Peak auxiliary energy",
+              "values": {
+                "B": 0,
+                "C": "battery kWh/day",
+                "D": "Observed demanding day"
+              }
+            },
+            {
+              "_row": 50,
+              "label": "Capital-price growth",
+              "values": {
+                "B": 0,
+                "C": "fraction/year",
+                "D": "Future purchase inflation"
+              }
+            },
+            {
+              "_row": 51,
+              "label": "Diesel-price growth",
+              "values": {
+                "B": 0,
+                "C": "fraction/year",
+                "D": "Diesel price inflation"
+              }
+            },
+            {
+              "_row": 52,
+              "label": "Charging-price growth",
+              "values": {
+                "B": 0,
+                "C": "fraction/year",
+                "D": "Charging price inflation"
+              }
+            },
+            {
+              "_row": 53,
+              "label": "Other-cost growth",
+              "values": {
+                "B": 0,
+                "C": "fraction/year",
+                "D": "Other operating inflation"
+              }
+            },
+            {
+              "_row": 54,
+              "label": "Discount rate",
+              "values": {
+                "B": 0,
+                "C": "fraction/year",
+                "D": "Nominal annual discount rate"
+              }
+            },
+            {
+              "_row": 55,
+              "label": "Extra upfront budget",
+              "values": {
+                "B": 250000,
+                "C": "SGD",
+                "D": "Additional day-0 fleet budget"
+              }
+            },
+            {
+              "_row": 56,
+              "label": "New ICE terminal value",
+              "values": {
+                "B": 12000,
+                "C": "SGD/truck",
+                "D": "All-new-ICE-now year-10 value"
+              }
+            },
+            {
+              "_row": 57,
+              "label": "Fallback EV COE",
+              "values": {
+                "B": 93000,
+                "C": "SGD",
+                "D": "Archived quote fallback COE assumption"
+              }
+            },
+            {
+              "_row": 58,
+              "label": "Backup confirmed",
+              "values": {
+                "B": "Yes",
+                "C": "Yes/No",
+                "D": "Capacity and all-in terms confirmed"
+              }
+            },
+            {
+              "_row": 59,
+              "label": "Loaded trial confirmed",
+              "values": {
+                "B": "Yes",
+                "C": "Yes/No",
+                "D": "Loaded route and charging trial"
+              }
+            },
+            {
+              "_row": 60,
+              "label": "Energy prices confirmed",
+              "values": {
+                "B": "Yes",
+                "C": "Yes/No",
+                "D": "Current company energy contracts"
+              }
+            },
+            {
+              "_row": 61,
+              "label": "Data mode",
+              "values": {
+                "B": "Customer",
+                "C": "mode",
+                "D": "Demonstration / Customer"
+              }
+            },
+            {
+              "_row": 62,
+              "label": "Vehicle quote basis",
+              "values": {
+                "B": "Gross",
+                "C": "Gross/Net/Unknown",
+                "D": "Vehicle inputs must be gross if grant separately deducted"
+              }
+            },
+            {
+              "_row": 63,
+              "label": "Analysis start date",
+              "values": {
+                "B": "2026-10-03 00:00:00",
+                "C": "date",
+                "D": "Analysis start date; fixed 120 months"
+              }
+            },
+            {
+              "_row": 64,
+              "label": "EV scheduled repair",
+              "values": {
+                "B": 0,
+                "C": "SGD/truck",
+                "D": "Separate scheduled battery/vehicle repair"
+              }
+            },
+            {
+              "_row": 65,
+              "label": "EV repair after purchase",
+              "values": {
+                "B": 60,
+                "C": "months after purchase",
+                "D": "Repair timing"
+              }
+            },
+            {
+              "_row": 66,
+              "label": "ICE scheduled repair",
+              "values": {
+                "B": 0,
+                "C": "SGD/truck",
+                "D": "Separate scheduled ICE repair"
+              }
+            },
+            {
+              "_row": 67,
+              "label": "ICE repair month",
+              "values": {
+                "B": 60,
+                "C": "analysis month",
+                "D": "Applies to active ICE only"
+              }
+            },
+            {
+              "_row": 68,
+              "label": "EV servicing basis",
+              "values": {
+                "B": "Hong Seh 200k average",
+                "C": "basis",
+                "D": "Hong Seh 200,000 km average uses the selected EV model. Annual override uses the value in row 26."
+              }
+            }
+          ]
+        },
+        "energy_and_charging": {
+          "range": "A7:E56",
+          "rows": [
+            {
+              "_row": 7,
+              "label": "Commercial diesel",
+              "values": {
+                "B": 2.5,
+                "C": 2.5,
+                "D": "SGD/litre",
+                "E": "Inherited assumption; enter net fleet invoice"
+              }
+            },
+            {
+              "_row": 8,
+              "label": "Public diesel",
+              "values": {
+                "B": 3.25,
+                "C": 3.25,
+                "D": "SGD/litre",
+                "E": "Inherited assumption; enter net public pump price"
+              }
+            },
+            {
+              "_row": 9,
+              "label": "Commercial diesel share",
+              "values": {
+                "B": 1,
+                "C": 1,
+                "D": "litres share",
+                "E": "Commercial purchase share"
+              }
+            },
+            {
+              "_row": 10,
+              "label": "Depot electricity",
+              "values": {
+                "B": 0.3,
+                "C": 0.3,
+                "D": "SGD/grid kWh",
+                "E": "Inherited assumption; not current commercial offer"
+              }
+            },
+            {
+              "_row": 11,
+              "label": "Public charging",
+              "values": {
+                "B": 0.75,
+                "C": 0.75,
+                "D": "SGD/grid kWh",
+                "E": "Inherited assumption; verify truck access"
+              }
+            },
+            {
+              "_row": 12,
+              "label": "Public electricity share",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "grid-kWh share",
+                "E": "Energy share, not visits share"
+              }
+            },
+            {
+              "_row": 13,
+              "label": "Charging-site arrangement",
+              "values": {
+                "B": "Existing depot",
+                "C": "Existing depot",
+                "D": "site",
+                "E": "Existing depot / New rented site / Public only / Operator funded"
+              }
+            },
+            {
+              "_row": 14,
+              "label": "Site location",
+              "values": {
+                "B": "Unspecified",
+                "C": "Unspecified",
+                "D": "region",
+                "E": "All Singapore areas considered; does not select a rent quote"
+              }
+            },
+            {
+              "_row": 15,
+              "label": "Charger type",
+              "values": {
+                "B": "AC22",
+                "C": "AC22",
+                "D": "type",
+                "E": "DC60 / DC120 / AC22 / Other"
+              }
+            },
+            {
+              "_row": 16,
+              "label": "Installed chargers",
+              "values": {
+                "B": 4,
+                "C": 4,
+                "D": "units",
+                "E": "Actual installed hardware, not EV count"
+              }
+            },
+            {
+              "_row": 17,
+              "label": "Usable truck plugs",
+              "values": {
+                "B": 4,
+                "C": 4,
+                "D": "usable plugs",
+                "E": "Actual simultaneous truck positions; sharing still limited by site power"
+              }
+            },
+            {
+              "_row": 18,
+              "label": "Charger equipment price",
+              "values": {
+                "B": 8000,
+                "C": 8000,
+                "D": "SGD/charger",
+                "E": "E01 equipment-only advertised before GST/installation"
+              }
+            },
+            {
+              "_row": 19,
+              "label": "Local EV distribution board",
+              "values": {
+                "B": 1200,
+                "C": 1200,
+                "D": "SGD/charger",
+                "E": "Local EV distribution equipment; itemised quote required"
+              }
+            },
+            {
+              "_row": 20,
+              "label": "Licensed electrical worker",
+              "values": {
+                "B": 800,
+                "C": 800,
+                "D": "SGD/charger",
+                "E": "Site/project LEW; quote required"
+              }
+            },
+            {
+              "_row": 21,
+              "label": "Local cable and installation",
+              "values": {
+                "B": 1500,
+                "C": 1500,
+                "D": "SGD/charger",
+                "E": "Local cabling/install only; quote required"
+              }
+            },
+            {
+              "_row": 22,
+              "label": "Charger registration",
+              "values": {
+                "B": 375,
+                "C": 375,
+                "D": "SGD/charger",
+                "E": "L01 no GST; current 23-150kW fee only through Mar2027"
+              }
+            },
+            {
+              "_row": 23,
+              "label": "Major electrical upgrade",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site",
+                "E": "Switchboard/transformer upgrade; NOT automatic EHVCG eligible cost"
+              }
+            },
+            {
+              "_row": 24,
+              "label": "General civil work",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site",
+                "E": "Separate paving/drainage/site infrastructure; quote required"
+              }
+            },
+            {
+              "_row": 25,
+              "label": "SP connection fee",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site",
+                "E": "SP incremental connection quote; NOT automatic S$16,700"
+              }
+            },
+            {
+              "_row": 26,
+              "label": "Other site preparation",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site",
+                "E": "Land preparation, permits, professional fees; no duplicate cable work"
+              }
+            },
+            {
+              "_row": 27,
+              "label": "Training and transition",
+              "values": {
+                "B": 1000,
+                "C": 1000,
+                "D": "SGD/site",
+                "E": "Inherited training/setup assumption"
+              }
+            },
+            {
+              "_row": 28,
+              "label": "Extra monthly space rent",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site/month",
+                "E": "Incremental EV space only. Existing common factory rent excluded"
+              }
+            },
+            {
+              "_row": 29,
+              "label": "Other fixed annual fees",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site/year",
+                "E": "Network/IT/insurance/standing fees not already in kWh price"
+              }
+            },
+            {
+              "_row": 30,
+              "label": "Annual demand charge",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site/year",
+                "E": "Only actual tariff demand charges. Do not assume all LT sites pay HT charges"
+              }
+            },
+            {
+              "_row": 31,
+              "label": "Lost space value /year",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site/year",
+                "E": "Only evidenced lost bay/use value, not duplicate rent"
+              }
+            },
+            {
+              "_row": 32,
+              "label": "Maintenance per charger",
+              "values": {
+                "B": 400,
+                "C": 400,
+                "D": "SGD/charger/year",
+                "E": "E05 advertised DC maintenance; check service and inspections included"
+              }
+            },
+            {
+              "_row": 33,
+              "label": "Installation month",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "analysis month",
+                "E": "Ready before first depot EV operation"
+              }
+            },
+            {
+              "_row": 34,
+              "label": "Site rights after install",
+              "values": {
+                "B": 120,
+                "C": 120,
+                "D": "months after installation",
+                "E": "Confirmed rights, not merely parking permit"
+              }
+            },
+            {
+              "_row": 35,
+              "label": "Year-10 equipment recovery",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site at year 10",
+                "E": "Explicit equipment terminal forecast"
+              }
+            },
+            {
+              "_row": 36,
+              "label": "Lease-end restoration",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site",
+                "E": "Lease-end restoration quote or evidenced zero"
+              }
+            },
+            {
+              "_row": 37,
+              "label": "Replacement-site cost",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site",
+                "E": "Replacement site total, no assumed free land"
+              }
+            },
+            {
+              "_row": 38,
+              "label": "Replacement-site month",
+              "values": {
+                "B": 120,
+                "C": 120,
+                "D": "analysis month",
+                "E": "Chargers/site change within horizon"
+              }
+            },
+            {
+              "_row": 39,
+              "label": "Next site confirmed",
+              "values": {
+                "B": "No",
+                "C": "No",
+                "D": "Yes/No",
+                "E": "Needed if current site rights end before horizon"
+              }
+            },
+            {
+              "_row": 40,
+              "label": "Charger replacement cost",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/charger",
+                "E": "Scheduled replacement, exclude duplicate maintenance"
+              }
+            },
+            {
+              "_row": 41,
+              "label": "Charger replacement month",
+              "values": {
+                "B": 120,
+                "C": 120,
+                "D": "analysis month",
+                "E": "Scheduled charger replacement"
+              }
+            },
+            {
+              "_row": 42,
+              "label": "Refundable deposit",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site",
+                "E": "Refundable funding tie-up, not full economic expense"
+              }
+            },
+            {
+              "_row": 43,
+              "label": "Deposit refund month",
+              "values": {
+                "B": 120,
+                "C": 120,
+                "D": "analysis month",
+                "E": "Enter refund date; beyond horizon remains cash tied up"
+              }
+            },
+            {
+              "_row": 44,
+              "label": "Approved charger grant",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "SGD/site",
+                "E": "Only written grant quantum. Budget ceiling below is NOT a grant award"
+              }
+            },
+            {
+              "_row": 45,
+              "label": "Grant receipt month",
+              "values": {
+                "B": 12,
+                "C": 12,
+                "D": "analysis month",
+                "E": "Reimbursement date, not upfront discount"
+              }
+            },
+            {
+              "_row": 46,
+              "label": "Award checked",
+              "values": {
+                "B": "No",
+                "C": "No",
+                "D": "Yes/No",
+                "E": "Written award and component caps checked"
+              }
+            },
+            {
+              "_row": 47,
+              "label": "Approved funded chargers",
+              "values": {
+                "B": 0,
+                "C": 0,
+                "D": "eligible units",
+                "E": "Approved units, <=3 and <=eligible new eHVs at this site"
+              }
+            },
+            {
+              "_row": 48,
+              "label": "Accepted cost per charger",
+              "values": {
+                "B": null,
+                "C": null,
+                "D": "SGD/eligible charger",
+                "E": "LTA-accepted eligible cost after component caps; blank ceiling unavailable"
+              }
+            },
+            {
+              "_row": 49,
+              "label": "Site quote basis",
+              "values": {
+                "B": "Gross",
+                "C": "Gross",
+                "D": "Gross/Net",
+                "E": "Site cost before approved grant"
+              }
+            },
+            {
+              "_row": 50,
+              "label": "Net site power",
+              "values": {
+                "B": 60,
+                "C": 60,
+                "D": "kW",
+                "E": "Net usable grid input after other site loads"
+              }
+            },
+            {
+              "_row": 51,
+              "label": "Charging window",
+              "values": {
+                "B": 10,
+                "C": 10,
+                "D": "hours",
+                "E": "Uninterrupted charging window"
+              }
+            },
+            {
+              "_row": 52,
+              "label": "Site permission and access",
+              "values": {
+                "B": "Yes",
+                "C": "Yes",
+                "D": "Yes/No/Unconfirmed",
+                "E": "Landlord/JTC, physical bays, connector, cable and permissions"
+              }
+            },
+            {
+              "_row": 53,
+              "label": "Shared schedule confirmed",
+              "values": {
+                "B": "Yes",
+                "C": "Yes",
+                "D": "Yes/No",
+                "E": "Observed fleet arrivals, departures and shared-power schedule"
+              }
+            },
+            {
+              "_row": 54,
+              "label": "Site cost evidence",
+              "values": {
+                "B": "Verified",
+                "C": "Verified",
+                "D": "Unknown/Assumed/Quoted/Verified",
+                "E": "Scope-complete values are not a site survey"
+              }
+            },
+            {
+              "_row": 55,
+              "label": "Public truck access",
+              "values": {
+                "B": "Yes",
+                "C": "Yes",
+                "D": "Yes/No/Unconfirmed",
+                "E": "Truck-compatible charger and availability evidence"
+              }
+            },
+            {
+              "_row": 56,
+              "label": "Charger rated input power",
+              "values": {
+                "B": 22,
+                "C": 22,
+                "D": "kW/charger",
+                "E": "Update price, power, maintenance and fee when changing charger type."
+              }
+            }
+          ],
+          "computed_range": "A59:C68",
+          "computed_rows": [
+            {
+              "_row": 59,
+              "A": "Calculated site result",
+              "B": "Plan A",
+              "C": "Plan B"
+            },
+            {
+              "_row": 60,
+              "A": "Input completeness",
+              "B": "Missing site quote",
+              "C": "Missing site quote"
+            },
+            {
+              "_row": 61,
+              "A": "Gross initial site cost",
+              "B": "n.a.",
+              "C": "n.a."
+            },
+            {
+              "_row": 62,
+              "A": "Annual site cost",
+              "B": "n.a.",
+              "C": "n.a."
+            },
+            {
+              "_row": 63,
+              "A": "Grant budget ceiling only",
+              "B": 0,
+              "C": 0
+            },
+            {
+              "_row": 64,
+              "A": "Initial cost less award",
+              "B": "n.a.",
+              "C": "n.a."
+            },
+            {
+              "_row": 65,
+              "A": "Peak depot energy",
+              "B": 41.576816845897724,
+              "C": 124.73045053769317
+            },
+            {
+              "_row": 66,
+              "A": "Total truck charging hours",
+              "B": 1.8898553111771692,
+              "C": 5.669565933531508
+            },
+            {
+              "_row": 67,
+              "A": "Access and capacity check",
+              "B": "Missing site quote",
+              "C": "Missing site quote"
+            },
+            {
+              "_row": 68,
+              "A": "EVs using arrangement",
+              "B": 1,
+              "C": 3
+            }
+          ]
+        },
+        "products": {
+          "range": "A7:Q13",
+          "rows": [
+            {
+              "_row": 7,
+              "A": "Farizon F3E",
+              "B": 4300,
+              "C": 2100,
+              "D": 73.3,
+              "E": 0.24076598400367882,
+              "F": "Battery",
+              "G": 11,
+              "H": 100,
+              "I": 70800,
+              "J": 367,
+              "K": "Farizon F3E Electric 22158_30-Aug-2026.pdf, p1-2",
+              "L": "Unconfirmed",
+              "M": 72.8,
+              "N": "Farizon F3e",
+              "O": 1861,
+              "P": 0.009305,
+              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+            },
+            {
+              "_row": 8,
+              "A": "SRM T3EV",
+              "B": 3500,
+              "C": 1560,
+              "D": 53.58,
+              "E": 0.17859999999999998,
+              "F": "Battery",
+              "G": 11,
+              "H": 55,
+              "I": 63800,
+              "J": 300,
+              "K": "https://evhubs.sg/electric-vehicles/srm-t3-ev.html",
+              "L": "Unconfirmed",
+              "M": 53.58,
+              "N": "SRM T3",
+              "O": 2220,
+              "P": 0.0111,
+              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+            },
+            {
+              "_row": 9,
+              "A": "ChengLong L2EV",
+              "B": 5000,
+              "C": 2480,
+              "D": 86.55,
+              "E": 0.2703694737088725,
+              "F": "Battery",
+              "G": 22,
+              "H": 120,
+              "I": 78800,
+              "J": 320,
+              "K": "Cheng Long L2 22151_14-Sep-2026.pdf, p1-2",
+              "L": "Unconfirmed",
+              "M": 86.55,
+              "N": "Chenglong L2",
+              "O": 3285,
+              "P": 0.016425,
+              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+            },
+            {
+              "_row": 10,
+              "A": "Farizon H5E",
+              "B": 5000,
+              "C": 2700,
+              "D": 100.46,
+              "E": 0.3556030668375185,
+              "F": "Battery",
+              "G": 22,
+              "H": 100,
+              "I": 98000,
+              "J": 344,
+              "K": "Farizon H5E 22109_14-Sep-2026.pdf, p1-2; user DC correction 17-Sep-2026",
+              "L": "Unconfirmed",
+              "M": 104.6,
+              "N": "Farizon H5E / H9E",
+              "O": 1400,
+              "P": 0.007,
+              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+            },
+            {
+              "_row": 11,
+              "A": "SRM T3EV+",
+              "B": 3505,
+              "C": 1660,
+              "D": 53.58,
+              "E": 0.17859999999999998,
+              "F": "Battery",
+              "G": 11,
+              "H": 55,
+              "I": 66800,
+              "J": 300,
+              "K": "https://evhubs.sg/electric-vehicles/srm-t3-ev.html",
+              "L": "Unconfirmed",
+              "M": 106,
+              "N": "SRM T3",
+              "O": 2220,
+              "P": 0.0111,
+              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+            },
+            {
+              "_row": 12,
+              "A": "Farizon H9E 14ft",
+              "B": 9800,
+              "C": 3400,
+              "D": 106.95,
+              "E": 0.4477763062331781,
+              "F": "Battery",
+              "G": null,
+              "H": 100,
+              "I": 108000,
+              "J": 243,
+              "K": "https://evhubs.sg/electric-vehicles/farizon-h9e.html",
+              "L": "Unconfirmed",
+              "M": 106,
+              "N": "Farizon H5E / H9E",
+              "O": 1400,
+              "P": 0.007,
+              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+            },
+            {
+              "_row": 13,
+              "A": "Farizon H9E 20ft",
+              "B": 9800,
+              "C": 3400,
+              "D": 162.28,
+              "E": 0.4591482266008702,
+              "F": "Battery",
+              "G": null,
+              "H": 100,
+              "I": 128000,
+              "J": 372,
+              "K": "https://evhubs.sg/electric-vehicles/farizon-h9e.html",
+              "L": "Unconfirmed",
+              "M": 162,
+              "N": "Farizon H5E / H9E",
+              "O": 1400,
+              "P": 0.007,
+              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+            }
+          ]
+        },
+        "service_costs": {
+          "range": "A7:Z14",
+          "rows": [
+            {
+              "_row": 7,
+              "A": "SRM T3",
+              "B": "FOC",
+              "C": "Nil",
+              "D": "FOC",
+              "E": "FOC",
+              "F": "FOC",
+              "G": "FOC",
+              "H": "FOC",
+              "I": "FOC",
+              "J": "FOC",
+              "K": "FOC",
+              "L": "FOC",
+              "M": "FOC",
+              "N": 108,
+              "O": 336,
+              "P": 108,
+              "Q": 336,
+              "R": 108,
+              "S": 336,
+              "T": 108,
+              "U": 336,
+              "V": 108,
+              "W": 336,
+              "X": 2220,
+              "Y": 2220,
+              "Z": 0
+            },
+            {
+              "_row": 8,
+              "A": "DFSK EC31/ EC35",
+              "B": "FOC",
+              "C": "Nil",
+              "D": "FOC",
+              "E": "FOC",
+              "F": "FOC",
+              "G": 246,
+              "H": 123,
+              "I": 246,
+              "J": 123,
+              "K": 246,
+              "L": 123,
+              "M": 246,
+              "N": 123,
+              "O": 246,
+              "P": 123,
+              "Q": 246,
+              "R": 123,
+              "S": 246,
+              "T": 123,
+              "U": 246,
+              "V": 123,
+              "W": 246,
+              "X": 3198,
+              "Y": 3198,
+              "Z": 0
+            },
+            {
+              "_row": 9,
+              "A": "Farizon SuperVan",
+              "B": "Nil",
+              "C": "Nil",
+              "D": "Nil",
+              "E": "Nil",
+              "F": "FOC",
+              "G": "Nil",
+              "H": "Nil",
+              "I": "FOC",
+              "J": "Nil",
+              "K": "Nil",
+              "L": "FOC",
+              "M": "Nil",
+              "N": "Nil",
+              "O": "FOC",
+              "P": "Nil",
+              "Q": "Nil",
+              "R": "FOC",
+              "S": "Nil",
+              "T": "Nil",
+              "U": 246,
+              "V": "Nil",
+              "W": "Nil",
+              "X": 246,
+              "Y": 246,
+              "Z": 0
+            },
+            {
+              "_row": 10,
+              "A": "Farizon H5E / H9E",
+              "B": "FOC",
+              "C": "Nil",
+              "D": "Nil",
+              "E": "FOC",
+              "F": "Nil",
+              "G": "FOC",
+              "H": "Nil",
+              "I": "FOC",
+              "J": "Nil",
+              "K": "FOC",
+              "L": "Nil",
+              "M": "FOC",
+              "N": "Nil",
+              "O": 280,
+              "P": "Nil",
+              "Q": 280,
+              "R": "Nil",
+              "S": 280,
+              "T": "Nil",
+              "U": 280,
+              "V": "Nil",
+              "W": 280,
+              "X": 1400,
+              "Y": 1400,
+              "Z": 0
+            },
+            {
+              "_row": 11,
+              "A": "Riddara RD6",
+              "B": "Nil",
+              "C": "Nil",
+              "D": "Nil",
+              "E": "FOC",
+              "F": "Nil",
+              "G": "FOC",
+              "H": "Nil",
+              "I": "FOC",
+              "J": "Nil",
+              "K": "FOC",
+              "L": "Nil",
+              "M": "FOC",
+              "N": "Nil",
+              "O": 139,
+              "P": "Nil",
+              "Q": 197,
+              "R": "Nil",
+              "S": 139,
+              "T": "Nil",
+              "U": 197,
+              "V": "Nil",
+              "W": 139,
+              "X": 811,
+              "Y": 811,
+              "Z": 0
+            },
+            {
+              "_row": 12,
+              "A": "Farizon V7e",
+              "B": "Nil",
+              "C": "FOC",
+              "D": "Nil",
+              "E": "Nil",
+              "F": "Nil",
+              "G": "FOC",
+              "H": "Nil",
+              "I": "Nil",
+              "J": "Nil",
+              "K": "FOC",
+              "L": "Nil",
+              "M": "Nil",
+              "N": "Nil",
+              "O": "FOC",
+              "P": "Nil",
+              "Q": "Nil",
+              "R": "Nil",
+              "S": "FOC",
+              "T": "Nil",
+              "U": "NIl",
+              "V": "NIl",
+              "W": 270,
+              "X": 270,
+              "Y": 270,
+              "Z": 0
+            },
+            {
+              "_row": 13,
+              "A": "Chenglong L2",
+              "B": "Nil",
+              "C": "FOC",
+              "D": "FOC",
+              "E": "FOC",
+              "F": "FOC",
+              "G": "FOC",
+              "H": "FOC",
+              "I": "FOC",
+              "J": "FOC",
+              "K": "FOC",
+              "L": "FOC",
+              "M": "FOC",
+              "N": 225,
+              "O": 465,
+              "P": 225,
+              "Q": 225,
+              "R": 480,
+              "S": 285,
+              "T": 225,
+              "U": 465,
+              "V": 225,
+              "W": 465,
+              "X": 3285,
+              "Y": 3285,
+              "Z": 0
+            },
+            {
+              "_row": 14,
+              "A": "Farizon F3e",
+              "B": "FOC",
+              "C": "Nil",
+              "D": "FOC",
+              "E": "FOC",
+              "F": "FOC",
+              "G": "FOC",
+              "H": "FOC",
+              "I": "FOC",
+              "J": "FOC",
+              "K": "FOC",
+              "L": "FOC",
+              "M": "FOC",
+              "N": 160,
+              "O": 247,
+              "P": 160,
+              "Q": 160,
+              "R": 160,
+              "S": 247,
+              "T": 160,
+              "U": 160,
+              "V": 160,
+              "W": 247,
+              "X": 1861,
+              "Y": 1861,
+              "Z": 0
+            }
+          ]
+        }
+      }
+    },
+    {
       "id": "demo",
       "name": "DEMONSTRATION 6-truck case",
       "evidence": "assumption",
