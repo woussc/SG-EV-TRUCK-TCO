@@ -31,11 +31,13 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '..');
 const enginePath = resolve(repoRoot, 'src/engine.js');
 const fixturePath = resolve(repoRoot, 'tools/fixtures/demo_case.json');
+const seedsPath = resolve(repoRoot, 'tools/fixtures/prospect_seeds.json');
 const indexPath = resolve(repoRoot, 'index.html');
 
 const engineSrc = readFileSync(enginePath, 'utf8');
 const engineHash = createHash('sha256').update(engineSrc).digest('hex');
 const fixture = JSON.parse(readFileSync(fixturePath, 'utf8'));
+const seeds = JSON.parse(readFileSync(seedsPath, 'utf8'));
 
 // Strip ES-module syntax so the engine runs inside a classic <script>.
 // 1) `export const NA` / `export function foo` -> drop the leading `export `.
@@ -44,8 +46,8 @@ let inlineEngine = engineSrc
   .replace(/^export\s+default\s+[^;]*;\s*$/m, '')
   .replace(/^export\s+/gm, '');
 
-// Expose computeFleet + NA on a namespace used by the page script.
-inlineEngine += '\nwindow.HSEngine = { computeFleet: computeFleet, NA: NA };\n';
+// Expose computeFleet + NA + scoreProspect on a namespace used by the page script.
+inlineEngine += '\nwindow.HSEngine = { computeFleet: computeFleet, NA: NA, scoreProspect: scoreProspect };\n';
 
 const engineBlock =
   `<!-- ENGINE:BEGIN  generated from src/engine.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
@@ -57,6 +59,11 @@ const demoBlock =
   `<!-- DEMO:BEGIN  generated from tools/fixtures/demo_case.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<script>\nwindow.HSDemoCase = ${JSON.stringify({ inputs: fixture.inputs, _meta: fixture._meta })};\n</script>\n` +
   `<!-- DEMO:END -->`;
+
+const prospectsBlock =
+  `<!-- PROSPECTS:BEGIN  generated from tools/fixtures/prospect_seeds.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<script>\nwindow.HSProspectSeeds = ${JSON.stringify(seeds)};\n</script>\n` +
+  `<!-- PROSPECTS:END -->`;
 
 let html = readFileSync(indexPath, 'utf8');
 
@@ -84,8 +91,16 @@ html = replaceBlock(
   'DEMO',
   demoBlock,
 );
+html = replaceBlock(
+  html,
+  /<!-- PROSPECTS:BEGIN[\s\S]*?-->/,
+  /<!-- PROSPECTS:END -->/,
+  'PROSPECTS',
+  prospectsBlock,
+);
 
 writeFileSync(indexPath, html);
 console.log(`index.html regenerated.`);
 console.log(`  engine  : src/engine.js (${engineSrc.length} bytes, sha256 ${engineHash.slice(0, 16)}...)`);
 console.log(`  demo    : tools/fixtures/demo_case.json inputs embedded`);
+console.log(`  prospects: tools/fixtures/prospect_seeds.json (${seeds.cases.length} seed cases) embedded`);

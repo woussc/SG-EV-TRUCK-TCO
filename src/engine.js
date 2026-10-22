@@ -980,4 +980,200 @@ function shapeResults(perPlan, sites) {
   };
 }
 
-export default { computeFleet, NA };
+/* ------------------------------------------------------------------ *
+ * Prospect scoring (deterministic, model-grounded, auditable).
+ * ------------------------------------------------------------------ *
+ * scoreProspect(result) turns one computeFleet(...) result into the two
+ * economics-grounded rankings the business asked for. It invents NO weights
+ * and no probabilities: every component is a figure the model already
+ * produced (Results!B12:E26 semantics). The function only
+ *   (a) picks the "best EV plan". An EV plan is Plan A or Plan B that actually
+ *       deploys EVs (Results!B11:E11 EVs at year 10 > 0). Among EV plans with
+ *       a numeric Total economic TCO (a confirmed win), it takes the larger
+ *       Saving vs Keep ICE (Results!B15:E15); ties resolve to Plan A. If every
+ *       EV plan lacks a numeric Total (e.g. the charging-site quote is missing
+ *       so site cost stays n.a., or the route-energy screen fails), it still
+ *       reports the EV plan with the larger vehicle-only economic TCO benefit
+ *       and flags the case "Diagnostic only"/"Fails entered limits" so it is
+ *       NOT presented as a confirmed win. If no plan deploys EVs at all, the
+ *       case is reported at Keep-ICE account scale only.
+ *   (b) copies that plan's model outputs into a flat, sortable component set.
+ *
+ * Ranking keys (both are plain model outputs, sorted descending; the UI sorts,
+ * scoreProspect only exposes the keys so the ordering is auditable):
+ *
+ *   benefitKey   = best EV-plan Saving % vs Keep ICE        (Results!B16:E16)
+ *                  Secondary audit components (shown, not blended):
+ *                    headroom15      = 0.85*KeepICE_total - plan_total  (Results!B17)
+ *                    maxSiteTco15    = 0.85*KeepICE_total - plan_vehTCO (Results!D26:E26)
+ *                    gatePass        = plan passes service/capacity/evidence
+ *                  A case whose best plan "Fails entered limits" or is
+ *                  "Diagnostic only" gets benefitKey = -Infinity so it sinks
+ *                  to the bottom of the benefit ranking (flagged, not ranked
+ *                  as a confirmed win).
+ *
+ *   accountKey   = absolute 10-yr Saving vs Keep ICE in S$  (Results!B15:E15)
+ *                  Secondary audit components (shown, not blended):
+ *                    totalEconomicTco (account size, Results!B14:E14)
+ *                    truckCount       (included trucks, Results!B9:E9)
+ *                    day0Funding      (Day-0 funding need, Results!B19:E19)
+ *                  accountKey uses absolute saving so a large fleet with a
+ *                  modest % still surfaces as a big opportunity; when the best
+ *                  EV plan has no numeric saving (missing site quote etc.) the
+ *                  key falls back to the vehicle-only benefit, then to the
+ *                  Keep-ICE account size, so the account is still ranked by
+ *                  scale with gatePass=false flagging the caveat.
+ *
+ * "fifteenTargetMet" mirrors Results!B24:E24 ("Saving claim status"); it is a
+ * conditional-on-inputs label, NOT an adoption probability.
+ */
+function num(v) { return isNum(v) ? v : null; }
+
+export function scoreProspect(result) {
+  const r = result.results;
+  const keepTotal = num(r.totalEconomicTco.keep_ice);
+
+  // EV plans = Plan A / Plan B that actually deploy EVs by year 10.
+  const evPlans = [];
+  for (const key of ['plan_a', 'plan_b']) {
+    if (isNum(r.evYear10[key]) && r.evYear10[key] > 0) {
+      evPlans.push({
+        key,
+        label: key === 'plan_a' ? 'Plan A' : 'Plan B',
+        total: num(r.totalEconomicTco[key]),
+        saving: num(r.savingVsKeep[key]),
+        // Vehicle-only benefit, usable when the site quote is missing so the
+        // full Total stays n.a. (Keep ICE has no site cost, so comparing
+        // vehicle economic TCO is apples-to-apples for the fleet itself).
+        vehBenefit: (isNum(r.vehicleEconomicTco.keep_ice) && isNum(r.vehicleEconomicTco[key]))
+          ? r.vehicleEconomicTco.keep_ice - r.vehicleEconomicTco[key] : null,
+      });
+    }
+  }
+
+  // No EV plan at all -> report at Keep-ICE account scale only.
+  if (evPlans.length === 0) {
+    const accountSize = keepTotal;
+    return {
+      bestPlanKey: null,
+      bestPlanLabel: 'n.a.',
+      truckCount: num(r.truckCount.keep_ice) == null ? NA : num(r.truckCount.keep_ice),
+      savingPct: NA,
+      savingAbs: NA,
+      totalEconomicTco: accountSize == null ? NA : accountSize,
+      day0Funding: NA,
+      headroom15: NA,
+      maxSiteTco15: NA,
+      gatePass: false,
+      gateStatus: 'No EV plan',
+      fifteenTargetMet: 'Diagnostic only',
+      benefitKey: -Infinity,
+      accountKey: accountSize == null ? -Infinity : accountSize,
+      components: {
+        note: 'No plan deploys EVs; ranked by Keep-ICE account size only.',
+      },
+    };
+  }
+
+  // Prefer EV plans with a numeric (confirmed) Total; among them take the
+  // larger Saving vs Keep ICE. If none is numeric, fall back to the larger
+  // vehicle-only benefit so the EV plan is still surfaced (and flagged).
+  const confirmed = evPlans.filter((p) => isNum(p.total) && isNum(p.saving));
+  let best;
+  if (confirmed.length > 0) {
+    best = confirmed[0];
+    for (const p of confirmed) if (p.saving > best.saving) best = p; // ties keep Plan A (first)
+  } else {
+    best = evPlans[0];
+    for (const p of evPlans) {
+      const pv = isNum(p.vehBenefit) ? p.vehBenefit : -Infinity;
+      const bv = isNum(best.vehBenefit) ? best.vehBenefit : -Infinity;
+      if (pv > bv) best = p;
+    }
+  }
+
+  const bestKey = best.key;
+
+  const savingPct = num(r.savingPct[bestKey]);
+  const savingAbs = num(r.savingVsKeep[bestKey]);
+  const headroom15 = num(r.headroom15[bestKey]);
+  const maxSiteTco15 = num(r.maxSiteTco15[bestKey]);
+  const total = num(r.totalEconomicTco[bestKey]);
+  const day0 = num(r.day0Funding[bestKey]);
+  const truckCount = num(r.truckCount[bestKey]);
+
+  const vehicleStatus = r.vehicleStatus[bestKey];
+  const siteStatus = r.siteStatus[bestKey];
+  const claimStatus = r.savingClaimStatus[bestKey];
+
+  // Gate status: a case that fails entered limits or is diagnostic-only is
+  // flagged, not presented as a confirmed win.
+  const failsVehicle = vehicleStatus === 'Fails entered limits';
+  const siteFails =
+    siteStatus === 'Site timing/power fails' ||
+    siteStatus === 'Missing site quote' ||
+    siteStatus === 'Missing public fixed cost' ||
+    siteStatus === 'Review site inputs';
+  const diagnostic = claimStatus === 'Diagnostic only' || claimStatus === 'Total incomplete';
+  const gatePass = !failsVehicle && !diagnostic && !siteFails;
+
+  let gateStatus;
+  if (failsVehicle) gateStatus = 'Fails entered limits';
+  else if (diagnostic) gateStatus = 'Diagnostic only';
+  else if (siteFails) gateStatus = 'Site inputs incomplete';
+  else if (vehicleStatus === 'Vehicle evidence open') gateStatus = 'Vehicle evidence open';
+  else gateStatus = 'Within entered limits';
+
+  // Benefit ranking key: Saving % of best plan; confirmed-win cases only.
+  // Flagged cases (fail/diagnostic) sink to the bottom.
+  const benefitKey = (gatePass && isNum(savingPct)) ? savingPct : -Infinity;
+
+  // Account ranking key: absolute 10-yr saving vs Keep ICE.
+  //  - confirmed plan with numeric saving -> that saving.
+  //  - plan whose Total is n.a. (missing site quote etc.) -> fall back to the
+  //    vehicle-only benefit so the account still ranks by indicative scale.
+  //  - otherwise fall back to Keep-ICE account size.
+  let accountKey;
+  if (isNum(savingAbs)) accountKey = savingAbs;
+  else if (isNum(best.vehBenefit)) accountKey = best.vehBenefit;
+  else if (keepTotal != null) accountKey = keepTotal;
+  else accountKey = -Infinity;
+
+  return {
+    bestPlanKey: bestKey,
+    bestPlanLabel: best.label,
+    truckCount: truckCount == null ? NA : truckCount,
+    savingPct: savingPct == null ? NA : savingPct,
+    savingAbs: savingAbs == null ? NA : savingAbs,
+    totalEconomicTco: total == null ? NA : total,
+    day0Funding: day0 == null ? NA : day0,
+    headroom15: headroom15 == null ? NA : headroom15,
+    maxSiteTco15: maxSiteTco15 == null ? NA : maxSiteTco15,
+    gatePass,
+    gateStatus,
+    fifteenTargetMet: claimStatus,
+    benefitKey,
+    accountKey,
+    // Vehicle-only EV benefit vs Keep ICE (Results!B12:E12 difference). Shown
+    // when the full Total is n.a. so the indicative fleet benefit is auditable.
+    vehicleBenefit: isNum(best.vehBenefit) ? best.vehBenefit : NA,
+    // Audit components for the UI: the exact numbers that drove each rank.
+    components: {
+      benefit: {
+        savingPct: savingPct == null ? NA : savingPct,
+        headroom15: headroom15 == null ? NA : headroom15,
+        maxSiteTco15: maxSiteTco15 == null ? NA : maxSiteTco15,
+        gatePass,
+      },
+      account: {
+        savingAbs: savingAbs == null ? NA : savingAbs,
+        vehicleBenefit: isNum(best.vehBenefit) ? best.vehBenefit : NA,
+        totalEconomicTco: total == null ? NA : total,
+        truckCount: truckCount == null ? NA : truckCount,
+        day0Funding: day0 == null ? NA : day0,
+      },
+    },
+  };
+}
+
+export default { computeFleet, NA, scoreProspect };
