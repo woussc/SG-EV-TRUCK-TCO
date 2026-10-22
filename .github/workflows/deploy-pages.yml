@@ -1,0 +1,58 @@
+name: Deploy to GitHub Pages
+
+# Publishes the self-contained EV TCO calculator (index.html at the repo root,
+# plus its relative assets such as src/engine.js) to GitHub Pages.
+#
+# The site is a static single-page app with NO build step and NO runtime
+# dependencies, so this workflow simply uploads the repository contents as a
+# Pages artifact and deploys it. Public URL: https://woussc.github.io/SG-EV-TRUCK-TCO/
+
+on:
+  # Deploy on every push to the default branch.
+  push:
+    branches:
+      - main
+  # Allow manual runs from the Actions tab.
+  workflow_dispatch:
+
+# Grant the token the permissions GitHub Pages deployment requires.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; let an in-progress run finish so a live
+# deployment is never cancelled midway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Pages artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload the repo root: index.html lives here and references
+          # src/engine.js and other repo-root assets by relative path.
+          path: "."
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
