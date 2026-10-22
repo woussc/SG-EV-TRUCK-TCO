@@ -1,0 +1,1717 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Hong Seh EV Truck TCO Calculator</title>
+<style>
+:root{--ink:#172b3a;--muted:#506475;--paper:#ffffff;--canvas:#f2f5f7;--line:#ccd6df;--accent:#12556b;--warn:#7e420b;--soft:#edf5f7;--amber:#fff1db;--amberline:#d9a441}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);background:var(--canvas);font:16px/1.55 'Segoe UI',Arial,sans-serif}
+a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+header{background:#143b4c;color:white;padding:34px max(24px,calc((100vw - 1160px)/2))}
+header .eyebrow{font-size:14px;text-transform:uppercase;letter-spacing:1px}
+header h1{font-size:32px;line-height:1.2;margin:8px 0 12px;max-width:960px}
+header p{max-width:900px;margin:8px 0}
+nav{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:12px 22px;display:flex;flex-wrap:wrap;gap:10px 20px;z-index:3;font-size:14px}
+main{max-width:1208px;margin:auto;padding:24px}
+section{background:var(--paper);padding:26px;margin:0 0 22px;border:1px solid var(--line);scroll-margin-top:86px}
+h2{font-size:24px;line-height:1.25;margin:0 0 16px}
+h3{font-size:19px;line-height:1.3;margin:24px 0 10px}
+h4{margin:16px 0 8px}
+p{margin:10px 0 14px}
+.lead{font-size:18px}
+.small{font-size:14px;color:var(--muted)}
+.notice{border-left:5px solid var(--warn);padding:14px 18px;background:#fff5e8;margin:14px 0}
+.note{padding:14px 18px;background:var(--soft);margin:14px 0}
+.banner{border-left:6px solid var(--warn);background:#fff5e8;padding:14px 18px;margin:0 0 18px;font-weight:600}
+.table-wrap{overflow-x:auto;margin:12px 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.4}
+caption{text-align:left;color:var(--muted);padding:0 0 10px;font-size:14px}
+th,td{padding:9px 11px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:#eaf0f4;font-weight:600}
+tbody tr:nth-child(even){background:#f7f9fb}
+td:not(:first-child),th:not(:first-child){font-variant-numeric:tabular-nums}
+td.num,th.num{text-align:right;white-space:nowrap}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 7px;border:1px solid #acbcc8;border-radius:3px;margin-right:5px;white-space:nowrap}
+.fact{background:#e8f2ed}.assumption{background:#fff1db}.inference{background:#e6eff9}.unknown{background:#eeeef0}
+.ref{font-size:12px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.panel{padding:18px;background:var(--soft)}
+.panel h3{margin-top:0}
+.large{font-size:26px;font-weight:600;line-height:1.2}
+.plan-card{border-top:4px solid var(--accent);padding:16px;background:var(--soft)}
+.na{color:var(--muted);font-style:italic}
+details{margin:14px 0;border-top:1px solid var(--line);padding-top:12px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+pre{overflow:auto;white-space:pre-wrap;font:13.5px/1.6 Consolas,monospace;padding:16px;background:#edf2f6}
+footer{max-width:1208px;margin:auto;padding:10px 26px 40px;color:var(--muted);font-size:14px}
+input,select{font:14px 'Segoe UI',Arial,sans-serif;color:var(--ink);padding:5px 6px;border:1px solid var(--line);border-radius:3px;background:#fff}
+input[type=number]{width:104px;text-align:right}
+input.amber,select.amber{background:var(--amber);border:1px solid var(--amberline)}
+.editwrap table td{padding:6px 8px}
+.editwrap input,.editwrap select{width:100%;min-width:72px}
+.editwrap td{min-width:84px}
+.legend{font-size:13px;color:var(--muted);margin:6px 0 2px}
+.legend .swatch{display:inline-block;width:12px;height:12px;background:var(--amber);border:1px solid var(--amberline);vertical-align:middle;margin:0 4px 2px 10px}
+.kpi{font-size:13px;color:var(--muted)}
+.resultline td:first-child{min-width:230px}
+.statusok{color:#1f6b3b}.statuswarn{color:var(--warn)}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px}
+.field{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0;border-bottom:1px dotted var(--line)}
+.field label{font-size:14px}
+.field .u{font-size:12px;color:var(--muted);min-width:90px;text-align:right}
+.rowctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+@media(max-width:860px){.grid,.grid4,.formgrid{grid-template-columns:1fr}}
+@media(max-width:700px){header h1{font-size:26px}main{padding:12px}section{padding:16px}nav{position:static}table{font-size:13px}th,td{padding:7px}h2{font-size:21px}}
+@media print{
+ body{background:white;font-size:10pt}
+ header{background:white;color:var(--ink);padding:14px 0}
+ header h1{font-size:22pt}
+ nav,.noprint{display:none!important}
+ main{padding:0;max-width:none}
+ section{border:0;padding:10px 0;margin:0 0 10px;break-inside:auto}
+ h2,h3{break-after:avoid}
+ table{font-size:8pt}.table-wrap{overflow:visible}tr{break-inside:avoid}
+ a{color:var(--ink)}.grid,.grid4{display:block}.panel,.plan-card{margin-bottom:10px}
+ input,select{border:0;background:transparent;-webkit-appearance:none;appearance:none}
+ details>div{display:block!important}details{break-inside:auto}
+}
+</style></head><body>
+<header>
+<div class="eyebrow">Hong Seh Evolution &middot; EV Truck Total Cost of Ownership &middot; Singapore market</div>
+<h1>Hong Seh EV truck TCO calculator and prospect screen</h1>
+<p>A bottom-up, ten-year (fixed 120-month) simulation that compares four ownership paths per fleet: Keep ICE, all-new ICE now, Plan A and Plan B. It reuses the deterministic model reverse-engineered from the authoritative workbook so the numbers match the Excel, cell for cell.</p>
+<p><strong>Decision status: diagnostic scenario, not a customer-validated savings claim.</strong></p>
+</header>
+<nav aria-label="Report contents">
+<a href="#decision">1 Decision</a>
+<a href="#inputs">2 Inputs &amp; evidence</a>
+<a href="#charging">3 Charging &amp; site</a>
+<a href="#results">4 Results</a>
+<a href="#sensitivity">5 Sensitivity</a>
+<a href="#gates">6 Adoption gates</a>
+<a href="#validation">7 Validation</a>
+<a href="#sources">8 Sources &amp; audit</a>
+<a href="#how">How numbers compute</a>
+</nav>
+<main>
+
+<div class="banner" id="demo-banner">DEMONSTRATION. Not a customer savings claim. (mirrors Results!A6)</div>
+
+<section id="decision"><h2>1. Decision snapshot</h2>
+<p class="lead" id="decision-lead">Live headline comparison of the four ownership paths at the current inputs.</p>
+<div class="grid4" id="decision-cards"></div>
+<p class="small">All figures are economic total cost of ownership over the fixed 120-month horizon. Saving is measured against Keep ICE. A negative saving means the plan costs more than keeping the current trucks and replacing them with new ICE at COE expiry. &quot;n.a.&quot; means the model cannot produce a number until the gating inputs (site quote completeness, per-truck input completeness, matching truck count) are supplied; it is never a zero.</p>
+<div class="notice" id="decision-notice">Demonstration defaults reproduce the Excel cached figures. Do not present these as a customer quotation or an owned-fleet fact.</div>
+</section>
+
+<section id="inputs"><h2>2. Inputs &amp; evidence</h2>
+<p>Editable inputs use the amber convention below. Unknowns are left blank or &quot;n.a.&quot; and are never auto-filled with zero: a blank is not a measured zero, and &quot;n.a.&quot; is not a value.</p>
+<p class="legend"><span class="swatch"></span>Amber = editable input. White = computed or reference. Evidence tags: <span class="tag fact">Fact</span><span class="tag assumption">Assumption</span><span class="tag inference">Inference</span><span class="tag unknown">Unknown</span></p>
+
+<h3>2.1 Fleet register <span class="tag assumption">Assumption</span></h3>
+<p class="small">Per-truck current fleet and duty. Include toggles whether a truck enters every path. Reference &apos;Fleet register&apos;!A7:S106.</p>
+<div class="table-wrap editwrap"><table id="fleet-table"><thead><tr>
+<th>Include</th><th>Truck ID</th><th>Duty</th><th>Body</th><th>Work km/day</th><th>Days/year</th><th>Peak route km</th><th>Peak cargo kg</th><th>Jobs/day</th><th>COE months left</th><th>Market value SGD</th><th>Scrap SGD</th><th>Straight-line SGD</th><th>COE term mo</th><th>Debt if sold</th><th>Sale fee</th><th>Evidence ref</th>
+</tr></thead><tbody id="fleet-body"></tbody></table></div>
+
+<h3>2.2 Replacement plan <span class="tag assumption">Assumption</span></h3>
+<p class="small">Per-truck action for Plan A and Plan B, EV model from the Products catalogue, replacement month, quotes, year-10 values and the manually-checked vehicle grant. Reference &apos;Replacement plan&apos;!A7:AI106. A blank replacement month inherits COE months left.</p>
+<div class="table-wrap editwrap"><table id="repl-table"><thead><tr>
+<th>Truck ID</th><th>EV model</th><th>New ICE quote</th><th>EV quote</th><th>Plan A action</th><th>Plan A month</th><th>Plan A yr-10 SGD</th><th>Plan B action</th><th>Plan B month</th><th>Plan B yr-10 SGD</th><th>Keep yr-10 SGD</th><th>New ICE yr-10 SGD</th><th>Vehicle grant SGD</th>
+</tr></thead><tbody id="repl-body"></tbody></table></div>
+
+<h3>2.3 Shared operating costs <span class="tag assumption">Assumption</span></h3>
+<p class="small">Fleet-wide operating assumptions and forecast controls. Reference &apos;Operating costs&apos;!A7:B68. Demonstration inflation and discount are all zero.</p>
+<div class="formgrid" id="oc-form"></div>
+
+<h3>2.4 Energy and charging (Plan A / Plan B) <span class="tag assumption">Assumption</span></h3>
+<p class="small">Energy prices and the charging-site cost build-up for Plan A (column B) and Plan B (column C). Reference &apos;Energy and charging&apos;!A7:C68.</p>
+<div class="table-wrap editwrap"><table id="ec-table"><thead><tr><th>Input</th><th>Plan A</th><th>Plan B</th><th>Unit</th><th>Meaning / cell reference</th></tr></thead><tbody id="ec-body"></tbody></table></div>
+<p class="noprint"><button type="button" id="reset-btn" style="padding:8px 14px;cursor:pointer;background:var(--accent);color:#fff;border:0;border-radius:3px;font:14px 'Segoe UI',Arial">Reset to demonstration case</button></p>
+</section>
+
+<section id="charging"><h2>3. Energy, charging design and site budget</h2>
+<p>The charging site is costed once per plan and shared across its EVs. Completeness and access gates must pass before a numeric site cost is produced; otherwise the plan total is &quot;n.a.&quot;. Reference &apos;Energy and charging&apos;!B59:C68.</p>
+<div class="table-wrap"><table id="site-table"><thead><tr><th>Site build-up</th><th class="num">Plan A</th><th class="num">Plan B</th><th>Meaning</th></tr></thead><tbody id="site-body"></tbody></table></div>
+<p class="small">Charger grant ceiling = MIN(30000, 0.5 &times; accepted cost per charger) &times; MIN(3, approved funded chargers). The ceiling is a budget estimate only; only an entered, checked award reduces TCO.</p>
+</section>
+
+<section id="results"><h2>4. Results</h2>
+<p>Four ownership paths at the current inputs. Keep ICE runs each truck to its COE expiry then buys a matched new ICE. All-new ICE replaces the cohort now. Plan A and Plan B follow the per-truck actions above. Recomputes live on any input change via the embedded engine.</p>
+<div class="table-wrap"><table id="results-table"><thead><tr>
+<th>Metric</th><th class="num">Keep ICE</th><th class="num">All-new ICE now</th><th class="num">Plan A</th><th class="num">Plan B</th>
+</tr></thead><tbody id="results-body"></tbody></table></div>
+<p class="small">Signed credits reduce cost. Vehicle economic TCO = current asset value + purchases + old/new operating + repairs + sale fees &minus; disposal proceeds &minus; vehicle grants &minus; year-10 asset value. Saving % = (Keep ICE total &minus; plan total) / Keep ICE total. 15% headroom = 0.85 &times; Keep ICE total &minus; plan total. Max site TCO for 15% saving = 0.85 &times; Keep ICE total &minus; plan vehicle TCO.</p>
+</section>
+
+<section id="sensitivity"><h2>5. Break-even and sensitivity</h2>
+<p>Each slider changes one cost driver and recomputes every path through the same engine. These are mathematical break-even conditions, not quoted prices or probabilities. The baseline is always the current Keep ICE total at the unchanged inputs.</p>
+<div class="grid" id="sens-controls"></div>
+<div class="table-wrap"><table id="sens-table"><thead><tr>
+<th>Path</th><th class="num">Total economic TCO</th><th class="num">Saving vs Keep</th><th class="num">Saving %</th><th class="num">15% headroom</th>
+</tr></thead><tbody id="sens-body"></tbody></table></div>
+<p class="small" id="sens-note">Average km cannot exceed peak km. Increasing demand without increasing the peak input would make a profile inconsistent. A price change is a cost breakpoint, not a route-planning recommendation.</p>
+</section>
+
+<section id="gates"><h2>6. Conditions that must hold before adoption</h2>
+<p>A numeric range or payload pass is an <strong>assumed technical pass</strong>, not an evidence pass. The gates below are the model&apos;s own screens at the current inputs.</p>
+<div class="table-wrap"><table id="gates-table"><thead><tr><th>Gate</th><th>Plan A</th><th>Plan B</th><th>Evidence needed</th></tr></thead><tbody id="gates-body"></tbody></table></div>
+<p class="small">Service screen is the per-plan vehicle service / evidence status. Capacity gate is the site completeness / access status. Verification flags cover backup confirmed, loaded trial confirmed and energy prices confirmed. No plan reaches an evidence pass while any flag reads No or Unconfirmed.</p>
+</section>
+
+<section id="validation"><h2>7. Validation</h2>
+<p>The engine runs an independent reconciliation (the workbook&apos;s Review sheet) on every recompute. These are internal consistency checks, not a probability that a company will save money.</p>
+<div class="table-wrap"><table id="review-table"><thead><tr><th>Reconciliation check</th><th class="num">Actual</th><th class="num">Expected</th><th>Status</th></tr></thead><tbody id="review-body"></tbody></table></div>
+<div class="note"><strong>Confidence distinction:</strong> numerical reconciliation is strong. Company-fit confidence is low because ownership, manifest, prices, COEs and charger rights are not established in the demonstration data. A pass count is not a savings forecast.</div>
+</section>
+
+<section id="sources"><h2>8. Sources and audit trail</h2>
+<h3>8.1 Energy-and-charging evidence table (E01..U01)</h3>
+<p class="small">Source-backed anchors behind the charging and tariff inputs. External URLs are shown as display text only; nothing on this page fetches them.</p>
+<div class="table-wrap"><table><thead><tr><th>Tag</th><th>Anchor</th><th>What it supports</th><th>Boundary</th></tr></thead><tbody>
+<tr><td>E01</td><td>Electric Pte Ltd EV-charger advertisements &mdash; electric.com.sg/ev-charger</td><td>AC22 S$1,800&ndash;3,500, DC60 S$23,800 equipment-only price</td><td><span class="tag fact">Fact</span>Advertised, before GST and installation</td></tr>
+<tr><td>E05</td><td>Electric Pte Ltd maintenance advertisement</td><td>Advertised per-charger annual maintenance</td><td><span class="tag assumption">Assumption</span>Confirm inspections and service scope</td></tr>
+<tr><td>L01</td><td>LTA Charger Registration &mdash; lta.gov.sg (registration-of-ev-chargers)</td><td>Charger registration fee band, no GST</td><td><span class="tag fact">Fact</span>23&ndash;150 kW fee only through Mar 2027</td></tr>
+<tr><td>S01</td><td>SP Transmission Service Rate Schedule, 1 Jul 2026</td><td>Conditional LT connection charge components</td><td><span class="tag assumption">Assumption</span>Not a whole-site installed quotation</td></tr>
+<tr><td>G01</td><td>LTA Charger Grants (EHVCG) &mdash; lta.gov.sg</td><td>Min 50 kW, &le;3 chargers, 50% / S$30,000 component cap</td><td><span class="tag fact">Fact</span>Ceiling is not an award; only a checked award reduces TCO</td></tr>
+<tr><td>H01</td><td>LTA Heavy Vehicle Zero Emissions Scheme adjustments, 2 Sep 2026</td><td>New-COE vehicle incentive quantum and tranche schedule</td><td><span class="tag fact">Fact</span>Vehicle grant is a manually-checked single-event input</td></tr>
+<tr><td>T01</td><td>OneMotoring Vehicle Tax Structure</td><td>HGV road-tax / AFC assumptions</td><td><span class="tag assumption">Assumption</span>EV road tax uses the full 2028 rate throughout</td></tr>
+<tr><td>P01</td><td>Keppel Electric Q4 2026 tariff revision</td><td>Regulated depot electricity tariff reference</td><td><span class="tag assumption">Assumption</span>Regulated tariff, not a commercial quote</td></tr>
+<tr><td>D01</td><td>Smart Energy corporate membership</td><td>Commercial diesel discount structure</td><td><span class="tag unknown">Unknown</span>Company contract rate not established</td></tr>
+<tr><td>U01</td><td>Hong Seh 200,000 km service schedule, supplied 18 Oct 2026</td><td>Per-km EV service rate = schedule total / 200,000</td><td><span class="tag assumption">Assumption</span>Average smooths timing; use beyond 200,000 km is a projection</td></tr>
+</tbody></table></div>
+
+<h3>8.2 Formula provenance (output &rarr; Excel sheet!cell)</h3>
+<div class="table-wrap"><table><thead><tr><th>Output</th><th>Excel source</th><th>Derivation</th></tr></thead><tbody>
+<tr><td>Truck count</td><td>Results!B9:E9</td><td>COUNTIFS of included Paths rows by plan code</td></tr>
+<tr><td>Vehicle economic TCO</td><td>Results!B12:E12</td><td>SUMIFS Annual build!N by plan code</td></tr>
+<tr><td>Net site ownership cost</td><td>Results!B13:E13</td><td>SUM of the per-year site economic schedule (Results!F45:I55)</td></tr>
+<tr><td>Total economic TCO</td><td>Results!B14:E14</td><td>Vehicle economic TCO + net site ownership cost</td></tr>
+<tr><td>Saving vs Keep ICE / %</td><td>Results!B15:E16</td><td>Keep ICE total &minus; plan total; divided by Keep ICE total</td></tr>
+<tr><td>15% fleet saving headroom</td><td>Results!B17:E17</td><td>0.85 &times; Keep ICE total &minus; plan total</td></tr>
+<tr><td>Cash less year-10 assets</td><td>Results!B18:E18</td><td>SUM Annual build!O + site cash schedule</td></tr>
+<tr><td>Day-0 funding before loans</td><td>Results!B19:E19</td><td>SUMIFS Annual build!R + year-0 site cash</td></tr>
+<tr><td>Cost per productive km</td><td>Results!B21:E21</td><td>Total economic TCO / SUMIFS Annual build!S</td></tr>
+<tr><td>Max site TCO for 15% saving</td><td>Results!D26:E26</td><td>0.85 &times; Keep ICE total &minus; plan vehicle TCO</td></tr>
+<tr><td>Diesel visits</td><td>Paths (fuel block)</td><td>ROUNDUP(work km &times; available days &times; L/km / (refill &minus; detour &times; L/km))</td></tr>
+<tr><td>EV grid intensity</td><td>Paths!U</td><td>battery kWh/km / (1 &minus; charging loss)</td></tr>
+<tr><td>Public visits / EV grid year</td><td>Paths!W,X</td><td>ROUNDUP of the detour-energy balance; grid energy over available days</td></tr>
+<tr><td>Review reconciliation</td><td>Review!B7:D18</td><td>Duty coverage, bridges, EV counts, path-formula count</td></tr>
+</tbody></table></div>
+<details><summary>Source links (display only; no code fetches them)</summary><div class="small">
+<p>LTA HVZES adjustments &middot; OneMotoring vehicle tax structure &middot; LTA EV charger grants (EHVCG) &middot; LTA charger registration &middot; SP transmission service rate schedule (1 Jul 2026) &middot; Keppel Electric Q4 2026 tariff &middot; Smart Energy corporate membership &middot; Electric Pte Ltd EV-charger advertisements. These are the same anchors cited in the reference Hong Seh simulation report. The page itself is self-contained and requires no online script or font to display.</p>
+</div></details>
+</section>
+
+<section id="how"><h2>How numbers are computed</h2>
+<p>The engine is deterministic: the same inputs always produce the same outputs, with no network, no randomness and no external service. The fixed horizon is 120 months (ten analysis years, 0 to 10). Demonstration inflation and discount are all zero, so year-band escalation is 1 and NPV equals nominal.</p>
+<pre>Diesel visits        = ceiling(work km x available days x L/km / (refill litres - detour km x L/km))
+Diesel quantity      = (productive km on available days + refuel visits x detour km) x L/km
+EV grid intensity    = battery kWh/km / (1 - charging loss)
+Public visits        = ceiling(public share x route/auxiliary grid demand
+                               / (grid refill energy - public share x charger detour energy))
+EV grid quantity     = productive route/auxiliary grid demand + public visits x detour energy
+EV service / year    = (Hong Seh 200,000 km schedule total / 200,000) x EV km/year
+Vehicle TCO          = current asset value + purchases + old/new operating + repairs + sale fees
+                       - old-vehicle disposal - year-10 assets - conditional in-horizon vehicle grants
+Site TCO             = initial installed cost + recurring cost + renewal + restoration - recovery
+                       - checked charger grant   (counted once per plan)
+Fleet TCO            = sum of truck-path vehicle TCO + shared site TCO
+Saving %             = (Keep ICE total - plan total) / Keep ICE total
+15% headroom         = 0.85 x Keep ICE total - plan total
+Horizon              = fixed 120 months; demo inflation = 0, demo discount = 0</pre>
+<p class="small">&quot;n.a.&quot; propagates whenever a gating input is missing: a per-truck input status that is not Complete, a site completeness that is not Complete, or a path count that does not equal the included truck count. The model never substitutes zero for an unknown.</p>
+</section>
+
+</main>
+<footer>Hong Seh EV truck TCO calculator. A reviewable planning simulation reverse-engineered from the authoritative workbook. It is not a fleet audit, grant approval, quotation, tax advice or acceptance by any company. Math source of truth: src/engine.js, regenerate this page with <code>node tools/build_index.js</code>.</footer>
+
+<!-- ENGINE:BEGIN  generated from src/engine.js by tools/build_index.js  DO NOT EDIT BY HAND -->
+<!-- src/engine.js SHA-256: 835a38cf65211f92fbc9c6f2baaaf1405c46563dbfe60dd553d8fc33623642e9 -->
+<script>
+/*
+ * Hong Seh EV Truck TCO engine
+ * =============================
+ * Pure, deterministic, dependency-free ES module. No DOM, no network, no
+ * third-party imports, no LLM/API calls. Runs identically in a browser and in
+ * Node (import { computeFleet } from './engine.js').
+ *
+ * It reverse-engineers the authoritative workbook
+ *   "Hong Seh - EV TCO Calculator - Fleet, Charging and Service v5.xlsx"
+ * reproducing the Paths -> Annual build -> Results -> Review calc chain.
+ *
+ * PROVENANCE MAP (Excel sheet!cell -> engine output field)
+ * --------------------------------------------------------
+ *   Results!B9:E9    Truck count                 -> results.truckCount        (Paths!B,C COUNTIFS)
+ *   Results!B10:E10  EVs at month 0              -> results.evMonth0
+ *   Results!B11:E11  EVs at year 10              -> results.evYear10
+ *   Results!B12:E12  Vehicle economic TCO        -> results.vehicleEconomicTco (SUMIFS Annual build!N by plan)
+ *   Results!B13:E13  Net site ownership cost     -> results.netSiteCost        (SUM Results!F45:I55 schedule)
+ *   Results!B14:E14  Total economic TCO          -> results.totalEconomicTco
+ *   Results!B15:E15  Saving vs Keep ICE          -> results.savingVsKeep
+ *   Results!B16:E16  Saving percentage           -> results.savingPct
+ *   Results!B17:E17  15% fleet saving headroom   -> results.headroom15
+ *   Results!B18:E18  Cash less year-10 assets    -> results.cashLessTerminal   (SUM Annual build!O / site cash)
+ *   Results!B19:E19  Day-0 funding before loans  -> results.day0Funding        (SUMIFS Annual build!R + site cash yr0)
+ *   Results!B20:E20  Incremental day-0 funding   -> results.incrementalDay0
+ *   Results!B21:E21  Cost per productive km      -> results.costPerKm          (total / SUMIFS Annual build!S)
+ *   Results!B22:E22  Site completeness / access  -> results.siteStatus         (Energy and charging!B67/C67)
+ *   Results!B23:E23  Vehicle service / evidence  -> results.vehicleStatus      (Paths!Q cascade)
+ *   Results!B24:E24  Saving claim status         -> results.savingClaimStatus
+ *   Results!D26:E26  Max site TCO for 15% saving -> results.maxSiteTco15
+ *   Energy and charging!B60:C60 Input completeness-> site.completeness
+ *   Energy and charging!B61:C61 Gross initial site-> site.grossInitial
+ *   Energy and charging!B62:C62 Annual site cost  -> site.annual
+ *   Energy and charging!B63:C63 Grant budget ceiling-> site.grantCeiling
+ *   Energy and charging!B64:C64 Initial cost less award-> site.initialLessAward
+ *   Energy and charging!B65:C65 Peak depot energy -> site.peakDepotEnergy
+ *   Energy and charging!B66:C66 Total charging hours-> site.chargingHours
+ *   Energy and charging!B67:C67 Access/capacity   -> site.accessCheck
+ *   Energy and charging!B68:C68 EVs using arrangement-> site.evCount
+ *   Review!B7:D18    Reconciliation checks        -> review.*
+ *
+ * The four plan codes mirror Paths!B: 0 = Keep ICE (then new ICE),
+ * 1 = all-new ICE now, 2 = Plan A, 3 = Plan B.
+ *
+ * Excel quirks reproduced faithfully: ROUNDUP (public/diesel visit counts),
+ * EDATE registration dates, old/new month proration at the replacement month,
+ * year-band escalation (1+growth)^max(0,year-1), NPV (1+discount)^-year, the
+ * "n.a." propagation guards (status must be "Complete" and the path count must
+ * equal the included truck count before a numeric total is produced), and the
+ * demonstration defaults (discount = 0, all growth = 0 -> escalation = 1).
+ */
+
+const NA = 'n.a.';
+
+/* ------------------------------------------------------------------ *
+ * Excel-compatible primitives
+ * ------------------------------------------------------------------ */
+function isNum(v) {
+  return typeof v === 'number' && isFinite(v);
+}
+function roundUp(x) {
+  // Excel ROUNDUP(x,0): away-from-zero to the next integer.
+  if (x >= 0) return Math.ceil(x - 1e-9);
+  return -Math.ceil(-x - 1e-9);
+}
+// EDATE(startDate, months): add whole months, clamped to month end.
+function edate(startDate, months) {
+  const d = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate()));
+  const targetMonthIndex = d.getUTCMonth() + months;
+  const y = d.getUTCFullYear() + Math.floor(targetMonthIndex / 12);
+  const m = ((targetMonthIndex % 12) + 12) % 12;
+  const day = d.getUTCDate();
+  const lastDay = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(y, m, Math.min(day, lastDay)));
+}
+function parseDate(v) {
+  if (v instanceof Date) return v;
+  if (typeof v === 'string') {
+    const d = new Date(v);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return null;
+}
+
+/* ------------------------------------------------------------------ *
+ * Input normalisation
+ * ------------------------------------------------------------------ *
+ * Accepts the fixture shape (tools/fixtures/demo_case.json -> .inputs):
+ *   fleet_register.rows   : [{_row, A..S}]           keyed by column letter
+ *   replacement_plan.rows : [{_row, A..AI}]
+ *   operating_costs.rows  : [{_row, label, values:{B,C,D}}]
+ *   energy_and_charging.rows: [{_row, label, values:{B,C,D,E}}]
+ *   products.rows         : [{_row, A..Q}]
+ *   service_costs.rows    : [{_row, A..Z}]
+ */
+function buildModel(inputs) {
+  // Operating costs: row -> B value.
+  const oc = {};
+  for (const r of inputs.operating_costs.rows) {
+    oc[r._row] = r.values ? r.values.B : r.B;
+  }
+
+  // Energy and charging input rows: row -> {B,C}.
+  const ec = {};
+  for (const r of inputs.energy_and_charging.rows) {
+    const v = r.values || r;
+    ec[r._row] = { B: v.B, C: v.C };
+  }
+
+  // Products by model name (col A).
+  const products = {};
+  for (const r of inputs.products.rows) {
+    if (r.A != null) products[r.A] = r;
+  }
+
+  // Fleet register by truck ID (col A), only rows with an ID.
+  const fleet = {};
+  const fleetRows = [];
+  for (const r of inputs.fleet_register.rows) {
+    if (r.A != null) {
+      fleet[r.A] = r;
+      fleetRows.push(r);
+    }
+  }
+
+  // Replacement plan by truck ID (col A).
+  const repl = {};
+  for (const r of inputs.replacement_plan.rows) {
+    if (r.A != null) repl[r.A] = r;
+  }
+
+  const analysisStart = parseDate(oc[63]) || new Date(Date.UTC(2026, 9, 3));
+
+  return { oc, ec, products, fleet, fleetRows, repl, analysisStart };
+}
+
+// VLOOKUP into Fleet register A7:S106, column index (1-based) 2..19 -> B..S.
+const FR_COL = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S'];
+function frLookup(model, id, colIdx) {
+  const row = model.fleet[id];
+  if (!row) return undefined;
+  return row[FR_COL[colIdx]];
+}
+
+// Blank test mirroring Excel's "" / empty cell.
+function blank(v) {
+  return v === '' || v == null;
+}
+
+/* ------------------------------------------------------------------ *
+ * Paths layer: for a truck + plan code produce the Paths! row object.
+ * ------------------------------------------------------------------ */
+const PLAN_TYPE = { 0: 'Keep ICE', 1: 'New ICE', 2: 'Plan A', 3: 'Plan B' };
+
+function buildPath(model, truckId, planCode) {
+  const { oc, ec, products, repl } = model;
+  const rp = repl[truckId] || {};
+  const B7 = rp.B; // EV model
+  const prod = products[B7] || {};
+
+  // C: Included
+  const C = frLookup(model, truckId, 2) === 1 ? 1 : 0;
+
+  // D: New type per plan code.
+  let planLabel; // "Keep ICE" / "New ICE" / "EV"
+  if (planCode === 0) planLabel = 'Keep ICE';
+  else if (planCode === 1) planLabel = 'New ICE';
+  else if (planCode === 2) planLabel = rp.O === 'EV' ? 'EV' : 'ICE';
+  else planLabel = rp.R === 'EV' ? 'EV' : 'ICE';
+  const D = planLabel === 'EV' ? 'EV' : 'ICE';
+
+  // E: Replace month.
+  const coeMonths = frLookup(model, truckId, 10); // Fleet col J
+  let E;
+  if (C === 0) {
+    E = 0;
+  } else if (planCode === 0) {
+    E = blank(rp.M) ? coeMonths : rp.M;
+  } else if (planCode === 1) {
+    E = 0;
+  } else if (planCode === 2) {
+    if (!blank(rp.P)) E = rp.P;
+    else if (rp.O === 'Keep ICE') E = blank(rp.M) ? coeMonths : rp.M;
+    else E = 0;
+  } else {
+    if (!blank(rp.S)) E = rp.S;
+    else if (rp.R === 'Keep ICE') E = blank(rp.M) ? coeMonths : rp.M;
+    else E = 0;
+  }
+
+  // R: Days/year, S: Work km/day, T: public share.
+  const R = C === 0 ? 0 : frLookup(model, truckId, 6);
+  const S = C === 0 ? 0 : frLookup(model, truckId, 5);
+  const T = D === 'EV' ? ec[12].B /* B12 public electricity share */ : 0;
+
+  // F: Current value.
+  let F;
+  if (C === 0) F = 0;
+  else if (planCode === 0) F = frLookup(model, truckId, 11);
+  else if (planCode === 1) F = frLookup(model, truckId, 11);
+  else F = frLookup(model, truckId, 11);
+
+  // U: EV grid kWh/km (battery basis).
+  let U;
+  if (C === 0) U = 0;
+  else if (D === 'EV') {
+    const base = blank(rp.F) ? prod.E : rp.F; // Products col E proxy
+    const denom = rp.G === 'Battery' ? 1 - oc[44] : 1;
+    U = base / denom;
+  } else U = 0;
+
+  // V: Usable battery.
+  let V;
+  if (C === 0) V = 0;
+  else if (D === 'EV') V = blank(rp.E) ? prod.D : rp.E; // Products col D listed battery
+  else V = 0;
+
+  // AD: EV model name, AE: peak load kg, AF: approved payload.
+  const AD = rp.B;
+  const AE = C === 0 ? 0 : frLookup(model, truckId, 8);
+  const AF = blank(rp.H) ? NA : rp.H;
+
+  // AG: depot average kW, AH: accepted depot kW.
+  const AG = rp.J;
+  let AH;
+  if (D === 'EV') {
+    if (rp.K === 'AC') AH = isNum(prod.G) ? prod.G : NA;
+    else AH = isNum(prod.H) ? prod.H : NA;
+  } else AH = 0;
+
+  // AB: EV years.
+  const AB = D === 'EV' ? (120 - E) / 12 : 0;
+
+  // AL: EV MLW kg (Products col B).
+  const AL = D === 'EV' ? (isNum(prod.B) ? prod.B : 0) : 0;
+
+  // AK: registration date = EDATE(start, E).
+  const AK = edate(model.analysisStart, E);
+
+  // AM: depot mode.
+  const AM = rp.K;
+
+  // Input status P (the gate). Reproduce the key cascade; demo inputs are
+  // Complete. We check the essential numeric-presence and validity conditions.
+  const P = inputStatus(model, truckId, planCode, { C, D, E, F, U, V });
+
+  // W: Public visits/year, X: EV grid kWh/year.
+  let W = 0, X = 0;
+  if (C !== 0 && P === 'Complete' && D === 'EV' && E < 120) {
+    if (T === 0) {
+      W = 0;
+    } else {
+      W = roundUp(
+        (T * (R - oc[41]) * (S * U + oc[48] / (1 - oc[44]))) /
+          (V * oc[47] / (1 - oc[44]) - T * oc[12] * U)
+      );
+    }
+    X = (R - oc[41]) * (S * U + oc[48] / (1 - oc[44])) + W * oc[12] * U;
+  }
+
+  // AA: Fuel litres/year (ICE basis, uses new-ICE unavailable days B40).
+  let AA = NA;
+  if (C === 0) AA = 0;
+  else if (P === 'Complete') {
+    const lkm = blank(rp.AH) ? oc[7] : rp.AH;
+    AA = (S * (R - oc[40])) +
+      roundUp((S * (R - oc[40]) * lkm) / (oc[8] - oc[9] * lkm)) * oc[9];
+    AA *= lkm;
+  }
+
+  // AC: Peak public minutes.
+  let AC = 0;
+  if (C === 1 && D === 'EV' && E < 120 && T > 0) {
+    AC = oc[12] / oc[11] * 60 + oc[13] + oc[14] +
+      (V * oc[47] / (1 - oc[44])) / rp.L * 60;
+  }
+
+  // AI: Peak battery kWh.
+  let AI = 0;
+  if (C === 1 && D === 'EV' && E < 120) {
+    const peakRouteKm = frLookup(model, truckId, 7); // Fleet col G
+    AI = (peakRouteKm + (T > 0 ? oc[12] : 0)) * U * (1 - oc[44]) + oc[49];
+  }
+
+  // Y: Peak depot kWh, Z: peak depot hours.
+  let Y = 0, Z = 0;
+  if (C === 1 && D === 'EV' && E < 120) {
+    Y = AI / (1 - oc[44]) * (1 - T);
+    if (T < 1 && AG > 0) Z = Y / AG;
+  }
+
+  // AO: EV odometer km/year, AP: EV servicing/year, AQ: basis.
+  let AO = 0, AP = 0;
+  if (C === 1 && D === 'EV' && E < 120) {
+    AO = (R - oc[41]) * S + W * oc[12];
+    if (oc[68] === 'Hong Seh 200k average') {
+      const rate = isNum(prod.P) ? prod.P : NA;
+      AP = isNum(rate) ? AO * rate : NA;
+    } else {
+      AP = oc[26];
+    }
+  }
+  const AQ = D === 'EV' ? oc[68] : 'Not applicable';
+
+  // G: Purchase.
+  let G;
+  if (C === 0) G = 0;
+  else if (E === 120) G = 0;
+  else {
+    let baseG;
+    if (D === 'ICE') baseG = rp.C; // New ICE all-in quote
+    else baseG = blank(rp.D)
+      ? (isNum(prod.I) ? prod.I + oc[57] : NaN)
+      : rp.D;
+    G = baseG * Math.pow(1 + oc[50], E / 12);
+    if (!isFinite(G)) G = NA;
+  }
+
+  // H: Gross disposal.
+  let H;
+  if (C === 0) H = 0;
+  else if (E === 0) H = F;
+  else {
+    // H7 = L + M * MAX(0, J - E) / N  (Fleet cols L=12 scrap, M=13 straight-line,
+    // J=10 COE months left, N=14 COE term months).
+    const coeLeft = frLookup(model, truckId, 10);
+    const L = frLookup(model, truckId, 12);
+    const M = frLookup(model, truckId, 13);
+    const N = frLookup(model, truckId, 14);
+    H = L + M * Math.max(0, coeLeft - E) / N;
+    if (!isFinite(H)) H = NA;
+  }
+
+  // I: Year-10 asset.
+  let I;
+  if (C === 0) I = 0;
+  else if (E === 120) I = 0;
+  else if (planCode === 0) I = rp.N; // Keep terminal at year 10
+  else if (planCode === 1) I = blank(rp.AI) ? oc[56] : rp.AI; // New ICE terminal
+  else if (planCode === 2) I = rp.Q; // A year-10 value
+  else I = rp.T; // B year-10 value
+
+  // J: Old energy/year, K: Old other/year, L: New energy/year, M: New other/year.
+  const dieselPrice = ec[9].B * ec[7].B + (1 - ec[9].B) * ec[8].B; // commercial/public blend
+  let J = NA, K = NA, Lnrg = NA, Mother = NA;
+  if (C === 0) { J = 0; K = 0; Lnrg = 0; Mother = 0; }
+  else if (P === 'Complete') {
+    // J7 = ((S*(R-B39)) + ROUNDUP(S*(R-B39)*lkm/(B8-B9*lkm),0)*B9) * lkm * dieselPrice * B23
+    const lkmOld = blank(rp.AG) ? oc[7] : rp.AG;
+    const detourVisits = roundUp((S * (R - oc[39]) * lkmOld) / (oc[8] - oc[9] * lkmOld));
+    const litresOldTotal = ((S * (R - oc[39])) + detourVisits * oc[9]) * lkmOld;
+    J = litresOldTotal * dieselPrice * oc[23];
+
+    // K: Old other/year.
+    const avoidOld = detourVisits * (oc[9] / oc[11] + oc[10] / 60) * oc[19] * oc[21];
+    K = (oc[24] + oc[27] + oc[29] + oc[31] + oc[33] + oc[34] + oc[37] + (rp.W || 0)) +
+      oc[39] * oc[42] + avoidOld;
+
+    // L: New energy/year.
+    if (D === 'EV') {
+      Lnrg = X * ((1 - T) * ec[10].B + T * ec[11].B) * oc[22];
+    } else {
+      Lnrg = AA * dieselPrice * oc[23];
+    }
+
+    // M: New other/year.
+    if (D === 'ICE') {
+      const lkmNew = blank(rp.AH) ? oc[7] : rp.AH;
+      const detourNew = roundUp((S * (R - oc[40]) * lkmNew) / (oc[8] - oc[9] * lkmNew));
+      const avoidNew = detourNew * (oc[9] / oc[11] + oc[10] / 60) * oc[19] * oc[21];
+      Mother = (oc[25] + oc[27] + oc[29] + oc[31] + oc[33] + oc[35] + oc[37] + (rp.X || 0)) +
+        oc[40] * oc[42] + avoidNew;
+    } else {
+      const evPaidTime =
+        (T * X / rp.L +
+          W * (oc[12] / oc[11] + (oc[13] + oc[14]) / 60) +
+          (R - oc[41]) * ((T < 1 ? oc[16] : 0) + oc[17]) / 60) * oc[19] * oc[20];
+      Mother = (AP + oc[28] + oc[30] + oc[32] + oc[33] + oc[36] + oc[38] + (rp.Y || 0)) +
+        oc[41] * oc[43] + W * oc[15] + evPaidTime;
+    }
+  }
+
+  // N: Grant, O: Grant month.
+  const AA_offset = rp.AA || 0;
+  let Ngrant = 0;
+  if (planCode === 1 && D === 'EV' && E < 120 && E + AA_offset <= 120) {
+    Ngrant = rp.Z || 0;
+  }
+  const Omonth = E + AA_offset;
+
+  // Q: Service status.
+  const Q = serviceStatus(model, truckId, planCode, {
+    C, D, E, P, AF, AE, AI, V, AB, AC, AG, AH, T,
+  });
+
+  return {
+    truckId, planCode, C, D, E, F, G, H, I,
+    J, K, L: Lnrg, M: Mother, N: Ngrant, O: Omonth,
+    P, Q, R, S, T, U, V, W, X, Y, Z, AA, AB, AC, AD, AE, AF, AG, AH, AI,
+    AK, AL, AM, AO, AP, AQ,
+  };
+}
+
+/* Input status P cascade (Paths!P). The demonstration data is Complete; this
+ * reproduces the material guards so missing/invalid inputs propagate "n.a.". */
+function inputStatus(model, truckId, planCode, d) {
+  const { oc } = model;
+  const { C, D, E } = d;
+  if (C === 0) return 'Excluded';
+  // Essential numeric presence from Fleet register (cols 5,6,10,11,12,13,14).
+  const needed = [5, 6, 10, 11, 12, 13, 14].map((c) => frLookup(model, truckId, c));
+  if (needed.some((x) => !isNum(x))) return 'Missing vehicle input';
+  if (!(frLookup(model, truckId, 14) > 0)) return 'Missing vehicle input';
+  if (!isNum(E)) return 'Missing vehicle input';
+  // Validity.
+  const daysYear = frLookup(model, truckId, 6);
+  if (
+    E < 0 || E > frLookup(model, truckId, 10) || E > 120 || E !== Math.trunc(E) ||
+    daysYear <= 0 || daysYear > 366 ||
+    frLookup(model, truckId, 5) < 0 || frLookup(model, truckId, 11) < 0 ||
+    oc[8] <= oc[7] * oc[9] || oc[11] <= 0 ||
+    oc[39] > daysYear || oc[40] > daysYear || oc[41] > daysYear
+  ) return 'Invalid vehicle input';
+  // EV-specific validity.
+  if (D === 'EV' && E < 120) {
+    if (
+      !isNum(d.U) || !isNum(d.V) || d.V <= 0 || d.T < 0 || d.T > 1 ||
+      oc[44] < 0 || oc[44] >= 1 || oc[47] <= 0 || oc[47] > 1
+    ) return 'Invalid EV input';
+  }
+  return 'Complete';
+}
+
+/* Service status Q cascade (Paths!Q). */
+function serviceStatus(model, truckId, planCode, d) {
+  const { oc, repl, products } = model;
+  const rp = repl[truckId] || {};
+  const prod = products[rp.B] || {};
+  const { C, D, E, P } = d;
+  if (C === 0) return 'Excluded';
+  if (P !== 'Complete') return P;
+
+  const AD = rp.AD; // ICE life months (Replacement plan col AD)
+  const iceLife = rp.AD;
+  const evLife = rp.AC;
+  const bodyFits = rp.I;
+
+  const fails =
+    (isNum(iceLife) && iceLife < 120 - E) ||
+    (D === 'EV' && E < 120 && (
+      (isNum(evLife) && evLife < 120 - E) ||
+      bodyFits === 'No' ||
+      (isNum(d.AF) && d.AE > d.AF) ||
+      d.AI > d.V * Math.pow(1 - oc[46], Math.max(0, d.AB - 1)) * (1 - oc[45]) ||
+      d.AC > oc[18] ||
+      (d.T < 1 && (d.AG <= 0 || (isNum(d.AH) && d.AG > d.AH))) ||
+      (isNum(prod.H) && rp.L > prod.H)
+    ));
+  if (fails) return 'Fails entered limits';
+
+  if (D === 'EV' && E < 120) {
+    const unverified =
+      !isNum(frLookup(model, truckId, 7)) ||
+      !isNum(frLookup(model, truckId, 8)) ||
+      !isNum(d.AF) ||
+      bodyFits !== 'Yes' ||
+      !isNum(d.AH) ||
+      oc[59] !== 'Yes' ||
+      oc[58] !== 'Yes';
+    if (unverified) return 'Unverified';
+  }
+  return 'Within entered limits';
+}
+
+/* ------------------------------------------------------------------ *
+ * Annual build layer: one path -> 11 yearly records (years 0..10).
+ * ------------------------------------------------------------------ */
+function buildAnnual(model, path) {
+  const { oc } = model;
+  const rows = [];
+  const included = path.C === 1;
+  const complete = path.P === 'Complete';
+  const feeWhenSold = frLookup(model, path.truckId, 16); // Fleet col P
+  const debtIfSold = frLookup(model, path.truckId, 15); // Fleet col O
+
+  for (let year = 0; year <= 10; year++) {
+    const rec = { year, path };
+    // E: Old months, F: New months.
+    let Emo, Fmo;
+    if (!included || year === 0) { Emo = 0; }
+    else Emo = Math.max(0, Math.min(year * 12, path.E) - (year - 1) * 12);
+    if (!included || year === 0) { Fmo = 0; }
+    else Fmo = 12 - Emo;
+    rec.oldMonths = Emo;
+    rec.newMonths = Fmo;
+
+    // Columns G..T gated: if NOT Paths!C=1 -> 0; elif P!=Complete -> n.a.
+    if (!included) {
+      Object.assign(rec, zeroYear());
+      rows.push(rec);
+      continue;
+    }
+    if (!complete) {
+      Object.assign(rec, naYear());
+      rows.push(rec);
+      continue;
+    }
+
+    const replacedThisYear = inPeriod(path.E, year);
+    const grantThisYear = inPeriod(path.O, year);
+
+    // G: Old operating (prorated by old months, year-band escalation).
+    const G = Emo / 12 * (
+      path.J * Math.pow(1 + oc[51], Math.max(0, year - 1)) +
+      path.K * Math.pow(1 + oc[53], Math.max(0, year - 1))
+    );
+    // H: New operating.
+    const newEnergyGrowth = path.D === 'EV' ? oc[52] : oc[51];
+    const H = Fmo / 12 * (
+      path.L * Math.pow(1 + newEnergyGrowth, Math.max(0, year - 1)) +
+      path.M * Math.pow(1 + oc[53], Math.max(0, year - 1))
+    );
+    // I: Purchase (at replacement year).
+    const I = replacedThisYear ? numOr0(path.G) : 0;
+    // J: Disposal.
+    const Jd = replacedThisYear ? numOr0(path.H) : 0;
+    // K: Grant.
+    const Kg = grantThisYear ? numOr0(path.N) : 0;
+    // L: Terminal asset (year 10).
+    const Lt = year === 10 ? numOr0(path.I) : 0;
+    // M: Scheduled repair.
+    let Mr = 0;
+    const evRepairMonth = path.E + oc[65];
+    if (path.D === 'EV' && path.E < 120 && evRepairMonth > path.E && evRepairMonth <= 120 &&
+      inPeriod(evRepairMonth, year)) {
+      Mr += oc[64];
+    }
+    if (oc[67] > 0 && oc[67] <= 120 &&
+      (path.D === 'ICE' || oc[67] <= path.E) &&
+      inPeriod(oc[67], year)) {
+      Mr += oc[66];
+    }
+    // N: Economic cost.
+    const currentValY0 = year === 0 ? path.F : 0;
+    const feeAtReplace = replacedThisYear ? numOr0(feeWhenSold) : 0;
+    const N = (G + H + I) - Jd - Kg - Lt + Mr + currentValY0 + feeAtReplace;
+    // O: Cash less terminal assets.
+    const O = N - currentValY0;
+    // P: Cash before terminal assets.
+    const Pc = O + Lt;
+    // Q: NPV economic.
+    const Qnpv = N * Math.pow(1 + oc[54], -year);
+    // R: Replacement funding at year 0 (only year 0 & replace-now).
+    let Rf = 0;
+    if (year === 0 && path.E === 0) {
+      Rf = I - Jd - Kg + numOr0(debtIfSold) + numOr0(feeWhenSold);
+    }
+    // S: Work km, T: Jobs.
+    const Sk = year === 0 ? 0 : path.S * path.R;
+    const jobsPerDay = frLookup(model, path.truckId, 9); // Fleet col I
+    const Tj = year === 0 ? 0 : jobsPerDay * path.R;
+
+    Object.assign(rec, {
+      G, H, I, J: Jd, K: Kg, L: Lt, M: Mr, N, O, P: Pc, Q: Qnpv, R: Rf, S: Sk, T: Tj,
+    });
+    rows.push(rec);
+  }
+  return rows;
+}
+function inPeriod(month, year) {
+  if (month === 0) return year === 0;
+  return year > 0 && month > (year - 1) * 12 && month <= year * 12;
+}
+function numOr0(v) { return isNum(v) ? v : 0; }
+function zeroYear() {
+  return { G: 0, H: 0, I: 0, J: 0, K: 0, L: 0, M: 0, N: 0, O: 0, P: 0, Q: 0, R: 0, S: 0, T: 0 };
+}
+function naYear() {
+  return { G: NA, H: NA, I: NA, J: NA, K: NA, L: NA, M: NA, N: NA, O: NA, P: NA, Q: NA, R: NA, S: NA, T: NA };
+}
+
+/* ------------------------------------------------------------------ *
+ * Energy and charging site build-up and gates (Energy and charging!59-68).
+ * ------------------------------------------------------------------ */
+function siteColumn(model, allPaths, planCode, col /* 'B' or 'C' */) {
+  const { ec, oc } = model;
+  const v = (row) => ec[row][col];
+  const completeness = siteCompleteness(model, allPaths, planCode, col);
+
+  // Gross initial site cost (row 61).
+  let grossInitial;
+  if (completeness === 'No EV site') grossInitial = 0;
+  else if (completeness === 'Public only') grossInitial = v(27);
+  else if (completeness === 'Complete') {
+    grossInitial = v(16) * (v(18) + v(19) + v(20) + v(21) + v(22)) +
+      (v(23) + v(24) + v(25) + v(26) + v(27));
+  } else grossInitial = NA;
+
+  // Annual site cost (row 62).
+  let annual;
+  if (completeness === 'No EV site') annual = 0;
+  else if (completeness === 'Public only') annual = v(29);
+  else if (completeness === 'Complete') {
+    annual = 12 * v(28) + (v(29) + v(30) + v(31)) + v(16) * v(32);
+  } else annual = NA;
+
+  // Grant budget ceiling (row 63).
+  let grantCeiling;
+  if (v(47) === 0) grantCeiling = 0;
+  else if (isNum(v(48))) grantCeiling = Math.min(30000, 0.5 * v(48)) * Math.min(3, v(47));
+  else grantCeiling = NA;
+
+  // Initial cost less award (row 64).
+  let initialLessAward;
+  if (isNum(grossInitial)) {
+    initialLessAward = grossInitial - (completeness === 'Complete' ? v(44) : 0);
+  } else initialLessAward = NA;
+
+  // Peak depot energy (row 65) and charging hours (row 66): SUMIFS over paths.
+  let peakDepotEnergy = 0, chargingHours = 0;
+  for (const p of allPaths) {
+    if (p.planCode === planCode && p.C === 1) {
+      peakDepotEnergy += p.Y;
+      chargingHours += p.Z;
+    }
+  }
+
+  // EVs using arrangement (row 68).
+  let evCount = 0;
+  for (const p of allPaths) {
+    if (p.planCode === planCode && p.C === 1 && p.D === 'EV' && p.E < 120) evCount++;
+  }
+
+  const accessCheck = siteAccessCheck(model, allPaths, planCode, col, {
+    completeness, peakDepotEnergy, chargingHours,
+  });
+
+  return {
+    completeness, grossInitial, annual, grantCeiling, initialLessAward,
+    peakDepotEnergy, chargingHours, accessCheck, evCount,
+  };
+}
+
+function siteCompleteness(model, allPaths, planCode, col) {
+  const { ec } = model;
+  const v = (row) => ec[row][col];
+  // B68/C68 (row 68) is the site arrangement switch "charger rated input power"
+  // but the completeness formula reads B68 ("=0" => No EV site). In the sheet
+  // B68 refers to EVs-using count only via COUNTIFS; the completeness uses the
+  // computed EV count. Here we mirror: No EV site when no EV paths use it.
+  let evCount = 0;
+  for (const p of allPaths) {
+    if (p.planCode === planCode && p.C === 1 && p.D === 'EV' && p.E < 120) evCount++;
+  }
+  if (evCount === 0) return 'No EV site';
+  if (v(12) === 1) {
+    // Public only branch.
+    if (isNum(v(27)) && v(27) >= 0 && isNum(v(29)) && v(29) >= 0 &&
+      isNum(v(33)) && v(33) >= 0 && v(33) <= 120 && v(33) === Math.trunc(v(33))) {
+      return 'Public only';
+    }
+    return 'Missing public fixed cost';
+  }
+  // Complete branch requires all site-quote numerics present.
+  const quoteRows = [18, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+    33, 34, 35, 36, 37, 38, 40, 41, 42, 43, 44, 45, 47, 50, 51];
+  const allPresent = quoteRows.every((r) => isNum(v(r)));
+  if (!allPresent) return 'Missing site quote';
+  // Review-site-inputs guards (subset).
+  if (
+    quoteRows.some((r) => v(r) < 0) ||
+    v(16) < 1 || v(17) < 1 || v(33) > 120 || v(33) !== Math.trunc(v(33)) ||
+    v(34) <= 0 || v(51) <= 0 || v(12) < 0 || v(12) > 1
+  ) return 'Review site inputs';
+  if (
+    !isNum(v(56)) || v(56) <= 0 ||
+    v(16) !== Math.trunc(v(16)) || v(17) !== Math.trunc(v(17)) ||
+    v(34) !== Math.trunc(v(34)) ||
+    v(43) < v(33) || v(38) < v(33) || v(41) < v(33)
+  ) return 'Review site inputs';
+  return 'Complete';
+}
+
+function siteAccessCheck(model, allPaths, planCode, col, s) {
+  const { ec } = model;
+  const v = (row) => ec[row][col];
+  let evCount = 0;
+  for (const p of allPaths) {
+    if (p.planCode === planCode && p.C === 1 && p.D === 'EV' && p.E < 120) evCount++;
+  }
+  if (evCount === 0) return 'No EV';
+  if (v(12) === 1) {
+    return v(55) === 'Yes' ? 'Public access entered' : 'Public access unconfirmed';
+  }
+  if (s.completeness !== 'Complete') return s.completeness;
+  const powerLimit = Math.min(v(50), v(16) * v(56)) * v(51);
+  const hoursLimit = v(17) * v(51);
+  if (s.peakDepotEnergy > powerLimit || s.chargingHours > hoursLimit) return 'Site timing/power fails';
+  if (v(52) !== 'Yes' || v(53) !== 'Yes' || v(54) !== 'Verified') return 'Site unverified';
+  return 'Within entered site limits';
+}
+
+/* Per-year site economic/cash schedule (Results!F45:I55). */
+function siteYearSchedule(model, site, planCode, col) {
+  const { ec, oc } = model;
+  const v = (row) => ec[row][col];
+  const econ = [];
+  const cash = [];
+  for (let y = 0; y <= 10; y++) {
+    let e;
+    if (site.completeness === 'No EV site') {
+      e = 0;
+    } else if (site.completeness === 'Public only') {
+      const install = inPeriod(v(33), y) ? v(27) : 0;
+      const recurring = recurringFraction(v(33), y) * v(29) * Math.pow(1 + oc[53], Math.max(0, y - 1));
+      e = install + recurring;
+    } else if (site.completeness === 'Complete') {
+      const install = inPeriod(v(33), y) ? site.grossInitial : 0;
+      const recurring = recurringFraction(v(33), y) * site.annual * Math.pow(1 + oc[53], Math.max(0, y - 1));
+      const grant = inPeriod(v(45), y) ? v(44) : 0;
+      const replSite = inPeriod(v(38), y) ? v(37) : 0;
+      const chargerRepl = inPeriod(v(41), y) ? v(16) * v(40) : 0;
+      const restoration = inPeriod(v(33) + v(34), y) ? v(36) : 0;
+      const recovery = y === 10 ? v(35) : 0;
+      e = install + recurring - grant + replSite + chargerRepl + restoration - recovery;
+    } else {
+      e = NA;
+    }
+    econ.push(e);
+    // Cash adds refundable deposit effect.
+    if (isNum(e)) {
+      let c = e;
+      if (site.completeness === 'Complete') {
+        if (inPeriod(v(33), y)) c += v(42);
+        if (inPeriod(v(43), y)) c -= v(42);
+      }
+      cash.push(c);
+    } else {
+      cash.push(NA);
+    }
+  }
+  return { econ, cash };
+}
+// Recurring annual fraction of the site operating cost in a given year, based
+// on the install month (Results!F46.. pattern: MAX(0,MIN(y*12,120)-MAX((y-1)*12,install))/12).
+function recurringFraction(installMonth, year) {
+  if (year === 0) return 0;
+  const start = Math.max((year - 1) * 12, installMonth);
+  const end = Math.min(year * 12, 120);
+  return Math.max(0, end - start) / 12;
+}
+
+/* ------------------------------------------------------------------ *
+ * Results aggregation.
+ * ------------------------------------------------------------------ */
+function aggregate(model, allPaths, annualByPlan, sites, siteSchedules) {
+  const includedTruckCount = model.fleetRows.reduce((a, r) => a + (r.B === 1 ? 1 : 0), 0);
+
+  const perPlan = {};
+  for (const code of [0, 1, 2, 3]) {
+    const paths = allPaths.filter((p) => p.planCode === code);
+    const annual = annualByPlan[code];
+
+    const truckCount = paths.filter((p) => p.C === 1).length;
+    const evMonth0 = paths.filter((p) => p.C === 1 && p.D === 'EV' && p.E === 0).length;
+    const evYear10 = paths.filter((p) => p.C === 1 && p.D === 'EV' && p.E < 120).length;
+
+    // Gate: all included paths Complete AND path count == included truck count.
+    const allComplete = paths.filter((p) => p.C === 1 && p.P !== 'Complete').length === 0;
+    const countMatch = truckCount === includedTruckCount;
+    const gate = allComplete && countMatch;
+
+    // Vehicle economic TCO = SUMIFS Annual build!N by plan.
+    let vehicleEconomicTco = NA;
+    if (gate) vehicleEconomicTco = sumAnnual(annual, 'N');
+
+    // Net site ownership cost (Keep ICE / New ICE = 0).
+    let netSiteCost;
+    if (code === 0 || code === 1) netSiteCost = 0;
+    else {
+      const sched = siteSchedules[code];
+      netSiteCost = sched.econ.every(isNum) ? sched.econ.reduce((a, b) => a + b, 0) : NA;
+    }
+
+    // Total economic TCO.
+    const totalEconomicTco = (isNum(vehicleEconomicTco) && isNum(netSiteCost))
+      ? vehicleEconomicTco + netSiteCost : NA;
+
+    // Cash less year-10 assets (SUM Annual build!O + site cash schedule).
+    let cashLessTerminal;
+    if (code === 0 || code === 1) {
+      cashLessTerminal = annual.every((r) => isNum(r.O)) ? sumAnnual(annual, 'O') : NA;
+    } else {
+      const sched = siteSchedules[code];
+      const vehOk = annual.every((r) => isNum(r.O));
+      cashLessTerminal = (vehOk && sched.cash.every(isNum))
+        ? sumAnnual(annual, 'O') + sched.cash.reduce((a, b) => a + b, 0) : NA;
+    }
+
+    // Day-0 funding before loans.
+    let day0Funding = NA;
+    if (code === 0 || code === 1) {
+      if (gate) day0Funding = sumAnnual(annual, 'R');
+    } else {
+      const sched = siteSchedules[code];
+      if (gate && isNum(sched.cash[0])) day0Funding = sumAnnual(annual, 'R') + sched.cash[0];
+    }
+
+    // Cost per productive km.
+    const workKm = sumAnnual(annual, 'S');
+    const costPerKm = (isNum(totalEconomicTco) && workKm > 0) ? totalEconomicTco / workKm : NA;
+
+    // Status strings.
+    let siteStatus;
+    if (code === 0 || code === 1) siteStatus = 'Not applicable';
+    else siteStatus = sites[code].accessCheck;
+
+    const vehicleStatus = vehicleServiceStatus(paths, allComplete && countMatch);
+
+    perPlan[code] = {
+      truckCount, evMonth0, evYear10,
+      vehicleEconomicTco, netSiteCost, totalEconomicTco,
+      cashLessTerminal, day0Funding, costPerKm,
+      siteStatus, vehicleStatus,
+    };
+  }
+
+  // Derived cross-plan metrics (relative to Keep ICE = code 0).
+  const keepTotal = perPlan[0].totalEconomicTco;
+  const keepDay0 = perPlan[0].day0Funding;
+  for (const code of [0, 1, 2, 3]) {
+    const pp = perPlan[code];
+    pp.savingVsKeep = (isNum(keepTotal) && isNum(pp.totalEconomicTco)) ? keepTotal - pp.totalEconomicTco : NA;
+    pp.savingPct = (isNum(pp.savingVsKeep) && isNum(keepTotal) && keepTotal > 0) ? pp.savingVsKeep / keepTotal : NA;
+    pp.headroom15 = (isNum(keepTotal) && isNum(pp.totalEconomicTco)) ? 0.85 * keepTotal - pp.totalEconomicTco : NA;
+    pp.incrementalDay0 = (isNum(pp.day0Funding) && isNum(keepDay0)) ? pp.day0Funding - keepDay0 : NA;
+    pp.maxSiteTco15 = (isNum(keepTotal) && isNum(pp.vehicleEconomicTco)) ? 0.85 * keepTotal - pp.vehicleEconomicTco : NA;
+    pp.savingClaimStatus = savingClaimStatus(model, pp, code);
+  }
+
+  return { perPlan, includedTruckCount };
+}
+
+function sumAnnual(annual, field) {
+  let s = 0;
+  for (const r of annual) if (isNum(r[field])) s += r[field];
+  return s;
+}
+
+function vehicleServiceStatus(paths, gate) {
+  if (!gate) return 'Missing/invalid vehicle inputs';
+  const inc = paths.filter((p) => p.C === 1);
+  if (inc.some((p) => p.Q === 'Fails entered limits')) return 'Fails entered limits';
+  if (inc.some((p) => p.Q === 'Unverified')) return 'Vehicle evidence open';
+  return 'Within entered limits';
+}
+
+function savingClaimStatus(model, pp, code) {
+  const { oc } = model;
+  if (!isNum(pp.totalEconomicTco)) return 'Total incomplete';
+  const customerMode = oc[61] === 'Customer';
+  const energyConfirmed = oc[60] === 'Yes';
+  const diagnostic =
+    pp.truckCount <= 0 || !isNum(pp.savingPct) ||
+    pp.vehicleStatus !== 'Within entered limits' ||
+    !customerMode || !energyConfirmed;
+  if (diagnostic) return 'Diagnostic only';
+  return pp.savingPct >= 0.15 ? 'Meets entered 15% target' : 'Below entered 15% target';
+}
+
+/* ------------------------------------------------------------------ *
+ * Review reconciliation (Review!B7:D18).
+ * ------------------------------------------------------------------ */
+function buildReview(model, allPaths, annualByPlan, perPlan, sites, includedTruckCount) {
+  const check = (actual, expected) =>
+    (isNum(actual) && isNum(expected)) ? (Math.abs(actual - expected) < 0.005 ? 'PASS' : 'FAIL') : 'Not available';
+
+  // Fixed ten-year duty coverage: sum old+new months across plan code 0.
+  let dutyCoverage = 0;
+  for (const r of annualByPlan[0]) {
+    dutyCoverage += (isNum(r.oldMonths) ? r.oldMonths : 0) + (isNum(r.newMonths) ? r.newMonths : 0);
+  }
+  const dutyExpected = includedTruckCount * 120;
+
+  // Economic/cash bridge = Total - Cash-less-terminal - SUMPRODUCT(include, market value now).
+  // Fleet register col K (index 11) = "Market value now".
+  const feeSum = model.fleetRows.reduce(
+    (a, r) => a + (r.B === 1 ? numOr0(frLookup(model, r.A, 11)) : 0), 0
+  );
+  const keepBridge = (isNum(perPlan[0].totalEconomicTco) && isNum(perPlan[0].cashLessTerminal))
+    ? perPlan[0].totalEconomicTco - perPlan[0].cashLessTerminal - feeSum : NA;
+  const newBridge = (isNum(perPlan[1].totalEconomicTco) && isNum(perPlan[1].cashLessTerminal))
+    ? perPlan[1].totalEconomicTco - perPlan[1].cashLessTerminal - feeSum : NA;
+  const planABridge = isNum(perPlan[2].totalEconomicTco)
+    ? perPlan[2].totalEconomicTco - perPlan[2].cashLessTerminal - feeSum : NA;
+  const planBBridge = isNum(perPlan[3].totalEconomicTco)
+    ? perPlan[3].totalEconomicTco - perPlan[3].cashLessTerminal - feeSum : NA;
+
+  const review = {
+    dutyCoverage: { actual: dutyCoverage, expected: dutyExpected, status: check(dutyCoverage, dutyExpected) },
+    includedTrucks: { actual: includedTruckCount, expected: perPlan[0].truckCount, status: check(includedTruckCount, perPlan[0].truckCount) },
+    keepBridge: { actual: keepBridge, expected: 0, status: check(keepBridge, 0) },
+    newBridge: { actual: newBridge, expected: 0, status: check(newBridge, 0) },
+    planABridge: { actual: planABridge, expected: 0, status: isNum(planABridge) ? check(planABridge, 0) : 'Not available' },
+    planBBridge: { actual: planBBridge, expected: 0, status: isNum(planBBridge) ? check(planBBridge, 0) : 'Not available' },
+    planAEvCount: { actual: perPlan[2].evYear10, expected: sites[2].evCount, status: check(perPlan[2].evYear10, sites[2].evCount) },
+    planBEvCount: { actual: perPlan[3].evYear10, expected: sites[3].evCount, status: check(perPlan[3].evYear10, sites[3].evCount) },
+    vehiclePathServiceFormulas: { actual: allPaths.length, expected: 400, status: check(allPaths.length, 400) },
+  };
+  return review;
+}
+
+/* ------------------------------------------------------------------ *
+ * Public API
+ * ------------------------------------------------------------------ */
+function computeFleet(inputs) {
+  const model = buildModel(inputs);
+
+  // Paths: for every truck row (up to 100) x 4 plan codes = 400 rows.
+  const allPaths = [];
+  for (const fr of model.fleetRows) {
+    const truckId = fr.A;
+    for (const planCode of [0, 1, 2, 3]) {
+      allPaths.push(buildPath(model, truckId, planCode));
+    }
+  }
+
+  // Annual build grouped by plan code.
+  const annualByPlan = { 0: [], 1: [], 2: [], 3: [] };
+  for (const p of allPaths) {
+    const rows = buildAnnual(model, p);
+    for (const r of rows) annualByPlan[p.planCode].push(r);
+  }
+
+  // Site build-up for Plan A (col B) and Plan B (col C).
+  const sites = {
+    0: null, 1: null,
+    2: siteColumn(model, allPaths, 2, 'B'),
+    3: siteColumn(model, allPaths, 3, 'C'),
+  };
+  const siteSchedules = {
+    2: siteYearSchedule(model, sites[2], 2, 'B'),
+    3: siteYearSchedule(model, sites[3], 3, 'C'),
+  };
+
+  const { perPlan, includedTruckCount } = aggregate(model, allPaths, annualByPlan, sites, siteSchedules);
+  const review = buildReview(model, allPaths, annualByPlan, perPlan, sites, includedTruckCount);
+
+  // Shape the headline results into the canonical structure.
+  const results = shapeResults(perPlan, sites);
+
+  return { results, review, sites, perPlan, pathCount: allPaths.length, includedTruckCount };
+}
+
+function shapeResults(perPlan, sites) {
+  const planKey = { 0: 'keep_ice', 1: 'all_new_ice', 2: 'plan_a', 3: 'plan_b' };
+  const metric = (field) => {
+    const o = {};
+    for (const code of [0, 1, 2, 3]) o[planKey[code]] = perPlan[code][field];
+    return o;
+  };
+  return {
+    truckCount: metric('truckCount'),
+    evMonth0: metric('evMonth0'),
+    evYear10: metric('evYear10'),
+    vehicleEconomicTco: metric('vehicleEconomicTco'),
+    netSiteCost: metric('netSiteCost'),
+    totalEconomicTco: metric('totalEconomicTco'),
+    savingVsKeep: metric('savingVsKeep'),
+    savingPct: metric('savingPct'),
+    headroom15: metric('headroom15'),
+    cashLessTerminal: metric('cashLessTerminal'),
+    day0Funding: metric('day0Funding'),
+    incrementalDay0: metric('incrementalDay0'),
+    costPerKm: metric('costPerKm'),
+    siteStatus: metric('siteStatus'),
+    vehicleStatus: metric('vehicleStatus'),
+    savingClaimStatus: metric('savingClaimStatus'),
+    maxSiteTco15: { plan_a: perPlan[2].maxSiteTco15, plan_b: perPlan[3].maxSiteTco15 },
+  };
+}
+
+
+window.HSEngine = { computeFleet: computeFleet, NA: NA };
+</script>
+<!-- ENGINE:END -->
+
+<!-- DEMO:BEGIN  generated from tools/fixtures/demo_case.json by tools/build_index.js  DO NOT EDIT BY HAND -->
+<script>
+window.HSDemoCase = {"inputs":{"fleet_register":{"range":"A7:S106","rows":[{"_row":7,"A":"T001","B":1,"C":"Ambient demo","D":"Box","E":150,"F":300,"G":165,"H":1200,"I":24,"J":12,"K":24000,"L":10000,"M":60000,"N":120,"O":0,"P":0,"Q":"DEMO-1","R":9,"S":null},{"_row":8,"A":"T002","B":1,"C":"Ambient demo","D":"Box","E":150,"F":300,"G":165,"H":1200,"I":24,"J":24,"K":30000,"L":10000,"M":60000,"N":120,"O":0,"P":0,"Q":"DEMO-2","R":8,"S":null},{"_row":9,"A":"T003","B":1,"C":"Ambient demo","D":"Box","E":150,"F":300,"G":165,"H":1200,"I":24,"J":36,"K":36000,"L":10000,"M":60000,"N":120,"O":0,"P":0,"Q":"DEMO-3","R":7,"S":null},{"_row":10,"A":"T004","B":1,"C":"Ambient demo","D":"Box","E":150,"F":300,"G":165,"H":1200,"I":24,"J":48,"K":42000,"L":10000,"M":60000,"N":120,"O":0,"P":0,"Q":"DEMO-4","R":6,"S":null},{"_row":11,"A":"T005","B":1,"C":"Ambient demo","D":"Box","E":150,"F":300,"G":165,"H":1200,"I":24,"J":60,"K":48000,"L":10000,"M":60000,"N":120,"O":0,"P":0,"Q":"DEMO-5","R":5,"S":null},{"_row":12,"A":"T006","B":1,"C":"Ambient demo","D":"Box","E":150,"F":300,"G":165,"H":1200,"I":24,"J":72,"K":54000,"L":10000,"M":60000,"N":120,"O":0,"P":0,"Q":"DEMO-6","R":4,"S":null},{"_row":13,"A":"T007","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":14,"A":"T008","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":15,"A":"T009","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":16,"A":"T010","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":17,"A":"T011","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":18,"A":"T012","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":19,"A":"T013","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":20,"A":"T014","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":21,"A":"T015","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":22,"A":"T016","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":23,"A":"T017","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":24,"A":"T018","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":25,"A":"T019","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":26,"A":"T020","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":27,"A":"T021","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":28,"A":"T022","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":29,"A":"T023","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":30,"A":"T024","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":31,"A":"T025","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":32,"A":"T026","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":33,"A":"T027","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":34,"A":"T028","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":35,"A":"T029","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":36,"A":"T030","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":37,"A":"T031","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":38,"A":"T032","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":39,"A":"T033","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":40,"A":"T034","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":41,"A":"T035","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":42,"A":"T036","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":43,"A":"T037","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":44,"A":"T038","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":45,"A":"T039","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":46,"A":"T040","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":47,"A":"T041","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":48,"A":"T042","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":49,"A":"T043","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":50,"A":"T044","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":51,"A":"T045","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":52,"A":"T046","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":53,"A":"T047","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":54,"A":"T048","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":55,"A":"T049","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":56,"A":"T050","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":57,"A":"T051","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":58,"A":"T052","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":59,"A":"T053","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":60,"A":"T054","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":61,"A":"T055","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":62,"A":"T056","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":63,"A":"T057","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":64,"A":"T058","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":65,"A":"T059","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":66,"A":"T060","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":67,"A":"T061","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":68,"A":"T062","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":69,"A":"T063","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":70,"A":"T064","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":71,"A":"T065","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":72,"A":"T066","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":73,"A":"T067","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":74,"A":"T068","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":75,"A":"T069","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":76,"A":"T070","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":77,"A":"T071","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":78,"A":"T072","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":79,"A":"T073","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":80,"A":"T074","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":81,"A":"T075","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":82,"A":"T076","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":83,"A":"T077","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":84,"A":"T078","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":85,"A":"T079","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":86,"A":"T080","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":87,"A":"T081","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":88,"A":"T082","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":89,"A":"T083","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":90,"A":"T084","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":91,"A":"T085","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":92,"A":"T086","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":93,"A":"T087","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":94,"A":"T088","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":95,"A":"T089","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":96,"A":"T090","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":97,"A":"T091","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":98,"A":"T092","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":99,"A":"T093","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":100,"A":"T094","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":101,"A":"T095","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":102,"A":"T096","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":103,"A":"T097","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":104,"A":"T098","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":105,"A":"T099","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null},{"_row":106,"A":"T100","B":0,"C":null,"D":null,"E":null,"F":null,"G":null,"H":null,"I":null,"J":null,"K":null,"L":null,"M":null,"N":null,"O":null,"P":null,"Q":null,"R":null,"S":null}]},"replacement_plan":{"range":"A7:AI106","rows":[{"_row":7,"A":"T001","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":21300,"O":"EV","P":0,"Q":8000,"R":"EV","S":0,"T":8000,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":"DEMO-1","AG":null,"AH":null,"AI":null},{"_row":8,"A":"T002","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":30600,"O":"Keep ICE","P":null,"Q":30600,"R":"EV","S":0,"T":8000,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":"DEMO-2","AG":null,"AH":null,"AI":null},{"_row":9,"A":"T003","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":39900,"O":"Keep ICE","P":null,"Q":39900,"R":"EV","S":0,"T":8000,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":"DEMO-3","AG":null,"AH":null,"AI":null},{"_row":10,"A":"T004","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":49200,"O":"Keep ICE","P":null,"Q":49200,"R":"Keep ICE","S":null,"T":49200,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":"DEMO-4","AG":null,"AH":null,"AI":null},{"_row":11,"A":"T005","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":58500,"O":"Keep ICE","P":null,"Q":58500,"R":"Keep ICE","S":null,"T":58500,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":"DEMO-5","AG":null,"AH":null,"AI":null},{"_row":12,"A":"T006","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":67800,"O":"Keep ICE","P":null,"Q":67800,"R":"Keep ICE","S":null,"T":67800,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":"DEMO-6","AG":null,"AH":null,"AI":null},{"_row":13,"A":"T007","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":14,"A":"T008","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":15,"A":"T009","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":16,"A":"T010","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":17,"A":"T011","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":18,"A":"T012","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":19,"A":"T013","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":20,"A":"T014","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":21,"A":"T015","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":22,"A":"T016","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":23,"A":"T017","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":24,"A":"T018","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":25,"A":"T019","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":26,"A":"T020","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":27,"A":"T021","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":28,"A":"T022","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":29,"A":"T023","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":30,"A":"T024","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":31,"A":"T025","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":32,"A":"T026","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":33,"A":"T027","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":34,"A":"T028","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":35,"A":"T029","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":36,"A":"T030","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":37,"A":"T031","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":38,"A":"T032","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":39,"A":"T033","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":40,"A":"T034","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":41,"A":"T035","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":42,"A":"T036","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":43,"A":"T037","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":44,"A":"T038","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":45,"A":"T039","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":46,"A":"T040","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":47,"A":"T041","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":48,"A":"T042","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":49,"A":"T043","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":50,"A":"T044","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":51,"A":"T045","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":52,"A":"T046","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":53,"A":"T047","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":54,"A":"T048","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":55,"A":"T049","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":56,"A":"T050","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":57,"A":"T051","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":58,"A":"T052","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":59,"A":"T053","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":60,"A":"T054","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":61,"A":"T055","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":62,"A":"T056","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":63,"A":"T057","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":64,"A":"T058","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":65,"A":"T059","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":66,"A":"T060","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":67,"A":"T061","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":68,"A":"T062","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":69,"A":"T063","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":70,"A":"T064","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":71,"A":"T065","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":72,"A":"T066","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":73,"A":"T067","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":74,"A":"T068","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":75,"A":"T069","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":76,"A":"T070","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":77,"A":"T071","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":78,"A":"T072","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":79,"A":"T073","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":80,"A":"T074","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":81,"A":"T075","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":82,"A":"T076","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":83,"A":"T077","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":84,"A":"T078","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":85,"A":"T079","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":86,"A":"T080","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":87,"A":"T081","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":88,"A":"T082","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":89,"A":"T083","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":90,"A":"T084","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":91,"A":"T085","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":92,"A":"T086","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":93,"A":"T087","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":94,"A":"T088","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":95,"A":"T089","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":96,"A":"T090","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":97,"A":"T091","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":98,"A":"T092","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":99,"A":"T093","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":100,"A":"T094","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":101,"A":"T095","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":102,"A":"T096","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":103,"A":"T097","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":104,"A":"T098","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":105,"A":"T099","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null},{"_row":106,"A":"T100","B":"ChengLong L2EV","C":181000,"D":null,"E":null,"F":null,"G":"Battery","H":null,"I":"Unconfirmed","J":22,"K":"DC","L":48,"M":null,"N":null,"O":"Keep ICE","P":null,"Q":null,"R":"Keep ICE","S":null,"T":null,"U":null,"V":null,"W":0,"X":0,"Y":0,"Z":0,"AA":0,"AB":"No","AC":120,"AD":120,"AE":"Assumed","AF":null,"AG":null,"AH":null,"AI":null}]},"operating_costs":{"range":"A7:D68","rows":[{"_row":7,"label":"ICE fuel consumption","values":{"B":0.1,"C":"litres/km","D":"Stock-balanced fuel / total km"}},{"_row":8,"label":"Diesel refill per visit","values":{"B":80,"C":"litres/visit","D":"Refill, not tank capacity"}},{"_row":9,"label":"Fuel-station detour","values":{"B":4,"C":"km/visit","D":"Extra round trip only"}},{"_row":10,"label":"Fuel queue and service","values":{"B":17,"C":"min/visit","D":"Queue and refuelling"}},{"_row":11,"label":"Detour driving speed","values":{"B":25,"C":"km/hour","D":"Detour speed"}},{"_row":12,"label":"Public-charger detour","values":{"B":8,"C":"km/visit","D":"Extra public-charger round trip"}},{"_row":13,"label":"Charging queue","values":{"B":15,"C":"min/visit","D":"Observed site/period queue"}},{"_row":14,"label":"Public plug handling","values":{"B":5,"C":"min/visit","D":"Public handling"}},{"_row":15,"label":"Public session fee","values":{"B":2,"C":"SGD/visit","D":"Exclude if tariff already includes it"}},{"_row":16,"label":"Depot handling time","values":{"B":4,"C":"min/day","D":"Depot handling"}},{"_row":17,"label":"Other EV paid time","values":{"B":0,"C":"min/day","D":"Distinct EV paid time"}},{"_row":18,"label":"Maximum public stop","values":{"B":90,"C":"min/visit","D":"Operating limit"}},{"_row":19,"label":"Avoidable paid time rate","values":{"B":25,"C":"SGD/hour","D":"Incremental avoidable paid time"}},{"_row":20,"label":"Paid EV-time share","values":{"B":1,"C":"fraction","D":"Avoidable paid EV time share"}},{"_row":21,"label":"Paid ICE-time share","values":{"B":1,"C":"fraction","D":"Avoidable paid ICE time share"}},{"_row":22,"label":"Buyer electricity share","values":{"B":1,"C":"fraction","D":"Electricity paid by buyer"}},{"_row":23,"label":"Buyer diesel share","values":{"B":1,"C":"fraction","D":"Diesel paid by buyer"}},{"_row":24,"label":"Old ICE maintenance","values":{"B":2500,"C":"SGD/year","D":"Current ICE maintenance"}},{"_row":25,"label":"New ICE maintenance","values":{"B":2500,"C":"SGD/year","D":"New ICE maintenance"}},{"_row":26,"label":"EV maintenance annual override","values":{"B":1500,"C":"SGD/year","D":"Used only when EV servicing basis is Annual override. Include the same scope as the Hong Seh schedule or explain the difference."}},{"_row":27,"label":"ICE tyres","values":{"B":600,"C":"SGD/year","D":"Separate tyres"}},{"_row":28,"label":"EV tyres","values":{"B":600,"C":"SGD/year","D":"Separate tyres"}},{"_row":29,"label":"ICE insurance","values":{"B":3500,"C":"SGD/year","D":"Matched coverage"}},{"_row":30,"label":"EV insurance","values":{"B":3500,"C":"SGD/year","D":"Matched coverage"}},{"_row":31,"label":"ICE road tax","values":{"B":524,"C":"SGD/year","D":"Verify tax"}},{"_row":32,"label":"EV road tax / AFC","values":{"B":530,"C":"SGD/year","D":"Verify tax/AFC"}},{"_row":33,"label":"Inspection","values":{"B":150,"C":"SGD/year","D":"Inspection"}},{"_row":34,"label":"Old ICE other cost","values":{"B":1200,"C":"SGD/year","D":"Current ICE other"}},{"_row":35,"label":"New ICE other cost","values":{"B":1200,"C":"SGD/year","D":"New ICE other"}},{"_row":36,"label":"EV other cost","values":{"B":1200,"C":"SGD/year","D":"EV other"}},{"_row":37,"label":"ICE contract surcharge","values":{"B":0,"C":"SGD/year","D":"Distinct contract surcharge"}},{"_row":38,"label":"EV contract surcharge","values":{"B":0,"C":"SGD/year","D":"Distinct contract surcharge"}},{"_row":39,"label":"Old ICE unavailable days","values":{"B":0,"C":"days/year","D":"Unknown is not measured zero"}},{"_row":40,"label":"New ICE unavailable days","values":{"B":0,"C":"days/year","D":"Unavailable days"}},{"_row":41,"label":"EV unavailable days","values":{"B":0,"C":"days/year","D":"Unavailable days"}},{"_row":42,"label":"ICE all-in backup rate","values":{"B":200,"C":"SGD/day","D":"All-in service replacement; no duplicate fuel"}},{"_row":43,"label":"EV all-in backup rate","values":{"B":200,"C":"SGD/day","D":"All-in service replacement"}},{"_row":44,"label":"Charging loss","values":{"B":0.1,"C":"fraction","D":"Apply once to battery-side consumption"}},{"_row":45,"label":"Battery reserve","values":{"B":0.2,"C":"fraction","D":"Battery reserve"}},{"_row":46,"label":"Annual battery fade","values":{"B":0.02,"C":"fraction/year","D":"Explicit capacity stress assumption"}},{"_row":47,"label":"Public refill fraction","values":{"B":0.6,"C":"fraction","D":"Typical public refill"}},{"_row":48,"label":"Extra auxiliary energy","values":{"B":0,"C":"battery kWh/day","D":"Only auxiliary demand not already in consumption"}},{"_row":49,"label":"Peak auxiliary energy","values":{"B":0,"C":"battery kWh/day","D":"Observed demanding day"}},{"_row":50,"label":"Capital-price growth","values":{"B":0,"C":"fraction/year","D":"Future purchase inflation"}},{"_row":51,"label":"Diesel-price growth","values":{"B":0,"C":"fraction/year","D":"Diesel price inflation"}},{"_row":52,"label":"Charging-price growth","values":{"B":0,"C":"fraction/year","D":"Charging price inflation"}},{"_row":53,"label":"Other-cost growth","values":{"B":0,"C":"fraction/year","D":"Other operating inflation"}},{"_row":54,"label":"Discount rate","values":{"B":0,"C":"fraction/year","D":"Nominal annual discount rate"}},{"_row":55,"label":"Extra upfront budget","values":{"B":250000,"C":"SGD","D":"Additional day-0 fleet budget"}},{"_row":56,"label":"New ICE terminal value","values":{"B":12000,"C":"SGD/truck","D":"All-new-ICE-now year-10 value"}},{"_row":57,"label":"Fallback EV COE","values":{"B":93000,"C":"SGD","D":"Archived quote fallback COE assumption"}},{"_row":58,"label":"Backup confirmed","values":{"B":"No","C":"Yes/No","D":"Capacity and all-in terms confirmed"}},{"_row":59,"label":"Loaded trial confirmed","values":{"B":"No","C":"Yes/No","D":"Loaded route and charging trial"}},{"_row":60,"label":"Energy prices confirmed","values":{"B":"No","C":"Yes/No","D":"Current company energy contracts"}},{"_row":61,"label":"Data mode","values":{"B":"Demonstration","C":"mode","D":"Demonstration / Customer"}},{"_row":62,"label":"Vehicle quote basis","values":{"B":"Gross","C":"Gross/Net/Unknown","D":"Vehicle inputs must be gross if grant separately deducted"}},{"_row":63,"label":"Analysis start date","values":{"B":"2026-10-03 00:00:00","C":"date","D":"Analysis start date; fixed 120 months"}},{"_row":64,"label":"EV scheduled repair","values":{"B":0,"C":"SGD/truck","D":"Separate scheduled battery/vehicle repair"}},{"_row":65,"label":"EV repair after purchase","values":{"B":60,"C":"months after purchase","D":"Repair timing"}},{"_row":66,"label":"ICE scheduled repair","values":{"B":0,"C":"SGD/truck","D":"Separate scheduled ICE repair"}},{"_row":67,"label":"ICE repair month","values":{"B":60,"C":"analysis month","D":"Applies to active ICE only"}},{"_row":68,"label":"EV servicing basis","values":{"B":"Hong Seh 200k average","C":"basis","D":"Hong Seh 200,000 km average uses the selected EV model. Annual override uses the value in row 26."}}]},"energy_and_charging":{"range":"A7:E56","rows":[{"_row":7,"label":"Commercial diesel","values":{"B":2,"C":2,"D":"SGD/litre","E":"Inherited assumption; enter net fleet invoice"}},{"_row":8,"label":"Public diesel","values":{"B":3,"C":3,"D":"SGD/litre","E":"Inherited assumption; enter net public pump price"}},{"_row":9,"label":"Commercial diesel share","values":{"B":1,"C":1,"D":"litres share","E":"Commercial purchase share"}},{"_row":10,"label":"Depot electricity","values":{"B":0.3478,"C":0.3478,"D":"SGD/grid kWh","E":"Inherited assumption; not current commercial offer"}},{"_row":11,"label":"Public charging","values":{"B":0.85,"C":0.85,"D":"SGD/grid kWh","E":"Inherited assumption; verify truck access"}},{"_row":12,"label":"Public electricity share","values":{"B":0.2,"C":0.2,"D":"grid-kWh share","E":"Energy share, not visits share"}},{"_row":13,"label":"Charging-site arrangement","values":{"B":"Existing depot","C":"Existing depot","D":"site","E":"Existing depot / New rented site / Public only / Operator funded"}},{"_row":14,"label":"Site location","values":{"B":"Unspecified","C":"Unspecified","D":"region","E":"All Singapore areas considered; does not select a rent quote"}},{"_row":15,"label":"Charger type","values":{"B":"DC60","C":"DC60","D":"type","E":"DC60 / DC120 / AC22 / Other"}},{"_row":16,"label":"Installed chargers","values":{"B":1,"C":2,"D":"units","E":"Actual installed hardware, not EV count"}},{"_row":17,"label":"Usable truck plugs","values":{"B":2,"C":4,"D":"usable plugs","E":"Actual simultaneous truck positions; sharing still limited by site power"}},{"_row":18,"label":"Charger equipment price","values":{"B":23800,"C":23800,"D":"SGD/charger","E":"E01 equipment-only advertised before GST/installation"}},{"_row":19,"label":"Local EV distribution board","values":{"B":null,"C":null,"D":"SGD/charger","E":"Local EV distribution equipment; itemised quote required"}},{"_row":20,"label":"Licensed electrical worker","values":{"B":null,"C":null,"D":"SGD/charger","E":"Site/project LEW; quote required"}},{"_row":21,"label":"Local cable and installation","values":{"B":null,"C":null,"D":"SGD/charger","E":"Local cabling/install only; quote required"}},{"_row":22,"label":"Charger registration","values":{"B":375,"C":375,"D":"SGD/charger","E":"L01 no GST; current 23-150kW fee only through Mar2027"}},{"_row":23,"label":"Major electrical upgrade","values":{"B":null,"C":null,"D":"SGD/site","E":"Switchboard/transformer upgrade; NOT automatic EHVCG eligible cost"}},{"_row":24,"label":"General civil work","values":{"B":null,"C":null,"D":"SGD/site","E":"Separate paving/drainage/site infrastructure; quote required"}},{"_row":25,"label":"SP connection fee","values":{"B":null,"C":null,"D":"SGD/site","E":"SP incremental connection quote; NOT automatic S$16,700"}},{"_row":26,"label":"Other site preparation","values":{"B":null,"C":null,"D":"SGD/site","E":"Land preparation, permits, professional fees; no duplicate cable work"}},{"_row":27,"label":"Training and transition","values":{"B":1000,"C":1000,"D":"SGD/site","E":"Inherited training/setup assumption"}},{"_row":28,"label":"Extra monthly space rent","values":{"B":null,"C":null,"D":"SGD/site/month","E":"Incremental EV space only. Existing common factory rent excluded"}},{"_row":29,"label":"Other fixed annual fees","values":{"B":null,"C":null,"D":"SGD/site/year","E":"Network/IT/insurance/standing fees not already in kWh price"}},{"_row":30,"label":"Annual demand charge","values":{"B":null,"C":null,"D":"SGD/site/year","E":"Only actual tariff demand charges. Do not assume all LT sites pay HT charges"}},{"_row":31,"label":"Lost space value /year","values":{"B":null,"C":null,"D":"SGD/site/year","E":"Only evidenced lost bay/use value, not duplicate rent"}},{"_row":32,"label":"Maintenance per charger","values":{"B":1180,"C":1180,"D":"SGD/charger/year","E":"E05 advertised DC maintenance; check service and inspections included"}},{"_row":33,"label":"Installation month","values":{"B":0,"C":0,"D":"analysis month","E":"Ready before first depot EV operation"}},{"_row":34,"label":"Site rights after install","values":{"B":120,"C":120,"D":"months after installation","E":"Confirmed rights, not merely parking permit"}},{"_row":35,"label":"Year-10 equipment recovery","values":{"B":0,"C":0,"D":"SGD/site at year 10","E":"Explicit equipment terminal forecast"}},{"_row":36,"label":"Lease-end restoration","values":{"B":0,"C":0,"D":"SGD/site","E":"Lease-end restoration quote or evidenced zero"}},{"_row":37,"label":"Replacement-site cost","values":{"B":0,"C":0,"D":"SGD/site","E":"Replacement site total, no assumed free land"}},{"_row":38,"label":"Replacement-site month","values":{"B":60,"C":60,"D":"analysis month","E":"Chargers/site change within horizon"}},{"_row":39,"label":"Next site confirmed","values":{"B":"No","C":"No","D":"Yes/No","E":"Needed if current site rights end before horizon"}},{"_row":40,"label":"Charger replacement cost","values":{"B":0,"C":0,"D":"SGD/charger","E":"Scheduled replacement, exclude duplicate maintenance"}},{"_row":41,"label":"Charger replacement month","values":{"B":60,"C":60,"D":"analysis month","E":"Scheduled charger replacement"}},{"_row":42,"label":"Refundable deposit","values":{"B":0,"C":0,"D":"SGD/site","E":"Refundable funding tie-up, not full economic expense"}},{"_row":43,"label":"Deposit refund month","values":{"B":120,"C":120,"D":"analysis month","E":"Enter refund date; beyond horizon remains cash tied up"}},{"_row":44,"label":"Approved charger grant","values":{"B":0,"C":0,"D":"SGD/site","E":"Only written grant quantum. Budget ceiling below is NOT a grant award"}},{"_row":45,"label":"Grant receipt month","values":{"B":12,"C":12,"D":"analysis month","E":"Reimbursement date, not upfront discount"}},{"_row":46,"label":"Award checked","values":{"B":"No","C":"No","D":"Yes/No","E":"Written award and component caps checked"}},{"_row":47,"label":"Approved funded chargers","values":{"B":0,"C":0,"D":"eligible units","E":"Approved units, <=3 and <=eligible new eHVs at this site"}},{"_row":48,"label":"Accepted cost per charger","values":{"B":null,"C":null,"D":"SGD/eligible charger","E":"LTA-accepted eligible cost after component caps; blank ceiling unavailable"}},{"_row":49,"label":"Site quote basis","values":{"B":"Gross","C":"Gross","D":"Gross/Net","E":"Site cost before approved grant"}},{"_row":50,"label":"Net site power","values":{"B":44,"C":44,"D":"kW","E":"Net usable grid input after other site loads"}},{"_row":51,"label":"Charging window","values":{"B":10,"C":10,"D":"hours","E":"Uninterrupted charging window"}},{"_row":52,"label":"Site permission and access","values":{"B":"Unconfirmed","C":"Unconfirmed","D":"Yes/No/Unconfirmed","E":"Landlord/JTC, physical bays, connector, cable and permissions"}},{"_row":53,"label":"Shared schedule confirmed","values":{"B":"No","C":"No","D":"Yes/No","E":"Observed fleet arrivals, departures and shared-power schedule"}},{"_row":54,"label":"Site cost evidence","values":{"B":"Unknown","C":"Unknown","D":"Unknown/Assumed/Quoted/Verified","E":"Scope-complete values are not a site survey"}},{"_row":55,"label":"Public truck access","values":{"B":"Unconfirmed","C":"Unconfirmed","D":"Yes/No/Unconfirmed","E":"Truck-compatible charger and availability evidence"}},{"_row":56,"label":"Charger rated input power","values":{"B":60,"C":60,"D":"kW/charger","E":"Update price, power, maintenance and fee when changing charger type."}}],"computed_range":"A59:C68","computed_rows":[{"_row":59,"A":"Calculated site result","B":"Plan A","C":"Plan B"},{"_row":60,"A":"Input completeness","B":"Missing site quote","C":"Missing site quote"},{"_row":61,"A":"Gross initial site cost","B":"n.a.","C":"n.a."},{"_row":62,"A":"Annual site cost","B":"n.a.","C":"n.a."},{"_row":63,"A":"Grant budget ceiling only","B":0,"C":0},{"_row":64,"A":"Initial cost less award","B":"n.a.","C":"n.a."},{"_row":65,"A":"Peak depot energy","B":41.576816845897724,"C":124.73045053769317},{"_row":66,"A":"Total truck charging hours","B":1.8898553111771692,"C":5.669565933531508},{"_row":67,"A":"Access and capacity check","B":"Missing site quote","C":"Missing site quote"},{"_row":68,"A":"EVs using arrangement","B":1,"C":3}]},"products":{"range":"A7:Q13","rows":[{"_row":7,"A":"Farizon F3E","B":4300,"C":2100,"D":73.3,"E":0.24076598400367882,"F":"Battery","G":11,"H":100,"I":70800,"J":367,"K":"Farizon F3E Electric 22158_30-Aug-2026.pdf, p1-2","L":"Unconfirmed","M":72.8,"N":"Farizon F3e","O":1861,"P":0.009305,"Q":"Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."},{"_row":8,"A":"SRM T3EV","B":3500,"C":1560,"D":53.58,"E":0.17859999999999998,"F":"Battery","G":11,"H":55,"I":63800,"J":300,"K":"https://evhubs.sg/electric-vehicles/srm-t3-ev.html","L":"Unconfirmed","M":53.58,"N":"SRM T3","O":2220,"P":0.0111,"Q":"Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."},{"_row":9,"A":"ChengLong L2EV","B":5000,"C":2480,"D":86.55,"E":0.2703694737088725,"F":"Battery","G":22,"H":120,"I":78800,"J":320,"K":"Cheng Long L2 22151_14-Sep-2026.pdf, p1-2","L":"Unconfirmed","M":86.55,"N":"Chenglong L2","O":3285,"P":0.016425,"Q":"Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."},{"_row":10,"A":"Farizon H5E","B":5000,"C":2700,"D":100.46,"E":0.3556030668375185,"F":"Battery","G":22,"H":100,"I":98000,"J":344,"K":"Farizon H5E 22109_14-Sep-2026.pdf, p1-2; user DC correction 17-Sep-2026","L":"Unconfirmed","M":104.6,"N":"Farizon H5E / H9E","O":1400,"P":0.007,"Q":"Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."},{"_row":11,"A":"SRM T3EV+","B":3505,"C":1660,"D":53.58,"E":0.17859999999999998,"F":"Battery","G":11,"H":55,"I":66800,"J":300,"K":"https://evhubs.sg/electric-vehicles/srm-t3-ev.html","L":"Unconfirmed","M":106,"N":"SRM T3","O":2220,"P":0.0111,"Q":"Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."},{"_row":12,"A":"Farizon H9E 14ft","B":9800,"C":3400,"D":106.95,"E":0.4477763062331781,"F":"Battery","G":null,"H":100,"I":108000,"J":243,"K":"https://evhubs.sg/electric-vehicles/farizon-h9e.html","L":"Unconfirmed","M":106,"N":"Farizon H5E / H9E","O":1400,"P":0.007,"Q":"Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."},{"_row":13,"A":"Farizon H9E 20ft","B":9800,"C":3400,"D":162.28,"E":0.4591482266008702,"F":"Battery","G":null,"H":100,"I":128000,"J":372,"K":"https://evhubs.sg/electric-vehicles/farizon-h9e.html","L":"Unconfirmed","M":162,"N":"Farizon H5E / H9E","O":1400,"P":0.007,"Q":"Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."}]},"service_costs":{"range":"A7:Z14","rows":[{"_row":7,"A":"SRM T3","B":"FOC","C":"Nil","D":"FOC","E":"FOC","F":"FOC","G":"FOC","H":"FOC","I":"FOC","J":"FOC","K":"FOC","L":"FOC","M":"FOC","N":108,"O":336,"P":108,"Q":336,"R":108,"S":336,"T":108,"U":336,"V":108,"W":336,"X":2220,"Y":2220,"Z":0},{"_row":8,"A":"DFSK EC31/ EC35","B":"FOC","C":"Nil","D":"FOC","E":"FOC","F":"FOC","G":246,"H":123,"I":246,"J":123,"K":246,"L":123,"M":246,"N":123,"O":246,"P":123,"Q":246,"R":123,"S":246,"T":123,"U":246,"V":123,"W":246,"X":3198,"Y":3198,"Z":0},{"_row":9,"A":"Farizon SuperVan","B":"Nil","C":"Nil","D":"Nil","E":"Nil","F":"FOC","G":"Nil","H":"Nil","I":"FOC","J":"Nil","K":"Nil","L":"FOC","M":"Nil","N":"Nil","O":"FOC","P":"Nil","Q":"Nil","R":"FOC","S":"Nil","T":"Nil","U":246,"V":"Nil","W":"Nil","X":246,"Y":246,"Z":0},{"_row":10,"A":"Farizon H5E / H9E","B":"FOC","C":"Nil","D":"Nil","E":"FOC","F":"Nil","G":"FOC","H":"Nil","I":"FOC","J":"Nil","K":"FOC","L":"Nil","M":"FOC","N":"Nil","O":280,"P":"Nil","Q":280,"R":"Nil","S":280,"T":"Nil","U":280,"V":"Nil","W":280,"X":1400,"Y":1400,"Z":0},{"_row":11,"A":"Riddara RD6","B":"Nil","C":"Nil","D":"Nil","E":"FOC","F":"Nil","G":"FOC","H":"Nil","I":"FOC","J":"Nil","K":"FOC","L":"Nil","M":"FOC","N":"Nil","O":139,"P":"Nil","Q":197,"R":"Nil","S":139,"T":"Nil","U":197,"V":"Nil","W":139,"X":811,"Y":811,"Z":0},{"_row":12,"A":"Farizon V7e","B":"Nil","C":"FOC","D":"Nil","E":"Nil","F":"Nil","G":"FOC","H":"Nil","I":"Nil","J":"Nil","K":"FOC","L":"Nil","M":"Nil","N":"Nil","O":"FOC","P":"Nil","Q":"Nil","R":"Nil","S":"FOC","T":"Nil","U":"NIl","V":"NIl","W":270,"X":270,"Y":270,"Z":0},{"_row":13,"A":"Chenglong L2","B":"Nil","C":"FOC","D":"FOC","E":"FOC","F":"FOC","G":"FOC","H":"FOC","I":"FOC","J":"FOC","K":"FOC","L":"FOC","M":"FOC","N":225,"O":465,"P":225,"Q":225,"R":480,"S":285,"T":225,"U":465,"V":225,"W":465,"X":3285,"Y":3285,"Z":0},{"_row":14,"A":"Farizon F3e","B":"FOC","C":"Nil","D":"FOC","E":"FOC","F":"FOC","G":"FOC","H":"FOC","I":"FOC","J":"FOC","K":"FOC","L":"FOC","M":"FOC","N":160,"O":247,"P":160,"Q":160,"R":160,"S":247,"T":160,"U":160,"V":160,"W":247,"X":1861,"Y":1861,"Z":0}]}},"_meta":{"source_workbook":"Hong Seh - EV TCO Calculator - Fleet, Charging and Service v5.xlsx","description":"Frozen DEMONSTRATION 6-truck case: all input-sheet values plus cached Results/Review outputs. 'n.a.' preserved verbatim; blanks stay null; nothing coerced to 0.","openpyxl_version":"3.1.5","generated_by":"tools/extract_excel.py"}};
+</script>
+<!-- DEMO:END -->
+
+<script>
+/* ================================================================== *
+ * Page controller. Reads window.HSDemoCase (embedded demo inputs),
+ * drives window.HSEngine.computeFleet, and renders the UI. No network.
+ * ================================================================== */
+(function(){
+  "use strict";
+  var NA = (window.HSEngine && window.HSEngine.NA) || 'n.a.';
+  var computeFleet = window.HSEngine && window.HSEngine.computeFleet;
+
+  // Deep clone the demonstration inputs so edits never mutate the embedded source.
+  function freshInputs(){ return JSON.parse(JSON.stringify(window.HSDemoCase.inputs)); }
+  var state = freshInputs();
+
+  // ---- helpers -----------------------------------------------------
+  function isNum(v){ return typeof v === 'number' && isFinite(v); }
+  function el(id){ return document.getElementById(id); }
+  function fmtMoney(v){
+    if (v === NA || v == null) return naSpan();
+    if (typeof v !== 'number' || !isFinite(v)) return naSpan();
+    var neg = v < 0; var a = Math.abs(v);
+    var s = 'S$' + a.toLocaleString('en-SG',{maximumFractionDigits:0});
+    return (neg ? '-' + s : s);
+  }
+  function fmtNum(v, dp){
+    if (v === NA || v == null) return naSpan();
+    if (typeof v !== 'number' || !isFinite(v)) return naSpan();
+    return v.toLocaleString('en-SG',{minimumFractionDigits:dp,maximumFractionDigits:dp});
+  }
+  function fmtPct(v){
+    if (v === NA || v == null) return naSpan();
+    if (typeof v !== 'number' || !isFinite(v)) return naSpan();
+    return (v*100).toFixed(2) + '%';
+  }
+  function fmtText(v){
+    if (v === NA || v == null) return naSpan();
+    return String(v);
+  }
+  function naSpan(){ return '<span class="na">n.a.</span>'; }
+  function cell(html){ return '<td class="num">' + html + '</td>'; }
+  function tcell(html){ return '<td>' + html + '</td>'; }
+
+  // Column letter helpers for the sheet-shaped fixture rows.
+  // Table view shows rows that are either Included or carry any entered data;
+  // blank placeholder rows (no duty, no values) stay in state for the engine
+  // but are not cluttering the editor. Blank is never coerced to zero.
+  var FLEET_DATA_COLS = ['C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q'];
+  function hasFleetData(r){
+    if (r.B === 1) return true;
+    for (var i=0;i<FLEET_DATA_COLS.length;i++){
+      var v = r[FLEET_DATA_COLS[i]];
+      if (v != null && v !== '') return true;
+    }
+    return false;
+  }
+  function includedFleet(){ return state.fleet_register.rows.filter(function(r){ return r.A != null && hasFleetData(r); }); }
+  function replByIdMap(){
+    var m={}; state.replacement_plan.rows.forEach(function(r){ if(r.A!=null) m[r.A]=r; }); return m;
+  }
+  function ocRow(n){ return state.operating_costs.rows.filter(function(r){return r._row===n;})[0]; }
+  function ecRow(n){ return state.energy_and_charging.rows.filter(function(r){return r._row===n;})[0]; }
+  function productNames(){ return state.products.rows.filter(function(r){return r.A!=null;}).map(function(r){return r.A;}); }
+
+  // Parse a numeric input box, preserving blank (null) and never coercing to 0.
+  function parseEditable(raw){
+    var t = (raw==null?'':String(raw)).trim();
+    if (t === '') return null;          // blank stays blank
+    if (t.toLowerCase() === 'n.a.' || t.toLowerCase() === 'na') return NA;
+    var n = Number(t);
+    return isFinite(n) ? n : t;         // fall back to raw string if not numeric
+  }
+
+  var recompute;  // assigned below
+
+  // ---- RESULTS rendering (depends on engine output) ----------------
+  var PLAN_KEYS = ['keep_ice','all_new_ice','plan_a','plan_b'];
+  var PLAN_LABELS = {keep_ice:'Keep ICE', all_new_ice:'All-new ICE now', plan_a:'Plan A', plan_b:'Plan B'};
+
+  function renderResults(out){
+    var r = out.results;
+    var rows = [
+      ['Truck count', r.truckCount, 'int'],
+      ['Vehicle economic TCO', r.vehicleEconomicTco, 'money'],
+      ['Net site ownership cost', r.netSiteCost, 'money'],
+      ['Total economic TCO', r.totalEconomicTco, 'money'],
+      ['Saving vs Keep ICE', r.savingVsKeep, 'money'],
+      ['Saving %', r.savingPct, 'pct'],
+      ['15% fleet saving headroom', r.headroom15, 'money'],
+      ['Cash less year-10 assets', r.cashLessTerminal, 'money'],
+      ['Day-0 funding before loans', r.day0Funding, 'money'],
+      ['Cost per productive km', r.costPerKm, 'km'],
+      ['Site completeness / access', r.siteStatus, 'text'],
+      ['Vehicle service / evidence', r.vehicleStatus, 'text'],
+      ['Saving claim status', r.savingClaimStatus, 'text']
+    ];
+    var html = '';
+    rows.forEach(function(row){
+      html += '<tr class="resultline"><td>' + row[0] + '</td>';
+      PLAN_KEYS.forEach(function(k){
+        var v = row[1][k];
+        html += cell(fmtByType(v, row[2]));
+      });
+      html += '</tr>';
+    });
+    // Max site TCO row (Plan A / Plan B only).
+    html += '<tr class="resultline"><td>Max site TCO for 15% saving</td>' +
+      cell('<span class="na">&mdash;</span>') + cell('<span class="na">&mdash;</span>') +
+      cell(fmtMoney(r.maxSiteTco15.plan_a)) + cell(fmtMoney(r.maxSiteTco15.plan_b)) + '</tr>';
+    el('results-body').innerHTML = html;
+  }
+  function fmtByType(v, t){
+    if (t==='money') return fmtMoney(v);
+    if (t==='pct') return fmtPct(v);
+    if (t==='km') return (v===NA||v==null||!isNum(v))?naSpan():('S$'+fmtNum(v,5));
+    if (t==='int') return (v===NA||v==null||!isNum(v))?naSpan():String(v);
+    return fmtText(v);
+  }
+
+  function renderDecision(out){
+    var r = out.results;
+    var html = '';
+    PLAN_KEYS.forEach(function(k){
+      var total = r.totalEconomicTco[k];
+      var sv = r.savingPct[k];
+      var d0 = r.day0Funding[k];
+      var claim = r.savingClaimStatus[k];
+      var headline;
+      if (sv===NA||sv==null||!isNum(sv)) headline = '<span class="na">n.a.</span>';
+      else if (sv>=0) headline = fmtPct(sv) + ' vs Keep ICE';
+      else headline = Math.abs(sv*100).toFixed(2) + '% higher than Keep ICE';
+      html += '<div class="plan-card"><h3>' + PLAN_LABELS[k] + '</h3>' +
+        '<div class="large">' + headline + '</div>' +
+        '<p class="kpi">Total economic TCO</p><div>' + fmtMoney(total) + '</div>' +
+        '<p class="kpi">Day-0 funding before loans</p><div>' + fmtMoney(d0) + '</div>' +
+        '<p class="kpi">Saving claim status</p><div>' + fmtText(claim) + '</div></div>';
+    });
+    el('decision-cards').innerHTML = html;
+  }
+
+  function renderSite(out){
+    var a = out.sites[2], b = out.sites[3];
+    function row(label, fa, fb, meaning, money){
+      var f = money ? fmtMoney : fmtText;
+      return '<tr><td>' + label + '</td>' + cell(f(fa)) + cell(f(fb)) + '<td>' + meaning + '</td></tr>';
+    }
+    var html = '';
+    html += row('Input completeness', a.completeness, b.completeness, 'Gate: Complete / Public only / No EV site', false);
+    html += row('Gross initial site cost', a.grossInitial, b.grossInitial, 'Chargers x per-charger build + site works', true);
+    html += row('Annual site cost', a.annual, b.annual, 'Maintenance + fixed fees + demand + lost space', true);
+    html += row('Grant budget ceiling', a.grantCeiling, b.grantCeiling, 'Estimate only; not an award', true);
+    html += row('Initial cost less award', a.initialLessAward, b.initialLessAward, 'Gross initial minus entered checked award', true);
+    html += row('Peak depot energy (kWh)', isNum(a.peakDepotEnergy)?Math.round(a.peakDepotEnergy*100)/100:a.peakDepotEnergy, isNum(b.peakDepotEnergy)?Math.round(b.peakDepotEnergy*100)/100:b.peakDepotEnergy, 'Sum of per-EV peak depot demand', false);
+    html += row('Total charging hours', isNum(a.chargingHours)?Math.round(a.chargingHours*100)/100:a.chargingHours, isNum(b.chargingHours)?Math.round(b.chargingHours*100)/100:b.chargingHours, 'Sum of per-EV depot charging hours', false);
+    html += row('Access / capacity', a.accessCheck, b.accessCheck, 'Power, plug-hours and verification gate', false);
+    html += row('EVs using the arrangement', a.evCount, b.evCount, 'EV paths within horizon on this site', false);
+    el('site-body').innerHTML = html;
+  }
+
+  function renderGates(out){
+    var r = out.results;
+    var oc = ocVal;
+    function flagRow(label, aVal, bVal, need){
+      return '<tr><td>' + label + '</td><td>' + fmtText(aVal) + '</td><td>' + fmtText(bVal) + '</td><td>' + need + '</td></tr>';
+    }
+    var html = '';
+    html += flagRow('Service screen (vehicle evidence)', r.vehicleStatus.plan_a, r.vehicleStatus.plan_b,
+      'Completed-body payload, battery route allowance and entered limits.');
+    html += flagRow('Capacity gate (site access)', r.siteStatus.plan_a, r.siteStatus.plan_b,
+      'Spare power, plug-hours, approved parking plug per EV and a surveyed site.');
+    html += flagRow('Backup confirmed', oc(58), oc(58),
+      'Costed substitute-service contract that delivers the same workload.');
+    html += flagRow('Loaded trial confirmed', oc(59), oc(59),
+      'Loaded route and charging trial with measured grid kWh and completion.');
+    html += flagRow('Energy prices confirmed', oc(60), oc(60),
+      'Current company diesel and electricity contracts, not inherited assumptions.');
+    el('gates-body').innerHTML = html;
+  }
+
+  function renderReview(out){
+    var rv = out.review;
+    var order = [
+      ['dutyCoverage','Fixed ten-year duty coverage (months)'],
+      ['includedTrucks','Included source trucks'],
+      ['keepBridge','Keep ICE economic/cash bridge'],
+      ['newBridge','New ICE economic/cash bridge'],
+      ['planABridge','Plan A cash bridge incl. deposit'],
+      ['planBBridge','Plan B cash bridge incl. deposit'],
+      ['planAEvCount','Plan A EV count'],
+      ['planBEvCount','Plan B EV count'],
+      ['vehiclePathServiceFormulas','Vehicle path service formulas (rows)']
+    ];
+    var html = '';
+    order.forEach(function(o){
+      var c = rv[o[0]];
+      var cls = c.status==='PASS' ? 'statusok' : (c.status==='FAIL' ? 'statuswarn' : 'na');
+      html += '<tr><td>' + o[1] + '</td>' +
+        cell(fmtNum(c.actual, roundDp(c.actual))) + cell(fmtNum(c.expected, roundDp(c.expected))) +
+        '<td class="' + cls + '">' + c.status + '</td></tr>';
+    });
+    el('review-body').innerHTML = html;
+  }
+  function roundDp(v){ if(!isNum(v)) return 0; return Number.isInteger(v)?0:2; }
+  function ocVal(n){ var r = ocRow(n); return r && r.values ? r.values.B : undefined; }
+
+  recompute = function(){
+    if (!computeFleet){ return; }
+    var out = computeFleet(state);
+    renderDecision(out);
+    renderResults(out);
+    renderSite(out);
+    renderGates(out);
+    renderReview(out);
+    renderSensitivity();
+  };
+
+  /* ---- INPUT UI rendering ---------------------------------------- */
+  // Built in a second script section for readability.
+  window.__HS = {
+    state: state, freshInputs: freshInputs, recompute: function(){ recompute(); },
+    includedFleet: includedFleet, replByIdMap: replByIdMap,
+    ocRow: ocRow, ecRow: ecRow, productNames: productNames,
+    parseEditable: parseEditable, el: el, isNum: isNum,
+    fmtMoney: fmtMoney, fmtText: fmtText, naSpan: naSpan, NA: NA,
+    computeFleet: function(s){ return computeFleet(s); }
+  };
+
+  // renderSensitivity defined after sensitivity UI is wired.
+  var renderSensitivity = function(){};
+  window.__HS.setSensRenderer = function(fn){ renderSensitivity = fn; };
+
+})();
+</script>
+
+<script>
+/* ================================================================== *
+ * Input-table builders and sensitivity controls.
+ * ================================================================== */
+(function(){
+  "use strict";
+  var H = window.__HS;
+  if (!H) return;
+  var NA = H.NA;
+
+  // ---- Fleet register editable table ----
+  // Columns used: B include, C duty, D body, E work km/day, F days/year,
+  // G peak route km, H peak cargo, I jobs/day, J COE months left,
+  // K market value, L scrap, M straight-line, N COE term, O debt, P sale fee, Q evidence ref.
+  var FLEET_COLS = [
+    {k:'B', type:'inc'},
+    {k:'A', type:'ro'},
+    {k:'C', type:'text'},
+    {k:'D', type:'text'},
+    {k:'E', type:'num'}, {k:'F', type:'num'}, {k:'G', type:'num'}, {k:'H', type:'num'},
+    {k:'I', type:'num'}, {k:'J', type:'num'}, {k:'K', type:'num'}, {k:'L', type:'num'},
+    {k:'M', type:'num'}, {k:'N', type:'num'}, {k:'O', type:'num'}, {k:'P', type:'num'},
+    {k:'Q', type:'text'}
+  ];
+  function buildFleet(){
+    var rows = H.includedFleet();
+    var body = H.el('fleet-body');
+    body.innerHTML = '';
+    rows.forEach(function(row){
+      var tr = document.createElement('tr');
+      FLEET_COLS.forEach(function(c){
+        var td = document.createElement('td');
+        if (c.type==='ro'){ td.textContent = row[c.k]; td.style.fontWeight='600'; }
+        else if (c.type==='inc'){
+          var cb = document.createElement('input'); cb.type='checkbox'; cb.className='amber';
+          cb.style.width='18px'; cb.checked = (row.B===1);
+          cb.addEventListener('change', function(){ row.B = cb.checked?1:0; H.recompute(); });
+          td.appendChild(cb);
+        } else {
+          var inp = document.createElement('input'); inp.className='amber';
+          inp.type = (c.type==='num')?'number':'text';
+          inp.value = (row[c.k]==null?'':row[c.k]);
+          inp.addEventListener('change', function(){
+            row[c.k] = (c.type==='num') ? H.parseEditable(inp.value) : (inp.value===''?null:inp.value);
+            H.recompute();
+          });
+          td.appendChild(inp);
+        }
+        tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+  }
+
+  // ---- Replacement plan editable table ----
+  // B EV model, C new ICE quote, D EV quote, O Plan A action, P Plan A month,
+  // Q Plan A yr10, R Plan B action, S Plan B month, T Plan B yr10,
+  // N Keep yr10, AI New ICE yr10, Z vehicle grant.
+  var ACTIONS = ['Keep ICE','New ICE','EV'];
+  function buildRepl(){
+    var map = H.replByIdMap();
+    var ids = H.includedFleet().map(function(r){return r.A;});
+    var body = H.el('repl-body'); body.innerHTML='';
+    var prods = H.productNames();
+    ids.forEach(function(id){
+      var rp = map[id]; if(!rp) return;
+      var tr = document.createElement('tr');
+      tr.appendChild(tdText(id, true));
+      tr.appendChild(tdSelect(rp,'B',prods));
+      tr.appendChild(tdNum(rp,'C'));
+      tr.appendChild(tdNum(rp,'D'));
+      tr.appendChild(tdSelect(rp,'O',ACTIONS));
+      tr.appendChild(tdNum(rp,'P'));
+      tr.appendChild(tdNum(rp,'Q'));
+      tr.appendChild(tdSelect(rp,'R',ACTIONS));
+      tr.appendChild(tdNum(rp,'S'));
+      tr.appendChild(tdNum(rp,'T'));
+      tr.appendChild(tdNum(rp,'N'));
+      tr.appendChild(tdNum(rp,'AI'));
+      tr.appendChild(tdNum(rp,'Z'));
+      body.appendChild(tr);
+    });
+  }
+  function tdText(v, ro){
+    var td=document.createElement('td');
+    if(ro){ td.textContent=v; td.style.fontWeight='600'; } else { td.textContent=v; }
+    return td;
+  }
+  function tdNum(obj,k){
+    var td=document.createElement('td');
+    var inp=document.createElement('input'); inp.type='number'; inp.className='amber';
+    inp.value=(obj[k]==null?'':obj[k]);
+    inp.addEventListener('change',function(){ obj[k]=H.parseEditable(inp.value); H.recompute(); });
+    td.appendChild(inp); return td;
+  }
+  function tdSelect(obj,k,opts){
+    var td=document.createElement('td');
+    var sel=document.createElement('select'); sel.className='amber';
+    opts.forEach(function(o){
+      var op=document.createElement('option'); op.value=o; op.textContent=o;
+      if(obj[k]===o) op.selected=true; sel.appendChild(op);
+    });
+    sel.addEventListener('change',function(){ obj[k]=sel.value; H.recompute(); });
+    td.appendChild(sel); return td;
+  }
+
+  // ---- Operating costs form ----
+  // A curated, labelled subset plus everything else as generic rows.
+  function buildOperating(){
+    var form = H.el('oc-form'); form.innerHTML='';
+    var rows = H.state.operating_costs.rows;
+    rows.forEach(function(r){
+      if (r.values==null) return;
+      var row = H.el; // noop
+      var div = document.createElement('div'); div.className='field';
+      var lab = document.createElement('label'); lab.textContent = (r.label||('Row '+r._row));
+      var val = r.values.B;
+      var ctl;
+      if (typeof val==='number'){
+        ctl=document.createElement('input'); ctl.type='number'; ctl.step='any'; ctl.className='amber';
+        ctl.value=(val==null?'':val);
+        ctl.addEventListener('change',function(){ r.values.B=H.parseEditable(ctl.value); H.recompute(); });
+      } else {
+        ctl=document.createElement('input'); ctl.type='text'; ctl.className='amber';
+        ctl.value=(val==null?'':val);
+        ctl.addEventListener('change',function(){ r.values.B=(ctl.value===''?null:ctl.value); H.recompute(); });
+      }
+      var unit=document.createElement('span'); unit.className='u'; unit.textContent=(r.values.C==null?'':r.values.C);
+      div.appendChild(lab); div.appendChild(ctl); div.appendChild(unit);
+      form.appendChild(div);
+    });
+  }
+
+  // ---- Energy and charging table (Plan A col B, Plan B col C) ----
+  function buildEnergy(){
+    var body=H.el('ec-body'); body.innerHTML='';
+    H.state.energy_and_charging.rows.forEach(function(r){
+      if (r.values==null) return;
+      var tr=document.createElement('tr');
+      tr.appendChild(tdText(r.label||('Row '+r._row)));
+      tr.appendChild(ecCell(r,'B'));
+      tr.appendChild(ecCell(r,'C'));
+      tr.appendChild(tdText(r.values.D==null?'':r.values.D));
+      var meaning=document.createElement('td'); meaning.className='small';
+      meaning.textContent=(r.values.E==null?('Energy and charging!B'+r._row):r.values.E);
+      tr.appendChild(meaning);
+      body.appendChild(tr);
+    });
+  }
+  function ecCell(r,col){
+    var td=document.createElement('td');
+    var v=r.values[col];
+    var inp=document.createElement('input'); inp.className='amber';
+    inp.type=(typeof v==='number')?'number':'text';
+    if(inp.type==='number') inp.step='any';
+    inp.value=(v==null?'':v);
+    inp.addEventListener('change',function(){
+      r.values[col]=(typeof v==='number')?H.parseEditable(inp.value):(inp.value===''?null:inp.value);
+      H.recompute();
+    });
+    td.appendChild(inp); return td;
+  }
+
+  // ---- Sensitivity controls ----
+  // Vary diesel price (EC row 7 B/C), electricity price (EC row 10 B/C),
+  // EV purchase price (Replacement plan col D for every truck), discount rate (OC row 54).
+  var SENS = [
+    {id:'diesel', label:'Commercial diesel (SGD/litre)', min:1.5, max:5, step:0.05, get:getDiesel},
+    {id:'elec', label:'Depot electricity (SGD/grid kWh)', min:0.2, max:0.8, step:0.01, get:getElec},
+    {id:'evprice', label:'EV purchase price (SGD/truck)', min:120000, max:260000, step:1000, get:getEvPrice},
+    {id:'disc', label:'Discount rate (fraction/year)', min:0, max:0.12, step:0.005, get:getDisc}
+  ];
+  function getDiesel(){ return H.ecRow(7).values.B; }
+  function getElec(){ return H.ecRow(10).values.B; }
+  function getDisc(){ return H.ocRow(54).values.B; }
+  function getEvPrice(){
+    // Use the first EV quote present, else fall back to the ChengLong L2EV demo quote 181000.
+    var map=H.replByIdMap();
+    var ids=H.includedFleet().map(function(r){return r.A;});
+    for(var i=0;i<ids.length;i++){ var rp=map[ids[i]]; if(rp && H.isNum(rp.D)) return rp.D; }
+    return 181000;
+  }
+
+  var sensVals = {};
+  function buildSensitivity(){
+    var wrap=H.el('sens-controls'); wrap.innerHTML='';
+    SENS.forEach(function(s){
+      sensVals[s.id] = s.get();
+      var panel=document.createElement('div'); panel.className='panel';
+      var h=document.createElement('h3'); h.textContent=s.label; h.style.fontSize='16px';
+      var out=document.createElement('div'); out.style.fontWeight='600'; out.style.margin='4px 0';
+      var slider=document.createElement('input'); slider.type='range';
+      slider.min=s.min; slider.max=s.max; slider.step=s.step; slider.value=sensVals[s.id];
+      slider.style.width='100%'; slider.className='amber';
+      function label(){ out.textContent = (s.id==='disc') ? (sensVals[s.id]).toFixed(3) : sensVals[s.id].toLocaleString('en-SG'); }
+      label();
+      slider.addEventListener('input',function(){ sensVals[s.id]=Number(slider.value); label(); renderSensitivity(); });
+      panel.appendChild(h); panel.appendChild(slider); panel.appendChild(out);
+      wrap.appendChild(panel);
+    });
+  }
+
+  function renderSensitivity(){
+    // Clone state, apply sensitivity overrides, recompute, render.
+    var s = JSON.parse(JSON.stringify(H.state));
+    setEc(s,7,sensVals.diesel);   // commercial diesel (public diesel left unchanged)
+    setEc(s,10,sensVals.elec);    // depot electricity
+    setOc(s,54,sensVals.disc);
+    // EV purchase price: set col D for every truck whose Plan A or Plan B action is EV.
+    s.replacement_plan.rows.forEach(function(rp){
+      if(rp.A==null) return;
+      if(rp.O==='EV' || rp.R==='EV'){ rp.D = sensVals.evprice; }
+    });
+    var out = H.computeFleet(s);
+    var r = out.results;
+    var html='';
+    ['keep_ice','all_new_ice','plan_a','plan_b'].forEach(function(k){
+      var lbl={keep_ice:'Keep ICE',all_new_ice:'All-new ICE now',plan_a:'Plan A',plan_b:'Plan B'}[k];
+      html += '<tr><td>'+lbl+'</td>'+
+        tdNumHtml(r.totalEconomicTco[k],'money')+
+        tdNumHtml(r.savingVsKeep[k],'money')+
+        tdNumHtml(r.savingPct[k],'pct')+
+        tdNumHtml(r.headroom15[k],'money')+'</tr>';
+    });
+    H.el('sens-body').innerHTML=html;
+  }
+  function setEc(s,rowNum,val){ var r=s.energy_and_charging.rows.filter(function(x){return x._row===rowNum;})[0]; if(r){ r.values.B=val; r.values.C=val; } }
+  function setOc(s,rowNum,val){ var r=s.operating_costs.rows.filter(function(x){return x._row===rowNum;})[0]; if(r){ r.values.B=val; } }
+  function tdNumHtml(v,t){
+    if(v===NA||v==null||typeof v!=='number'||!isFinite(v)) return '<td class="num"><span class="na">n.a.</span></td>';
+    if(t==='pct') return '<td class="num">'+(v*100).toFixed(2)+'%</td>';
+    var neg=v<0,a=Math.abs(v); var str='S$'+a.toLocaleString('en-SG',{maximumFractionDigits:0});
+    return '<td class="num">'+(neg?'-'+str:str)+'</td>';
+  }
+
+  H.setSensRenderer(renderSensitivity);
+
+  // ---- Reset ----
+  function wireReset(){
+    var btn=H.el('reset-btn');
+    if(!btn) return;
+    btn.addEventListener('click',function(){
+      var fresh=H.freshInputs();
+      // Copy fresh into the live state object (keep same reference).
+      Object.keys(H.state).forEach(function(k){ delete H.state[k]; });
+      Object.keys(fresh).forEach(function(k){ H.state[k]=fresh[k]; });
+      buildAll();
+      H.recompute();
+    });
+  }
+
+  function buildAll(){
+    buildFleet(); buildRepl(); buildOperating(); buildEnergy(); buildSensitivity();
+  }
+
+  // ---- init ----
+  buildAll();
+  wireReset();
+  H.recompute();
+})();
+</script>
+</body></html>
