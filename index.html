@@ -186,7 +186,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <div class="charts-region" id="charts-region">
   <figure class="chart-card"><figcaption class="chart-title">Cumulative economic TCO over 10 years</figcaption><div class="chart-box" id="chart-cumulative"></div><figcaption class="chart-cap">Per-path running economic cost, years 0&ndash;10. n.a. years appear as dashed gaps.</figcaption></figure>
   <figure class="chart-card"><figcaption class="chart-title">Total economic TCO by path</figcaption><div class="chart-box" id="chart-total"></div><figcaption class="chart-cap">Lower is cheaper. A hatched bar marked n.a. means the aggregate gate did not clear, not a zero cost.</figcaption></figure>
-  <figure class="chart-card"><figcaption class="chart-title">Saving vs Keep ICE against the 15% target</figcaption><div class="chart-box" id="chart-target"></div><figcaption class="chart-cap">Bars show each EV plan&rsquo;s saving % versus Keep ICE; the dashed line is the entered 15% target. Green meets it, amber is below.</figcaption></figure>
+  <figure class="chart-card"><figcaption class="chart-title">Saving vs Keep ICE against the <span id="chart-target-title-pct">15</span>% target</figcaption><div class="chart-box" id="chart-target"></div><figcaption class="chart-cap">Bars show each EV plan&rsquo;s saving % versus Keep ICE; the dashed line is the entered <span id="chart-target-cap-pct">15</span>% target. Green meets it, amber is below.</figcaption></figure>
   <figure class="chart-card"><figcaption class="chart-title">Day-0 funding by path</figcaption><div class="chart-box" id="chart-day0"></div><figcaption class="chart-cap">Cash needed at day 0. n.a. is shown hatched, never as zero.</figcaption></figure>
   <figure class="chart-card chart-card-wide"><figcaption class="chart-title">Sensitivity response &mdash; Total economic TCO at current sliders</figcaption><div class="chart-box" id="chart-sens"></div><figcaption class="chart-cap">Redraws as you drag the diesel, electricity, EV-price and discount sliders below.</figcaption></figure>
 </div>
@@ -210,7 +210,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="small">Each slider changes one cost driver and recomputes every path through the same engine. These are mathematical break-even conditions, not quoted prices. The baseline is always the current Keep ICE total at the unchanged inputs.</p>
 <div class="grid" id="sens-controls"></div>
 <div class="table-wrap"><table id="sens-table"><thead><tr>
-<th>Path</th><th class="num">Total economic TCO</th><th class="num">Saving vs Keep</th><th class="num">Saving %</th><th class="num">15% headroom</th>
+<th>Path</th><th class="num">Total economic TCO</th><th class="num">Saving vs Keep</th><th class="num">Saving %</th><th class="num" id="sens-headroom-th">15% headroom</th>
 </tr></thead><tbody id="sens-body"></tbody></table></div>
 <p class="small" id="sens-note">Average km cannot exceed peak km. A price change is a cost breakpoint, not a route-planning recommendation.</p>
 </section>
@@ -1678,8 +1678,18 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   var PLAN_KEYS = ['keep_ice','all_new_ice','plan_a','plan_b'];
   var PLAN_LABELS = {keep_ice:'Keep ICE', all_new_ice:'All-new ICE now', plan_a:'Plan A', plan_b:'Plan B'};
 
+  // Committed saving target as a percentage string (mirrors the engine's
+  // resolveSavingTarget domain guard + formatTargetPct); drives the dynamic
+  // '15%' labels so they track the live target instead of a frozen literal.
+  function committedTargetPct(){
+    var n = Number(state.savingTarget);
+    var t = (isFinite(n) && n>0 && n<1) ? n : 0.15;
+    return parseFloat((t*100).toFixed(4)).toString();
+  }
+
   function renderResults(out){
     var r = out.results;
+    var tp = committedTargetPct();
     var rows = [
       ['Truck count', r.truckCount, 'int'],
       ['Vehicle economic TCO', r.vehicleEconomicTco, 'money'],
@@ -1687,7 +1697,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
       ['Total economic TCO', r.totalEconomicTco, 'money'],
       ['Saving vs Keep ICE', r.savingVsKeep, 'money'],
       ['Saving %', r.savingPct, 'pct'],
-      ['15% fleet saving headroom', r.headroom15, 'money'],
+      [tp + '% fleet saving headroom', r.headroom15, 'money'],
       ['Cash less year-10 assets', r.cashLessTerminal, 'money'],
       ['Day-0 funding before loans', r.day0Funding, 'money'],
       ['Cost per productive km', r.costPerKm, 'km'],
@@ -1705,7 +1715,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
       html += '</tr>';
     });
     // Max site TCO row (Plan A / Plan B only).
-    html += '<tr class="resultline"><td>Max site TCO for 15% saving</td>' +
+    html += '<tr class="resultline"><td>Max site TCO for ' + tp + '% saving</td>' +
       cell('<span class="na">&mdash;</span>') + cell('<span class="na">&mdash;</span>') +
       cell(fmtMoney(r.maxSiteTco15.plan_a)) + cell(fmtMoney(r.maxSiteTco15.plan_b)) + '</tr>';
     el('results-body').innerHTML = html;
@@ -1812,7 +1822,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     renderSite(out);
     renderGates(out);
     renderReview(out);
-    renderSensitivity();
+    renderSensitivity(out);
     renderCharts(out);
   };
 
@@ -2050,18 +2060,32 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     td.appendChild(inp); return td;
   }
 
-  // ---- Sensitivity controls ----
-  // Vary diesel price (EC row 7 B/C), electricity price (EC row 10 B/C),
-  // EV purchase price (Replacement plan col D for every truck), discount rate (OC row 54).
-  var SENS = [
-    {id:'diesel', label:'Commercial diesel (SGD/litre)', min:1.5, max:5, step:0.05, get:getDiesel},
-    {id:'elec', label:'Depot electricity (SGD/grid kWh)', min:0.2, max:0.8, step:0.01, get:getElec},
-    {id:'evprice', label:'EV purchase price (SGD/truck)', min:120000, max:260000, step:1000, get:getEvPrice},
-    {id:'disc', label:'Discount rate (fraction/year)', min:0, max:0.12, step:0.005, get:getDisc}
-  ];
-  function getDiesel(){ return H.ecRow(7).values.B; }
-  function getElec(){ return H.ecRow(10).values.B; }
-  function getDisc(){ return H.ocRow(54).values.B; }
+  // ---- Shared cost-driver controls (Task A: single source of truth) --------
+  // Each driver is bound to the SAME canonical state field that computeFleet
+  // reads (no clone, no parallel store). Both a <input type=range> slider and a
+  // <input type=number> box read and write that one field; editing either writes
+  // the value into state and calls the ONE liveRecompute() path, so the money
+  // view, the charts, the gates AND the sensitivity table all move in lockstep.
+  // The sensitivity section is therefore a LIVE reflection of committed state
+  // (Q6 Option A), not a throwaway JSON clone.
+  //
+  // Q5 structure preserved: the unified commercial diesel/electricity driver
+  // writes BOTH Plan A (col B) and Plan B (col C) together (matching the old
+  // setEc). Public diesel and the per-plan A/B overrides stay editable in the
+  // Advanced area (#ec-body-adv / #oc-form-adv); only the commercial A/B pair is
+  // driven here. The EV-quote driver fans col D to every EV-action truck.
+  //
+  // The saving-target (Task B) is one more shared driver bound to the top-level
+  // H.state.savingTarget field FEAT-002 introduced (the engine defaults it to
+  // 0.15 when absent / out of (0,1)); moving it recomputes headroom15,
+  // maxSiteTco15 and the 'Meets entered X% target' claim live.
+  var DEFAULT_SAVING_TARGET = 0.15;
+  function getDiesel(){ var r=H.ecRow(7); return r?r.values.B:undefined; }
+  function setDiesel(v){ var r=H.ecRow(7); if(r){ r.values.B=v; r.values.C=v; } }
+  function getElec(){ var r=H.ecRow(10); return r?r.values.B:undefined; }
+  function setElec(v){ var r=H.ecRow(10); if(r){ r.values.B=v; r.values.C=v; } }
+  function getDisc(){ var r=H.ocRow(54); return r?r.values.B:undefined; }
+  function setDisc(v){ var r=H.ocRow(54); if(r){ r.values.B=v; } }
   function getEvPrice(){
     // Use the first EV quote present, else fall back to the ChengLong L2EV demo quote 181000.
     var map=H.replByIdMap();
@@ -2069,38 +2093,100 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     for(var i=0;i<ids.length;i++){ var rp=map[ids[i]]; if(rp && H.isNum(rp.D)) return rp.D; }
     return 181000;
   }
+  function setEvPrice(v){
+    // Fan the single EV quote to col D for every truck whose Plan A or Plan B
+    // action is EV (the quote basis the engine reads for the EV paths).
+    var map=H.replByIdMap();
+    var ids=H.includedFleet().map(function(r){return r.A;});
+    ids.forEach(function(id){ var rp=map[id]; if(rp && (rp.O==='EV'||rp.R==='EV')) rp.D=v; });
+  }
+  function getTarget(){
+    // Mirror the engine's resolveSavingTarget domain guard so the control shows
+    // the value computeFleet will actually use (default 0.15 when out of range).
+    var raw=H.state.savingTarget; var n=Number(raw);
+    return (isFinite(n) && n>0 && n<1) ? n : DEFAULT_SAVING_TARGET;
+  }
+  function setTarget(v){ H.state.savingTarget = v; }
 
-  var sensVals = {};
+  // Format a target fraction as a percentage with no spurious decimals, matching
+  // the engine's formatTargetPct (0.15 -> '15', 0.2 -> '20', 0.125 -> '12.5').
+  function fmtTargetPct(t){ return parseFloat((t*100).toFixed(4)).toString(); }
+  H.fmtTargetPct = fmtTargetPct;
+  H.committedTarget = getTarget;
+
+  // The four price/rate drivers feed the sensitivity table; the saving-target
+  // driver is a fifth shared control rendered alongside them.
+  var SENS = [
+    {id:'diesel', label:'Commercial diesel (SGD/litre)', min:1.5, max:5, step:0.05, get:getDiesel, set:setDiesel, kind:'num'},
+    {id:'elec', label:'Depot electricity (SGD/grid kWh)', min:0.2, max:0.8, step:0.01, get:getElec, set:setElec, kind:'num'},
+    {id:'evprice', label:'EV purchase price (SGD/truck)', min:120000, max:260000, step:1000, get:getEvPrice, set:setEvPrice, kind:'num'},
+    {id:'disc', label:'Discount rate (fraction/year)', min:0, max:0.12, step:0.005, get:getDisc, set:setDisc, kind:'disc'},
+    {id:'target', label:'Fleet saving target (%)', min:0.05, max:0.30, step:0.005, get:getTarget, set:setTarget, kind:'pct'}
+  ];
+
+  // Live references to each driver's slider + number box so renderSensitivity()
+  // can re-sync their displayed values to committed state (e.g. after an
+  // Advanced-area edit or a Reset moves the same canonical field).
+  var sensCtl = {};
+
+  function fmtDriver(s, v){
+    if (!H.isNum(v)) return '';
+    if (s.kind==='disc') return v.toFixed(3);
+    if (s.kind==='pct') return fmtTargetPct(v) + '%';
+    return v.toLocaleString('en-SG');
+  }
+
   function buildSensitivity(){
     var wrap=H.el('sens-controls'); wrap.innerHTML='';
+    sensCtl = {};
     SENS.forEach(function(s){
-      sensVals[s.id] = s.get();
+      var cur = s.get();
       var panel=document.createElement('div'); panel.className='panel';
       var h=document.createElement('h3'); h.textContent=s.label; h.style.fontSize='16px';
       var out=document.createElement('div'); out.style.fontWeight='600'; out.style.margin='4px 0';
       var slider=document.createElement('input'); slider.type='range';
-      slider.min=s.min; slider.max=s.max; slider.step=s.step; slider.value=sensVals[s.id];
+      slider.min=s.min; slider.max=s.max; slider.step=s.step; slider.value=cur;
       slider.style.width='100%'; slider.className='amber';
-      function label(){ out.textContent = (s.id==='disc') ? (sensVals[s.id]).toFixed(3) : sensVals[s.id].toLocaleString('en-SG'); }
-      label();
-      slider.addEventListener('input',function(){ sensVals[s.id]=Number(slider.value); label(); renderSensitivity(); });
-      panel.appendChild(h); panel.appendChild(slider); panel.appendChild(out);
+      var box=document.createElement('input'); box.type='number';
+      box.min=s.min; box.max=s.max; box.step=s.step; box.value=cur;
+      box.className='amber'; box.style.width='120px';
+      function show(v){ out.textContent = fmtDriver(s, v); }
+      show(cur);
+      // Both controls write the SAME canonical state field, keep each other in
+      // sync, and trigger the one live recompute. renderSensitivity (called by
+      // recompute) re-reads committed state, so there is no divergence.
+      function commit(v){
+        if (!isFinite(v)) return;
+        s.set(v);
+        slider.value = v; box.value = v; show(v);
+        liveRecompute();
+      }
+      slider.addEventListener('input',function(){ commit(Number(slider.value)); });
+      box.addEventListener('input',function(){ if(box.value!=='') commit(Number(box.value)); });
+      sensCtl[s.id] = {slider:slider, box:box, show:show, def:s};
+      panel.appendChild(h); panel.appendChild(slider); panel.appendChild(box); panel.appendChild(out);
       wrap.appendChild(panel);
     });
   }
 
-  function renderSensitivity(){
-    // Clone state, apply sensitivity overrides, recompute, render.
-    var s = JSON.parse(JSON.stringify(H.state));
-    setEc(s,7,sensVals.diesel);   // commercial diesel (public diesel left unchanged)
-    setEc(s,10,sensVals.elec);    // depot electricity
-    setOc(s,54,sensVals.disc);
-    // EV purchase price: set col D for every truck whose Plan A or Plan B action is EV.
-    s.replacement_plan.rows.forEach(function(rp){
-      if(rp.A==null) return;
-      if(rp.O==='EV' || rp.R==='EV'){ rp.D = sensVals.evprice; }
+  // Re-sync every driver control to the committed state value. Called on each
+  // recompute so an edit made in the Advanced area (which writes the same
+  // canonical field) or a Reset is reflected on the slider + number box.
+  function syncSensControls(){
+    SENS.forEach(function(s){
+      var c = sensCtl[s.id]; if(!c) return;
+      var v = s.get();
+      if (H.isNum(v)){ c.slider.value = v; c.box.value = v; c.show(v); }
     });
-    var out = H.computeFleet(s);
+  }
+
+  // Render the sensitivity table from COMMITTED state (Q6 Option A). recompute()
+  // passes the already-computed engine output, so the sens table reflects the
+  // identical value shown in the money view (no clone divergence). Also publish
+  // it to H.onSensResult / H.lastSensOut so the Charts module redraws chart-sens.
+  function renderSensitivity(out){
+    if (!out){ out = H.computeFleet(H.state); }
+    syncSensControls();
     var r = out.results;
     var html='';
     ['keep_ice','all_new_ice','plan_a','plan_b'].forEach(function(k){
@@ -2112,13 +2198,12 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
         tdNumHtml(r.headroom15[k],'money')+'</tr>';
     });
     H.el('sens-body').innerHTML=html;
-    // Publish the slider-overridden result so the Charts module can redraw the
-    // sensitivity-response chart live as the sliders drag (input event).
+    // Keep the dynamic '15% headroom' column header in step with the target.
+    var hdr = H.el('sens-headroom-th');
+    if (hdr) hdr.textContent = fmtTargetPct(getTarget()) + '% headroom';
     H.lastSensOut = out;
-    if (typeof H.onSensResult === 'function') H.onSensResult(out, sensVals);
+    if (typeof H.onSensResult === 'function') H.onSensResult(out);
   }
-  function setEc(s,rowNum,val){ var r=s.energy_and_charging.rows.filter(function(x){return x._row===rowNum;})[0]; if(r){ r.values.B=val; r.values.C=val; } }
-  function setOc(s,rowNum,val){ var r=s.operating_costs.rows.filter(function(x){return x._row===rowNum;})[0]; if(r){ r.values.B=val; } }
   function tdNumHtml(v,t){
     if(v===NA||v==null||typeof v!=='number'||!isFinite(v)) return '<td class="num"><span class="na">n.a.</span></td>';
     if(t==='pct') return '<td class="num">'+(v*100).toFixed(2)+'%</td>';
@@ -2597,7 +2682,11 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     var res=out&&out.results;
     var pct=res&&res.savingPct, hr=res&&res.headroom15;
     var evPaths=['plan_a','plan_b','all_new_ice'];
-    var target=0.15;
+    var target=(typeof H.committedTarget==='function') ? H.committedTarget() : 0.15;
+    var targetPct=(typeof H.fmtTargetPct==='function') ? H.fmtTargetPct(target) : '15';
+    // Keep the figcaption percentages in step with the committed target.
+    var ttl=el('chart-target-title-pct'); if(ttl) ttl.textContent=targetPct;
+    var cap=el('chart-target-cap-pct'); if(cap) cap.textContent=targetPct;
     // Scale: show from min(0, lowest) to max(target*1.3, highest) in percent.
     var vs=evPaths.map(function(p){ return pct?pct[p]:NA; }).filter(isNum);
     var lo=Math.min(0, target); var hi=Math.max(target*1.3, target);
@@ -2611,7 +2700,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     // zero baseline + 15% target reference line
     svg+='<line x1="'+zx.toFixed(1)+'" y1="'+mT+'" x2="'+zx.toFixed(1)+'" y2="'+(mT+plotH)+'" stroke="'+C.line2+'" stroke-width="1"/>';
     svg+='<line x1="'+tx.toFixed(1)+'" y1="'+(mT-2)+'" x2="'+tx.toFixed(1)+'" y2="'+(mT+plotH)+'" stroke="'+C.warn+'" stroke-width="1.5" stroke-dasharray="4 3"/>';
-    svg+='<text x="'+tx.toFixed(1)+'" y="'+(mT+plotH+16)+'" text-anchor="middle" fill="'+C.warn+'">15% target</text>';
+    svg+='<text x="'+tx.toFixed(1)+'" y="'+(mT+plotH+16)+'" text-anchor="middle" fill="'+C.warn+'">'+targetPct+'% target</text>';
     var n=evPaths.length, slot=plotH/n, bh=slot*0.5;
     evPaths.forEach(function(p,i){
       var cy=mT+slot*i+slot/2, y=cy-bh/2;

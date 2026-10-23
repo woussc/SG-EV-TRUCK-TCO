@@ -190,14 +190,25 @@ const day0Html = byId['chart-day0'].innerHTML;
 checks.push(['day0 chart marks n.a. (not zero bar)',
   day0Html.indexOf('n.a.') !== -1 && day0Html.indexOf('url(#hatch') !== -1]);
 
-// Live update #1: dragging a sensitivity slider ('input' event) redraws the
-// sensitivity-response chart. The sliders are appended under #sens-controls as
-// panels [h3, input[type=range], div]; grab the first slider and fire 'input'.
+// Live update #1: dragging the UNIFIED shared-driver slider ('input' event)
+// redraws the sensitivity-response chart. The drivers are appended under
+// #sens-controls as panels [h3, input[type=range], input[type=number], div];
+// each slider now writes its canonical state field and runs the ONE recompute
+// (Task A), so firing it must be observed synchronously -> force sync mode.
+// Grab the first driver's slider (range) and fire 'input'.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
 const sensControls = byId['sens-controls'];
+function driverControls(panel) {
+  // Returns { slider, box } for a driver panel: slider is input[type=range],
+  // box is input[type=number].
+  const inputs = (panel.children || []).filter((c) => c.tagName === 'input');
+  const slider = inputs.find((c) => c.type === 'range') || inputs[0];
+  const box = inputs.find((c) => c.type === 'number') || inputs[1];
+  return { slider, box };
+}
 let sensSlider = null;
 if (sensControls && sensControls.children.length) {
-  const panel0 = sensControls.children[0];
-  sensSlider = panel0.children.find((c) => c.tagName === 'input') || panel0.children[1];
+  sensSlider = driverControls(sensControls.children[0]).slider;
 }
 checks.push(['sensitivity slider present', !!sensSlider]);
 const sensBefore = byId['chart-sens'].innerHTML;
@@ -208,6 +219,119 @@ if (sensSlider) {
 const sensAfter = byId['chart-sens'].innerHTML;
 checks.push(['sensitivity chart updates live on slider input',
   !!sensSlider && sensBefore !== sensAfter && sensAfter.indexOf('<svg') !== -1]);
+
+// ---- FEAT-003 (A): unified shared diesel driver, no clone divergence -------
+// The sensitivity section is a LIVE reflection of committed state (Q6 Option
+// A): driving the commercial-diesel driver through its control must update BOTH
+// the main results path AND the sensitivity table to the SAME value (the old
+// bug kept a separate JSON clone + sensVals store so the slider and the input
+// box diverged). Find the diesel driver (first panel, label mentions 'diesel'),
+// drive a new litre price through its number box, and assert that the engine
+// now reads that exact value on ec row 7 (B and C, the Q5 A/B pair) AND that
+// the sens-body renders the recomputed numbers (committed state, not a clone).
+function panelLabel(panel) {
+  const h = (panel.children || []).find((c) => c.tagName === 'h3');
+  return (h && (h.textContent || '')) || '';
+}
+let dieselPanel = null;
+for (const p of (sensControls.children || [])) {
+  if (/diesel/i.test(panelLabel(p))) { dieselPanel = p; break; }
+}
+checks.push(['unified diesel driver present', !!dieselPanel]);
+const dieselCtl = dieselPanel ? driverControls(dieselPanel) : {};
+const DRIVEN_DIESEL = 3.33;
+const sensBodyBeforeDiesel = byId['sens-body'].innerHTML;
+if (dieselCtl.box) { dieselCtl.box.value = String(DRIVEN_DIESEL); dieselCtl.box.fire('input'); }
+// Canonical state field the engine reads (ec row 7, Plan A col B + Plan B col C).
+const ecRow7 = windowObj.__HS.state.energy_and_charging.rows.find((row) => row._row === 7);
+checks.push(['driver writes committed state (ec row7 B)',
+  !!ecRow7 && ecRow7.values.B === DRIVEN_DIESEL]);
+checks.push(['driver writes committed state (ec row7 C = B, Q5 pair)',
+  !!ecRow7 && ecRow7.values.C === DRIVEN_DIESEL]);
+// The driver updates the number box and the slider together (single source).
+checks.push(['driver slider mirrors driven value',
+  !!dieselCtl.slider && Number(dieselCtl.slider.value) === DRIVEN_DIESEL]);
+// The sensitivity table recomputed from the SAME committed state (no clone):
+// the rendered sens-body changed and the money view (results-body) reflects the
+// identical driven engine run. Recompute the engine from committed state and
+// confirm the sens-body Keep ICE total matches the main results Keep ICE total.
+const sensBodyAfterDiesel = byId['sens-body'].innerHTML;
+checks.push(['sens table reflects driven diesel (no clone divergence)',
+  sensBodyBeforeDiesel !== sensBodyAfterDiesel]);
+const drivenOut = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+function fmtMoneyCell(v) {
+  if (v === NA || v == null || typeof v !== 'number' || !isFinite(v)) return null;
+  const neg = v < 0, a = Math.abs(v);
+  const s = 'S$' + a.toLocaleString('en-SG', { maximumFractionDigits: 0 });
+  return neg ? '-' + s : s;
+}
+const keepTotalCell = fmtMoneyCell(drivenOut.results.totalEconomicTco.keep_ice);
+checks.push(['sens table + results agree on driven value (same source of truth)',
+  !!keepTotalCell &&
+  byId['sens-body'].innerHTML.indexOf(keepTotalCell) !== -1 &&
+  byId['results-body'].innerHTML.indexOf(keepTotalCell) !== -1]);
+
+// ---- FEAT-003 (B): live configurable saving-target control -----------------
+// A shared saving-target driver (slider + number, shown as a percentage) binds
+// to the top-level state.savingTarget field FEAT-002 introduced. It defaults to
+// 0.15 (the engine's resolveSavingTarget domain default; the demo fixture sets
+// no savingTarget). Moving it must change the rendered headroom / claim label
+// live, while the DEFAULT path still yields 'Meets entered 15% target'.
+let targetPanel = null;
+for (const p of (sensControls.children || [])) {
+  if (/target/i.test(panelLabel(p))) { targetPanel = p; break; }
+}
+checks.push(['saving-target control present', !!targetPanel]);
+const targetCtl = targetPanel ? driverControls(targetPanel) : {};
+// Initial value reflects the 0.15 default (the demo sets no savingTarget).
+checks.push(['saving-target defaults to 0.15',
+  !!targetCtl.slider && Math.abs(Number(targetCtl.slider.value) - 0.15) < 1e-9]);
+// With the default target the engine still emits the exact legacy claim label.
+const defaultTargetOut = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+// (state.savingTarget is still unset here -> engine defaults to 0.15.)
+const evForLabel = scoredSeeds.find((x) => x.id === 'evergreen');
+checks.push(['default target still yields Meets entered 15% target',
+  evForLabel && evForLabel.s.fifteenTargetMet === 'Meets entered 15% target']);
+// Moving the target changes the rendered headroom row + the claim label. Drive
+// the target to 0.25 and confirm the results-body headroom label + decision
+// claim both reflect the new committed target, then restore the default.
+const headroomBefore = byId['results-body'].innerHTML;
+if (targetCtl.box) { targetCtl.box.value = '0.25'; targetCtl.box.fire('input'); }
+checks.push(['saving-target writes committed state.savingTarget',
+  windowObj.__HS.state.savingTarget === 0.25]);
+const headroomAfter = byId['results-body'].innerHTML;
+checks.push(['moving target relabels headroom row (25%)',
+  headroomBefore !== headroomAfter && headroomAfter.indexOf('25% fleet saving headroom') !== -1]);
+// The sens-table headroom column header also tracks the committed target.
+checks.push(['moving target relabels sens headroom header (25%)',
+  byId['sens-body'] && byId['sens-headroom-th'] &&
+  byId['sens-headroom-th'].textContent === '25% headroom']);
+// The 'Meets/Below entered X% target' claim label is conditional (never an
+// adoption probability) and only renders for a gate-passing case. Prove the
+// label reflects the committed target through the engine on the gate-passing
+// Evergreen seed: at the default 0.15 it reads 'Meets entered 15% target'; at a
+// higher 0.30 target the SAME case flips to 'Below entered 30% target'.
+const everAtDefault = windowObj.HSEngine.scoreProspect(
+  windowObj.HSEngine.computeFleet(seeds.cases.find((c) => c.id === 'evergreen').inputs));
+const everInputsHi = JSON.parse(JSON.stringify(seeds.cases.find((c) => c.id === 'evergreen').inputs));
+everInputsHi.savingTarget = 0.30;
+const everAtHi = windowObj.HSEngine.scoreProspect(windowObj.HSEngine.computeFleet(everInputsHi));
+checks.push(['claim label reflects committed target (default 15% met)',
+  everAtDefault.fifteenTargetMet === 'Meets entered 15% target']);
+checks.push(['claim label reflects committed target (30% below, conditional)',
+  everAtHi.fifteenTargetMet === 'Below entered 30% target']);
+// n.a. propagation preserved at the extreme: driving the target does not turn
+// an n.a. headroom into a fake zero (the demo plan_a/plan_b totals are n.a.).
+checks.push(['target move keeps n.a. (no fake zero)',
+  byId['sens-body'].innerHTML.indexOf('n.a.') !== -1]);
+// Restore the default target so later assertions see the baseline.
+if (targetCtl.box) { targetCtl.box.value = '0.15'; targetCtl.box.fire('input'); }
+// Restore diesel so the later 'change' live-update assertions compare cleanly.
+if (dieselCtl.box) {
+  const demoDiesel = windowObj.HSDemoCase.inputs.energy_and_charging.rows.find((row) => row._row === 7);
+  if (demoDiesel) { dieselCtl.box.value = String(demoDiesel.values.B); dieselCtl.box.fire('input'); }
+}
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // Live update #2: changing an amber input and recomputing redraws the
 // comparison charts (they read from the same computeFleet(state) output).
