@@ -2246,7 +2246,7 @@
               "values": {
                 "B": "Hong Seh 200k average",
                 "C": "basis",
-                "D": "Hong Seh 200,000 km average uses the selected EV model. Annual override uses the value in row 26."
+                "D": "The 200,000 km average basis uses the selected EV model. Annual override uses the value in row 26."
               }
             }
           ]
@@ -2840,7 +2840,7 @@
               "N": "Farizon F3e",
               "O": 1861,
               "P": 0.009305,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 8,
@@ -2860,7 +2860,7 @@
               "N": "SRM T3",
               "O": 2220,
               "P": 0.0111,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 9,
@@ -2880,7 +2880,7 @@
               "N": "Chenglong L2",
               "O": 3285,
               "P": 0.016425,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 10,
@@ -2900,7 +2900,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 11,
@@ -2920,7 +2920,7 @@
               "N": "SRM T3",
               "O": 2220,
               "P": 0.0111,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 12,
@@ -2940,7 +2940,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 13,
@@ -2960,7 +2960,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             }
           ]
         },
@@ -9777,7 +9777,7 @@
               "values": {
                 "B": "Hong Seh 200k average",
                 "C": "basis",
-                "D": "Hong Seh 200,000 km average uses the selected EV model. Annual override uses the value in row 26."
+                "D": "The 200,000 km average basis uses the selected EV model. Annual override uses the value in row 26."
               }
             }
           ]
@@ -10371,7 +10371,7 @@
               "N": "Farizon F3e",
               "O": 1861,
               "P": 0.009305,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 8,
@@ -10391,7 +10391,7 @@
               "N": "SRM T3",
               "O": 2220,
               "P": 0.0111,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 9,
@@ -10411,7 +10411,7 @@
               "N": "Chenglong L2",
               "O": 3285,
               "P": 0.016425,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 10,
@@ -10431,7 +10431,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 11,
@@ -10451,7 +10451,7 @@
               "N": "SRM T3",
               "O": 2220,
               "P": 0.0111,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 12,
@@ -10471,7 +10471,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 13,
@@ -10491,7 +10491,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             }
           ]
         },
@@ -13018,7 +13018,7 @@
               "values": {
                 "B": "Annual override",
                 "C": "basis",
-                "D": "Hong Seh 200,000 km average uses the selected EV model. Annual override uses the value in row 26."
+                "D": "The 200,000 km average basis uses the selected EV model. Annual override uses the value in row 26."
               }
             }
           ]
@@ -13612,7 +13612,7 @@
               "N": "Farizon F3e",
               "O": 1861,
               "P": 0.009305,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 8,
@@ -13632,7 +13632,7 @@
               "N": "SRM T3",
               "O": 2220,
               "P": 0.0111,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 9,
@@ -13652,7 +13652,7 @@
               "N": "Chenglong L2",
               "O": 3285,
               "P": 0.016425,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 10,
@@ -13672,7 +13672,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 11,
@@ -13692,7 +13692,7 @@
               "N": "SRM T3",
               "O": 2220,
               "P": 0.0111,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 12,
@@ -13712,7 +13712,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 13,
@@ -13732,7 +13732,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             }
           ]
         },
@@ -16175,7 +16175,7 @@
               "values": {
                 "B": "Annual override",
                 "C": "basis",
-                "D": "Hong Seh 200,000 km average uses the selected EV model. Annual override uses the value in row 26."
+                "D": "The 200,000 km average basis uses the selected EV model. Annual override uses the value in row 26."
               }
             }
           ]
@@ -16769,7 +16769,7 @@
               "N": "Farizon F3e",
               "O": 1861,
               "P": 0.009305,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 8,
@@ -16789,7 +16789,7 @@
               "N": "SRM T3",
               "O": 2220,
               "P": 0.0111,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 9,
@@ -16809,7 +16809,7 @@
               "N": "Chenglong L2",
               "O": 3285,
               "P": 0.016425,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 10,
@@ -16829,7 +16829,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 11,
@@ -16849,7 +16849,7 @@
               "N": "SRM T3",
               "O": 2220,
               "P": 0.0111,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 12,
@@ -16869,7 +16869,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             },
             {
               "_row": 13,
@@ -16889,7 +16889,7 @@
               "N": "Farizon H5E / H9E",
               "O": 1400,
               "P": 0.007,
-              "Q": "Hong Seh schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+              "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
             }
           ]
         },
