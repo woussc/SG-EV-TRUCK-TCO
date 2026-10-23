@@ -64,6 +64,10 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'confidence-badge','confidence-dot','confidence-text',
   // FEAT-004 (portfolio): ranked model-matching guide hooks.
   'portfolio-body','portfolio-duty-line','portfolio-honesty',
+  // FEAT-003: TCO interactive dashboard + Part A fleet matched-models summary.
+  'chart-cumulative','chart-breakdown','chart-sens','chart-total','chart-day0',
+  'results-table','day0-cards','tco-tooltip',
+  'portfolio-matched-models','portfolio-fleet-body','portfolio-config-text',
   // FEAT-002: folded-in customer profile + consolidated per-truck Advanced.
   'customer-form','fleet-adv'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
@@ -237,31 +241,74 @@ checks.push(['account sort renders Blank profile last',
 // sensitivity slider 'input' event redraws the sensitivity chart (live update);
 // (c) changing an amber input redraws the comparison charts (live update);
 // (d) an n.a. total is drawn as a hatched 'n.a.' marker, never a zero bar.
-const chartIds = ['chart-cumulative','chart-total','chart-target','chart-day0','chart-sens'];
+// FEAT-003 re-layout: the TCO stage is now an interactive dashboard. The hero
+// is the cumulative-TCO LINE (chart-cumulative); below it the cost-component
+// BREAKDOWN BAR (chart-breakdown); beside them the sensitivity chart
+// (chart-sens). The old chart-total / chart-target / chart-day0 boxes were
+// folded away (day-0 is now a card grid; total/target live in the hero + table).
+const chartIds = ['chart-cumulative','chart-breakdown','chart-sens'];
 chartIds.forEach((id) => {
   const h = byId[id] ? byId[id].innerHTML : '';
   checks.push([id + ' emits <svg>', h.indexOf('<svg') !== -1]);
 });
-// The cumulative chart draws real geometry (polyline/circle for the numeric runs).
+// The cumulative HERO draws real geometry (polyline + a data point per year).
 const cumHtml = byId['chart-cumulative'].innerHTML;
-checks.push(['cumulative chart draws polyline/point',
+checks.push(['cumulative hero draws polyline/point',
   cumHtml.indexOf('polyline') !== -1 || cumHtml.indexOf('<circle') !== -1]);
-// The bar charts draw <rect> bars.
-checks.push(['total chart draws rect bars', byId['chart-total'].innerHTML.indexOf('<rect') !== -1]);
-checks.push(['day0 chart draws rect bars', byId['chart-day0'].innerHTML.indexOf('<rect') !== -1]);
+// FEAT-003: a labelled, INTERACTIVE data point for every year carries the
+// cross-highlight hooks (data-tco-point + data-plan/-year/-amount).
+checks.push(['hero has interactive per-year data points (data-tco-point)',
+  cumHtml.indexOf('data-tco-point') !== -1]);
+checks.push(['hero data points carry plan + year + 2dp amount hooks',
+  cumHtml.indexOf('data-plan=') !== -1 && cumHtml.indexOf('data-year=') !== -1 &&
+  cumHtml.indexOf('data-amount=') !== -1]);
+// FEAT-003: year 3 / 5 / 10 financial-milestone segmentation markers.
+checks.push(['hero marks year 3/5/10 milestones',
+  cumHtml.indexOf('data-tco-milestone="3"') !== -1 &&
+  cumHtml.indexOf('data-tco-milestone="5"') !== -1 &&
+  cumHtml.indexOf('data-tco-milestone="10"') !== -1]);
+// FEAT-003: displayed figures are 2 decimal places (display-only formatter).
+checks.push(['hero amounts formatted to 2 decimal places',
+  /data-amount="[^"]*\.\d\d"/.test(cumHtml)]);
+
+// The breakdown chart draws stacked <rect> component segments with hooks.
+const brkHtml = byId['chart-breakdown'].innerHTML;
+checks.push(['breakdown chart draws rect segments', brkHtml.indexOf('<rect') !== -1]);
+checks.push(['breakdown segments are interactive (data-tco-seg + plan + amount)',
+  brkHtml.indexOf('data-tco-seg') !== -1 && brkHtml.indexOf('data-plan=') !== -1 &&
+  brkHtml.indexOf('data-amount=') !== -1]);
+checks.push(['breakdown names the vehicle + site components',
+  brkHtml.indexOf('Vehicle economic TCO') !== -1 && brkHtml.indexOf('charging-site') !== -1]);
 
 // n.a. is honoured, not drawn as a zero bar. For the demo case plan_a/plan_b
-// totalEconomicTco is n.a., so the TCO bar chart MUST carry an 'n.a.' marker and
-// MUST use the hatched placeholder pattern (url(#hatch_...)) rather than a solid
-// full-height-from-zero bar implying zero cost.
+// totalEconomicTco is n.a. (the site cost stays n.a.), so the breakdown bar for
+// those paths MUST carry an 'n.a.' marker and use the hatched placeholder
+// pattern (url(#hatch_...)) rather than a solid zero-height-implying bar.
 checks.push(['demo plan_a Total is n.a.', r.totalEconomicTco.plan_a === NA]);
 checks.push(['demo plan_b Total is n.a.', r.totalEconomicTco.plan_b === NA]);
-const totalHtml = byId['chart-total'].innerHTML;
-checks.push(['total chart marks n.a. (not zero bar)',
-  totalHtml.indexOf('n.a.') !== -1 && totalHtml.indexOf('url(#hatch') !== -1]);
-const day0Html = byId['chart-day0'].innerHTML;
-checks.push(['day0 chart marks n.a. (not zero bar)',
-  day0Html.indexOf('n.a.') !== -1 && day0Html.indexOf('url(#hatch') !== -1]);
+checks.push(['breakdown chart marks n.a. (not zero bar)',
+  brkHtml.indexOf('n.a.') !== -1 && brkHtml.indexOf('url(#hatch') !== -1]);
+
+// FEAT-003: the cross-highlight API is exposed and the chart boxes are wired.
+checks.push(['cross-highlight API exposed on the page',
+  typeof windowObj.__HS.tcoCrossHighlight === 'function']);
+checks.push(['hero chart box wired for interactivity (mouseover listener)',
+  Array.isArray(byId['chart-cumulative'].listeners.mouseover) &&
+  byId['chart-cumulative'].listeners.mouseover.length > 0]);
+checks.push(['breakdown chart box wired for interactivity (mouseover listener)',
+  Array.isArray(byId['chart-breakdown'].listeners.mouseover) &&
+  byId['chart-breakdown'].listeners.mouseover.length > 0]);
+// FEAT-003: the results-table value cells carry the per-plan cross-highlight
+// hook, and the Day-0 funding cards carry a per-plan hook.
+checks.push(['results-table value cells carry data-results-plan hook',
+  byId['results-body'].innerHTML.indexOf('data-results-plan=') !== -1]);
+checks.push(['Day-0 funding cards carry per-plan hook',
+  byId['day0-cards'].innerHTML.indexOf('data-day0-plan=') !== -1]);
+// FEAT-003: the Day-0 cards render 2dp currency and keep n.a. (never zero).
+checks.push(['Day-0 cards render n.a. (not a zero substitute)',
+  byId['day0-cards'].innerHTML.indexOf('n.a.') !== -1]);
+checks.push(['Day-0 cards render a 2dp currency figure',
+  /S\$[\d,]+\.\d\d/.test(byId['day0-cards'].innerHTML)]);
 
 // Live update #1: dragging the UNIFIED shared-driver slider ('input' event)
 // redraws the sensitivity-response chart. The drivers are appended under
@@ -435,13 +482,13 @@ if (dieselCtl.box) {
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // Live update #2: changing an amber input and recomputing redraws the
-// comparison charts (they read from the same computeFleet(state) output).
-const totalBefore = byId['chart-total'].innerHTML;
+// dashboard charts (they read from the same computeFleet(state) output).
+const totalBefore = byId['chart-breakdown'].innerHTML;
 windowObj.__HS.state.energy_and_charging.rows.forEach((row) => {
   if (row._row === 7) { row.values.B = 99; row.values.C = 99; }
 });
 windowObj.__HS.recompute();
-const totalAfter = byId['chart-total'].innerHTML;
+const totalAfter = byId['chart-breakdown'].innerHTML;
 checks.push(['comparison charts update live on input change',
   totalBefore !== totalAfter && totalAfter.indexOf('<svg') !== -1]);
 
@@ -480,12 +527,12 @@ checks.push(['editable field listens on input (live update)',
 checks.push(['editable field NOT wired on change (blur-only)',
   !!ecInput && !(Array.isArray(ecInput.listeners.change) && ecInput.listeners.change.length > 0)]);
 // Firing 'input' on that field must redraw a chart (same engine output path).
-const liveBefore = byId['chart-total'].innerHTML;
+const liveBefore = byId['chart-breakdown'].innerHTML;
 if (ecInput) {
   ecInput.value = String((Number(ecInput.value) || 0) + 1234);
   ecInput.fire('input');
 }
-const liveAfter = byId['chart-total'].innerHTML;
+const liveAfter = byId['chart-breakdown'].innerHTML;
 checks.push(['firing input event redraws charts (would FAIL on change)',
   !!ecInput && liveBefore !== liveAfter && liveAfter.indexOf('<svg') !== -1]);
 
@@ -1152,6 +1199,59 @@ checks.push(['computeFleet valid after Portfolio Select', !!outAfterSelect && !!
 byId['reset-btn'].fire('click');
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
+// ---- FEAT-003 Part A: Portfolio repurposed as a fleet matched-models summary
+// The Portfolio surface is no longer a disconnected ranked table: its PRIMARY
+// content is a fleet-wide summary of the SAME per-truck EV matching, fed by
+// window.HSPortfolioFit.matchFleetToPortfolio (reused, not reimplemented). It
+// aggregates which model matched each included truck, counts per model, the
+// verdict/caveats and the vehicle/COE price split, plus the fleet-level
+// charging/config constraints. The full ranked guide is kept only as a details
+// disclosure (supporting evidence), so the matcher drives the surface.
+checks.push(['Portfolio summary is fed by matchFleetToPortfolio (reused matcher)',
+  typeof windowObj.HSPortfolioFit.matchFleetToPortfolio === 'function']);
+// The repurposed surface chrome exists in the markup (fleet summary + config).
+checks.push(['Portfolio fleet matched-models summary present in markup',
+  html.indexOf('id="portfolio-fleet-summary"') !== -1 &&
+  html.indexOf('id="portfolio-matched-models"') !== -1 &&
+  html.indexOf('id="portfolio-fleet-table"') !== -1]);
+checks.push(['Portfolio fleet-level config/charging block present',
+  html.indexOf('id="portfolio-fleet-config"') !== -1]);
+// The old ranked table is demoted into a details disclosure (supporting, not
+// the lead), so the surface is not a disconnected ranked table.
+checks.push(['Portfolio ranked guide demoted into a details disclosure',
+  html.indexOf('id="portfolio-detail"') !== -1 &&
+  html.indexOf('Full ranked fit guide') !== -1]);
+// The matched-models cards render one card per matched model (or honest buckets)
+// for the demo fleet, with a count. All six demo trucks are included.
+const matchGrid = byId['portfolio-matched-models'];
+const matchCards = (matchGrid.children || []).filter(
+  (c) => c.attributes && (c.attributes['data-matched-model'] != null ||
+    c.attributes['data-matched-nofit'] != null || c.attributes['data-matched-none'] != null));
+checks.push(['Portfolio renders matched-model count cards for the fleet',
+  matchCards.length >= 1]);
+// Every demo included truck appears in the per-truck match table.
+const fleetBody = byId['portfolio-fleet-body'];
+const fleetRows = (fleetBody.children || []).filter(
+  (rrow) => rrow.attributes && rrow.attributes['data-fleet-truck'] != null);
+const demoMatches = windowObj.HSPortfolioFit.matchFleetToPortfolio(windowObj.__HS.state) || [];
+checks.push(['Portfolio per-truck match table has a row per included truck',
+  fleetRows.length === demoMatches.length && demoMatches.length >= 1]);
+// The fleet summary carries the vehicle/COE split (2dp) and a matched model name.
+const fleetText = textOfNode(fleetBody);
+checks.push(['Portfolio per-truck table shows a 2dp vehicle/COE price',
+  /S\$[\d,]+\.\d\d/.test(fleetText)]);
+// Honesty preserved: the fleet-level config text still names the Unconfirmed
+// caveat, so no match is presented as a confirmed win.
+checks.push(['Portfolio fleet config preserves the Unconfirmed honesty caveat',
+  (byId['portfolio-config-text']._text || '').indexOf('Unconfirmed') !== -1]);
+// Live: the summary re-renders on recompute (it is wired via the portfolio
+// renderer). Firing a recompute keeps the per-truck rows populated.
+windowObj.__HS.recompute();
+const fleetRowsAfter = (byId['portfolio-fleet-body'].children || []).filter(
+  (rrow) => rrow.attributes && rrow.attributes['data-fleet-truck'] != null);
+checks.push(['Portfolio fleet summary re-renders live on recompute',
+  fleetRowsAfter.length === demoMatches.length]);
+
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html
 // markup (the `html` string already loaded above). These lock in the taste-skill
@@ -1208,12 +1308,31 @@ checks.push(['advanced energy container present', /id="ec-body-adv"/.test(chrome
 checks.push(['tablet stack media query (<=1023px) present',
   /@media\s*\(\s*max-width:\s*1023px\s*\)/.test(chrome)]);
 
-// Charts region + the five chart containers exist and are populated (the chart
-// container id checks above already prove each holds emitted <svg>).
-checks.push(['charts region present', /id="charts-region"/.test(chrome)]);
+// FEAT-003: the interactive TCO dashboard region + its chart containers exist
+// and are populated (the chart id checks above already prove each holds <svg>).
+checks.push(['TCO dashboard region present', /id="tco-dashboard"/.test(chrome)]);
+checks.push(['dashboard charts column present', /id="tco-charts"/.test(chrome)]);
+checks.push(['dashboard sensitivity-beside column present', /id="tco-side"/.test(chrome)]);
 chartIds.forEach((id) => {
   checks.push([id + ' container in markup', chrome.indexOf('id="' + id + '"') !== -1]);
 });
+// FEAT-003: the dashboard DOM order is line hero -> breakdown bar -> sensitivity
+// beside -> results table + Day-0 below. Assert the source order of the ids.
+(() => {
+  const iHero = chrome.indexOf('id="chart-cumulative"');
+  const iBar  = chrome.indexOf('id="chart-breakdown"');
+  const iSens = chrome.indexOf('id="sensitivity"');
+  const iRes  = chrome.indexOf('id="results"');
+  const iDay0 = chrome.indexOf('id="day0-funding"');
+  checks.push(['dashboard order: line hero before breakdown bar',
+    iHero !== -1 && iBar !== -1 && iHero < iBar]);
+  checks.push(['dashboard order: sensitivity card beside the charts (after bar in source)',
+    iSens !== -1 && iBar < iSens]);
+  checks.push(['dashboard order: results table below the three top elements',
+    iRes !== -1 && iSens < iRes]);
+  checks.push(['dashboard order: Day-0 funding below the results table',
+    iDay0 !== -1 && iRes < iDay0]);
+})();
 
 // Flat surfaces: no decorative shadow or gradient at rest in the chrome.
 checks.push(['no box-shadow in chrome', !/box-shadow/i.test(chrome)]);
