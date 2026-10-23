@@ -33,6 +33,11 @@ function makeEl(tag) {
     set innerHTML(v) { this._html = v; this.children = []; }, get innerHTML() { return this._html; },
     set textContent(v) { this._text = v; }, get textContent() { return this._text || ''; },
     appendChild(c) { this.children.push(c); return c; },
+    replaceChild(nw, old) {
+      const i = this.children.indexOf(old);
+      if (i !== -1) this.children[i] = nw; else this.children.push(nw);
+      return old;
+    },
     addEventListener(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); },
     setAttribute(k, v) { this.attributes[k] = v; },
     getAttribute(k) { return this.attributes[k]; },
@@ -52,12 +57,23 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   // FEAT-004: input overlay panel hooks (scrim + in-panel close button).
   'sidebar-toggle','sidebar-toggle-label','input-col','results-col',
   'input-scrim','input-overlay-close',
-  // FEAT-005: journey stepper, stage viewports + confidence badge hooks.
-  'stepper','step-customer','step-portfolio','step-tco','step-charging','step-proposal',
-  'stage-customer','stage-portfolio','stage-tco','stage-charging','stage-proposal',
-  'confidence-badge','confidence-dot','confidence-text','stage-open-inputs',
+  // FEAT-004: prospects top-accessed hover overlay hooks (mirrors the Inputs
+  // overlay): top-chrome trigger + scrim + in-panel close button + dialog.
+  'prospects-toggle','prospects-toggle-label','prospects-col',
+  'prospects-scrim','prospects-overlay-close','inputs',
+  // FEAT-002: journey stepper (Customer stage removed -> 4 stages), stage
+  // viewports + confidence badge hooks.
+  'stepper','step-portfolio','step-tco','step-charging','step-proposal',
+  'stage-portfolio','stage-tco','stage-charging','stage-proposal',
+  'confidence-badge','confidence-dot','confidence-text',
   // FEAT-004 (portfolio): ranked model-matching guide hooks.
-  'portfolio-body','portfolio-duty-line','portfolio-honesty'];
+  'portfolio-body','portfolio-duty-line','portfolio-honesty',
+  // FEAT-003: TCO interactive dashboard + Part A fleet matched-models summary.
+  'chart-cumulative','chart-breakdown','chart-sens','chart-total','chart-day0',
+  'results-table','day0-cards','tco-tooltip',
+  'portfolio-matched-models','portfolio-fleet-body','portfolio-config-text',
+  // FEAT-002: folded-in customer profile + consolidated per-truck Advanced.
+  'customer-form','fleet-adv'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
 
 const document = {
@@ -120,19 +136,23 @@ checks.push(['sensitivity rendered', byId['sens-body'].innerHTML.indexOf('Keep I
 // ---- Prospects view checks -------------------------------------------------
 const seeds = windowObj.HSProspectSeeds;
 // FEAT-003: the Yong Wen / Venus reconstructions were replaced by four
-// illustrative presets (best / mid / bad / blank), so the seed set is now six
-// cases: evergreen, demo, best, mid, bad, blank.
-checks.push(['prospect seeds embedded (6)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 6]);
+// illustrative presets (best / mid / bad / blank). FEAT-001 (loophole fixes)
+// removed the misleading named 'evergreen' seed (the 'best' case is the same
+// fully-specified confirmed-win input set), so the seed set is now five cases:
+// demo, best, mid, bad, blank.
+checks.push(['prospect seeds embedded (5)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 5]);
 checks.push(['no yong_wen/venus seeds remain',
   !!seeds && !seeds.cases.some((c) => c.id === 'yong_wen' || c.id === 'venus')]);
+checks.push(['no evergreen named-customer seed remains',
+  !!seeds && !seeds.cases.some((c) => c.id === 'evergreen')]);
 checks.push(['scoreProspect exposed', typeof windowObj.HSEngine.scoreProspect === 'function']);
 
 const pbodyBenefit = byId['prospect-body'].innerHTML;
 checks.push(['prospect table rendered', pbodyBenefit.indexOf('Why this rank') !== -1]);
-checks.push(['prospect lists Evergreen (illustrative)', pbodyBenefit.indexOf('Evergreen Logistics') !== -1]);
+checks.push(['prospect does NOT name Evergreen Logistics', pbodyBenefit.indexOf('Evergreen Logistics') === -1]);
 checks.push(['prospect lists demo', pbodyBenefit.indexOf('DEMONSTRATION 6-truck case') !== -1]);
-// The four new illustrative presets must each render in the table.
-checks.push(['prospect lists Best case', pbodyBenefit.indexOf('Best case (illustrative, gates pass)') !== -1]);
+// The four illustrative presets must each render in the table.
+checks.push(['prospect lists Best case', pbodyBenefit.indexOf('Best case (illustrative, fully specified, gates pass)') !== -1]);
 checks.push(['prospect lists Mid case', pbodyBenefit.indexOf('Mid case (illustrative, marginal saving)') !== -1]);
 checks.push(['prospect lists Bad case', pbodyBenefit.indexOf('Bad case (illustrative, EV not a fit)') !== -1]);
 checks.push(['prospect lists Blank profile', pbodyBenefit.indexOf('Blank profile (start a fresh client)') !== -1]);
@@ -151,12 +171,14 @@ const confirmedWins = scoredSeeds.filter((x) =>
   typeof x.s.savingAbs === 'number' && x.s.savingAbs > 0 &&
   typeof x.s.savingPct === 'number' && x.s.savingPct > 0);
 checks.push(['at least one confirmed-win seed', confirmedWins.length >= 1]);
-checks.push(['confirmed win is Evergreen', confirmedWins.some((x) => x.id === 'evergreen')]);
-const evergreen = scoredSeeds.find((x) => x.id === 'evergreen');
-checks.push(['Evergreen gatePass true', evergreen && evergreen.s.gatePass === true]);
-checks.push(['Evergreen numeric Total', evergreen && typeof evergreen.s.totalEconomicTco === 'number']);
-checks.push(['Evergreen positive saving S$', evergreen && evergreen.s.savingAbs > 0]);
-checks.push(['Evergreen meets 15% target label', evergreen && evergreen.s.fifteenTargetMet === 'Meets entered 15% target']);
+// The confirmed win is now the 'best' case (same fully-specified input set the
+// removed 'evergreen' seed used). Assertions are unchanged in strength.
+checks.push(['confirmed win is Best case', confirmedWins.some((x) => x.id === 'best')]);
+const bestWin = scoredSeeds.find((x) => x.id === 'best');
+checks.push(['Best case gatePass true', bestWin && bestWin.s.gatePass === true]);
+checks.push(['Best case numeric Total', bestWin && typeof bestWin.s.totalEconomicTco === 'number']);
+checks.push(['Best case positive saving S$', bestWin && bestWin.s.savingAbs > 0]);
+checks.push(['Best case meets 15% target label', bestWin && bestWin.s.fifteenTargetMet === 'Meets entered 15% target']);
 
 // Direct score check on the seeds through the inlined engine.
 function orderFor(mode) {
@@ -173,14 +195,12 @@ function orderFor(mode) {
 }
 const accountOrder = orderFor('account');
 const benefitOrder = orderFor('benefit');
-// The confirmed-win illustrative cases (Evergreen and its deep-copy Best) lead
-// BOTH sort modes: they share the largest absolute saving and the only strong
-// gate-passing benefit figure. (Ties keep the fixture order, so Evergreen -
-// listed first - stays ahead of Best.)
-checks.push(['account order evergreen first', accountOrder[0] === 'evergreen']);
-checks.push(['benefit order evergreen first', benefitOrder[0] === 'evergreen']);
-checks.push(['best ranks as a gate-passing win (2nd in both modes)',
-  accountOrder[1] === 'best' && benefitOrder[1] === 'best']);
+// The confirmed-win illustrative Best case leads BOTH sort modes: it has the
+// largest absolute saving and the only strong gate-passing benefit figure.
+// (Formerly the removed 'evergreen' seed led and 'best' followed; 'best' is the
+// same fully-specified input set, so it now leads directly.)
+checks.push(['account order best first', accountOrder[0] === 'best']);
+checks.push(['benefit order best first', benefitOrder[0] === 'best']);
 // The illustrative presets rank by their engine-verified saving: best > mid >
 // bad in the benefit (saving %) order. This replaces the removed yong_wen >
 // venus ordering assertions with equivalent coverage on the new presets.
@@ -207,14 +227,14 @@ sel.value = 'account';
 sel.fire('change');
 const afterHtml = byId['prospect-body'].innerHTML;
 checks.push(['sort toggle reorders table', beforeHtml !== afterHtml]);
-// In account order the confirmed-win Evergreen case still leads the rendered
-// table, the Best preset follows, and the honest-blank preset is rendered last.
-checks.push(['account sort puts Evergreen on top',
-  afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('Best case (illustrative, gates pass)') &&
-  afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('DEMONSTRATION')]);
+// In account order the confirmed-win Best case leads the rendered table, ahead
+// of the demonstration case, and the honest-blank preset is rendered last.
+checks.push(['account sort puts Best case on top',
+  afterHtml.indexOf('Best case (illustrative, fully specified, gates pass)') <
+    afterHtml.indexOf('DEMONSTRATION')]);
 checks.push(['account sort renders Blank profile last',
   afterHtml.indexOf('Blank profile (start a fresh client)') >
-    afterHtml.indexOf('Best case (illustrative, gates pass)') &&
+    afterHtml.indexOf('Best case (illustrative, fully specified, gates pass)') &&
   afterHtml.indexOf('Blank profile (start a fresh client)') >
     afterHtml.indexOf('Mid case (illustrative, marginal saving)')]);
 
@@ -225,31 +245,74 @@ checks.push(['account sort renders Blank profile last',
 // sensitivity slider 'input' event redraws the sensitivity chart (live update);
 // (c) changing an amber input redraws the comparison charts (live update);
 // (d) an n.a. total is drawn as a hatched 'n.a.' marker, never a zero bar.
-const chartIds = ['chart-cumulative','chart-total','chart-target','chart-day0','chart-sens'];
+// FEAT-003 re-layout: the TCO stage is now an interactive dashboard. The hero
+// is the cumulative-TCO LINE (chart-cumulative); below it the cost-component
+// BREAKDOWN BAR (chart-breakdown); beside them the sensitivity chart
+// (chart-sens). The old chart-total / chart-target / chart-day0 boxes were
+// folded away (day-0 is now a card grid; total/target live in the hero + table).
+const chartIds = ['chart-cumulative','chart-breakdown','chart-sens'];
 chartIds.forEach((id) => {
   const h = byId[id] ? byId[id].innerHTML : '';
   checks.push([id + ' emits <svg>', h.indexOf('<svg') !== -1]);
 });
-// The cumulative chart draws real geometry (polyline/circle for the numeric runs).
+// The cumulative HERO draws real geometry (polyline + a data point per year).
 const cumHtml = byId['chart-cumulative'].innerHTML;
-checks.push(['cumulative chart draws polyline/point',
+checks.push(['cumulative hero draws polyline/point',
   cumHtml.indexOf('polyline') !== -1 || cumHtml.indexOf('<circle') !== -1]);
-// The bar charts draw <rect> bars.
-checks.push(['total chart draws rect bars', byId['chart-total'].innerHTML.indexOf('<rect') !== -1]);
-checks.push(['day0 chart draws rect bars', byId['chart-day0'].innerHTML.indexOf('<rect') !== -1]);
+// FEAT-003: a labelled, INTERACTIVE data point for every year carries the
+// cross-highlight hooks (data-tco-point + data-plan/-year/-amount).
+checks.push(['hero has interactive per-year data points (data-tco-point)',
+  cumHtml.indexOf('data-tco-point') !== -1]);
+checks.push(['hero data points carry plan + year + 2dp amount hooks',
+  cumHtml.indexOf('data-plan=') !== -1 && cumHtml.indexOf('data-year=') !== -1 &&
+  cumHtml.indexOf('data-amount=') !== -1]);
+// FEAT-003: year 3 / 5 / 10 financial-milestone segmentation markers.
+checks.push(['hero marks year 3/5/10 milestones',
+  cumHtml.indexOf('data-tco-milestone="3"') !== -1 &&
+  cumHtml.indexOf('data-tco-milestone="5"') !== -1 &&
+  cumHtml.indexOf('data-tco-milestone="10"') !== -1]);
+// FEAT-003: displayed figures are 2 decimal places (display-only formatter).
+checks.push(['hero amounts formatted to 2 decimal places',
+  /data-amount="[^"]*\.\d\d"/.test(cumHtml)]);
+
+// The breakdown chart draws stacked <rect> component segments with hooks.
+const brkHtml = byId['chart-breakdown'].innerHTML;
+checks.push(['breakdown chart draws rect segments', brkHtml.indexOf('<rect') !== -1]);
+checks.push(['breakdown segments are interactive (data-tco-seg + plan + amount)',
+  brkHtml.indexOf('data-tco-seg') !== -1 && brkHtml.indexOf('data-plan=') !== -1 &&
+  brkHtml.indexOf('data-amount=') !== -1]);
+checks.push(['breakdown names the vehicle + site components',
+  brkHtml.indexOf('Vehicle economic TCO') !== -1 && brkHtml.indexOf('charging-site') !== -1]);
 
 // n.a. is honoured, not drawn as a zero bar. For the demo case plan_a/plan_b
-// totalEconomicTco is n.a., so the TCO bar chart MUST carry an 'n.a.' marker and
-// MUST use the hatched placeholder pattern (url(#hatch_...)) rather than a solid
-// full-height-from-zero bar implying zero cost.
+// totalEconomicTco is n.a. (the site cost stays n.a.), so the breakdown bar for
+// those paths MUST carry an 'n.a.' marker and use the hatched placeholder
+// pattern (url(#hatch_...)) rather than a solid zero-height-implying bar.
 checks.push(['demo plan_a Total is n.a.', r.totalEconomicTco.plan_a === NA]);
 checks.push(['demo plan_b Total is n.a.', r.totalEconomicTco.plan_b === NA]);
-const totalHtml = byId['chart-total'].innerHTML;
-checks.push(['total chart marks n.a. (not zero bar)',
-  totalHtml.indexOf('n.a.') !== -1 && totalHtml.indexOf('url(#hatch') !== -1]);
-const day0Html = byId['chart-day0'].innerHTML;
-checks.push(['day0 chart marks n.a. (not zero bar)',
-  day0Html.indexOf('n.a.') !== -1 && day0Html.indexOf('url(#hatch') !== -1]);
+checks.push(['breakdown chart marks n.a. (not zero bar)',
+  brkHtml.indexOf('n.a.') !== -1 && brkHtml.indexOf('url(#hatch') !== -1]);
+
+// FEAT-003: the cross-highlight API is exposed and the chart boxes are wired.
+checks.push(['cross-highlight API exposed on the page',
+  typeof windowObj.__HS.tcoCrossHighlight === 'function']);
+checks.push(['hero chart box wired for interactivity (mouseover listener)',
+  Array.isArray(byId['chart-cumulative'].listeners.mouseover) &&
+  byId['chart-cumulative'].listeners.mouseover.length > 0]);
+checks.push(['breakdown chart box wired for interactivity (mouseover listener)',
+  Array.isArray(byId['chart-breakdown'].listeners.mouseover) &&
+  byId['chart-breakdown'].listeners.mouseover.length > 0]);
+// FEAT-003: the results-table value cells carry the per-plan cross-highlight
+// hook, and the Day-0 funding cards carry a per-plan hook.
+checks.push(['results-table value cells carry data-results-plan hook',
+  byId['results-body'].innerHTML.indexOf('data-results-plan=') !== -1]);
+checks.push(['Day-0 funding cards carry per-plan hook',
+  byId['day0-cards'].innerHTML.indexOf('data-day0-plan=') !== -1]);
+// FEAT-003: the Day-0 cards render 2dp currency and keep n.a. (never zero).
+checks.push(['Day-0 cards render n.a. (not a zero substitute)',
+  byId['day0-cards'].innerHTML.indexOf('n.a.') !== -1]);
+checks.push(['Day-0 cards render a 2dp currency figure',
+  /S\$[\d,]+\.\d\d/.test(byId['day0-cards'].innerHTML)]);
 
 // Live update #1: dragging the UNIFIED shared-driver slider ('input' event)
 // redraws the sensitivity-response chart. The drivers are appended under
@@ -377,7 +440,7 @@ checks.push(['saving-target defaults to 0.15',
 // With the default target the engine still emits the exact legacy claim label.
 const defaultTargetOut = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
 // (state.savingTarget is still unset here -> engine defaults to 0.15.)
-const evForLabel = scoredSeeds.find((x) => x.id === 'evergreen');
+const evForLabel = scoredSeeds.find((x) => x.id === 'best');
 checks.push(['default target still yields Meets entered 15% target',
   evForLabel && evForLabel.s.fifteenTargetMet === 'Meets entered 15% target']);
 // Moving the target changes the rendered headroom row + the claim label. Drive
@@ -397,11 +460,12 @@ checks.push(['moving target relabels sens headroom header (25%)',
 // The 'Meets/Below entered X% target' claim label is conditional (never an
 // adoption probability) and only renders for a gate-passing case. Prove the
 // label reflects the committed target through the engine on the gate-passing
-// Evergreen seed: at the default 0.15 it reads 'Meets entered 15% target'; at a
-// higher 0.30 target the SAME case flips to 'Below entered 30% target'.
+// Best-case seed (the fully-specified set the removed 'evergreen' seed used):
+// at the default 0.15 it reads 'Meets entered 15% target'; at a higher 0.30
+// target the SAME case flips to 'Below entered 30% target'.
 const everAtDefault = windowObj.HSEngine.scoreProspect(
-  windowObj.HSEngine.computeFleet(seeds.cases.find((c) => c.id === 'evergreen').inputs));
-const everInputsHi = JSON.parse(JSON.stringify(seeds.cases.find((c) => c.id === 'evergreen').inputs));
+  windowObj.HSEngine.computeFleet(seeds.cases.find((c) => c.id === 'best').inputs));
+const everInputsHi = JSON.parse(JSON.stringify(seeds.cases.find((c) => c.id === 'best').inputs));
 everInputsHi.savingTarget = 0.30;
 const everAtHi = windowObj.HSEngine.scoreProspect(windowObj.HSEngine.computeFleet(everInputsHi));
 checks.push(['claim label reflects committed target (default 15% met)',
@@ -422,13 +486,13 @@ if (dieselCtl.box) {
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // Live update #2: changing an amber input and recomputing redraws the
-// comparison charts (they read from the same computeFleet(state) output).
-const totalBefore = byId['chart-total'].innerHTML;
+// dashboard charts (they read from the same computeFleet(state) output).
+const totalBefore = byId['chart-breakdown'].innerHTML;
 windowObj.__HS.state.energy_and_charging.rows.forEach((row) => {
   if (row._row === 7) { row.values.B = 99; row.values.C = 99; }
 });
 windowObj.__HS.recompute();
-const totalAfter = byId['chart-total'].innerHTML;
+const totalAfter = byId['chart-breakdown'].innerHTML;
 checks.push(['comparison charts update live on input change',
   totalBefore !== totalAfter && totalAfter.indexOf('<svg') !== -1]);
 
@@ -467,12 +531,12 @@ checks.push(['editable field listens on input (live update)',
 checks.push(['editable field NOT wired on change (blur-only)',
   !!ecInput && !(Array.isArray(ecInput.listeners.change) && ecInput.listeners.change.length > 0)]);
 // Firing 'input' on that field must redraw a chart (same engine output path).
-const liveBefore = byId['chart-total'].innerHTML;
+const liveBefore = byId['chart-breakdown'].innerHTML;
 if (ecInput) {
   ecInput.value = String((Number(ecInput.value) || 0) + 1234);
   ecInput.fire('input');
 }
-const liveAfter = byId['chart-total'].innerHTML;
+const liveAfter = byId['chart-breakdown'].innerHTML;
 checks.push(['firing input event redraws charts (would FAIL on change)',
   !!ecInput && liveBefore !== liveAfter && liveAfter.indexOf('<svg') !== -1]);
 
@@ -555,14 +619,80 @@ function collectLabels(node, acc) {
 }
 const card0 = truckCards()[0];
 const primaryLabels = collectLabels(card0, []);
-const criticalLabels = ['Work km/day', 'Days/year', 'COE months left', 'Market value SGD',
-  'EV model', 'New ICE quote SGD', 'EV quote SGD', 'Plan A action', 'Plan B action'];
-checks.push(['truck card surfaces the minimum-critical primary fields',
+// FEAT-002: the card now captures the CURRENT ICE duty front-and-centre (work
+// km/day, days/year, peak jobs, peak cargo, demanding-day route, COE months,
+// market value), plus the matched-EV controls (model select, override quote,
+// plan actions). These feed fleet_register / replacement_plan EXACTLY as before.
+const criticalLabels = ['Work km/day', 'Days/year', 'Peak jobs/day', 'Peak cargo kg',
+  'Demanding-day route km', 'COE months left', 'Market value SGD',
+  'EV model', 'New ICE quote SGD', 'EV quote SGD (override)', 'Plan A action', 'Plan B action'];
+checks.push(['truck card surfaces the ICE-duty + matched-EV primary fields',
   criticalLabels.every((l) => primaryLabels.indexOf(l) !== -1)]);
-// The low-impact fields are behind the card's Advanced disclosure, not primary.
-checks.push(['low-impact fields demoted to the card Advanced disclosure',
-  primaryLabels.indexOf('Scrap SGD') === -1 && primaryLabels.indexOf('Peak route km') === -1 &&
-  primaryLabels.indexOf('Vehicle grant SGD') === -1]);
+// FEAT-002: there is NO per-card Advanced <details> any more (the per-truck
+// low-impact fields moved into the single global Advanced area #fleet-adv).
+function hasTruckAdvDetails(node) {
+  if (!node || typeof node !== 'object') return false;
+  if ((node.tagName || '') === 'details' && /(^|\s)truck-adv(\s|$)/.test(node.className || '')) return true;
+  return (node.children || []).some(hasTruckAdvDetails);
+}
+checks.push(['no per-card Advanced <details> remains (consolidated globally)',
+  !hasTruckAdvDetails(card0)]);
+// The low-impact fields are NOT in the primary card any more.
+checks.push(['low-impact fields removed from the primary card',
+  primaryLabels.indexOf('Scrap SGD') === -1 && primaryLabels.indexOf('Vehicle grant SGD') === -1 &&
+  primaryLabels.indexOf('Straight-line SGD') === -1]);
+// They ARE present in the single consolidated global Advanced area (#fleet-adv).
+const advLabels = collectLabels(byId['fleet-adv'], []);
+checks.push(['per-truck low-impact fields live in the consolidated Advanced area',
+  advLabels.indexOf('Scrap SGD') !== -1 && advLabels.indexOf('Vehicle grant SGD') !== -1 &&
+  advLabels.indexOf('Straight-line SGD') !== -1]);
+// The consolidated #fleet-adv renders one group per shown truck (6 for demo).
+function truckAdvGroups() {
+  return (byId['fleet-adv'].children || []).filter(
+    (c) => c.attributes && c.attributes['data-truck-adv-id'] != null);
+}
+checks.push(['consolidated Advanced renders one group per truck (6 demo trucks)',
+  truckAdvGroups().length === 6]);
+
+// FEAT-002 (Fix 1): the customer / company profile is folded into the top of
+// the input panel (non-economic context) and renders editable fields.
+checks.push(['customer profile form populated', byId['customer-form'].children.length > 0]);
+const custLabels = collectLabels(byId['customer-form'], []);
+checks.push(['customer profile carries company + contact + evidence fields',
+  custLabels.indexOf('Company') !== -1 && custLabels.indexOf('Contact') !== -1 &&
+  custLabels.indexOf('Evidence reference') !== -1]);
+// Editing the customer profile must NOT change a computed number (it lives on a
+// field the frozen engine never reads).
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+const beforeCustEdit = windowObj.HSEngine.computeFleet(windowObj.__HS.state).results.vehicleEconomicTco.keep_ice;
+windowObj.__HS.state.customer = windowObj.__HS.state.customer || {};
+windowObj.__HS.state.customer.company = 'Acme Haulage Pte Ltd';
+const afterCustEdit = windowObj.HSEngine.computeFleet(windowObj.__HS.state).results.vehicleEconomicTco.keep_ice;
+checks.push(['customer profile is non-economic (no computed number changes)',
+  afterCustEdit === beforeCustEdit]);
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
+
+// FEAT-002 (Fix 1): the input overlay panel occupies MORE THAN HALF the desktop
+// viewport (width rule exceeds 50vw) yet still degrades to a full-width mobile
+// sheet. Assert on the hand-written chrome CSS.
+const chromeForPanel = html.slice(0, html.indexOf('<!-- ENGINE:BEGIN') === -1 ? html.length : html.indexOf('<!-- ENGINE:BEGIN'));
+const inputColRule = (chromeForPanel.match(/#input-col\s*\{[^}]*\}/) || [''])[0];
+const vwM = inputColRule.match(/width:\s*min\(\s*(\d+(?:\.\d+)?)vw/);
+checks.push(['input panel width exceeds 50vw (more than half the desktop)',
+  !!vwM && Number(vwM[1]) > 50]);
+checks.push(['input panel still folds to a full-width mobile sheet',
+  /#input-col\s*\{\s*width:\s*100vw/.test(chromeForPanel)]);
+
+// FEAT-002 (Fix 3): overflow containment. The .fld grid children must carry
+// min-width:0 and inputs box-sizing:border-box + width:100% so wide number
+// inputs cannot force the 1fr tracks to overflow the card.
+checks.push(['overflow fix: .fld grid child has min-width:0',
+  /\.truck-card\s+\.fld\s*\{[^}]*min-width:\s*0/.test(chromeForPanel)]);
+checks.push(['overflow fix: card inputs are box-sizing:border-box width:100%',
+  /\.truck-card\s+\.fld\s+input[^{]*\{[^}]*width:\s*100%[^}]*box-sizing:\s*border-box/.test(chromeForPanel) ||
+  /\.truck-card\s+\.fld\s+input[^{]*\{[^}]*box-sizing:\s*border-box[^}]*width:\s*100%/.test(chromeForPanel)]);
+checks.push(['overflow fix: side-by-side columns pin min-width:0',
+  /\.tc-col\s*\{[^}]*min-width:\s*0/.test(chromeForPanel)]);
 
 // ---- FEAT-002 (redesign): EV product-spec loading + Unconfirmed caveat ------
 // Selecting an EV model for a truck must load the catalogue specs into the
@@ -615,6 +745,79 @@ const fitTag = findFitStatus(byId['fleet-cards']);
 checks.push(['card surfaces payload/body-fit status with Unconfirmed caveat',
   !!fitTag && (fitTag.textContent || '').indexOf('Unconfirmed') !== -1 &&
   /(^|\s)unknown(\s|$)/.test(fitTag.className || '')]);
+
+// ---- FEAT-002 (Fix 2): side-by-side ICE-vs-matched-EV + vehicle/COE split ---
+// Each truck card renders a live side-by-side comparison (.tc-compare) once the
+// duty is started. The EV column must split the VEHICLE PRICE (catalogue
+// prod.I) from the COE PRICE (oc[57]) as DISTINCT line items and show the
+// combined default EV quote = prod.I + oc[57] (the engine's blank-fallback).
+// The matcher (window.HSPortfolioFit) drives the recommended model; it stays
+// user-overridable. None of this writes a number back, so figures are unchanged.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+byId['reset-btn'].fire('click');            // restore the clean demo cards
+const compareCard = truckCards()[0];
+function textOfNode(node) {
+  if (!node || typeof node !== 'object') return '';
+  let t = (node._text || '');
+  (node.children || []).forEach((c) => { t += ' ' + textOfNode(c); });
+  return t;
+}
+function findByClass(node, cls) {
+  if (!node || typeof node !== 'object') return null;
+  if (new RegExp('(^|\\s)' + cls + '(\\s|$)').test(node.className || '')) return node;
+  const kids = node.children || [];
+  for (const c of kids) { const hit = findByClass(c, cls); if (hit) return hit; }
+  return null;
+}
+const compareEl = findByClass(compareCard, 'tc-compare');
+checks.push(['truck card renders a side-by-side ICE-vs-EV comparison (duty started)',
+  !!compareEl]);
+const evCol = compareEl ? findByClass(compareEl, 'tc-col-ev') : null;
+const iceCol = compareEl ? findByClass(compareEl, 'tc-col-ice') : null;
+checks.push(['comparison has both an ICE column and a matched-EV column',
+  !!evCol && !!iceCol]);
+const evColText = textOfNode(evCol);
+checks.push(['EV column splits Vehicle price and COE price as distinct line items',
+  evColText.indexOf('Vehicle price') !== -1 && evColText.indexOf('COE price') !== -1]);
+checks.push(['EV column shows the combined default EV quote line',
+  evColText.indexOf('Default EV quote') !== -1]);
+// The displayed split sums to the engine's blank-fallback: pick the recommended
+// (or shown) model and confirm vehicle price (prod.I) + COE (oc[57]) is what the
+// matcher-driven default shows, and that it equals prod.I + oc[57].
+const fitMod = windowObj.HSPortfolioFit;
+const oc57c = windowObj.__HS.state.operating_costs.rows.find((r) => r._row === 57);
+const acqAdderC = (oc57c && typeof oc57c.values.B === 'number') ? oc57c.values.B : 0;
+const demoRow0 = windowObj.__HS.includedFleet()[0];
+const dutyC = fitMod.truckDutyFromRow(demoRow0, {
+  energyPricePerKwh: (windowObj.__HS.ecRow(10) || { values: {} }).values.B,
+  chargeWindowH: (windowObj.__HS.ecRow(51) || { values: {} }).values.B,
+});
+const matchC = fitMod.matchBestModel(dutyC, windowObj.__HS.state.products.rows);
+const shownModelName = (() => {
+  const rp0 = windowObj.__HS.replByIdMap()[demoRow0.A];
+  return (rp0 && rp0.B != null && String(rp0.B) !== '') ? String(rp0.B)
+    : (matchC && matchC.best ? matchC.best.name : null);
+})();
+const shownProd = windowObj.__HS.state.products.rows.find((p) => p.A === shownModelName);
+checks.push(['side-by-side vehicle+COE split equals engine blank-fallback (prod.I + oc[57])',
+  !!shownProd && typeof shownProd.I === 'number' &&
+  (compareEl ? textOfNode(compareEl).indexOf(String(Math.round(shownProd.I + acqAdderC).toLocaleString('en-SG'))) !== -1 : false)]);
+// The matcher is the SAME additive module FEAT-001 exposed, used as a per-truck
+// recommendation that stays overridable via the EV model select.
+checks.push(['card uses the additive matcher for the EV recommendation',
+  typeof fitMod.matchBestModel === 'function' && !!matchC]);
+// The comparison reveals progressively: a card whose duty is BLANK shows the
+// empty prompt, not a fabricated comparison.
+const stProbe = windowObj.__HS.state;
+const savedE = demoRow0.E;
+demoRow0.E = null;
+windowObj.__HS.recompute();
+const blankDutyCard = truckCards()[0];
+checks.push(['comparison is hidden until the duty is entered (progressive reveal)',
+  !findByClass(blankDutyCard, 'tc-compare') && !!findByClass(blankDutyCard, 'tc-compare-empty')]);
+demoRow0.E = savedE;
+byId['reset-btn'].fire('click');
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- FEAT-002 (redesign): add / remove trucks (ID-consistent) --------------
 // An 'Add truck' control exists; firing it increases the rendered truck-card
@@ -740,27 +943,129 @@ checks.push(['overlay closes on Esc keydown',
   inputCol.getAttribute('aria-hidden') === 'true' &&
   !hasOpen(inputCol) && !hasOpen(inputScrim)]);
 
-// ---- FEAT-005: journey stepper + stage viewports + confidence badge --------
-// A five-step, tablist-like control switches a single visible stage viewport
-// with NO routing and NO fetch (pure client-side show/hide). The active stage
-// persists in localStorage. The confidence badge is driven by the LIVE engine
-// output's gate / saving-claim status for the best EV plan -- never a fabricated
-// probability. For the demonstration case both EV plans are 'Total incomplete'
-// (site cost n.a.), so the badge MUST show the honest non-confirmed Diagnostic
-// state, not a fake 'confirmed'.
-const STAGES = ['customer','portfolio','tco','charging','proposal'];
+// ---- FEAT-004: PROSPECTS top-accessed hover overlay ------------------------
+// Fix 6 converts the former inline #prospects section into a top-accessed hover
+// screen built on the SAME overlay mechanism as the Inputs panel: a fixed drawer
+// (#prospects-col) over a scrim (#prospects-scrim), triggered from the top chrome
+// (#prospects-toggle). It is a modal dialog (role=dialog + aria-modal; aria-hidden
+// toggles with the open state), dismissed by the trigger (toggle), the in-panel
+// Close button, a scrim click, and Escape. Default = CLOSED. The results/content
+// underneath must NOT reflow when it opens/closes. These assertions mirror the
+// Inputs-overlay ones so the two share a consistent, polished pattern.
+const pxToggle = byId['prospects-toggle'];
+const pxCol = byId['prospects-col'];
+const pxScrim = byId['prospects-scrim'];
+const pxClose = byId['prospects-overlay-close'];
+// The prospects panel is a modal dialog in the markup with aria-modal + a
+// top-chrome trigger wired with aria-controls to it.
+checks.push(['prospects overlay panel is a dialog in markup (role=dialog + aria-modal)',
+  /id="prospects-col"[^>]*role="dialog"[^>]*aria-modal="true"/.test(html) ||
+  /id="prospects-col"[^>]*aria-modal="true"[^>]*role="dialog"/.test(html)]);
+checks.push(['prospects trigger in top chrome with aria-controls',
+  /id="prospects-toggle"[^>]*aria-controls="prospects-col"/.test(html)]);
+checks.push(['prospects trigger lives in the top chrome (topbar, before <main>)',
+  html.indexOf('class="topbar"') !== -1 &&
+  html.indexOf('id="prospects-toggle"') > html.indexOf('class="topbar"') &&
+  html.indexOf('id="prospects-toggle"') < html.indexOf('<main>')]);
+checks.push(['prospects overlay trigger exists', !!pxToggle]);
+checks.push(['prospects overlay trigger registers a click listener',
+  Array.isArray(pxToggle.listeners.click) && pxToggle.listeners.click.length > 0]);
+checks.push(['prospects overlay scrim present', !!pxScrim]);
+checks.push(['prospects overlay scrim registers a click listener',
+  Array.isArray(pxScrim.listeners.click) && pxScrim.listeners.click.length > 0]);
+checks.push(['prospects overlay close button registers a click listener',
+  Array.isArray(pxClose.listeners.click) && pxClose.listeners.click.length > 0]);
+// Default CLOSED.
+checks.push(['prospects overlay starts closed (default)',
+  pxToggle.getAttribute('aria-expanded') === 'false' &&
+  pxCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(pxCol) && !hasOpen(pxScrim)]);
+// Results column must not reflow when the prospects overlay opens/closes.
+const resWidthBeforeP = resultsCol.style.width;
+const resDisplayBeforeP = resultsCol.style.display;
+// Open via trigger.
+pxToggle.fire('click');
+checks.push(['prospects overlay opens on trigger click (aria + open class + scrim)',
+  pxToggle.getAttribute('aria-expanded') === 'true' &&
+  pxCol.getAttribute('aria-hidden') === 'false' &&
+  hasOpen(pxCol) && hasOpen(pxScrim)]);
+checks.push(['opening prospects overlay does NOT reflow results column',
+  resultsCol.style.width === resWidthBeforeP && resultsCol.style.display === resDisplayBeforeP]);
+// Toggle closes.
+pxToggle.fire('click');
+checks.push(['prospects overlay closes on second trigger click (toggle)',
+  pxToggle.getAttribute('aria-expanded') === 'false' &&
+  pxCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(pxCol) && !hasOpen(pxScrim)]);
+// Scrim click dismisses.
+pxToggle.fire('click');
+pxScrim.fire('click');
+checks.push(['prospects overlay closes on scrim click',
+  pxToggle.getAttribute('aria-expanded') === 'false' &&
+  pxCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(pxCol) && !hasOpen(pxScrim)]);
+// Esc dismisses.
+pxToggle.fire('click');
+checks.push(['prospects overlay open before Esc', hasOpen(pxCol)]);
+pxCol.fire('keydown', { key: 'Escape' });
+checks.push(['prospects overlay closes on Esc keydown',
+  pxToggle.getAttribute('aria-expanded') === 'false' &&
+  pxCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(pxCol) && !hasOpen(pxScrim)]);
+// The prospects view is no longer an inline always-visible section: it lives
+// inside the #prospects-col dialog wrapper.
+checks.push(['prospects view nested inside the hover overlay wrapper',
+  html.indexOf('id="prospects-col"') !== -1 &&
+  html.indexOf('id="prospects-col"') < html.indexOf('id="prospects"') &&
+  html.indexOf('id="prospects"') < html.indexOf('</div><!-- /prospects-col overlay -->')]);
+// Loading a prospect dismisses the hover screen (loadCase -> closeProspectsOverlay).
+// loadCase() REPLACES the live H.state, so snapshot it first and RESTORE it
+// afterwards (via the 'demo' seed) so later checks still see the demo state.
+const stateSnapshot = JSON.parse(JSON.stringify(windowObj.__HS.state));
+pxToggle.fire('click');
+checks.push(['prospects overlay open before load', hasOpen(pxCol)]);
+byId['prospect-body'].fire('click', { target: { getAttribute: (k) => (k === 'data-load' ? 'best' : null), parentNode: byId['prospect-body'] } });
+checks.push(['loading a prospect dismisses the hover screen',
+  pxToggle.getAttribute('aria-expanded') === 'false' &&
+  pxCol.getAttribute('aria-hidden') === 'true' && !hasOpen(pxCol)]);
+// Restore the demo state so downstream assertions (confidence badge, etc.) run
+// against the original demonstration case rather than the loaded 'best' case.
+Object.keys(windowObj.__HS.state).forEach((k) => { delete windowObj.__HS.state[k]; });
+Object.keys(stateSnapshot).forEach((k) => { windowObj.__HS.state[k] = stateSnapshot[k]; });
+if (windowObj.__HS.rebuildInputs) windowObj.__HS.rebuildInputs();
+windowObj.__HS.recompute();
+// No references to the removed evergreen case anywhere in the prospects markup.
+checks.push(['prospects markup has no evergreen reference',
+  html.toLowerCase().indexOf('evergreen') === -1]);
+
+// ---- FEAT-002: journey stepper + stage viewports + confidence badge --------
+// FEAT-002 removed the standalone Customer stage (its profile + duty inputs
+// moved into the widened Inputs overlay), leaving a FOUR-step, tablist-like
+// control (Portfolio / TCO / Charging / Proposal). It switches a single visible
+// stage viewport with NO routing and NO fetch (pure client-side show/hide). The
+// active stage persists in localStorage. The confidence badge is driven by the
+// LIVE engine output's gate / saving-claim status for the best EV plan -- never
+// a fabricated probability. For the demonstration case both EV plans are 'Total
+// incomplete' (site cost n.a.), so the badge MUST show the honest non-confirmed
+// Diagnostic state, not a fake 'confirmed'.
+const STAGES = ['portfolio','tco','charging','proposal'];
 // Hand-written chrome (everything before the first generated block), so the
 // markup counts below never pick up generated DEMO/PROSPECTS data.
 const chromeEndFeat5 = html.indexOf('<!-- ENGINE:BEGIN');
 const chromeFeat5 = chromeEndFeat5 === -1 ? html : html.slice(0, chromeEndFeat5);
-// All five stage panels exist in the markup.
+// All four stage panels exist in the markup.
 STAGES.forEach((s) => {
   checks.push(['stage section ' + s + ' present', chromeFeat5.indexOf('id="stage-' + s + '"') !== -1]);
 });
-// The stepper exists and carries exactly five step buttons in the markup.
+// The removed Customer stage is GONE (no dangling step button or stage panel).
+checks.push(['Customer stage removed (no step-customer button)',
+  chromeFeat5.indexOf('id="step-customer"') === -1]);
+checks.push(['Customer stage removed (no stage-customer panel)',
+  chromeFeat5.indexOf('id="stage-customer"') === -1]);
+// The stepper exists and carries exactly four step buttons in the markup.
 checks.push(['stepper present in markup', chromeFeat5.indexOf('id="stepper"') !== -1]);
 const stepMatches = (chromeFeat5.match(/class="step"/g) || []).length;
-checks.push(['stepper has five steps', stepMatches === 5]);
+checks.push(['stepper has four steps (Customer removed)', stepMatches === 4]);
 
 // The confidence badge element exists in the markup.
 checks.push(['confidence badge present in markup', chromeFeat5.indexOf('id="confidence-badge"') !== -1]);
@@ -794,7 +1099,7 @@ checks.push(['keyboard ArrowLeft switches stage back to TCO',
 // The persistent demonstration honesty banner is NOT buried inside any one
 // stage: it sits above the stepper in the chrome, before the first stage panel.
 const bannerIdx = html.indexOf('id="demo-banner"');
-const firstStageIdx = html.indexOf('id="stage-customer"');
+const firstStageIdx = html.indexOf('id="stage-portfolio"');
 checks.push(['honesty banner persists above the stages (not inside one)',
   bannerIdx !== -1 && firstStageIdx !== -1 && bannerIdx < firstStageIdx]);
 
@@ -853,6 +1158,12 @@ checks.push(['portfolio fit module exposed on window.HSPortfolioFit',
 checks.push(['portfolio fit module is separate from the engine',
   windowObj.HSPortfolioFit !== windowObj.HSEngine &&
   typeof windowObj.HSPortfolioFit.scoreModelFit === 'function']);
+// FEAT-002: the cost-effectiveness matcher functions are exposed so the
+// per-truck side-by-side comparison can recommend the best EV live.
+checks.push(['cost-effectiveness matcher exposed (truckDutyFromRow + matchBestModel)',
+  typeof windowObj.HSPortfolioFit.truckDutyFromRow === 'function' &&
+  typeof windowObj.HSPortfolioFit.matchBestModel === 'function' &&
+  typeof windowObj.HSPortfolioFit.rankModelsByCost === 'function']);
 
 // (3) The rendered body holds a RANKED model list. Walk the built rows and
 // collect the model names from the data-portfolio-model rows, plus the text of
@@ -987,6 +1298,59 @@ checks.push(['computeFleet valid after Portfolio Select', !!outAfterSelect && !!
 byId['reset-btn'].fire('click');
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
+// ---- FEAT-003 Part A: Portfolio repurposed as a fleet matched-models summary
+// The Portfolio surface is no longer a disconnected ranked table: its PRIMARY
+// content is a fleet-wide summary of the SAME per-truck EV matching, fed by
+// window.HSPortfolioFit.matchFleetToPortfolio (reused, not reimplemented). It
+// aggregates which model matched each included truck, counts per model, the
+// verdict/caveats and the vehicle/COE price split, plus the fleet-level
+// charging/config constraints. The full ranked guide is kept only as a details
+// disclosure (supporting evidence), so the matcher drives the surface.
+checks.push(['Portfolio summary is fed by matchFleetToPortfolio (reused matcher)',
+  typeof windowObj.HSPortfolioFit.matchFleetToPortfolio === 'function']);
+// The repurposed surface chrome exists in the markup (fleet summary + config).
+checks.push(['Portfolio fleet matched-models summary present in markup',
+  html.indexOf('id="portfolio-fleet-summary"') !== -1 &&
+  html.indexOf('id="portfolio-matched-models"') !== -1 &&
+  html.indexOf('id="portfolio-fleet-table"') !== -1]);
+checks.push(['Portfolio fleet-level config/charging block present',
+  html.indexOf('id="portfolio-fleet-config"') !== -1]);
+// The old ranked table is demoted into a details disclosure (supporting, not
+// the lead), so the surface is not a disconnected ranked table.
+checks.push(['Portfolio ranked guide demoted into a details disclosure',
+  html.indexOf('id="portfolio-detail"') !== -1 &&
+  html.indexOf('Full ranked fit guide') !== -1]);
+// The matched-models cards render one card per matched model (or honest buckets)
+// for the demo fleet, with a count. All six demo trucks are included.
+const matchGrid = byId['portfolio-matched-models'];
+const matchCards = (matchGrid.children || []).filter(
+  (c) => c.attributes && (c.attributes['data-matched-model'] != null ||
+    c.attributes['data-matched-nofit'] != null || c.attributes['data-matched-none'] != null));
+checks.push(['Portfolio renders matched-model count cards for the fleet',
+  matchCards.length >= 1]);
+// Every demo included truck appears in the per-truck match table.
+const fleetBody = byId['portfolio-fleet-body'];
+const fleetRows = (fleetBody.children || []).filter(
+  (rrow) => rrow.attributes && rrow.attributes['data-fleet-truck'] != null);
+const demoMatches = windowObj.HSPortfolioFit.matchFleetToPortfolio(windowObj.__HS.state) || [];
+checks.push(['Portfolio per-truck match table has a row per included truck',
+  fleetRows.length === demoMatches.length && demoMatches.length >= 1]);
+// The fleet summary carries the vehicle/COE split (2dp) and a matched model name.
+const fleetText = textOfNode(fleetBody);
+checks.push(['Portfolio per-truck table shows a 2dp vehicle/COE price',
+  /S\$[\d,]+\.\d\d/.test(fleetText)]);
+// Honesty preserved: the fleet-level config text still names the Unconfirmed
+// caveat, so no match is presented as a confirmed win.
+checks.push(['Portfolio fleet config preserves the Unconfirmed honesty caveat',
+  (byId['portfolio-config-text']._text || '').indexOf('Unconfirmed') !== -1]);
+// Live: the summary re-renders on recompute (it is wired via the portfolio
+// renderer). Firing a recompute keeps the per-truck rows populated.
+windowObj.__HS.recompute();
+const fleetRowsAfter = (byId['portfolio-fleet-body'].children || []).filter(
+  (rrow) => rrow.attributes && rrow.attributes['data-fleet-truck'] != null);
+checks.push(['Portfolio fleet summary re-renders live on recompute',
+  fleetRowsAfter.length === demoMatches.length]);
+
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html
 // markup (the `html` string already loaded above). These lock in the taste-skill
@@ -1043,12 +1407,31 @@ checks.push(['advanced energy container present', /id="ec-body-adv"/.test(chrome
 checks.push(['tablet stack media query (<=1023px) present',
   /@media\s*\(\s*max-width:\s*1023px\s*\)/.test(chrome)]);
 
-// Charts region + the five chart containers exist and are populated (the chart
-// container id checks above already prove each holds emitted <svg>).
-checks.push(['charts region present', /id="charts-region"/.test(chrome)]);
+// FEAT-003: the interactive TCO dashboard region + its chart containers exist
+// and are populated (the chart id checks above already prove each holds <svg>).
+checks.push(['TCO dashboard region present', /id="tco-dashboard"/.test(chrome)]);
+checks.push(['dashboard charts column present', /id="tco-charts"/.test(chrome)]);
+checks.push(['dashboard sensitivity-beside column present', /id="tco-side"/.test(chrome)]);
 chartIds.forEach((id) => {
   checks.push([id + ' container in markup', chrome.indexOf('id="' + id + '"') !== -1]);
 });
+// FEAT-003: the dashboard DOM order is line hero -> breakdown bar -> sensitivity
+// beside -> results table + Day-0 below. Assert the source order of the ids.
+(() => {
+  const iHero = chrome.indexOf('id="chart-cumulative"');
+  const iBar  = chrome.indexOf('id="chart-breakdown"');
+  const iSens = chrome.indexOf('id="sensitivity"');
+  const iRes  = chrome.indexOf('id="results"');
+  const iDay0 = chrome.indexOf('id="day0-funding"');
+  checks.push(['dashboard order: line hero before breakdown bar',
+    iHero !== -1 && iBar !== -1 && iHero < iBar]);
+  checks.push(['dashboard order: sensitivity card beside the charts (after bar in source)',
+    iSens !== -1 && iBar < iSens]);
+  checks.push(['dashboard order: results table below the three top elements',
+    iRes !== -1 && iSens < iRes]);
+  checks.push(['dashboard order: Day-0 funding below the results table',
+    iDay0 !== -1 && iRes < iDay0]);
+})();
 
 // Flat surfaces: no decorative shadow or gradient at rest in the chrome.
 checks.push(['no box-shadow in chrome', !/box-shadow/i.test(chrome)]);
@@ -1075,7 +1458,7 @@ checks.push(['phone fold media query (<=700px) present',
 
 // Model-integrity signals preserved in the chrome: amber-editable legend text
 // and the four evidence tags are present.
-checks.push(['amber-editable legend present', /Amber\s*=\s*editable input/i.test(chrome)]);
+checks.push(['amber-editable legend present', /Amber\s*=\s*editable/i.test(chrome)]);
 checks.push(['evidence tags present (Fact/Assumption/Inference/Unknown)',
   /tag fact/.test(chrome) && /tag assumption/.test(chrome) &&
   /tag inference/.test(chrome) && /tag unknown/.test(chrome)]);

@@ -30,10 +30,12 @@ function clone(x) { return JSON.parse(JSON.stringify(x)); }
 function isNum(v) { return typeof v === 'number' && isFinite(v); }
 
 /* ---- Scenario: the fully-specified illustrative case that clears gates --- *
- * Evergreen's Total economic TCO and Saving % are numeric and respond to
- * inputs, which is exactly what a sensitivity sweep needs. */
-const evergreen = seeds.cases.find(c => c.id === 'evergreen');
-const SCENARIO = { id: 'evergreen', label: 'Evergreen (fully specified, gates pass)', inputs: evergreen.inputs };
+ * The 'best' case is the fully-specified illustrative confirmed-win set: its
+ * Total economic TCO and Saving % are numeric and respond to inputs, which is
+ * exactly what a sensitivity sweep needs. (The former 'evergreen' seed was
+ * removed as a misleading named customer; 'best' is the same input set.) */
+const baseline = seeds.cases.find(c => c.id === 'best');
+const SCENARIO = { id: 'best', label: 'Best case (fully specified, gates pass)', inputs: baseline.inputs };
 
 /* ---- Output extractor: pick best EV plan like scoreProspect -------------- */
 function bestEvPlan(out) {

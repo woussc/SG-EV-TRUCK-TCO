@@ -63,7 +63,12 @@ inlinePortfolio += '\nwindow.HSPortfolioFit = { ' +
   'rankModels: rankModels, rankModelsForInputs: rankModelsForInputs, ' +
   'scoreModelFit: scoreModelFit, deriveDuty: deriveDuty, ' +
   'productAttributes: productAttributes, FIT_THRESHOLDS: FIT_THRESHOLDS, ' +
-  'VERDICT_RANK: VERDICT_RANK, FIT_UNCONFIRMED: FIT_UNCONFIRMED };\n';
+  'VERDICT_RANK: VERDICT_RANK, FIT_UNCONFIRMED: FIT_UNCONFIRMED, ' +
+  // FEAT-002: the cost-effectiveness matcher (FEAT-001 additive layer) is now
+  // consumed by the per-truck side-by-side comparison UI, so expose it too.
+  'MATCH_DEFAULTS: MATCH_DEFAULTS, truckDutyFromRow: truckDutyFromRow, ' +
+  'indicativeCost: indicativeCost, rankModelsByCost: rankModelsByCost, ' +
+  'matchBestModel: matchBestModel, matchFleetToPortfolio: matchFleetToPortfolio };\n';
 
 const engineBlock =
   `<!-- ENGINE:BEGIN  generated from src/engine.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
