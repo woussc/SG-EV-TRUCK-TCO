@@ -33,6 +33,7 @@ const enginePath = resolve(repoRoot, 'src/engine.js');
 const portfolioPath = resolve(repoRoot, 'src/portfolio_fit.js');
 const fixturePath = resolve(repoRoot, 'tools/fixtures/demo_case.json');
 const seedsPath = resolve(repoRoot, 'tools/fixtures/prospect_seeds.json');
+const chargingPath = resolve(repoRoot, 'tools/fixtures/charging_context.json');
 const indexPath = resolve(repoRoot, 'index.html');
 
 const engineSrc = readFileSync(enginePath, 'utf8');
@@ -41,6 +42,12 @@ const portfolioSrc = readFileSync(portfolioPath, 'utf8');
 const portfolioHash = createHash('sha256').update(portfolioSrc).digest('hex');
 const fixture = JSON.parse(readFileSync(fixturePath, 'utf8'));
 const seeds = JSON.parse(readFileSync(seedsPath, 'utf8'));
+// Compact charging aggregates derived at build time by tools/build_charging_data.mjs
+// from the 6.3MB vendored LTA/BoCharge snapshot. ONLY this small derived asset is
+// inlined into the page - the raw snapshot is never shipped. Re-generate it with
+// `node tools/build_charging_data.mjs` before this build if the snapshot changed.
+const chargingRaw = readFileSync(chargingPath, 'utf8');
+const charging = JSON.parse(chargingRaw);
 
 // Strip ES-module syntax so the engine runs inside a classic <script>.
 // 1) `export const NA` / `export function foo` -> drop the leading `export `.
@@ -92,6 +99,11 @@ const portfolioBlock =
   `<script>\n${inlinePortfolio}</script>\n` +
   `<!-- PORTFOLIO:END -->`;
 
+const chargingBlock =
+  `<!-- CHARGING:BEGIN  generated from tools/fixtures/charging_context.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<script>\nwindow.HSChargingContext = ${JSON.stringify(charging)};\n</script>\n` +
+  `<!-- CHARGING:END -->`;
+
 let html = readFileSync(indexPath, 'utf8');
 
 function replaceBlock(src, beginRe, endRe, label, replacement) {
@@ -132,6 +144,13 @@ html = replaceBlock(
   'PORTFOLIO',
   portfolioBlock,
 );
+html = replaceBlock(
+  html,
+  /<!-- CHARGING:BEGIN[\s\S]*?-->/,
+  /<!-- CHARGING:END -->/,
+  'CHARGING',
+  chargingBlock,
+);
 
 writeFileSync(indexPath, html);
 console.log(`index.html regenerated.`);
@@ -139,3 +158,4 @@ console.log(`  engine  : src/engine.js (${engineSrc.length} bytes, sha256 ${engi
 console.log(`  portfolio: src/portfolio_fit.js (${portfolioSrc.length} bytes, sha256 ${portfolioHash.slice(0, 16)}...)`);
 console.log(`  demo    : tools/fixtures/demo_case.json inputs embedded`);
 console.log(`  prospects: tools/fixtures/prospect_seeds.json (${seeds.cases.length} seed cases) embedded`);
+console.log(`  charging: tools/fixtures/charging_context.json (${(Buffer.byteLength(chargingRaw) / 1024).toFixed(2)} KB compact aggregates) embedded`);

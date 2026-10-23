@@ -1,0 +1,261 @@
+{
+  "schemaVersion": 1,
+  "provenance": {
+    "source": "lta-datamall-snapshot",
+    "sourceLabel": "LTA DataMall snapshot",
+    "generatedAt": "2026-05-16T05:40:21.979Z",
+    "lastUpdatedTime": "2026-05-16 13:40:00",
+    "count": 2687
+  },
+  "attribution": "Charger data: LTA DataMall EV Charging Points Batch API, used under the Singapore Open Data Licence and LTA API Terms of Service; surfaced via the vendored BoCharge project. Provider names are attribution, not endorsement.",
+  "totals": {
+    "locations": 2687,
+    "chargingPoints": 9005,
+    "acPoints": 8229,
+    "dcPoints": 776
+  },
+  "powerBands": [
+    {
+      "band": "<=7.4 kW (slow AC)",
+      "count": 6580
+    },
+    {
+      "band": "11-22 kW (AC)",
+      "count": 1463
+    },
+    {
+      "band": "23-60 kW (DC)",
+      "count": 533
+    },
+    {
+      "band": "61-119 kW (DC)",
+      "count": 139
+    },
+    {
+      "band": ">=120 kW (rapid DC)",
+      "count": 290
+    }
+  ],
+  "tariffPerKwh": {
+    "ac": {
+      "min": 0.4295,
+      "median": 0.69,
+      "max": 0.87,
+      "n": 7898
+    },
+    "dc": {
+      "min": 0.39,
+      "median": 0.8,
+      "max": 0.89,
+      "n": 708
+    }
+  },
+  "byRegion": [
+    {
+      "region": "West",
+      "points": 2705,
+      "ac": 2465,
+      "dc": 240,
+      "tariffPerKwh": {
+        "min": 0.39,
+        "median": 0.695,
+        "max": 0.89,
+        "n": 2600
+      }
+    },
+    {
+      "region": "East",
+      "points": 1904,
+      "ac": 1754,
+      "dc": 150,
+      "tariffPerKwh": {
+        "min": 0.45,
+        "median": 0.695,
+        "max": 0.89,
+        "n": 1865
+      }
+    },
+    {
+      "region": "North",
+      "points": 1851,
+      "ac": 1718,
+      "dc": 133,
+      "tariffPerKwh": {
+        "min": 0.45,
+        "median": 0.695,
+        "max": 0.89,
+        "n": 1736
+      }
+    },
+    {
+      "region": "North-East",
+      "points": 1282,
+      "ac": 1220,
+      "dc": 62,
+      "tariffPerKwh": {
+        "min": 0.48,
+        "median": 0.695,
+        "max": 0.89,
+        "n": 1214
+      }
+    },
+    {
+      "region": "Central",
+      "points": 1263,
+      "ac": 1072,
+      "dc": 191,
+      "tariffPerKwh": {
+        "min": 0.4295,
+        "median": 0.695,
+        "max": 0.89,
+        "n": 1191
+      }
+    }
+  ],
+  "byOperator": [
+    {
+      "operator": "SP MOBILITY PTE. LTD.",
+      "points": 2445,
+      "ac": 2138,
+      "dc": 307,
+      "tariffPerKwh": {
+        "min": 0.5297,
+        "median": 0.6976,
+        "max": 0.8611,
+        "n": 2430
+      }
+    },
+    {
+      "operator": "COMFORTDELGRO ENGIE PTE. LTD.",
+      "points": 1807,
+      "ac": 1742,
+      "dc": 65,
+      "tariffPerKwh": {
+        "min": 0.49,
+        "median": 0.695,
+        "max": 0.78,
+        "n": 1807
+      }
+    },
+    {
+      "operator": "SHELL SINGAPORE PTE. LTD.",
+      "points": 1688,
+      "ac": 1612,
+      "dc": 76,
+      "tariffPerKwh": {
+        "min": 0.63,
+        "median": 0.69,
+        "max": 0.89,
+        "n": 1543
+      }
+    },
+    {
+      "operator": "CHARGE+ PTE. LTD.",
+      "points": 1241,
+      "ac": 1157,
+      "dc": 84,
+      "tariffPerKwh": {
+        "min": 0.45,
+        "median": 0.629,
+        "max": 0.849,
+        "n": 1239
+      }
+    },
+    {
+      "operator": "STRIDES YTL PTE. LTD.",
+      "points": 1111,
+      "ac": 1092,
+      "dc": 19,
+      "tariffPerKwh": {
+        "min": 0.65,
+        "median": 0.6781,
+        "max": 0.763,
+        "n": 1111
+      }
+    },
+    {
+      "operator": "VOLT SINGAPORE PTE. LTD.",
+      "points": 212,
+      "ac": 133,
+      "dc": 79,
+      "tariffPerKwh": {
+        "min": 0.488,
+        "median": 0.66,
+        "max": 0.74,
+        "n": 119
+      }
+    },
+    {
+      "operator": "MNL SOLUTIONS PTE. LTD.",
+      "points": 88,
+      "ac": 84,
+      "dc": 4,
+      "tariffPerKwh": {
+        "min": 0.5123,
+        "median": 0.545,
+        "max": 0.6758,
+        "n": 62
+      }
+    },
+    {
+      "operator": "FASTPARKNCHARGE PTE. LTD.",
+      "points": 54,
+      "ac": 39,
+      "dc": 15,
+      "tariffPerKwh": {
+        "min": 0.65,
+        "median": 0.7,
+        "max": 0.82,
+        "n": 54
+      }
+    },
+    {
+      "operator": "GREAT CHARGE PTE. LTD.",
+      "points": 49,
+      "ac": 28,
+      "dc": 21,
+      "tariffPerKwh": {
+        "min": 0.5451,
+        "median": 0.5451,
+        "max": 0.5451,
+        "n": 47
+      }
+    },
+    {
+      "operator": "EIGEN ENERGY PTE. LTD.",
+      "points": 40,
+      "ac": 34,
+      "dc": 6,
+      "tariffPerKwh": {
+        "min": 0.48,
+        "median": 0.58,
+        "max": 0.65,
+        "n": 33
+      }
+    },
+    {
+      "operator": "NOVOWATT PTE. LTD.",
+      "points": 37,
+      "ac": 35,
+      "dc": 2,
+      "tariffPerKwh": {
+        "min": 0.49,
+        "median": 0.55,
+        "max": 0.6501,
+        "n": 36
+      }
+    },
+    {
+      "operator": "EV MOBILITY PTE. LTD.",
+      "points": 34,
+      "ac": 15,
+      "dc": 19,
+      "tariffPerKwh": {
+        "min": 0.5,
+        "median": 0.599,
+        "max": 0.659,
+        "n": 34
+      }
+    }
+  ]
+}

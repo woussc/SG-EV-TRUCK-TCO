@@ -636,11 +636,20 @@ function siteColumn(model, allPaths, planCode, col /* 'B' or 'C' */) {
   } else initialLessAward = NA;
 
   // Peak depot energy (row 65) and charging hours (row 66): SUMIFS over paths.
+  // publicVisits/publicVisitEnergy are ADDITIVE read-only surfacings of values
+  // the Paths math already computed (p.W public visits/year, p.X EV grid
+  // kWh/year); they are summed here for the Stage-4 coarse detour/queue read.
+  // They change NO existing value and feed NO formula - validate.py stays 19/19.
   let peakDepotEnergy = 0, chargingHours = 0;
+  let publicVisits = 0, publicVisitEnergy = 0;
   for (const p of allPaths) {
     if (p.planCode === planCode && p.C === 1) {
       peakDepotEnergy += p.Y;
       chargingHours += p.Z;
+      if (p.D === 'EV' && p.E < 120) {
+        if (isNum(p.W)) publicVisits += p.W;
+        if (isNum(p.X)) publicVisitEnergy += p.X;
+      }
     }
   }
 
@@ -657,6 +666,7 @@ function siteColumn(model, allPaths, planCode, col /* 'B' or 'C' */) {
   return {
     completeness, grossInitial, annual, grantCeiling, initialLessAward,
     peakDepotEnergy, chargingHours, accessCheck, evCount,
+    publicVisits, publicVisitEnergy,
   };
 }
 

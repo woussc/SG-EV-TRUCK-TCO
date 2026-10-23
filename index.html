@@ -94,6 +94,21 @@ p{margin:8px 0 12px}
 .confidence.conf-below .conf-dot{background:var(--amberline)}
 .confidence.conf-diagnostic{border-color:var(--line2);background:var(--soft);color:var(--muted)}
 .confidence.conf-diagnostic .conf-dot{background:var(--muted)}
+/* STAGE 5 STANDARD PROPOSAL. A presentation-only leave-behind. The header badge
+   and wording INHERIT the chosen plan's gate / claim status: a confirmed case
+   reads green ('confirmed quotation'), anything else reads amber/grey
+   ('INDICATIVE / pending evidence'). No decorative shadow/gradient (flat). */
+.proposal-head{margin:0 0 16px}
+.proposal-head-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.proposal-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border:1px solid var(--line2);border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;background:var(--paper);color:var(--muted)}
+.proposal-badge.pb-confirmed{border-color:#9ccbb0;background:#eef6f1;color:#1f6b3b}
+.proposal-badge.pb-indicative{border-color:var(--amberline);background:var(--amber);color:var(--warn)}
+.proposal-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gutter)}
+.proposal-block{border:1px solid var(--line);border-radius:6px;padding:14px 16px;background:var(--paper)}
+.proposal-block-wide{grid-column:1 / -1}
+.proposal-block .block-title{margin-top:0}
+#stage-proposal.pending .proposal-badge,#stage-proposal.pending #proposal-quotation-block{position:relative}
+@media (max-width:860px){.proposal-grid{grid-template-columns:1fr}}
 /* STAGE VIEWPORTS: exactly one visible at a time. Simple, smooth fade/slide-in
    on activation; hidden stages are removed from layout + the a11y tree. */
 .stage.stage-hidden{display:none}
@@ -220,22 +235,39 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .chart-box{width:100%}
 .chart-box svg{display:block;width:100%;height:auto}
 
-/* ---- FEAT-003: interactive TCO dashboard ------------------------------- *
- * Grid: a wide left column of stacked charts (line hero then breakdown bar)
- * and a right column holding the sensitivity card BESIDE them. Reflows to a
- * single column (charts first, sensitivity below) under 1100px. */
-.tco-dashboard{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:var(--gutter);align-items:start;position:relative}
-.tco-charts{display:flex;flex-direction:column;gap:var(--gutter);min-width:0}
-.tco-side{min-width:0}
-.tco-side #sensitivity{margin:0}
-/* The sensitivity drivers sit in the narrow side column: stack them one per
-   row so the slider + number box never overflow. On a wide single-column
-   reflow (<=1100px) they can breathe back to two-up. */
-.tco-side #sens-controls{grid-template-columns:1fr}
-@media(max-width:1100px){.tco-side #sens-controls{grid-template-columns:1fr 1fr}}
+/* ---- FEAT-003 + dashboard-A: interactive TCO dashboard ----------------- *
+ * ONE RESPONSIVE BAND (#tco-band): the cumulative-TCO LINE (primary, reads
+ * wider), the cost-component BREAKDOWN BAR and the SENSITIVITY controls card
+ * sit on a single grid row on wide screens, then reflow to stacked on narrow
+ * screens using the existing breakpoints (1023 / 860 / 700). The line is the
+ * widest track; the bar and the sensitivity controls share the remaining width.
+ * (A2 removed the redundant sensitivity-response bar; A3 removed the sensitivity
+ * table, so the band holds exactly these three surfaces.) */
+.tco-dashboard{min-width:0;position:relative}
+.tco-band{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr);gap:var(--gutter);align-items:start}
+.tco-band>*{min-width:0;margin:0}
+.tco-band-sens{min-width:0}
+/* The sensitivity drivers sit in a narrow band track: stack them one per row so
+   the slider + number box never overflow. */
+.tco-band-sens #sens-controls{grid-template-columns:1fr}
 .chart-hero .chart-box{min-height:300px}
 .chart-hero svg{min-height:300px}
-@media(max-width:1100px){.tco-dashboard{grid-template-columns:1fr}}
+/* Reflow to stacked on narrow screens (existing breakpoints). At 1023px the
+   line spans full width and the bar + sensitivity sit two-up beneath it; at
+   860px everything stacks to one column. */
+@media(max-width:1023px){
+  .tco-band{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .tco-band-line{grid-column:1 / -1}
+  .tco-band-sens #sens-controls{grid-template-columns:1fr 1fr}
+}
+@media(max-width:860px){
+  .tco-band{grid-template-columns:1fr}
+  .tco-band-line{grid-column:auto}
+  .tco-band-sens #sens-controls{grid-template-columns:1fr 1fr}
+}
+@media(max-width:700px){
+  .tco-band-sens #sens-controls{grid-template-columns:1fr}
+}
 /* Floating tooltip for the interactive charts (hand-rolled, no library). */
 .tco-dashboard{--tt-pad:8px}
 .tco-tooltip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;line-height:1.5;padding:8px 10px;border-radius:7px;max-width:260px;font-variant-numeric:tabular-nums}
@@ -260,6 +292,33 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .day0-card .d0-line .d0-lab{color:var(--muted);overflow-wrap:anywhere}
 .day0-card .d0-line .d0-val{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 
+/* ---- dashboard-A A6: prospect cards ------------------------------------ *
+ * The prospects list is a responsive card grid (one card per prospect),
+ * streamlined like the input cards. Essentials up top; ranking detail + the
+ * case note collapse behind a per-card Details disclosure. */
+.prospect-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin:10px 0 0}
+.prospect-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--paper);min-width:0;display:flex;flex-direction:column;gap:8px;transition:border-color .18s ease,transform .18s ease}
+/* Tasteful pointer-device hover affordance; the reduced-motion guard above
+   (*{transition-duration:.001ms}) neutralises the lift when motion is reduced. */
+@media(hover:hover){.prospect-card:hover{border-color:var(--line2);transform:translateY(-1px)}}
+.prospect-card:focus-within{border-color:var(--line2)}
+.prospect-card .pc-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.prospect-card .pc-rank{font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.prospect-card .pc-name{margin:0;font-size:14px;overflow-wrap:anywhere;flex:1 1 auto}
+.prospect-card .pc-tags{flex:0 0 auto}
+.prospect-card .pc-status{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px}
+.prospect-card .pc-target{color:var(--muted)}
+.prospect-card .pc-metrics{display:grid;grid-template-columns:1fr;gap:4px;margin:2px 0 0}
+.prospect-card .pc-metric{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;border-bottom:1px dotted var(--line);min-width:0}
+.prospect-card .pc-metric:last-child{border-bottom:0}
+.prospect-card .pc-metric .pc-k{color:var(--muted);overflow-wrap:anywhere}
+.prospect-card .pc-metric .pc-v{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere}
+.prospect-card .pc-details{border-top:1px solid var(--line);padding-top:6px}
+.prospect-card .pc-details>summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)}
+.prospect-card .pc-details-inner{margin:6px 0 0}
+.prospect-card .pc-details-inner p{margin:0 0 6px}
+.prospect-card .pc-actions{margin-top:auto}
+
 /* ---- FEAT-003 Part A: fleet matched-models summary --------------------- */
 .sub-title{font-size:13px;margin:0 0 4px}
 .matched-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin:10px 0 0}
@@ -273,6 +332,31 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .portfolio-detail>summary{cursor:pointer;padding:12px 14px;font-weight:600;font-size:13px}
 .portfolio-detail>.inner{padding:0 14px 14px}
 #portfolio-fleet-table td,#portfolio-fleet-table th{vertical-align:top}
+
+/* ---- FEAT-002 Part C: Stage-4 charging assessment --------------------- *
+ * Three read-only panels (route-energy/site read, coarse detour/queue read,
+ * public-charging context). Clean cards + inline-SVG bars, consistent with
+ * the day0/matched card style. No new fonts, no runtime network. */
+.charge-panel{margin:0 0 var(--gutter)}
+.charge-readgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin:10px 0 0}
+.charge-read{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--paper);min-width:0;display:flex;flex-direction:column;gap:6px;transition:border-color .18s ease}
+@media(hover:hover){.charge-read:hover{border-color:var(--line2)}}
+.charge-read h4{margin:0;font-size:13px}
+.charge-read .cr-verdict{font-size:12px;font-weight:600}
+.charge-read .cr-verdict.ok{color:#1f6b3b}.charge-read .cr-verdict.warn{color:var(--warn)}.charge-read .cr-verdict.na{color:var(--muted);font-style:italic}
+.charge-read .cr-line{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;border-bottom:1px dotted var(--line);min-width:0}
+.charge-read .cr-line:last-child{border-bottom:0}
+.charge-read .cr-k{color:var(--muted);overflow-wrap:anywhere}
+.charge-read .cr-v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.coarse-label{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 7px;border:1px solid var(--line2);border-radius:3px;color:var(--muted);background:var(--soft)}
+.charge-bands{margin:10px 0 0;display:flex;flex-direction:column;gap:6px}
+.charge-band{display:grid;grid-template-columns:150px 1fr 70px;align-items:center;gap:10px;font-size:12px}
+.charge-band .cb-lab{color:var(--muted);overflow-wrap:anywhere}
+.charge-band .cb-track{background:var(--soft);border-radius:4px;height:14px;overflow:hidden}
+.charge-band .cb-fill{height:100%;background:var(--accent);border-radius:4px}
+.charge-band .cb-val{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.charge-attrib{font-size:11.5px;color:var(--muted);border-left:3px solid var(--line2);padding:8px 12px;background:var(--soft);margin:12px 0 0;border-radius:0 6px 6px 0}
+@media(max-width:700px){.charge-band{grid-template-columns:110px 1fr 56px}}
 @media(max-width:1023px){.workspace{grid-template-columns:1fr}}
 @media(max-width:860px){.grid,.formgrid{grid-template-columns:1fr}.grid4{grid-template-columns:1fr}}
 @media(max-width:700px){h1{font-size:24px}main{padding:18px 16px 8px}.topbar{flex-wrap:wrap;padding:10px 16px}.topbar .caveat{margin-left:0;flex-basis:100%;order:3}section{padding:16px}table{font-size:12.5px}th,td{padding:7px}
@@ -304,6 +388,16 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  a{color:var(--ink)}.grid,.grid4{display:block}.panel,.plan-card{margin-bottom:10px}
  input,select{border:0;background:transparent;-webkit-appearance:none;appearance:none}
  details>.inner{display:block!important}details{break-inside:auto}
+ /* STAGE 5 proposal leave-behind: keep the indicative/confirmed badge and its
+    colour in print (so a diagnostic case prints 'indicative', never a firm
+    quotation), keep the proposal blocks bordered, and start the proposal on a
+    fresh page. The finance note is .noprint, so it is already hidden. */
+ .proposal-badge{border:1px solid #888!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .proposal-badge.pb-confirmed{border-color:#1f6b3b!important;color:#1f6b3b!important}
+ .proposal-badge.pb-indicative{border-color:#8a6d00!important;color:#8a6d00!important}
+ .proposal-grid{display:block}
+ .proposal-block{border:1px solid #bbb;margin-bottom:10px;break-inside:avoid}
+ #stage-proposal{break-before:page}
 }
 </style></head><body>
 <div class="topbar">
@@ -476,32 +570,36 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="caveat-line" id="decision-notice">Demonstration defaults reproduce the Excel cached figures. Do not present these as a customer quotation or an owned-fleet fact.</p>
 </section>
 
-<!-- INTERACTIVE TCO DASHBOARD (FEAT-003 Fix 5).
-     DOM order: (1) cumulative-TCO LINE hero, full width, per-year points +
-     year 3/5/10 segmentation; (2) cost-component BREAKDOWN BAR below it; both
-     in the left/main column. (3) the break-even SENSITIVITY card BESIDE them in
-     the right column. (4) results table + Day-0 funding below all three. All
-     three graphs are inline SVG, hand-rolled, interactive (hover tooltip +
-     cross-highlight), offline. All displayed figures use the 2dp formatter. -->
+<!-- INTERACTIVE TCO DASHBOARD (FEAT-003 Fix 5; restructured FEAT-dashboard-A).
+     ONE RESPONSIVE BAND (A1): the cumulative-TCO LINE (primary, reads wider),
+     the cost-component BREAKDOWN BAR and the break-even SENSITIVITY controls
+     card sit side-by-side in a single flex/grid band (#tco-band) that reflows to
+     stacked on narrow screens via the existing breakpoints (1023/860/700).
+     (A2) The redundant sensitivity-response bar (#chart-sens) has been removed:
+     it plotted results.totalEconomicTco per path, which is EXACTLY the stacked
+     height of the breakdown bar (vehicleEconomicTco + netSiteCost sum to the same
+     per-path total from the identical committed engine output). The breakdown bar
+     is strictly richer (shows the split AND the total) and already redraws live on
+     every driver/slider change via the main recompute (renderAll).
+     (A3) The sensitivity table (#sens-table/#sens-body) has been removed: its four
+     columns over the same four paths were a strict subset of the main #results-table
+     once renderSensitivity read committed state. The saving-target headroom now lives
+     in the main results table and in the new saving-target reference marker (A5).
+     All charts are inline SVG, hand-rolled, interactive (hover tooltip + cross-
+     highlight), offline. All displayed figures use the 2dp formatter. -->
 <section id="tco-dashboard-wrap"><p class="block-title">Interactive dashboard</p>
 <p class="small">Figures redraw live from the same engine output as the table below. Hover any line point or bar segment for its exact figure (2 decimal places) and to highlight the matching row in the results table and the Day-0 funding box. n.a. values are shown as gaps or hatched &lsquo;n.a.&rsquo; markers, never as a zero cost.</p>
 <div class="tco-tooltip" id="tco-tooltip" role="status" aria-live="polite" hidden></div>
 <div class="tco-dashboard" id="tco-dashboard">
-  <div class="tco-charts" id="tco-charts">
-    <figure class="chart-card chart-hero"><figcaption class="chart-title">Cumulative economic TCO over 10 years</figcaption><div class="chart-box" id="chart-cumulative"></div><figcaption class="chart-cap">Per-path running economic cost, years 0&ndash;10, with a labelled data point for every year. Marker lines call out the year&nbsp;3, year&nbsp;5 and year&nbsp;10 financial milestones. n.a. years appear as dashed gaps, never as a zero.</figcaption></figure>
-    <figure class="chart-card"><figcaption class="chart-title">Cost-component breakdown by path</figcaption><div class="chart-box" id="chart-breakdown"></div><figcaption class="chart-cap">Stacked economic cost per path: vehicle economic TCO (purchase + operating, net of disposal and grants) plus net charging-site ownership (charger installation and site works, net of any entered award). Hover a segment for the exact component. A hatched bar marked n.a. means the aggregate gate did not clear, not a zero cost.</figcaption></figure>
-  </div>
-  <aside class="tco-side" id="tco-side">
-    <section id="sensitivity"><p class="block-title">Break-even &amp; sensitivity</p>
-    <p class="small">Each slider changes one of the most-critical cost drivers and recomputes every path through the same engine, redrawing the line and bar above live. These are mathematical break-even conditions, not quoted prices. The baseline is always the current Keep ICE total at the unchanged inputs.</p>
+  <div class="tco-band" id="tco-band">
+    <figure class="chart-card chart-hero tco-band-line" id="tco-charts"><figcaption class="chart-title">Cumulative economic TCO over 10 years</figcaption><div class="chart-box" id="chart-cumulative"></div><figcaption class="chart-cap">Per-path running economic cost, years 0&ndash;10, with a labelled data point for every year. Marker lines call out the year&nbsp;3, year&nbsp;5 and year&nbsp;10 financial milestones. The dashed <strong>saving-target</strong> line shows the year-10 economic cost a plan must beat to meet the committed fleet saving target. n.a. years appear as dashed gaps, never as a zero.</figcaption></figure>
+    <figure class="chart-card tco-band-bar"><figcaption class="chart-title">Cost-component breakdown by path</figcaption><div class="chart-box" id="chart-breakdown"></div><figcaption class="chart-cap">Stacked economic cost per path: vehicle economic TCO (purchase + operating, net of disposal and grants) plus net charging-site ownership (charger installation and site works, net of any entered award). The height of each bar is the path&rsquo;s Total economic TCO. A dashed <strong>saving-target</strong> tick marks the level a plan must beat. Hover a segment for the exact component. A hatched bar marked n.a. means the aggregate gate did not clear, not a zero cost.</figcaption></figure>
+    <section class="tco-band-sens" id="sensitivity"><p class="block-title">Break-even &amp; sensitivity</p>
+    <p class="small">Each slider changes one of the most-critical cost drivers and recomputes every path through the same engine, redrawing the line and bar beside it live. These are mathematical break-even conditions, not quoted prices. The baseline is always the current Keep ICE total at the unchanged inputs. The discount rate is a rarely-changed assumption and lives in the <strong>Advanced assumptions</strong> area in the Inputs panel.</p>
     <div class="grid" id="sens-controls"></div>
-    <figure class="chart-card"><figcaption class="chart-title">Sensitivity response &mdash; Total economic TCO at current sliders</figcaption><div class="chart-box" id="chart-sens"></div><figcaption class="chart-cap">Redraws as you drag the diesel, electricity, EV-price and discount sliders.</figcaption></figure>
-    <div class="table-wrap"><table id="sens-table"><thead><tr>
-    <th>Path</th><th class="num">Total economic TCO</th><th class="num">Saving vs Keep</th><th class="num">Saving %</th><th class="num" id="sens-headroom-th">15% headroom</th>
-    </tr></thead><tbody id="sens-body"></tbody></table></div>
-    <p class="small" id="sens-note">Average km cannot exceed peak km. A price change is a cost breakpoint, not a route-planning recommendation.</p>
+    <p class="small" id="sens-note">Average km cannot exceed peak km. A price change is a cost breakpoint, not a route-planning recommendation. The per-path figures and the saving-target headroom are in the <strong>Results breakdown</strong> table below.</p>
     </section>
-  </aside>
+  </div>
 </div>
 </section>
 
@@ -531,28 +629,95 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      adoption gates. The deeper charger-location integration is a later phase. -->
 <section class="stage stage-hidden" id="stage-charging" role="tabpanel" aria-labelledby="step-charging">
 <p class="block-title">3 &middot; Charging &amp; site</p>
+<p class="lead">A charging assessment, read from the same engine output as the TCO stage plus a build-time snapshot of Singapore&rsquo;s public charger network. It is a <strong>coarse operational screen</strong>, not a routing optimiser or an arrival-by-arrival scheduler.</p>
 
-<section id="charging"><p class="block-title">Energy, charging and site budget</p>
-<p class="small">The charging site is costed once per plan and shared across its EVs. Completeness and access gates must pass before a numeric site cost is produced; otherwise the plan total is &quot;n.a.&quot;</p>
+<!-- PANEL 1: route-energy / capacity screen + site build-up human read. -->
+<section class="charge-panel" id="charging"><p class="block-title">Route energy, capacity screen &amp; site build-up</p>
+<p class="small">The charging site is costed once per plan and shared across its EVs. Completeness and access gates must pass before a numeric site cost is produced; otherwise the plan total stays &quot;n.a.&quot; (the model never substitutes zero for an unknown).</p>
+<div class="charge-readgrid" id="charge-site-read"></div>
 <div class="table-wrap"><table id="site-table"><thead><tr><th>Site build-up</th><th class="num">Plan A</th><th class="num">Plan B</th><th>Meaning</th></tr></thead><tbody id="site-body"></tbody></table></div>
 <p class="small">Charger grant ceiling = MIN(30000, 0.5 &times; accepted cost per charger) &times; MIN(3, approved funded chargers). The ceiling is a budget estimate only; only an entered, checked award reduces TCO.</p>
-<p class="caveat-line">A later phase will match this site budget against surveyed charger-location and grid-capacity data; for now the chargers and site line items are entered in the <strong>Inputs</strong> panel and only an entered, checked award reduces TCO.</p>
-</section>
 
-<section id="gates"><p class="block-title">Conditions that must hold before adoption</p>
+<p class="block-title" style="margin-top:18px">Conditions that must hold before adoption</p>
 <p class="small">A numeric range or payload pass is an <strong>assumed technical pass</strong>, not an evidence pass. The gates below are the model&apos;s own screens at the current inputs.</p>
 <div class="table-wrap"><table id="gates-table"><thead><tr><th>Gate</th><th>Plan A</th><th>Plan B</th><th>Evidence needed</th></tr></thead><tbody id="gates-body"></tbody></table></div>
 <p class="small">Service screen is the per-plan vehicle service / evidence status. Capacity gate is the site completeness / access status. No plan reaches an evidence pass while any verification flag reads No or Unconfirmed.</p>
 </section>
 
+<!-- PANEL 2: coarse detour / queue / recovery read of the engine's public-visit
+     intermediates. Honesty per approved proposal Q2: a coarse screen, NOT a
+     scheduler. -->
+<section class="charge-panel" id="charging-detour"><p class="block-title">Detour, queue &amp; recovery &mdash; coarse screen</p>
+<p class="small"><span class="coarse-label">Coarse screen &middot; not an arrival-by-arrival scheduler</span> This reads the engine&rsquo;s own public-charging intermediates for the EV paths (public top-up visits per year and the detour energy they add). It is a feasibility screen only: it does not simulate arrival times, queueing, or charger availability.</p>
+<div class="charge-readgrid" id="charge-detour-read"></div>
+<p class="caveat-line" id="charge-detour-note">&ldquo;Recovery&rdquo; is a what-if on the entered backup / substitute-service rate, not a measured outcome. A confirmed plan still needs a loaded route-and-charging trial with measured grid kWh.</p>
+</section>
+
+<!-- PANEL 3: public-charging context from window.HSChargingContext (compact
+     build-time aggregates). Context/evidence only. -->
+<section class="charge-panel" id="charging-public"><p class="block-title">Singapore-wide public-charging context (by region &amp; operator)</p>
+<p class="small"><span class="coarse-label">Public context, not a routing recommendation</span> National aggregates derived at build time from a Singapore-wide snapshot of public EV chargers, summarised by region and by operator. These are <strong>not</strong> filtered to the specific depots in play &mdash; they are background evidence only, not depot-specific and not a per-truck routing or charger recommendation. Shown as context for the detour read above; it does not pick chargers or routes for any truck.</p>
+<div class="charge-readgrid" id="charge-public-totals"></div>
+<p class="sub-title" style="margin-top:14px"><strong>Power bands</strong> (charging points by rated power)</p>
+<div class="charge-bands" id="charge-public-bands"></div>
+<p class="sub-title" style="margin-top:14px"><strong>Per-kWh tariff range by region</strong> (public, where published)</p>
+<div class="table-wrap"><table id="charge-region-table"><thead><tr><th>Region</th><th class="num">Points</th><th class="num">AC</th><th class="num">DC</th><th class="num">Tariff S$/kWh (min &middot; median &middot; max)</th></tr></thead><tbody id="charge-region-body"></tbody></table></div>
+<p class="sub-title" style="margin-top:14px"><strong>Top operators</strong> (by charging-point count)</p>
+<div class="table-wrap"><table id="charge-operator-table"><thead><tr><th>Operator</th><th class="num">Points</th><th class="num">AC</th><th class="num">DC</th><th class="num">Tariff S$/kWh (min &middot; median &middot; max)</th></tr></thead><tbody id="charge-operator-body"></tbody></table></div>
+<p class="charge-attrib" id="charge-attribution"></p>
+</section>
+
 </section><!-- /stage-charging -->
 
-<!-- STAGE 4: PROPOSAL (deferred). Honest 'coming next' placeholder: the
-     proposal / finance module is a later phase. No fabricated outputs. -->
+<!-- STAGE 4: STANDARD PROPOSAL (FEAT-003 Part C). A presentation-only,
+     print-friendly leave-behind built ENTIRELY from existing engine outputs
+     (no new economic math). The best EV plan is chosen exactly as the Prospects
+     view does, via window.HSEngine.scoreProspect(computeFleet(state)); the
+     three blocks (quotation / servicing coverage / unresolved conditions) read
+     that result's committed figures. The whole header + quotation INHERIT the
+     gate / claim status: a diagnostic, illustrative or any not-all-gates-clear
+     case renders (and prints) as 'INDICATIVE / pending evidence', never a firm
+     quotation. Only a fully-cleared case (numeric Total, gates pass, saving
+     claim met) reads as a confirmed quotation, and even then keeps the
+     conditional-on-supplied-figures caveat. Finance / instalment is DEFERRED to
+     a clearly-labelled separate opt-in module (no half-wired control here). All
+     figures use the shared 2dp formatter; n.a. is shown as n.a., never a zero.
+     The containers are populated live by renderProposal(out) in the page
+     controller; it re-runs on every recompute so loading a diagnostic prospect
+     flips the badge to indicative. -->
 <section class="stage stage-hidden" id="stage-proposal" role="tabpanel" aria-labelledby="step-proposal">
-<p class="block-title">4 &middot; Proposal</p>
-<p class="lead">Assemble the chosen path, funding and grants into a shareable proposal.</p>
-<div class="notice"><strong>Coming next.</strong> The proposal / finance module (loan and lease structuring, grant timing, a printable customer-facing summary) is a later phase of this tool. It is not built yet, so this stage shows no figures rather than a fabricated quotation. The underlying economics are already in the <strong>TCO</strong> and <strong>Charging &amp; site</strong> stages, and the whole page prints as an internal diagnostic record.</div>
+<div class="proposal-head" id="proposal-head">
+  <div class="proposal-head-row">
+    <p class="block-title" style="margin:0">4 &middot; Standard proposal</p>
+    <span class="proposal-badge" id="proposal-badge" role="status" aria-live="polite" title="Driven by the live gate / saving-claim status for the chosen plan; not an adoption probability.">&mdash;</span>
+  </div>
+  <p class="lead" id="proposal-lead">The chosen path, funding and grants assembled into a shareable, printable leave-behind. Every figure is a committed output of the same engine that drives the Results and Charging stages &mdash; nothing here is re-derived. Print this stage (the controls hide automatically) to hand it over.</p>
+  <p class="small" id="proposal-status-line">&mdash;</p>
+</div>
+
+<div class="proposal-grid">
+  <section class="proposal-block" id="proposal-quotation-block">
+    <p class="block-title">Quotation</p>
+    <p class="small" id="proposal-quotation-note">Vehicle quote(s), COE split, charging-site cost, Day-0 funding and the Total economic TCO for the chosen plan. All figures to 2 decimal places; an unavailable figure is shown as <span class="na">n.a.</span>, never a zero.</p>
+    <div class="table-wrap"><table id="proposal-quotation-table"><thead><tr><th>Line</th><th class="num">Amount</th></tr></thead><tbody id="proposal-quotation-body"></tbody></table></div>
+    <p class="caveat-line" id="proposal-quotation-caveat"></p>
+  </section>
+
+  <section class="proposal-block" id="proposal-servicing-block">
+    <p class="block-title">Servicing coverage</p>
+    <p class="small">The EV service basis is the supplied 200,000&nbsp;km service schedule; the per-km service rate = schedule total / 200,000 (<span class="tag assumption">Assumption</span> average smooths timing). Figures below are committed engine outputs for the chosen plan.</p>
+    <div class="table-wrap"><table id="proposal-servicing-table"><thead><tr><th>Item</th><th class="num">Value</th></tr></thead><tbody id="proposal-servicing-body"></tbody></table></div>
+    <p class="small" id="proposal-servicing-caveat">Use beyond 200,000&nbsp;km is a projection, not a quoted schedule. The service / evidence status below is the model&apos;s own per-plan screen, not a signed service contract.</p>
+  </section>
+
+  <section class="proposal-block proposal-block-wide" id="proposal-conditions-block">
+    <p class="block-title">Unresolved conditions</p>
+    <p class="small">What must be confirmed before this reads as a firm quotation. These are the model&apos;s own gates at the current inputs, plus every <span class="na">n.a.</span> / Unconfirmed / diagnostic flag on the chosen plan. An empty list is only possible for a fully-cleared case.</p>
+    <div class="table-wrap"><table id="proposal-conditions-table"><thead><tr><th>Condition</th><th>Status</th><th>What must be confirmed</th></tr></thead><tbody id="proposal-conditions-body"></tbody></table></div>
+  </section>
+</div>
+
+<div class="notice noprint" id="proposal-finance-note"><strong>Finance / instalment view is a separate opt-in module, next phase.</strong> Loan and lease structuring (rate, term, deposit) is deliberately NOT wired into this proposal: it is a financing illustration that must never feed back into the frozen economic TCO. It will ship as a genuinely separate, clearly-labelled module with its own inputs and its own validation. This stage shows only the economic quotation above.</div>
 </section>
 
 </div><!-- /results-col -->
@@ -587,10 +752,14 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <button type="button" id="prospect-current-btn" class="btn">Duplicate current edited case as a prospect</button>
 </div>
 
-<div class="table-wrap"><table id="prospect-table"><thead><tr>
-<th>Rank</th><th>Customer</th><th class="num">Trucks</th><th>Best EV plan</th><th class="num">Saving % vs Keep ICE</th><th class="num">Absolute 10-yr saving (S$)</th><th>15% target met?</th><th class="num">Account size (Total economic TCO S$)</th><th class="num">Day-0 funding</th><th>Gate status</th><th class="noprint">Load</th>
-</tr></thead><tbody id="prospect-body"></tbody></table></div>
-<p class="small" id="prospect-note">Benefit ranking uses best EV-plan Saving % vs Keep ICE; cases that fail entered limits or are diagnostic-only are flagged and sink to the bottom (they are not confirmed wins). Account ranking uses absolute 10-yr saving in S$; when a case has no confirmed numeric saving (for example the charging-site quote is not itemised so site cost stays n.a.) it falls back to the indicative vehicle-only benefit and is still flagged. Expand a row to see the exact model figures that drove its rank.</p>
+<!-- A6: the prospects list is a CARD GRID (one scannable card per prospect),
+     streamlined like the input cards. The former verbose table (a row per
+     prospect plus an always-on 'Why this rank' audit row) is replaced; the
+     ranking components + case note now collapse behind a per-card Details
+     disclosure. #prospect-body is the card container; the Load buttons keep
+     their data-load hooks and the delegated listener on #prospect-body. -->
+<div class="prospect-cards" id="prospect-body"></div>
+<p class="small" id="prospect-note">Cards are ranked by the selected sort. Benefit ranking uses best EV-plan Saving % vs Keep ICE; cases that fail entered limits or are diagnostic-only are flagged and sink to the bottom (they are not confirmed wins). Account ranking uses absolute 10-yr saving in S$; when a case has no confirmed numeric saving (for example the charging-site quote is not itemised so site cost stays n.a.) it falls back to the indicative vehicle-only benefit and is still flagged. Open a card&rsquo;s <strong>Details</strong> for the exact model figures that drove its rank.</p>
 <p class="small"><em>Load</em> copies a prospect's full input set into the editable sections, so you can inspect or adjust it. Edits made do not change the saved prospect unless you duplicate it back.</p>
 </section>
 </div><!-- /prospects-col overlay -->
@@ -653,7 +822,7 @@ Horizon              = fixed 120 months; demo inflation = 0, demo discount = 0</
 <footer>EV Truck TCO Calculator. A reviewable planning simulation reverse-engineered from the authoritative workbook. It is not a fleet audit, grant approval, quotation, tax advice or acceptance by any company. Math source of truth: src/engine.js, regenerate this page with <code>node tools/build_index.js</code>.</footer>
 
 <!-- ENGINE:BEGIN  generated from src/engine.js by tools/build_index.js  DO NOT EDIT BY HAND -->
-<!-- src/engine.js SHA-256: 8a259b836686312336ef5bca60ca736d6b8a0cd0f09910b6f06794905802b407 -->
+<!-- src/engine.js SHA-256: 45b388a1edaca77081e62f49e52276f6919448e458610474c7f65aafcb50fae3 -->
 <script>
 /*
  * Hong Seh EV Truck TCO engine
@@ -1293,11 +1462,20 @@ function siteColumn(model, allPaths, planCode, col /* 'B' or 'C' */) {
   } else initialLessAward = NA;
 
   // Peak depot energy (row 65) and charging hours (row 66): SUMIFS over paths.
+  // publicVisits/publicVisitEnergy are ADDITIVE read-only surfacings of values
+  // the Paths math already computed (p.W public visits/year, p.X EV grid
+  // kWh/year); they are summed here for the Stage-4 coarse detour/queue read.
+  // They change NO existing value and feed NO formula - validate.py stays 19/19.
   let peakDepotEnergy = 0, chargingHours = 0;
+  let publicVisits = 0, publicVisitEnergy = 0;
   for (const p of allPaths) {
     if (p.planCode === planCode && p.C === 1) {
       peakDepotEnergy += p.Y;
       chargingHours += p.Z;
+      if (p.D === 'EV' && p.E < 120) {
+        if (isNum(p.W)) publicVisits += p.W;
+        if (isNum(p.X)) publicVisitEnergy += p.X;
+      }
     }
   }
 
@@ -1314,6 +1492,7 @@ function siteColumn(model, allPaths, planCode, col /* 'B' or 'C' */) {
   return {
     completeness, grossInitial, annual, grantCeiling, initialLessAward,
     peakDepotEnergy, chargingHours, accessCheck, evCount,
+    publicVisits, publicVisitEnergy,
   };
 }
 
@@ -2680,6 +2859,12 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
 </script>
 <!-- PORTFOLIO:END -->
 
+<!-- CHARGING:BEGIN  generated from tools/fixtures/charging_context.json by tools/build_index.js  DO NOT EDIT BY HAND -->
+<script>
+window.HSChargingContext = {"schemaVersion":1,"provenance":{"source":"lta-datamall-snapshot","sourceLabel":"LTA DataMall snapshot","generatedAt":"2026-05-16T05:40:21.979Z","lastUpdatedTime":"2026-05-16 13:40:00","count":2687},"attribution":"Charger data: LTA DataMall EV Charging Points Batch API, used under the Singapore Open Data Licence and LTA API Terms of Service; surfaced via the vendored BoCharge project. Provider names are attribution, not endorsement.","totals":{"locations":2687,"chargingPoints":9005,"acPoints":8229,"dcPoints":776},"powerBands":[{"band":"<=7.4 kW (slow AC)","count":6580},{"band":"11-22 kW (AC)","count":1463},{"band":"23-60 kW (DC)","count":533},{"band":"61-119 kW (DC)","count":139},{"band":">=120 kW (rapid DC)","count":290}],"tariffPerKwh":{"ac":{"min":0.4295,"median":0.69,"max":0.87,"n":7898},"dc":{"min":0.39,"median":0.8,"max":0.89,"n":708}},"byRegion":[{"region":"West","points":2705,"ac":2465,"dc":240,"tariffPerKwh":{"min":0.39,"median":0.695,"max":0.89,"n":2600}},{"region":"East","points":1904,"ac":1754,"dc":150,"tariffPerKwh":{"min":0.45,"median":0.695,"max":0.89,"n":1865}},{"region":"North","points":1851,"ac":1718,"dc":133,"tariffPerKwh":{"min":0.45,"median":0.695,"max":0.89,"n":1736}},{"region":"North-East","points":1282,"ac":1220,"dc":62,"tariffPerKwh":{"min":0.48,"median":0.695,"max":0.89,"n":1214}},{"region":"Central","points":1263,"ac":1072,"dc":191,"tariffPerKwh":{"min":0.4295,"median":0.695,"max":0.89,"n":1191}}],"byOperator":[{"operator":"SP MOBILITY PTE. LTD.","points":2445,"ac":2138,"dc":307,"tariffPerKwh":{"min":0.5297,"median":0.6976,"max":0.8611,"n":2430}},{"operator":"COMFORTDELGRO ENGIE PTE. LTD.","points":1807,"ac":1742,"dc":65,"tariffPerKwh":{"min":0.49,"median":0.695,"max":0.78,"n":1807}},{"operator":"SHELL SINGAPORE PTE. LTD.","points":1688,"ac":1612,"dc":76,"tariffPerKwh":{"min":0.63,"median":0.69,"max":0.89,"n":1543}},{"operator":"CHARGE+ PTE. LTD.","points":1241,"ac":1157,"dc":84,"tariffPerKwh":{"min":0.45,"median":0.629,"max":0.849,"n":1239}},{"operator":"STRIDES YTL PTE. LTD.","points":1111,"ac":1092,"dc":19,"tariffPerKwh":{"min":0.65,"median":0.6781,"max":0.763,"n":1111}},{"operator":"VOLT SINGAPORE PTE. LTD.","points":212,"ac":133,"dc":79,"tariffPerKwh":{"min":0.488,"median":0.66,"max":0.74,"n":119}},{"operator":"MNL SOLUTIONS PTE. LTD.","points":88,"ac":84,"dc":4,"tariffPerKwh":{"min":0.5123,"median":0.545,"max":0.6758,"n":62}},{"operator":"FASTPARKNCHARGE PTE. LTD.","points":54,"ac":39,"dc":15,"tariffPerKwh":{"min":0.65,"median":0.7,"max":0.82,"n":54}},{"operator":"GREAT CHARGE PTE. LTD.","points":49,"ac":28,"dc":21,"tariffPerKwh":{"min":0.5451,"median":0.5451,"max":0.5451,"n":47}},{"operator":"EIGEN ENERGY PTE. LTD.","points":40,"ac":34,"dc":6,"tariffPerKwh":{"min":0.48,"median":0.58,"max":0.65,"n":33}},{"operator":"NOVOWATT PTE. LTD.","points":37,"ac":35,"dc":2,"tariffPerKwh":{"min":0.49,"median":0.55,"max":0.6501,"n":36}},{"operator":"EV MOBILITY PTE. LTD.","points":34,"ac":15,"dc":19,"tariffPerKwh":{"min":0.5,"median":0.599,"max":0.659,"n":34}}]};
+</script>
+<!-- CHARGING:END -->
+
 <script>
 /* ================================================================== *
  * Page controller. Reads window.HSDemoCase (embedded demo inputs),
@@ -2689,6 +2874,7 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
   "use strict";
   var NA = (window.HSEngine && window.HSEngine.NA) || 'n.a.';
   var computeFleet = window.HSEngine && window.HSEngine.computeFleet;
+  var scoreProspect = window.HSEngine && window.HSEngine.scoreProspect;
 
   // Deep clone the demonstration inputs so edits never mutate the embedded source.
   function freshInputs(){ return JSON.parse(JSON.stringify(window.HSDemoCase.inputs)); }
@@ -2722,6 +2908,7 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     return String(v);
   }
   function naSpan(){ return '<span class="na">n.a.</span>'; }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function cell(html){ return '<td class="num">' + html + '</td>'; }
   function tcell(html){ return '<td>' + html + '</td>'; }
 
@@ -2896,6 +3083,156 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     el('gates-body').innerHTML = html;
   }
 
+  /* ---- FEAT-002 Part C: Stage-4 charging assessment --------------- *
+   * Three read-only panels. P1 + P2 recompute live from engine output;
+   * P3 is static context from window.HSChargingContext (compact build-time
+   * aggregates - no runtime network). Honesty signals preserved: n.a. is
+   * never zeroed, PASS/FAIL verdicts are honest, the coarse-screen framing
+   * and the LTA/BoCharge attribution are always rendered. */
+
+  // PASS/FAIL classification for a site accessCheck string. A clean 'Access OK'
+  // is a pass; a missing/failed/review state is a warn; anything else honest.
+  function siteVerdict(status){
+    if (typeof status !== 'string') return { cls:'na', text:'n.a.' };
+    if (status === 'Access OK') return { cls:'ok', text:'PASS &middot; access screen clear' };
+    if (status === 'Not applicable') return { cls:'na', text:'n.a. (no EV site on this plan)' };
+    return { cls:'warn', text:'FAIL &middot; ' + status };
+  }
+  function crLine(k, v){
+    return '<div class="cr-line"><span class="cr-k">' + k + '</span><span class="cr-v">' + v + '</span></div>';
+  }
+  function num2(x){ return isNum(x) ? (Math.round(x*100)/100) : x; }
+
+  // P1: per-plan route-energy / capacity screen + site build-up read.
+  function renderChargeSiteRead(out){
+    var box = el('charge-site-read'); if(!box) return;
+    var sites = out.sites || {};
+    var r = out.results;
+    var html = '';
+    [['plan_a',2],['plan_b',3]].forEach(function(pk){
+      var key = pk[0], code = pk[1];
+      var s = sites[code];
+      var v = siteVerdict(r.siteStatus[key]);
+      html += '<div class="charge-read">' +
+        '<h4>' + PLAN_LABELS[key] + '</h4>' +
+        '<div class="cr-verdict ' + v.cls + '">' + v.text + '</div>';
+      if (s){
+        html += crLine('Input completeness', fmtText(s.completeness)) +
+          crLine('EVs on this site', fmtText(s.evCount)) +
+          crLine('Peak depot energy (kWh)', fmtText(num2(s.peakDepotEnergy))) +
+          crLine('Total charging hours', fmtText(num2(s.chargingHours))) +
+          crLine('Gross initial site cost', fmtMoney(s.grossInitial)) +
+          crLine('Grant budget ceiling', fmtMoney(s.grantCeiling));
+      }
+      html += '<p class="small" style="margin:4px 0 0">What must hold operationally: enough spare depot power and plug-hours overnight, an approved parking plug per EV, and a surveyed site. A numeric site cost appears only when completeness is Complete and the access screen is clear.</p>' +
+        '</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  // P2: coarse detour / queue / recovery read from engine public-visit intermediates.
+  function renderChargeDetourRead(out){
+    var box = el('charge-detour-read'); if(!box) return;
+    var sites = out.sites || {};
+    var r = out.results;
+    var backup = ocVal(58); // Backup confirmed (Yes/No)
+    var html = '';
+    [['plan_a',2],['plan_b',3]].forEach(function(pk){
+      var key = pk[0], code = pk[1];
+      var s = sites[code];
+      var evs = s ? s.evCount : NA;
+      var visits = s ? s.publicVisits : NA;
+      var visitEnergy = s ? s.publicVisitEnergy : NA;
+      var perEv = (isNum(visits) && isNum(evs) && evs>0) ? Math.round((visits/evs)*10)/10 : NA;
+      // An honest coarse read: 0 public visits means depot-only (buffer at route
+      // end); a positive count means public top-ups are assumed mid-route.
+      var screen;
+      if (!s || s.completeness === 'No EV site') screen = { cls:'na', text:'n.a. (no EV site on this plan)' };
+      else if (!isNum(visits)) screen = { cls:'na', text:'n.a. (site inputs incomplete)' };
+      else if (visits === 0) screen = { cls:'ok', text:'Depot-only &middot; no public top-ups assumed' };
+      else screen = { cls:'warn', text:'~' + Math.round(visits) + ' public top-ups/yr assumed' };
+      html += '<div class="charge-read">' +
+        '<h4>' + PLAN_LABELS[key] + '</h4>' +
+        '<div class="cr-verdict ' + screen.cls + '">' + screen.text + '</div>' +
+        crLine('EV paths', fmtText(evs)) +
+        crLine('Public top-up visits / yr', isNum(visits)?('~'+Math.round(visits)):fmtText(visits)) +
+        crLine('&hellip; per EV / yr', isNum(perEv)?('~'+perEv):fmtText(perEv)) +
+        crLine('Detour grid energy (kWh/yr)', fmtText(num2(visitEnergy))) +
+        crLine('Backup confirmed', fmtText(backup)) +
+        '<p class="small" style="margin:4px 0 0">A top-up count of ~0 means the route is covered by overnight depot charging with buffer at route end. A positive count is the engine&rsquo;s estimate of mid-route public stops, each adding detour energy; it is a feasibility signal, not a timed schedule.</p>' +
+        '</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  // P3: public-charging context from the compact build-time aggregates.
+  function tariffText(t){
+    if(!t || !isNum(t.min)) return '<span class="na">n.a.</span>';
+    return t.min.toFixed(2) + ' &middot; ' + t.median.toFixed(2) + ' &middot; ' + t.max.toFixed(2);
+  }
+  function renderChargePublic(){
+    var ctx = (window.HSChargingContext && window.HSChargingContext.totals) ? window.HSChargingContext : null;
+    var totalsBox = el('charge-public-totals');
+    var attribEl = el('charge-attribution');
+    if (!ctx){
+      if (totalsBox) totalsBox.innerHTML = '<p class="small na">Public-charging context not available in this build.</p>';
+      if (attribEl) attribEl.textContent = '';
+      return;
+    }
+    // Totals cards.
+    var t = ctx.totals;
+    if (totalsBox){
+      totalsBox.innerHTML =
+        '<div class="charge-read"><h4>Network snapshot</h4>' +
+          crLine('Locations', fmtText(t.locations)) +
+          crLine('Charging points', fmtText(t.chargingPoints)) +
+          crLine('AC points', fmtText(t.acPoints)) +
+          crLine('DC (fast) points', fmtText(t.dcPoints)) +
+        '</div>' +
+        '<div class="charge-read"><h4>Public tariff (S$/kWh)</h4>' +
+          crLine('AC min &middot; median &middot; max', tariffText(ctx.tariffPerKwh && ctx.tariffPerKwh.ac)) +
+          crLine('DC min &middot; median &middot; max', tariffText(ctx.tariffPerKwh && ctx.tariffPerKwh.dc)) +
+          '<p class="small" style="margin:4px 0 0">Per-kWh published tariffs only; per-hour and free points are excluded from the ranges.</p>' +
+        '</div>';
+    }
+    // Power-band bars (inline, no SVG library).
+    var bandsBox = el('charge-public-bands');
+    if (bandsBox){
+      var bands = ctx.powerBands || [];
+      var maxC = 0; bands.forEach(function(b){ if(b.count>maxC) maxC=b.count; });
+      bandsBox.innerHTML = bands.map(function(b){
+        var pct = maxC>0 ? Math.round((b.count/maxC)*100) : 0;
+        return '<div class="charge-band"><span class="cb-lab">' + b.band + '</span>' +
+          '<span class="cb-track"><span class="cb-fill" style="width:' + pct + '%"></span></span>' +
+          '<span class="cb-val">' + b.count + '</span></div>';
+      }).join('');
+    }
+    // Region + operator tables.
+    function aggRows(rows, nameKey){
+      return (rows||[]).map(function(x){
+        return '<tr><td>' + x[nameKey] + '</td>' +
+          '<td class="num">' + x.points + '</td>' +
+          '<td class="num">' + x.ac + '</td>' +
+          '<td class="num">' + x.dc + '</td>' +
+          '<td class="num">' + tariffText(x.tariffPerKwh) + '</td></tr>';
+      }).join('');
+    }
+    if (el('charge-region-body')) el('charge-region-body').innerHTML = aggRows(ctx.byRegion, 'region');
+    if (el('charge-operator-body')) el('charge-operator-body').innerHTML = aggRows(ctx.byOperator, 'operator');
+    // Attribution (always visible).
+    if (attribEl){
+      var prov = ctx.provenance || {};
+      var provTxt = prov.sourceLabel ? (' Snapshot: ' + prov.sourceLabel + (prov.lastUpdatedTime ? (', last updated ' + prov.lastUpdatedTime + '.') : '.')) : '';
+      attribEl.textContent = (ctx.attribution || '') + provTxt;
+    }
+  }
+  function renderChargingAssessment(out){
+    renderChargeSiteRead(out);
+    renderChargeDetourRead(out);
+    // P3 is static context; render once but harmless to re-run.
+    renderChargePublic();
+  }
+
   function renderReview(out){
     var rv = out.review;
     var order = [
@@ -2972,6 +3309,157 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     if (dot && dot.setAttribute) dot.setAttribute('data-status', cls);
   }
 
+  // ---- Stage 5 standard proposal (presentation-only leave-behind) ---------
+  // Built ENTIRELY from existing engine outputs. The best EV plan is chosen the
+  // same way the Prospects view does (window.HSEngine.scoreProspect); the three
+  // blocks read that result's committed figures. The whole header + quotation
+  // INHERIT the chosen plan's gate / claim status: only a fully-cleared case
+  // (gatePass true, numeric Total, 'Meets entered X% target') reads as a
+  // confirmed quotation; everything else (diagnostic, illustrative, below
+  // target, failing gates, n.a. Total) reads as 'INDICATIVE / pending evidence',
+  // and the same wording prints. No new economic math is done here.
+  function renderProposal(out){
+    var stage = el('stage-proposal');
+    var badge = el('proposal-badge');
+    if (!badge) return;
+    var r = out.results;
+    var score = scoreProspect ? scoreProspect(out) : null;
+
+    // The chosen plan. Fall back to the saving-% best EV plan (same helper the
+    // confidence badge uses) if scoreProspect is unavailable.
+    var key = (score && score.bestPlanKey) ? score.bestPlanKey : bestEvPlanKey(out);
+    var label = score && score.bestPlanLabel && score.bestPlanLabel !== 'n.a.'
+      ? score.bestPlanLabel : (PLAN_LABELS[key] || 'n.a.');
+    var claim = r.savingClaimStatus[key];
+
+    // A confirmed quotation requires ALL of: scoreProspect gatePass true, a
+    // numeric Total economic TCO, and the committed saving-claim met.
+    var gatePass = !!(score && score.gatePass);
+    var totalNumeric = isNum(r.totalEconomicTco[key]);
+    var claimMet = typeof claim === 'string' && claim.indexOf('Meets entered') === 0;
+    var confirmed = gatePass && totalNumeric && claimMet;
+
+    // Badge + header wording inherit the status.
+    var bcls = confirmed ? 'pb-confirmed' : 'pb-indicative';
+    badge.className = 'proposal-badge ' + bcls;
+    badge.innerHTML = confirmed
+      ? 'Confirmed quotation &middot; ' + esc(label)
+      : 'INDICATIVE &middot; pending evidence';
+    if (stage){
+      var base = (stage.className || 'stage')
+        .replace(/\s*proposal-confirmed/g,'').replace(/\s*proposal-pending/g,'');
+      stage.className = base.trim() + (confirmed ? ' proposal-confirmed' : ' proposal-pending');
+    }
+
+    var gateStatus = score ? score.gateStatus : null;
+    var statusLine = el('proposal-status-line');
+    if (statusLine){
+      if (confirmed){
+        statusLine.innerHTML = 'Chosen plan: <strong>' + esc(label) + '</strong>. ' +
+          'All gates clear and the committed saving target is met, so this reads as a ' +
+          'confirmed quotation &mdash; still <strong>conditional on the supplied figures</strong>, not an adoption probability.';
+      } else {
+        statusLine.innerHTML = 'Chosen plan: <strong>' + esc(label) + '</strong>. ' +
+          'This is an <strong>indicative</strong> leave-behind, not a firm quotation: ' +
+          (gateStatus ? 'gate status <strong>' + esc(gateStatus) + '</strong>; ' : '') +
+          'saving-claim status <strong>' + fmtText(claim) + '</strong>. ' +
+          'The unresolved conditions below list what must be confirmed first.';
+      }
+    }
+
+    // ---- QUOTATION block (committed figures for the chosen plan) ----------
+    // Vehicle economic TCO split into vehicle + COE where the per-plan Day-0
+    // charging-site cost is read from the site intermediates (same source the
+    // Day-0 cards use). No figure is re-derived; n.a. stays n.a.
+    var code = ({keep_ice:0,all_new_ice:1,plan_a:2,plan_b:3})[key];
+    var sites = out.sites || {};
+    var site = sites[code];
+    var siteDay0 = (site && (code===2||code===3)) ? site.initialLessAward : NA;
+    var qb = el('proposal-quotation-body');
+    if (qb){
+      function qrow(line, v, strong){
+        var cls = strong ? ' class="resultline proposal-total"' : '';
+        return '<tr' + cls + '><td>' + (strong?'<strong>'+line+'</strong>':line) + '</td>' +
+          '<td class="num">' + (strong?'<strong>'+fmtMoney(v)+'</strong>':fmtMoney(v)) + '</td></tr>';
+      }
+      var html = '';
+      html += qrow('Vehicle economic TCO (' + esc(label) + ')', r.vehicleEconomicTco[key], false);
+      html += qrow('COE acquisition included in the vehicle quote', ocVal(57), false);
+      html += qrow('Net charging-site ownership cost', r.netSiteCost[key], false);
+      html += qrow('Charging-site Day-0 cost (net of entered award)', siteDay0, false);
+      html += qrow('Day-0 funding before loans', r.day0Funding[key], false);
+      html += qrow('Total economic TCO (10-year)', r.totalEconomicTco[key], true);
+      qb.innerHTML = html;
+    }
+    var qcav = el('proposal-quotation-caveat');
+    if (qcav){
+      qcav.innerHTML = confirmed
+        ? 'Confirmed on the supplied figures only. The COE line is the acquisition COE embedded in the vehicle economic TCO, not a separate charge. Saving % is whole-fleet, not per-truck.'
+        : 'Indicative on the supplied figures. An <span class="na">n.a.</span> Total means a gate has not cleared (for example a missing charging-site quote), not a zero cost. Saving % is whole-fleet, not per-truck.';
+    }
+
+    // ---- SERVICING COVERAGE block (committed outputs) ---------------------
+    var sb = el('proposal-servicing-body');
+    if (sb){
+      function srow(item, html){ return '<tr><td>' + item + '</td><td class="num">' + html + '</td></tr>'; }
+      var cpk = r.costPerKm[key];
+      var cpkHtml = (cpk===NA||cpk==null||!isNum(cpk)) ? naSpan() : ('S$'+fmtNum(cpk,5));
+      var html2 = '';
+      html2 += srow('EV service basis', 'Supplied 200,000&nbsp;km schedule');
+      html2 += srow('Cost per productive km (all-in)', cpkHtml);
+      html2 += srow('Vehicle service / evidence status', fmtText(r.vehicleStatus[key]));
+      html2 += srow('Site completeness / access status', fmtText(r.siteStatus[key]));
+      sb.innerHTML = html2;
+    }
+
+    // ---- UNRESOLVED CONDITIONS block (honesty backbone) -------------------
+    // The gates (same data as the gates-table) PLUS every n.a. / Unconfirmed /
+    // diagnostic flag on the chosen plan. For a confirmed case this may be an
+    // explicit 'all cleared' note.
+    var cb = el('proposal-conditions-body');
+    if (cb){
+      function cond(name, status, cls, need){
+        return '<tr><td>' + name + '</td><td class="' + (cls||'') + '">' + status + '</td><td>' + need + '</td></tr>';
+      }
+      function openFlag(s){
+        // A status that is NOT a clean pass is an open condition.
+        if (s === 'Within entered limits' || s === 'Within entered site limits' ||
+            s === 'Complete' || s === 'Public only' || s === 'Public access entered' ||
+            s === 'Access OK') return false;
+        return true;
+      }
+      var rows = [];
+      // Vehicle service gate.
+      var vs = r.vehicleStatus[key];
+      rows.push(cond('Service screen (vehicle evidence)', fmtText(vs),
+        openFlag(vs) ? 'statuswarn' : 'statusok',
+        'Completed-body payload, battery route allowance and entered limits.'));
+      // Capacity / site gate.
+      var ss = r.siteStatus[key];
+      rows.push(cond('Capacity gate (site access)', fmtText(ss),
+        openFlag(ss) ? 'statuswarn' : 'statusok',
+        'Spare power, plug-hours, an approved parking plug per EV and a surveyed site.'));
+      // Evidence verification flags (same oc rows as the gates table).
+      [['Backup confirmed',58,'Costed substitute-service contract for the same workload.'],
+       ['Loaded trial confirmed',59,'Loaded route and charging trial with measured grid kWh.'],
+       ['Energy prices confirmed',60,'Current company diesel and electricity contracts.']].forEach(function(g){
+        var val = ocVal(g[1]);
+        var clean = (val === 'Yes' || val === 'Verified');
+        rows.push(cond(g[0], fmtText(val), clean ? 'statusok' : 'statuswarn', g[2]));
+      });
+      // Total / saving-claim flag.
+      if (!totalNumeric){
+        rows.push(cond('Total economic TCO', naSpan(), 'statuswarn',
+          'A plan Total stays n.a. until the gate that drives it clears (e.g. the charging-site quote). Shown as n.a., never a zero.'));
+      }
+      if (!claimMet){
+        rows.push(cond('Saving-claim status', fmtText(claim), 'statuswarn',
+          'The committed fleet saving target must be met on the supplied figures before this reads as a confirmed win.'));
+      }
+      cb.innerHTML = rows.join('');
+    }
+  }
+
   recompute = function(){
     if (!computeFleet){ return; }
     var out = computeFleet(state);
@@ -2980,10 +3468,12 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     renderDay0Cards(out);
     renderSite(out);
     renderGates(out);
+    renderChargingAssessment(out);
     renderReview(out);
     renderSensitivity(out);
     renderCharts(out);
     renderConfidence(out);
+    renderProposal(out);
     renderPortfolio(out);
     renderFleetComparisons(out);
   };
@@ -3554,6 +4044,18 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     }
     var unit=document.createElement('span'); unit.className='u'; unit.textContent=(r.values.C==null?'':r.values.C);
     div.appendChild(lab); div.appendChild(ctl); div.appendChild(unit);
+    // A4: the discount rate (operating_costs row 54) was relocated here from the
+    // headline sensitivity sliders. Flag that it only bites when escalation /
+    // discount is non-zero (the demonstration defaults are 0, so moving it alone
+    // changes no displayed figure). Same canonical field; liveRecompute already
+    // wired above, so it still recomputes.
+    if (r._row===54){
+      div.setAttribute('data-oc-discount','1');
+      var note=document.createElement('p'); note.className='adv-help';
+      note.style.gridColumn='1 / -1'; note.style.margin='2px 0 0';
+      note.textContent='Only bites when a price-growth / escalation rate is non-zero. The demonstration defaults are 0, so changing this alone does not move the displayed economics (NPV equals nominal at zero inflation).';
+      div.appendChild(note);
+    }
     return div;
   }
   function buildOperating(){
@@ -3705,13 +4207,18 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
   H.fmtTargetPct = fmtTargetPct;
   H.committedTarget = getTarget;
 
-  // The four price/rate drivers feed the sensitivity table; the saving-target
-  // driver is a fifth shared control rendered alongside them.
+  // Headline shared drivers (A4): the high-impact day-to-day cost levers plus
+  // the fleet saving-target control. The DISCOUNT RATE was removed from this
+  // headline array because at the demonstration defaults escalation = 0 and
+  // discount = 0, so moving it changes nothing visible (confirmed in
+  // docs/input-sensitivity-findings.md); a prominent control that visibly does
+  // nothing erodes trust. Discount stays fully editable as the canonical engine
+  // input (operating_costs row 54 via getDisc/setDisc) in the Advanced
+  // assumptions area, where buildOperating() renders it with a note.
   var SENS = [
     {id:'diesel', label:'Commercial diesel (SGD/litre)', min:1.5, max:5, step:0.05, get:getDiesel, set:setDiesel, kind:'num'},
     {id:'elec', label:'Depot electricity (SGD/grid kWh)', min:0.2, max:0.8, step:0.01, get:getElec, set:setElec, kind:'num'},
     {id:'evprice', label:'EV purchase price (SGD/truck)', min:120000, max:260000, step:1000, get:getEvPrice, set:setEvPrice, kind:'num'},
-    {id:'disc', label:'Discount rate (fraction/year)', min:0, max:0.12, step:0.005, get:getDisc, set:setDisc, kind:'disc'},
     {id:'target', label:'Fleet saving target (%)', min:0.05, max:0.30, step:0.005, get:getTarget, set:setTarget, kind:'pct'}
   ];
 
@@ -3785,36 +4292,18 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     });
   }
 
-  // Render the sensitivity table from COMMITTED state (Q6 Option A). recompute()
-  // passes the already-computed engine output, so the sens table reflects the
-  // identical value shown in the money view (no clone divergence). Also publish
-  // it to H.onSensResult / H.lastSensOut so the Charts module redraws chart-sens.
+  // Sensitivity renderer (A3). The former sensitivity TABLE was removed: its four
+  // columns (Total economic TCO, Saving vs Keep, Saving %, target headroom) over
+  // the same four paths were a strict SUBSET of the main #results-table once this
+  // read committed state (Q6 Option A) - pure duplication. The target headroom is
+  // additionally surfaced by the saving-target reference marker on the charts (A5).
+  // All that remains here is the slider SYNC: re-read committed state onto the
+  // headline driver controls (so an Advanced-area edit or a Reset is reflected).
+  // The breakdown bar + cumulative line are redrawn by the main recompute path
+  // (renderAll), so there is no separate sensitivity chart to publish any more.
   function renderSensitivity(out){
-    if (!out){ out = H.computeFleet(H.state); }
     syncSensControls();
-    var r = out.results;
-    var html='';
-    ['keep_ice','all_new_ice','plan_a','plan_b'].forEach(function(k){
-      var lbl={keep_ice:'Keep ICE',all_new_ice:'All-new ICE now',plan_a:'Plan A',plan_b:'Plan B'}[k];
-      html += '<tr><td>'+lbl+'</td>'+
-        tdNumHtml(r.totalEconomicTco[k],'money')+
-        tdNumHtml(r.savingVsKeep[k],'money')+
-        tdNumHtml(r.savingPct[k],'pct')+
-        tdNumHtml(r.headroom15[k],'money')+'</tr>';
-    });
-    H.el('sens-body').innerHTML=html;
-    // Keep the dynamic '15% headroom' column header in step with the target.
-    var hdr = H.el('sens-headroom-th');
-    if (hdr) hdr.textContent = fmtTargetPct(getTarget()) + '% headroom';
-    H.lastSensOut = out;
-    if (typeof H.onSensResult === 'function') H.onSensResult(out);
-  }
-  function tdNumHtml(v,t){
-    if(v===NA||v==null||typeof v!=='number'||!isFinite(v)) return '<td class="num"><span class="na">n.a.</span></td>';
-    if(t==='pct') return '<td class="num">'+(v*100).toFixed(2)+'%</td>';
-    // DISPLAY-ONLY 2dp (FEAT-003): format at the boundary; no engine value changed.
-    var neg=v<0,a=Math.abs(v); var str='S$'+a.toLocaleString('en-SG',{minimumFractionDigits:2,maximumFractionDigits:2});
-    return '<td class="num">'+(neg?'-'+str:str)+'</td>';
+    if (out) H.lastSensOut = out;
   }
 
   H.setSensRenderer(renderSensitivity);
@@ -4158,50 +4647,66 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
       return kb - ka;
     });
 
+    // A6: render one clean CARD per prospect (streamlined, like the input cards)
+    // instead of a verbose table row + always-on 'Why this rank' audit prose.
+    // Each card surfaces the essentials; the detailed ranking components and the
+    // case note collapse behind a compact <details>. PRESERVED: the two sort
+    // modes (handled above), the Load-into-editor action (data-load, delegated
+    // on #prospect-body), the duplicate-current action (#prospect-current-btn),
+    // the Illustrative/Assumption honesty tags, the conditional-savings caveat,
+    // and n.a. != zero (vehicle-only indicative fallback; n.a. shown as n.a.).
     var html='';
     scored.forEach(function(row, i){
       var c=row.c, s=row.s;
       var evTag = (c.evidence==='illustrative')
-        ? ' <span class="tag illustrative">Illustrative</span>'
+        ? '<span class="tag illustrative">Illustrative</span>'
         : (c.evidence==='assumption')
-          ? ' <span class="tag assumption">Assumption</span>' : '';
+          ? '<span class="tag assumption">Assumption</span>' : '';
       var gcls = gateClass(s.gateStatus, s.gatePass);
-      // Account "absolute 10-yr saving" cell: show confirmed saving, or the
-      // indicative vehicle-only benefit with a flag when the Total is n.a.
+      // "Absolute 10-yr saving": confirmed saving, or the indicative vehicle-only
+      // benefit flagged when the Total is n.a.; n.a. stays n.a. (never a zero).
       var absSavingCell;
       if (isNum(s.savingAbs)) absSavingCell = money(s.savingAbs);
       else if (isNum(s.vehicleBenefit)) absSavingCell = money(s.vehicleBenefit) + ' <span class="na">(vehicle-only, indicative)</span>';
       else absSavingCell = '<span class="na">n.a.</span>';
 
-      html += '<tr class="resultline">' +
-        '<td class="num">' + (i+1) + '</td>' +
-        '<td>' + esc(c.name) + evTag + '</td>' +
-        '<td class="num">' + intFmt(s.truckCount) + '</td>' +
-        '<td>' + txt(s.bestPlanLabel) + '</td>' +
-        '<td class="num">' + pct(s.savingPct) + '</td>' +
-        '<td class="num">' + absSavingCell + '</td>' +
-        '<td>' + txt(s.fifteenTargetMet) + '</td>' +
-        '<td class="num">' + money(s.totalEconomicTco) + '</td>' +
-        '<td class="num">' + money(s.day0Funding) + '</td>' +
-        '<td class="' + gcls + '">' + txt(s.gateStatus) + '</td>' +
-        '<td class="noprint"><button type="button" class="btn-sm" data-load="' + esc(c.id) + '">Load into editor</button></td>' +
-        '</tr>';
+      var metrics =
+        '<div class="pc-metric"><span class="pc-k">Saving % vs Keep ICE</span><span class="pc-v">' + pct(s.savingPct) + '</span></div>' +
+        '<div class="pc-metric"><span class="pc-k">Absolute 10-yr saving</span><span class="pc-v">' + absSavingCell + '</span></div>' +
+        '<div class="pc-metric"><span class="pc-k">Trucks</span><span class="pc-v">' + intFmt(s.truckCount) + '</span></div>' +
+        '<div class="pc-metric"><span class="pc-k">Best EV plan</span><span class="pc-v">' + txt(s.bestPlanLabel) + '</span></div>' +
+        '<div class="pc-metric"><span class="pc-k">Account size (Total economic TCO)</span><span class="pc-v">' + money(s.totalEconomicTco) + '</span></div>' +
+        '<div class="pc-metric"><span class="pc-k">Day-0 funding</span><span class="pc-v">' + money(s.day0Funding) + '</span></div>';
 
-      // Audit row: expose the exact components that drove each rank.
-      html += '<tr class="prospect-audit"><td></td><td colspan="10" class="small">' +
-        '<strong>Why this rank:</strong> ' +
-        '<span class="chip">Benefit key = Saving % ' + pct(s.components.benefit ? s.components.benefit.savingPct : NA) + '</span> ' +
-        '<span class="chip">15% headroom ' + money(s.components.benefit ? s.components.benefit.headroom15 : NA) + '</span> ' +
-        '<span class="chip">Max site TCO for 15% ' + money(s.components.benefit ? s.components.benefit.maxSiteTco15 : NA) + '</span> ' +
-        '<span class="chip">Gate pass ' + (s.gatePass?'yes':'no') + '</span> ' +
-        '&nbsp;|&nbsp; ' +
-        '<span class="chip">Account key = abs saving ' + money(s.components.account ? s.components.account.savingAbs : NA) + '</span> ' +
-        '<span class="chip">Vehicle-only benefit ' + money(s.vehicleBenefit) + '</span> ' +
-        '<span class="chip">Account size ' + money(s.totalEconomicTco) + '</span> ' +
-        '<span class="chip">Trucks ' + intFmt(s.truckCount) + '</span> ' +
-        '<span class="chip">Day-0 ' + money(s.day0Funding) + '</span>' +
-        (c.note ? '<br><em>' + esc(c.note) + '</em>' : '') +
-        '</td></tr>';
+      // Collapsible Details: the exact ranking components + the case note prose,
+      // plus the conditional-savings caveat (kept, not deleted; now folded away).
+      var details =
+        '<details class="pc-details"><summary>Details &amp; why this rank</summary>' +
+        '<div class="pc-details-inner small">' +
+        '<p><strong>Benefit key</strong> = Saving % ' + pct(s.components.benefit ? s.components.benefit.savingPct : NA) +
+          ' &middot; target headroom ' + money(s.components.benefit ? s.components.benefit.headroom15 : NA) +
+          ' &middot; max site TCO for target ' + money(s.components.benefit ? s.components.benefit.maxSiteTco15 : NA) +
+          ' &middot; gate pass ' + (s.gatePass?'yes':'no') + '</p>' +
+        '<p><strong>Account key</strong> = absolute saving ' + money(s.components.account ? s.components.account.savingAbs : NA) +
+          ' &middot; vehicle-only benefit ' + money(s.vehicleBenefit) +
+          ' &middot; account size ' + money(s.totalEconomicTco) + '</p>' +
+        '<p class="caveat-line">Saving figures are conditional on the supplied inputs, not an adoption probability. A case that fails entered limits or is diagnostic-only is flagged and is not a confirmed win.</p>' +
+        (c.note ? '<p><em>' + esc(c.note) + '</em></p>' : '') +
+        '</div></details>';
+
+      html +=
+        '<article class="prospect-card" data-prospect-id="' + esc(c.id) + '">' +
+          '<div class="pc-head">' +
+            '<span class="pc-rank">#' + (i+1) + '</span>' +
+            '<h3 class="pc-name">' + esc(c.name) + '</h3>' +
+            (evTag ? '<span class="pc-tags">' + evTag + '</span>' : '') +
+          '</div>' +
+          '<div class="pc-status"><span class="' + gcls + '">' + txt(s.gateStatus) + '</span>' +
+            '<span class="pc-target">' + txt(s.fifteenTargetMet) + '</span></div>' +
+          '<div class="pc-metrics">' + metrics + '</div>' +
+          details +
+          '<div class="pc-actions noprint"><button type="button" class="btn-sm" data-load="' + esc(c.id) + '">Load into editor</button></div>' +
+        '</article>';
     });
     var body = el('prospect-body');
     body.innerHTML = html;
@@ -4844,7 +5349,24 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
       for(var y=0;y<years;y++){ if(isNum(s[y])){ any=true; if(s[y]>max) max=s[y]; } }
     });
     if(!any){ box.innerHTML = svgOpen(W,Hh)+'<text x="'+(W/2)+'" y="'+(Hh/2)+'" text-anchor="middle" fill="'+C.muted+'">No numeric series</text></svg>'; return; }
-    var top=niceCeil(max);
+    // A5 SAVING-TARGET MARKER (display-only; no engine change). The level a plan's
+    // year-10 cumulative must BEAT to meet the committed fleet saving target is
+    //   targetLevel = (1 - savingTarget) * keepTotal
+    // which is exactly where results.headroom15 crosses zero (engine:
+    // headroom15 = (1-savingTarget)*keepTotal - planTotal). We derive it from the
+    // SAME output already passed to the renderer, without a new engine field:
+    // keepTotal is the Keep ICE year-10 cumulative (== results.totalEconomicTco
+    // .keep_ice), and savingTarget comes from the committed page state. If
+    // keepTotal is n.a. we draw NO marker (honest: never a fabricated zero).
+    var savingTarget = (H && typeof H.committedTarget==='function') ? H.committedTarget() : 0.15;
+    var keepSeries = series && series.keep_ice && series.keep_ice.cumulative;
+    var keepTotal = NA;
+    if (keepSeries){ for(var ky=years-1; ky>=0; ky--){ if(isNum(keepSeries[ky])){ keepTotal=keepSeries[ky]; break; } } }
+    var targetLevel = (isNum(keepTotal) && isNum(savingTarget)) ? (1 - savingTarget) * keepTotal : NA;
+    // Let the value axis include the target line so it never clips off-chart.
+    var scaleMax = max;
+    if (isNum(targetLevel) && targetLevel > scaleMax) scaleMax = targetLevel;
+    var top=niceCeil(scaleMax);
     function xOf(y){ return mL + (plotW*(y/(years-1))); }
     function yOf(v){ return mT + plotH - (plotH*(v/top)); }
     var svg=svgOpen(W,Hh);
@@ -4862,6 +5384,17 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
       svg+='<rect x="'+(mx-18).toFixed(1)+'" y="'+(mT-16)+'" width="36" height="14" rx="3" fill="'+C.warn+'" opacity="0.12"/>';
       svg+='<text x="'+mx.toFixed(1)+'" y="'+(mT-5)+'" text-anchor="middle" fill="'+C.warn+'" font-weight="600">Yr '+my+'</text>';
     });
+    // A5: the display-only saving-target reference line at targetLevel, labelled
+    // with the committed target %. Drawn only when keepTotal (and thus the level)
+    // is numeric; it moves whenever the saving-target control changes (this
+    // renderer is on the committed recompute path).
+    if (isNum(targetLevel)){
+      var ty = yOf(targetLevel);
+      var tpct = (H && typeof H.fmtTargetPct==='function') ? H.fmtTargetPct(savingTarget) : String(Math.round(savingTarget*100));
+      svg+='<line data-tco-target="1" x1="'+mL+'" y1="'+ty.toFixed(1)+'" x2="'+(mL+plotW)+'" y2="'+ty.toFixed(1)+'" stroke="'+C.good+'" stroke-width="1.5" stroke-dasharray="6 4"/>';
+      svg+='<rect x="'+(mL+plotW+2).toFixed(1)+'" y="'+(ty-8).toFixed(1)+'" width="'+(mR-4)+'" height="16" rx="3" fill="'+C.good+'" opacity="0.12"/>';
+      svg+='<text data-tco-target-label="1" x="'+(mL+plotW+6).toFixed(1)+'" y="'+(ty+3).toFixed(1)+'" fill="'+C.good+'" font-weight="600" font-size="10">Meet '+esc(tpct)+'% target</text>';
+    }
     // all year axis labels 0..10
     for(var yy=0; yy<years; yy++){
       svg+='<text x="'+xOf(yy).toFixed(1)+'" y="'+(Hh-14)+'" text-anchor="middle" fill="'+C.muted+'">'+yy+'</text>';
@@ -4941,6 +5474,15 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     }
     var max=0, any=false;
     PATHS.forEach(function(p){ var c=comps(p); if(c.okAll){ any=true; if(c.sum>max) max=c.sum; } });
+    // A5: matching saving-target tick. Same level as the cumulative chart:
+    // (1 - savingTarget) * keepTotal, where keepTotal is the Keep ICE bar total
+    // (== results.totalEconomicTco.keep_ice). Derived from the SAME output; no
+    // engine change. Drawn only when the Keep ICE total is numeric.
+    var savingTarget = (H && typeof H.committedTarget==='function') ? H.committedTarget() : 0.15;
+    var keepComps = comps('keep_ice');
+    var keepTotal = keepComps.okAll ? keepComps.sum : NA;
+    var targetLevel = (isNum(keepTotal) && isNum(savingTarget)) ? (1 - savingTarget) * keepTotal : NA;
+    if (isNum(targetLevel) && targetLevel > max) max = targetLevel;
     var top=niceCeil(max||1);
     var n=PATHS.length, slot=plotW/n, bw=slot*0.56, hatch='hatch_breakdown';
     var svg=svgOpen(W,Hh)+defs(hatch);
@@ -4973,6 +5515,13 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
       svg+='<text x="'+cx.toFixed(1)+'" y="'+(baseY+14)+'" text-anchor="middle" fill="'+C.muted+'">'+esc(PLABEL[p])+'</text>';
     });
     svg+='<line x1="'+mL+'" y1="'+baseY+'" x2="'+(mL+plotW)+'" y2="'+baseY+'" stroke="'+C.line2+'" stroke-width="1"/>';
+    // A5: the saving-target tick across the bars, labelled with the committed %.
+    if (isNum(targetLevel)){
+      var tyB = mT+plotH-(plotH*(targetLevel/top));
+      var tpctB = (H && typeof H.fmtTargetPct==='function') ? H.fmtTargetPct(savingTarget) : String(Math.round(savingTarget*100));
+      svg+='<line data-tco-target="1" x1="'+mL+'" y1="'+tyB.toFixed(1)+'" x2="'+(mL+plotW)+'" y2="'+tyB.toFixed(1)+'" stroke="'+C.good+'" stroke-width="1.5" stroke-dasharray="6 4"/>';
+      svg+='<text data-tco-target-label="1" x="'+(mL+2)+'" y="'+(tyB-3).toFixed(1)+'" fill="'+C.good+'" font-weight="600" font-size="10">Meet '+esc(tpctB)+'% target</text>';
+    }
     // compact legend for the components
     var lx=mL, ly=mT+2;
     SEG_DEFS.forEach(function(sd,li){
@@ -4984,45 +5533,14 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     wireChart(box);
   }
 
-  /* ---- Chart 5: sensitivity response ------------------------------ */
-  // Driven by the slider-overridden clone used by renderSensitivity (published
-  // through H.onSensResult / H.lastSensOut), so it updates on every slider drag.
-  function renderSensChart(out){
-    var box=el('chart-sens'); if(!box) return;
-    renderBarsInto(box,'chart-sens', out && out.results && out.results.totalEconomicTco);
-  }
-  // Same as renderBars but to a known element (keeps a distinct hatch id).
-  function renderBarsInto(box, idForHatch, dataObj){
-    var W=520,Hh=210, mL=56,mR=10,mT=14,mB=42;
-    var plotW=W-mL-mR, plotH=Hh-mT-mB;
-    var max=0; PATHS.forEach(function(p){ var v=dataObj?dataObj[p]:NA; if(isNum(v)&&Math.abs(v)>max) max=Math.abs(v); });
-    var top=niceCeil(max||1);
-    var n=PATHS.length, slot=plotW/n, bw=slot*0.56, hatch='hatch_'+idForHatch;
-    var svg=svgOpen(W,Hh)+defs(hatch);
-    var gl=4;
-    for(var g=0; g<=gl; g++){
-      var gv=top*g/gl, gy=mT+plotH-(plotH*(gv/top));
-      svg+='<line x1="'+mL+'" y1="'+gy.toFixed(1)+'" x2="'+(mL+plotW)+'" y2="'+gy.toFixed(1)+'" stroke="'+C.line+'" stroke-width="1"/>';
-      svg+='<text x="'+(mL-6)+'" y="'+(gy+3).toFixed(1)+'" text-anchor="end" fill="'+C.muted+'">'+moneyShort(gv)+'</text>';
-    }
-    var baseY=mT+plotH;
-    PATHS.forEach(function(p,i){
-      var v=dataObj?dataObj[p]:NA;
-      var cx=mL+slot*i+slot/2, x=cx-bw/2;
-      if(isNum(v)){
-        var h=Math.max(1,(Math.abs(v)/top)*plotH), y=baseY-h;
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" fill="'+PCOLOR[p]+'"/>';
-        svg+='<text x="'+cx.toFixed(1)+'" y="'+(y-4).toFixed(1)+'" text-anchor="middle" fill="'+C.ink+'">'+moneyShort(v)+'</text>';
-      } else {
-        var nah=Math.max(18,plotH*0.22), ny=baseY-nah;
-        svg+='<rect x="'+x.toFixed(1)+'" y="'+ny.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+nah.toFixed(1)+'" fill="url(#'+hatch+')" stroke="'+C.line2+'" stroke-dasharray="3 2"/>';
-        svg+='<text x="'+cx.toFixed(1)+'" y="'+(ny-4).toFixed(1)+'" text-anchor="middle" fill="'+C.muted+'">n.a.</text>';
-      }
-      svg+='<text x="'+cx.toFixed(1)+'" y="'+(baseY+14)+'" text-anchor="middle" fill="'+C.muted+'">'+esc(PLABEL[p])+'</text>';
-    });
-    svg+='<line x1="'+mL+'" y1="'+baseY+'" x2="'+(mL+plotW)+'" y2="'+baseY+'" stroke="'+C.line2+'" stroke-width="1"/></svg>';
-    box.innerHTML=svg;
-  }
+  /* ---- (A2) sensitivity-response bar removed ---------------------- *
+   * The former chart-sens bar plotted results.totalEconomicTco per path, which
+   * is EXACTLY the stacked height of the breakdown bar above (vehicleEconomicTco
+   * + netSiteCost sum to the same per-path total from the identical committed
+   * engine output). The breakdown bar is strictly richer (it shows the component
+   * split AND the same total) and already redraws live on every driver/slider
+   * change via renderAll, so the duplicate bar and its renderBarsInto helper were
+   * removed. H.onSensResult is no longer wired. */
 
   function niceCeil(v){
     if(!isNum(v)||v<=0) return 1;
@@ -5040,15 +5558,15 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     renderBreakdown(out);
   }
 
-  // Main recompute path: redraws charts 1-4 on every amber-input change.
+  // Main recompute path: redraws the cumulative line + breakdown bar on every
+  // amber-input / slider change (the sensitivity controls run liveRecompute,
+  // which fires this). A2 removed the separate sensitivity-response chart, so
+  // there is no distinct H.onSensResult redraw any more.
   if (typeof H.setChartRenderer === 'function') H.setChartRenderer(renderAll);
-  // Sensitivity path: redraw chart 5 from the slider-overridden clone, live on 'input'.
-  H.onSensResult = function(out){ renderSensChart(out); };
 
   // Initial draw now that the controllers have already run once.
   try {
     if (H.computeFleet && H.state) renderAll(H.computeFleet(H.state));
-    if (H.lastSensOut) renderSensChart(H.lastSensOut);
   } catch(e){ /* stay silent; charts redraw on next recompute */ }
 })();
 </script>
