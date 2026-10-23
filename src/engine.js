@@ -19,7 +19,7 @@
  *   Results!B14:E14  Total economic TCO          -> results.totalEconomicTco
  *   Results!B15:E15  Saving vs Keep ICE          -> results.savingVsKeep
  *   Results!B16:E16  Saving percentage           -> results.savingPct
- *   Results!B17:E17  15% fleet saving headroom   -> results.headroom15
+ *   Results!B17:E17  Fleet saving-target headroom-> results.headroom15 (target default 15%)
  *   Results!B18:E18  Cash less year-10 assets    -> results.cashLessTerminal   (SUM Annual build!O / site cash)
  *   Results!B19:E19  Day-0 funding before loans  -> results.day0Funding        (SUMIFS Annual build!R + site cash yr0)
  *   Results!B20:E20  Incremental day-0 funding   -> results.incrementalDay0
@@ -27,7 +27,7 @@
  *   Results!B22:E22  Site completeness / access  -> results.siteStatus         (Energy and charging!B67/C67)
  *   Results!B23:E23  Vehicle service / evidence  -> results.vehicleStatus      (Paths!Q cascade)
  *   Results!B24:E24  Saving claim status         -> results.savingClaimStatus
- *   Results!D26:E26  Max site TCO for 15% saving -> results.maxSiteTco15
+ *   Results!D26:E26  Max site TCO for saving tgt -> results.maxSiteTco15 (target default 15%)
  *   Energy and charging!B60:C60 Input completeness-> site.completeness
  *   Energy and charging!B61:C61 Gross initial site-> site.grossInitial
  *   Energy and charging!B62:C62 Annual site cost  -> site.annual
@@ -131,7 +131,26 @@ function buildModel(inputs) {
 
   const analysisStart = parseDate(oc[63]) || new Date(Date.UTC(2026, 9, 3));
 
-  return { oc, ec, products, fleet, fleetRows, repl, analysisStart };
+  // Configurable fleet-saving target (fraction, e.g. 0.15 = 15%).
+  // STATE SOURCE (bound by the FEAT-003 UI slider + number): the top-level
+  // `inputs.savingTarget` field. DEFAULTS to 0.15 when absent, null, non-numeric,
+  // <= 0, or >= 1, so the demo fixture (which does NOT set it) resolves to exactly
+  // 0.15 and reproduces every current number bit-for-bit. All existing
+  // operating_costs rows (7..68) are Excel-mapped and must not be repurposed, so a
+  // dedicated top-level field is used instead.
+  const savingTarget = resolveSavingTarget(inputs.savingTarget);
+
+  return { oc, ec, products, fleet, fleetRows, repl, analysisStart, savingTarget };
+}
+
+// Domain-guarded saving-target resolver. Returns a fraction strictly in (0, 1),
+// defaulting to 0.15 for any absent/invalid/out-of-domain input.
+function resolveSavingTarget(...candidates) {
+  for (const c of candidates) {
+    const n = (typeof c === 'number') ? c : (typeof c === 'string' && c.trim() !== '' ? Number(c) : NaN);
+    if (Number.isFinite(n) && n > 0 && n < 1) return n;
+  }
+  return 0.15;
 }
 
 // VLOOKUP into Fleet register A7:S106, column index (1-based) 2..19 -> B..S.
@@ -828,13 +847,17 @@ function aggregate(model, allPaths, annualByPlan, sites, siteSchedules) {
   // Derived cross-plan metrics (relative to Keep ICE = code 0).
   const keepTotal = perPlan[0].totalEconomicTco;
   const keepDay0 = perPlan[0].day0Funding;
+  // Configurable fleet-saving target (fraction); defaults to 0.15 via buildModel.
+  // With savingTarget === 0.15, (1 - savingTarget) === 0.85 exactly in IEEE-754,
+  // so headroom15/maxSiteTco15 reproduce the frozen Excel numbers bit-for-bit.
+  const savingTarget = model.savingTarget;
   for (const code of [0, 1, 2, 3]) {
     const pp = perPlan[code];
     pp.savingVsKeep = (isNum(keepTotal) && isNum(pp.totalEconomicTco)) ? keepTotal - pp.totalEconomicTco : NA;
     pp.savingPct = (isNum(pp.savingVsKeep) && isNum(keepTotal) && keepTotal > 0) ? pp.savingVsKeep / keepTotal : NA;
-    pp.headroom15 = (isNum(keepTotal) && isNum(pp.totalEconomicTco)) ? 0.85 * keepTotal - pp.totalEconomicTco : NA;
+    pp.headroom15 = (isNum(keepTotal) && isNum(pp.totalEconomicTco)) ? (1 - savingTarget) * keepTotal - pp.totalEconomicTco : NA;
     pp.incrementalDay0 = (isNum(pp.day0Funding) && isNum(keepDay0)) ? pp.day0Funding - keepDay0 : NA;
-    pp.maxSiteTco15 = (isNum(keepTotal) && isNum(pp.vehicleEconomicTco)) ? 0.85 * keepTotal - pp.vehicleEconomicTco : NA;
+    pp.maxSiteTco15 = (isNum(keepTotal) && isNum(pp.vehicleEconomicTco)) ? (1 - savingTarget) * keepTotal - pp.vehicleEconomicTco : NA;
     pp.savingClaimStatus = savingClaimStatus(model, pp, code);
   }
 
@@ -865,7 +888,19 @@ function savingClaimStatus(model, pp, code) {
     pp.vehicleStatus !== 'Within entered limits' ||
     !customerMode || !energyConfirmed;
   if (diagnostic) return 'Diagnostic only';
-  return pp.savingPct >= 0.15 ? 'Meets entered 15% target' : 'Below entered 15% target';
+  const target = model.savingTarget;
+  const pct = formatTargetPct(target);
+  return pp.savingPct >= target
+    ? `Meets entered ${pct}% target`
+    : `Below entered ${pct}% target`;
+}
+
+// Render a saving-target fraction as a percentage label with no spurious
+// decimals: 0.15 -> '15', 0.2 -> '20', 0.125 -> '12.5'. Uses a rounded
+// fixed-precision string with trailing zeros trimmed to avoid float artefacts
+// (e.g. 0.2 * 100 === 20.000000000000004 in IEEE-754).
+function formatTargetPct(target) {
+  return parseFloat((target * 100).toFixed(4)).toString();
 }
 
 /* ------------------------------------------------------------------ *
@@ -1059,8 +1094,11 @@ function shapeResults(perPlan, sites) {
  *
  *   benefitKey   = best EV-plan Saving % vs Keep ICE        (Results!B16:E16)
  *                  Secondary audit components (shown, not blended):
- *                    headroom15      = 0.85*KeepICE_total - plan_total  (Results!B17)
- *                    maxSiteTco15    = 0.85*KeepICE_total - plan_vehTCO (Results!D26:E26)
+ *                    headroom15      = (1-target)*KeepICE_total - plan_total  (Results!B17)
+ *                    maxSiteTco15    = (1-target)*KeepICE_total - plan_vehTCO (Results!D26:E26)
+ *                    (target = model.savingTarget, the committed saving target,
+ *                     default 0.15; field names keep the "15" suffix for
+ *                     continuity with the Excel map)
  *                    gatePass        = plan passes service/capacity/evidence
  *                  A case whose best plan "Fails entered limits" or is
  *                  "Diagnostic only" gets benefitKey = -Infinity so it sinks
@@ -1080,7 +1118,9 @@ function shapeResults(perPlan, sites) {
  *                  scale with gatePass=false flagging the caveat.
  *
  * "fifteenTargetMet" mirrors Results!B24:E24 ("Saving claim status"); it is a
- * conditional-on-inputs label, NOT an adoption probability.
+ * conditional-on-inputs label reporting the committed saving target
+ * ("Meets/Below entered X% target", X = model.savingTarget, default 15%),
+ * NOT an adoption probability.
  */
 function num(v) { return isNum(v) ? v : null; }
 
