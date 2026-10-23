@@ -117,15 +117,23 @@ checks.push(['sensitivity rendered', byId['sens-body'].innerHTML.indexOf('Keep I
 
 // ---- Prospects view checks -------------------------------------------------
 const seeds = windowObj.HSProspectSeeds;
-checks.push(['prospect seeds embedded (4)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 4]);
+// FEAT-003: the Yong Wen / Venus reconstructions were replaced by four
+// illustrative presets (best / mid / bad / blank), so the seed set is now six
+// cases: evergreen, demo, best, mid, bad, blank.
+checks.push(['prospect seeds embedded (6)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 6]);
+checks.push(['no yong_wen/venus seeds remain',
+  !!seeds && !seeds.cases.some((c) => c.id === 'yong_wen' || c.id === 'venus')]);
 checks.push(['scoreProspect exposed', typeof windowObj.HSEngine.scoreProspect === 'function']);
 
 const pbodyBenefit = byId['prospect-body'].innerHTML;
 checks.push(['prospect table rendered', pbodyBenefit.indexOf('Why this rank') !== -1]);
 checks.push(['prospect lists Evergreen (illustrative)', pbodyBenefit.indexOf('Evergreen Logistics') !== -1]);
 checks.push(['prospect lists demo', pbodyBenefit.indexOf('DEMONSTRATION 6-truck case') !== -1]);
-checks.push(['prospect lists Yong Wen', pbodyBenefit.indexOf('Yong Wen') !== -1]);
-checks.push(['prospect lists Venus', pbodyBenefit.indexOf('Venus') !== -1]);
+// The four new illustrative presets must each render in the table.
+checks.push(['prospect lists Best case', pbodyBenefit.indexOf('Best case (illustrative, gates pass)') !== -1]);
+checks.push(['prospect lists Mid case', pbodyBenefit.indexOf('Mid case (illustrative, marginal saving)') !== -1]);
+checks.push(['prospect lists Bad case', pbodyBenefit.indexOf('Bad case (illustrative, EV not a fit)') !== -1]);
+checks.push(['prospect lists Blank profile', pbodyBenefit.indexOf('Blank profile (start a fresh client)') !== -1]);
 checks.push(['prospect exposes components', pbodyBenefit.indexOf('Account key') !== -1 && pbodyBenefit.indexOf('Benefit key') !== -1]);
 
 // ---- Confirmed-win assertion (review finding #2) ---------------------------
@@ -163,14 +171,32 @@ function orderFor(mode) {
 }
 const accountOrder = orderFor('account');
 const benefitOrder = orderFor('benefit');
-// The confirmed-win illustrative case (Evergreen) leads BOTH sort modes: it has
-// the largest absolute saving and it is the only gate-passing benefit figure.
+// The confirmed-win illustrative cases (Evergreen and its deep-copy Best) lead
+// BOTH sort modes: they share the largest absolute saving and the only strong
+// gate-passing benefit figure. (Ties keep the fixture order, so Evergreen -
+// listed first - stays ahead of Best.)
 checks.push(['account order evergreen first', accountOrder[0] === 'evergreen']);
 checks.push(['benefit order evergreen first', benefitOrder[0] === 'evergreen']);
-// Among the flagged reconstructions the 5-truck Yong Wen still ranks ahead of
-// the 3-truck Venus (larger vehicle-only benefit), and both ahead of the demo.
-checks.push(['account order yong_wen before venus', accountOrder.indexOf('yong_wen') < accountOrder.indexOf('venus')]);
-checks.push(['account order venus before demo', accountOrder.indexOf('venus') < accountOrder.indexOf('demo')]);
+checks.push(['best ranks as a gate-passing win (2nd in both modes)',
+  accountOrder[1] === 'best' && benefitOrder[1] === 'best']);
+// The illustrative presets rank by their engine-verified saving: best > mid >
+// bad in the benefit (saving %) order. This replaces the removed yong_wen >
+// venus ordering assertions with equivalent coverage on the new presets.
+checks.push(['benefit order best before mid before bad',
+  benefitOrder.indexOf('best') < benefitOrder.indexOf('mid') &&
+  benefitOrder.indexOf('mid') < benefitOrder.indexOf('bad')]);
+// The marginal MID still gate-passes with a positive saving, so it outranks the
+// negative-saving BAD in account order too.
+checks.push(['account order mid before bad',
+  accountOrder.indexOf('mid') < accountOrder.indexOf('bad')]);
+// Non-numeric ranking keys sort last: the honest-blank preset (Total n.a., no
+// EV plan) sinks to the bottom of BOTH sort modes, and the bad case (negative
+// saving) sits below the gate-passing winners.
+checks.push(['blank sinks to the bottom (both modes)',
+  accountOrder[accountOrder.length - 1] === 'blank' &&
+  benefitOrder[benefitOrder.length - 1] === 'blank']);
+checks.push(['bad outranks only blank in benefit order',
+  benefitOrder.indexOf('bad') < benefitOrder.indexOf('blank')]);
 
 // Toggle the live sort control and confirm the rendered order changes.
 const sel = byId['prospect-sort'];
@@ -179,12 +205,16 @@ sel.value = 'account';
 sel.fire('change');
 const afterHtml = byId['prospect-body'].innerHTML;
 checks.push(['sort toggle reorders table', beforeHtml !== afterHtml]);
-// In account order the confirmed-win Evergreen case leads, and among the
-// flagged reconstructions Yong Wen precedes the demonstration case.
+// In account order the confirmed-win Evergreen case still leads the rendered
+// table, the Best preset follows, and the honest-blank preset is rendered last.
 checks.push(['account sort puts Evergreen on top',
-  afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('Yong Wen') &&
+  afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('Best case (illustrative, gates pass)') &&
   afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('DEMONSTRATION')]);
-checks.push(['account sort Yong Wen before demo', afterHtml.indexOf('Yong Wen') < afterHtml.indexOf('DEMONSTRATION')]);
+checks.push(['account sort renders Blank profile last',
+  afterHtml.indexOf('Blank profile (start a fresh client)') >
+    afterHtml.indexOf('Best case (illustrative, gates pass)') &&
+  afterHtml.indexOf('Blank profile (start a fresh client)') >
+    afterHtml.indexOf('Mid case (illustrative, marginal saving)')]);
 
 // ---- Live inline-SVG charts (FEAT-003) ------------------------------------
 // The Charts module renders inline SVG strings into the chart containers from
