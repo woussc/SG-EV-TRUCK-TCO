@@ -6196,7 +6196,7 @@
           "values": {
             "B": 1500,
             "C": "SGD/year",
-            "D": "Used only when EV servicing basis is Annual override. Include the same scope as the Hong Seh schedule or explain the difference."
+            "D": "Used only when EV servicing basis is Annual override. Include the same scope as the reference EV service schedule or explain the difference."
           }
         },
         {
