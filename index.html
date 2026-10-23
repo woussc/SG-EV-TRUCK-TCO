@@ -132,6 +132,30 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .field .u{font-size:11.5px;color:var(--muted);min-width:88px;text-align:right}
 .rowctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .btn{padding:8px 14px;cursor:pointer;background:var(--accent);color:#fff;border:0;border-radius:5px;font:13px -apple-system,'Segoe UI',Arial}
+/* Per-truck card stack. One card per included truck merges the truck's
+   critical fleet + replacement fields into a compact, responsive form that
+   needs no horizontal scroll on a laptop. Low-impact fields live in each
+   card's own Advanced <details>. */
+.truck-cards{display:flex;flex-direction:column;gap:12px}
+.truck-card{border:1px solid var(--line2);border-radius:8px;padding:12px;background:var(--paper)}
+.truck-card .tc-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 8px}
+.truck-card .tc-head .tc-id{flex:1 1 auto;min-width:120px}
+.truck-card .tc-head .tc-id input{width:100%}
+.truck-card .tc-inc{display:inline-flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap}
+.truck-card .tc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+.truck-card .tc-grid.one{grid-template-columns:1fr}
+.truck-card .fld{display:flex;flex-direction:column;gap:3px;padding:3px 0}
+.truck-card .fld label{font-size:12px;color:var(--muted)}
+.truck-card .fld input,.truck-card .fld select{width:100%;text-align:left}
+.truck-card .fld input[type=number]{text-align:right}
+.truck-card .tc-spec{font-size:11.5px;color:var(--muted);margin:6px 0 0;line-height:1.4}
+.truck-card .tc-caveat{color:var(--warn);font-style:italic}
+.truck-card .remove-truck{padding:5px 10px;cursor:pointer;background:var(--paper);color:var(--warn);border:1px solid var(--amberline);border-radius:5px;font:12px -apple-system,'Segoe UI',Arial;font-weight:600}
+.truck-card .remove-truck:hover{background:var(--amber)}
+.truck-card details.truck-adv{margin:10px 0 0;border-top:1px dotted var(--line)}
+.truck-card details.truck-adv>summary{cursor:pointer;font-size:12.5px;color:var(--accent);padding:8px 0 4px}
+.truck-card details.truck-adv .tc-grid{margin-top:6px}
+@media(max-width:520px){.truck-card .tc-grid{grid-template-columns:1fr}}
 .charts-region{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gutter)}
 .chart-card{margin:0;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--paper);min-width:0}
 .chart-card-wide{grid-column:1 / -1}
@@ -224,17 +248,10 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="small">Editable inputs use the amber convention. Unknowns are left blank or &quot;n.a.&quot; and are never auto-filled with zero: a blank is not a measured zero, and &quot;n.a.&quot; is not a value.</p>
 <p class="legend"><span class="swatch"></span>Amber = editable input. White = computed or reference. Evidence tags: <span class="tag fact">Fact</span><span class="tag assumption">Assumption</span><span class="tag inference">Inference</span><span class="tag unknown">Unknown</span></p>
 
-<h3>Fleet register <span class="tag assumption">Assumption</span></h3>
-<p class="small">Per-truck current fleet and duty. Include toggles whether a truck enters every path.</p>
-<div class="table-wrap editwrap"><table id="fleet-table"><thead><tr>
-<th>Include</th><th>Truck ID</th><th>Duty</th><th>Body</th><th>Work km/day</th><th>Days/year</th><th>Peak route km</th><th>Peak cargo kg</th><th>Jobs/day</th><th>COE months left</th><th>Market value SGD</th><th>Scrap SGD</th><th>Straight-line SGD</th><th>COE term mo</th><th>Debt if sold</th><th>Sale fee</th><th>Evidence ref</th>
-</tr></thead><tbody id="fleet-body"></tbody></table></div>
-
-<h3>Replacement plan <span class="tag assumption">Assumption</span></h3>
-<p class="small">Per-truck action for Plan A and Plan B, EV model, replacement month, quotes, year-10 values and the manually-checked vehicle grant. A blank replacement month inherits COE months left.</p>
-<div class="table-wrap editwrap"><table id="repl-table"><thead><tr>
-<th>Truck ID</th><th>EV model</th><th>New ICE quote</th><th>EV quote</th><th>Plan A action</th><th>Plan A month</th><th>Plan A yr-10 SGD</th><th>Plan B action</th><th>Plan B month</th><th>Plan B yr-10 SGD</th><th>Keep yr-10 SGD</th><th>New ICE yr-10 SGD</th><th>Vehicle grant SGD</th>
-</tr></thead><tbody id="repl-body"></tbody></table></div>
+<h3>Fleet &amp; replacement (one card per truck) <span class="tag assumption">Assumption</span></h3>
+<p class="small">One compact card per truck merges its current-fleet duty and its replacement plan. The minimum critical inputs are shown first; the rest sit under each card&rsquo;s &ldquo;Advanced&rdquo; disclosure. The Truck ID links the two sheets. A blank replacement month inherits COE months left.</p>
+<div id="fleet-cards" class="truck-cards"></div>
+<p class="noprint"><button type="button" id="add-truck-btn" class="btn">+ Add truck</button></p>
 
 <h3>Shared operating costs <span class="tag assumption">Assumption</span></h3>
 <p class="small">The high-impact recurring costs. Demonstration inflation and discount are all zero. Rarely-changed rows are under &ldquo;Advanced&rdquo; below, each kept at its demonstration default.</p>
@@ -242,12 +259,12 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 
 <h3>Energy and charging (Plan A / Plan B) <span class="tag assumption">Assumption</span></h3>
 <p class="small">The high-impact energy prices and charger build-up for Plan A (column B) and Plan B (column C).</p>
-<div class="table-wrap editwrap"><table id="ec-table"><thead><tr><th>Input</th><th>Plan A</th><th>Plan B</th><th>Unit</th><th>Meaning / cell reference</th></tr></thead><tbody id="ec-body"></tbody></table></div>
+<div class="table-wrap editwrap"><table id="ec-table"><thead><tr><th>Input</th><th>Plan A</th><th>Plan B</th><th>Unit</th></tr></thead><tbody id="ec-body"></tbody></table></div>
 
 <details id="advanced-inputs">
 <summary>Advanced assumptions (rarely changed)</summary>
 <div class="inner">
-<p class="adv-help">This holds the low-impact, rarely-changed <em>operating-cost rows</em> demoted from the form above (tyres, inspection, contract surcharges, unavailable-days and all-in backup rates, battery reserve and fade, auxiliary energy, growth and discount rates, operating-cost scheduled-repair timing, the new-ICE operating terminal value, and the data-mode and quote-basis flags) together with the <em>detailed per-charger energy and site line items</em> beyond the primary four (distribution board, electrical worker, cabling and install, upgrades, civil work, connection and other site preparation, grant and deposit rows, and so on). The fleet register and replacement-plan tables stay fully visible in the sidebar, so their columns &mdash; including each truck's year-10 / terminal values and replacement months &mdash; are not hidden here. Each demoted field stays at its demonstration default and feeds the engine exactly as before, so hiding it changes no computed number.</p>
+<p class="adv-help">This holds the low-impact, rarely-changed <em>operating-cost rows</em> demoted from the form above (tyres, inspection, contract surcharges, unavailable-days and all-in backup rates, battery reserve and fade, auxiliary energy, growth and discount rates, operating-cost scheduled-repair timing, the new-ICE operating terminal value, and the data-mode and quote-basis flags) together with the <em>detailed per-charger energy and site line items</em> beyond the primary four (distribution board, electrical worker, cabling and install, upgrades, civil work, connection and other site preparation, grant and deposit rows, and so on). Each truck now has its own compact card above, whose primary fields are the minimum-critical inputs and whose per-card &ldquo;Advanced&rdquo; disclosure holds that truck's low-impact fields (scrap, straight-line, COE term, debt, sale fee, peak km, jobs, body, battery and kWh/km specs, per-plan months and year-10 / terminal values, and the vehicle grant). Each demoted field stays at its demonstration default and feeds the engine exactly as before, so hiding it changes no computed number.</p>
 <h4>Operating costs &mdash; advanced <span class="tag assumption">Assumption</span></h4>
 <div class="formgrid" id="oc-form-adv"></div>
 <h4>Energy and charging &mdash; advanced <span class="tag assumption">Assumption</span></h4>
@@ -2064,104 +2081,316 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   // Expose so the harness can force synchronous recompute for assertions.
   H.setSyncRecompute = function(on){ H.__syncRecompute = !!on; };
 
-  // ---- Fleet register editable table ----
-  // Columns used: B include, C duty, D body, E work km/day, F days/year,
-  // G peak route km, H peak cargo, I jobs/day, J COE months left,
-  // K market value, L scrap, M straight-line, N COE term, O debt, P sale fee, Q evidence ref.
-  var FLEET_COLS = [
-    {k:'B', type:'inc'},
-    {k:'A', type:'ro'},
-    {k:'C', type:'text'},
-    {k:'D', type:'text'},
-    {k:'E', type:'num'}, {k:'F', type:'num'}, {k:'G', type:'num'}, {k:'H', type:'num'},
-    {k:'I', type:'num'}, {k:'J', type:'num'}, {k:'K', type:'num'}, {k:'L', type:'num'},
-    {k:'M', type:'num'}, {k:'N', type:'num'}, {k:'O', type:'num'}, {k:'P', type:'num'},
-    {k:'Q', type:'text'}
-  ];
-  function buildFleet(){
-    var rows = H.includedFleet();
-    var body = H.el('fleet-body');
-    body.innerHTML = '';
-    rows.forEach(function(row){
-      var tr = document.createElement('tr');
-      FLEET_COLS.forEach(function(c){
-        var td = document.createElement('td');
-        if (c.type==='ro'){ td.textContent = row[c.k]; td.style.fontWeight='600'; }
-        else if (c.type==='inc'){
-          var cb = document.createElement('input'); cb.type='checkbox'; cb.className='amber';
-          cb.style.width='18px'; cb.checked = (row.B===1);
-          // Include toggle is discrete: recompute immediately (not debounced).
-          cb.addEventListener('change', function(){ row.B = cb.checked?1:0; H.recompute(); });
-          td.appendChild(cb);
-        } else {
-          var inp = document.createElement('input'); inp.className='amber';
-          inp.type = (c.type==='num')?'number':'text';
-          inp.value = (row[c.k]==null?'':row[c.k]);
-          // Live update: recompute (debounced) as the user types, not on blur.
-          inp.addEventListener('input', function(){
-            row[c.k] = (c.type==='num') ? H.parseEditable(inp.value) : (inp.value===''?null:inp.value);
-            liveRecompute();
-          });
-          td.appendChild(inp);
-        }
-        tr.appendChild(td);
-      });
-      body.appendChild(tr);
-    });
-  }
-
-  // ---- Replacement plan editable table ----
-  // B EV model, C new ICE quote, D EV quote, O Plan A action, P Plan A month,
-  // Q Plan A yr10, R Plan B action, S Plan B month, T Plan B yr10,
-  // N Keep yr10, AI New ICE yr10, Z vehicle grant.
+  // ---- Per-truck card layout (fleet register + replacement plan merged) ----
+  // Each included truck renders ONE compact card into #fleet-cards. The card
+  // puts the minimum-critical inputs front-and-centre (see
+  // docs/minimum-critical-inputs.md) and pushes low-impact fields behind the
+  // card's own Advanced <details>. The fleet register and replacement plan stay
+  // linked by Truck ID (fleet col A === repl col A). This replaces the two wide
+  // horizontally-scrolling tables with no change to the engine read paths.
+  //
+  // Fleet cols: B include, C duty, D body, E work km/day, F days/year,
+  // G peak route km, H peak cargo, I jobs/day, J COE months left, K market
+  // value, L scrap, M straight-line, N COE term, O debt, P sale fee, Q evidence.
+  // Repl cols: B EV model, C new-ICE quote, D EV quote, E usable battery kWh,
+  // F EV kWh/km, K charge mode (AC/DC), O Plan A action, P Plan A month,
+  // Q Plan A yr10, R Plan B action, S Plan B month, T Plan B yr10, N Keep yr10,
+  // AI New-ICE yr10, Z vehicle grant.
   var ACTIONS = ['Keep ICE','New ICE','EV'];
-  function buildRepl(){
-    var map = H.replByIdMap();
-    var ids = H.includedFleet().map(function(r){return r.A;});
-    var body = H.el('repl-body'); body.innerHTML='';
-    var prods = H.productNames();
-    ids.forEach(function(id){
-      var rp = map[id]; if(!rp) return;
-      var tr = document.createElement('tr');
-      tr.appendChild(tdText(id, true));
-      tr.appendChild(tdSelect(rp,'B',prods));
-      tr.appendChild(tdNum(rp,'C'));
-      tr.appendChild(tdNum(rp,'D'));
-      tr.appendChild(tdSelect(rp,'O',ACTIONS));
-      tr.appendChild(tdNum(rp,'P'));
-      tr.appendChild(tdNum(rp,'Q'));
-      tr.appendChild(tdSelect(rp,'R',ACTIONS));
-      tr.appendChild(tdNum(rp,'S'));
-      tr.appendChild(tdNum(rp,'T'));
-      tr.appendChild(tdNum(rp,'N'));
-      tr.appendChild(tdNum(rp,'AI'));
-      tr.appendChild(tdNum(rp,'Z'));
-      body.appendChild(tr);
-    });
-  }
-  function tdText(v, ro){
-    var td=document.createElement('td');
-    if(ro){ td.textContent=v; td.style.fontWeight='600'; } else { td.textContent=v; }
-    return td;
-  }
-  function tdNum(obj,k){
-    var td=document.createElement('td');
-    var inp=document.createElement('input'); inp.type='number'; inp.className='amber';
+  var CHARGE_MODES = ['AC','DC'];
+
+  // A labelled editable field (stacked label + amber input) bound to obj[k].
+  // kind: 'num' -> number input; 'text' -> text input. Blank preserved, never 0.
+  function cardField(label, obj, k, kind){
+    var wrap=document.createElement('div'); wrap.className='fld';
+    var lab=document.createElement('label'); lab.textContent=label;
+    var inp=document.createElement('input'); inp.className='amber';
+    inp.type=(kind==='num')?'number':'text';
+    if(kind==='num') inp.step='any';
     inp.value=(obj[k]==null?'':obj[k]);
-    inp.addEventListener('input',function(){ obj[k]=H.parseEditable(inp.value); liveRecompute(); });
-    td.appendChild(inp); return td;
+    inp.addEventListener('input',function(){
+      obj[k]=(kind==='num')?H.parseEditable(inp.value):(inp.value===''?null:inp.value);
+      liveRecompute();
+    });
+    wrap.appendChild(lab); wrap.appendChild(inp);
+    return wrap;
   }
-  function tdSelect(obj,k,opts){
-    var td=document.createElement('td');
+  // A labelled <select> bound to obj[k]. onPick (optional) fires after the state
+  // field is set, before the recompute, so callers can load dependent defaults.
+  function cardSelect(label, obj, k, opts, onPick){
+    var wrap=document.createElement('div'); wrap.className='fld';
+    var lab=document.createElement('label'); lab.textContent=label;
     var sel=document.createElement('select'); sel.className='amber';
     opts.forEach(function(o){
       var op=document.createElement('option'); op.value=o; op.textContent=o;
       if(obj[k]===o) op.selected=true; sel.appendChild(op);
     });
-    // <select> is discrete; both 'input' and 'change' fire on pick. Use 'input'
-    // for consistency with the editable fields, recompute immediately.
-    sel.addEventListener('input',function(){ obj[k]=sel.value; H.recompute(); });
-    td.appendChild(sel); return td;
+    sel.addEventListener('input',function(){
+      obj[k]=sel.value;
+      if(typeof onPick==='function') onPick(sel.value);
+      H.recompute();
+    });
+    wrap.appendChild(lab); wrap.appendChild(sel);
+    return wrap;
+  }
+
+  // Look up a product (catalogue) row by model name.
+  function productByName(name){
+    var rows=H.state.products.rows;
+    for(var i=0;i<rows.length;i++){ if(rows[i].A===name) return rows[i]; }
+    return null;
+  }
+  // Acquisition adder the engine folds into the EV-quote blank-fallback (oc[57]).
+  function evAcqAdder(){ var r=H.ocRow(57); var v=r?r.values.B:null; return H.isNum(v)?v:0; }
+
+  // EV PRODUCT-SPEC LOADING. When a user PICKS an EV model for a truck, load the
+  // catalogue specs into the truck's overridable replacement fields as editable
+  // defaults, each matching the engine's blank-fallback so loading a model and
+  // NOT overriding reproduces the number the engine already computes from a
+  // blank (no new math):
+  //   rp.D (EV quote)        <- prod.I + oc[57] acquisition adder
+  //   rp.E (usable battery)  <- prod.D
+  //   rp.F (EV kWh/km)       <- prod.E
+  //   rp.K (charge mode)     <- 'AC' when the model has an AC rating (prod.G),
+  //                             else 'DC' (prod.H); context only.
+  // This is ONLY invoked on an explicit user pick (cardSelect onPick), never on
+  // initial build/Reset, so the demonstration case renders unchanged.
+  function loadProductSpecs(rp, name){
+    var prod=productByName(name);
+    if(!prod) return;
+    if(H.isNum(prod.I)) rp.D = prod.I + evAcqAdder();
+    if(H.isNum(prod.D)) rp.E = prod.D;
+    if(H.isNum(prod.E)) rp.F = prod.E;
+    rp.K = H.isNum(prod.G) ? 'AC' : 'DC';
+  }
+
+  // Read-only spec strip under the EV model select: payload / body-fit (always
+  // caveated 'Unconfirmed' because prod.L is 'Unconfirmed' for every catalogue
+  // model today) and the service rate. Honest: never presents an Unconfirmed
+  // figure as a confirmed number.
+  function productSpecStrip(name){
+    var p=document.createElement('p'); p.className='tc-spec';
+    p.setAttribute('data-product-spec', name||'');
+    var prod=productByName(name);
+    if(!prod){ p.textContent='No EV model selected.'; return p; }
+    var payload=H.isNum(prod.B)?(prod.B.toLocaleString('en-SG')+' kg MLW'):'payload n.a.';
+    var fit=(prod.L==null?'Unconfirmed':String(prod.L));
+    var svc=H.isNum(prod.P)?('S$'+prod.P.toFixed(4)+'/km service'):'service n.a.';
+    // Build as real nodes (not an innerHTML string) so the payload/body-fit
+    // status is an actual element carrying the Unconfirmed caveat tag.
+    var lead=document.createElement('span');
+    lead.textContent='Catalogue: '+payload+' \u00b7 '+svc+' \u00b7 payload/body-fit ';
+    var fitTag=document.createElement('span');
+    fitTag.className='tag unknown';
+    fitTag.setAttribute('data-fit-status','1');
+    fitTag.textContent=fit;
+    var caveat=document.createElement('span');
+    caveat.className='tc-caveat';
+    caveat.textContent=' (not yet confirmed for this duty)';
+    p.appendChild(lead); p.appendChild(fitTag); p.appendChild(caveat);
+    return p;
+  }
+
+  function buildFleet(){
+    var cards = H.el('fleet-cards');
+    if(!cards) return;
+    cards.innerHTML='';
+    var rows = H.includedFleet();
+    var map = H.replByIdMap();
+    var prods = H.productNames();
+    rows.forEach(function(row){
+      var rp = map[row.A];
+      cards.appendChild(buildTruckCard(row, rp, prods));
+    });
+  }
+
+  function buildTruckCard(row, rp, prods){
+    var card=document.createElement('div'); card.className='truck-card';
+    card.setAttribute('data-truck-id', row.A==null?'':String(row.A));
+
+    // ---- header: Include + Truck ID + Remove ----
+    var head=document.createElement('div'); head.className='tc-head';
+    var incWrap=document.createElement('label'); incWrap.className='tc-inc';
+    var cb=document.createElement('input'); cb.type='checkbox'; cb.className='amber';
+    cb.checked=(row.B===1);
+    cb.addEventListener('change',function(){ row.B=cb.checked?1:0; H.recompute(); });
+    var incTxt=document.createElement('span'); incTxt.textContent='Include';
+    incWrap.appendChild(cb); incWrap.appendChild(incTxt);
+    head.appendChild(incWrap);
+
+    var idWrap=document.createElement('div'); idWrap.className='fld tc-id';
+    var idLab=document.createElement('label'); idLab.textContent='Truck ID';
+    var idInp=document.createElement('input'); idInp.className='amber'; idInp.type='text';
+    idInp.value=(row.A==null?'':row.A);
+    idInp.addEventListener('input',function(){
+      var oldId=row.A; var newId=(idInp.value===''?null:idInp.value);
+      // Keep the matching replacement row's ID (col A) and link (col AF) in sync
+      // so the two sheets always share one ID set.
+      if(rp){ rp.A=newId; }
+      row.A=newId;
+      card.setAttribute('data-truck-id', newId==null?'':String(newId));
+      liveRecompute();
+    });
+    idWrap.appendChild(idLab); idWrap.appendChild(idInp);
+    head.appendChild(idWrap);
+
+    var rm=document.createElement('button'); rm.type='button'; rm.className='remove-truck';
+    rm.textContent='Remove'; rm.setAttribute('aria-label','Remove this truck');
+    rm.addEventListener('click',function(){ removeTruck(row.A); });
+    head.appendChild(rm);
+    card.appendChild(head);
+
+    // ---- primary minimum-critical grid ----
+    var grid=document.createElement('div'); grid.className='tc-grid';
+    grid.appendChild(cardField('Work km/day', row, 'E', 'num'));
+    grid.appendChild(cardField('Days/year', row, 'F', 'num'));
+    grid.appendChild(cardField('COE months left', row, 'J', 'num'));
+    grid.appendChild(cardField('Market value SGD', row, 'K', 'num'));
+    card.appendChild(grid);
+
+    if(rp){
+      // EV model select (loads catalogue specs on pick) + spec strip.
+      var modelGrid=document.createElement('div'); modelGrid.className='tc-grid one';
+      var specHolder=document.createElement('div');
+      var specStrip=productSpecStrip(rp.B);
+      specHolder.appendChild(specStrip);
+      var modelSel=cardSelect('EV model', rp, 'B', prods, function(name){
+        loadProductSpecs(rp, name);
+        // Refresh the whole card so the loaded EV quote / battery / kWh-km
+        // defaults and the Unconfirmed spec strip re-render.
+        var fresh=buildTruckCard(row, rp, prods);
+        if(card.parentNode) card.parentNode.replaceChild(fresh, card);
+      });
+      modelGrid.appendChild(modelSel);
+      modelGrid.appendChild(specHolder);
+      card.appendChild(modelGrid);
+
+      var qGrid=document.createElement('div'); qGrid.className='tc-grid';
+      qGrid.appendChild(cardField('New ICE quote SGD', rp, 'C', 'num'));
+      qGrid.appendChild(cardField('EV quote SGD', rp, 'D', 'num'));
+      qGrid.appendChild(cardSelect('Plan A action', rp, 'O', ACTIONS));
+      qGrid.appendChild(cardSelect('Plan B action', rp, 'R', ACTIONS));
+      card.appendChild(qGrid);
+    }
+
+    // ---- per-card Advanced (low-impact fields) ----
+    var adv=document.createElement('details'); adv.className='truck-adv';
+    var sum=document.createElement('summary'); sum.textContent='Advanced (rarely changed)';
+    adv.appendChild(sum);
+    var fg=document.createElement('div'); fg.className='tc-grid';
+    // Fleet low-impact
+    fg.appendChild(cardField('Duty', row, 'C', 'text'));
+    fg.appendChild(cardField('Body', row, 'D', 'text'));
+    fg.appendChild(cardField('Peak route km', row, 'G', 'num'));
+    fg.appendChild(cardField('Peak cargo kg', row, 'H', 'num'));
+    fg.appendChild(cardField('Jobs/day', row, 'I', 'num'));
+    fg.appendChild(cardField('Scrap SGD', row, 'L', 'num'));
+    fg.appendChild(cardField('Straight-line SGD', row, 'M', 'num'));
+    fg.appendChild(cardField('COE term mo', row, 'N', 'num'));
+    fg.appendChild(cardField('Debt if sold SGD', row, 'O', 'num'));
+    fg.appendChild(cardField('Sale fee SGD', row, 'P', 'num'));
+    fg.appendChild(cardField('Evidence ref', row, 'Q', 'text'));
+    if(rp){
+      fg.appendChild(cardField('Usable battery kWh', rp, 'E', 'num'));
+      fg.appendChild(cardField('EV kWh/km', rp, 'F', 'num'));
+      fg.appendChild(cardSelect('Charge mode', rp, 'K', CHARGE_MODES));
+      fg.appendChild(cardField('Plan A month', rp, 'P', 'num'));
+      fg.appendChild(cardField('Plan A yr-10 SGD', rp, 'Q', 'num'));
+      fg.appendChild(cardField('Plan B month', rp, 'S', 'num'));
+      fg.appendChild(cardField('Plan B yr-10 SGD', rp, 'T', 'num'));
+      fg.appendChild(cardField('Keep yr-10 SGD', rp, 'N', 'num'));
+      fg.appendChild(cardField('New ICE yr-10 SGD', rp, 'AI', 'num'));
+      fg.appendChild(cardField('Vehicle grant SGD', rp, 'Z', 'num'));
+    }
+    adv.appendChild(fg);
+    card.appendChild(adv);
+
+    return card;
+  }
+
+  // ---- Add / remove trucks (keep Fleet + Replacement ID-consistent) ----
+  // The fixture supports rows A7:S106 (up to 100). Add appends a fresh unique ID
+  // to the next unused fleet row AND seeds a matching replacement row with the
+  // same ID (Keep ICE default) so computeFleet stays valid. Remove resets BOTH
+  // the fleet row and its matching replacement row back to an excluded blank
+  // placeholder, so the two sheets always share one ID set.
+  var FLEET_GATE_DEFAULTS = {E:100, F:300, J:12, K:20000, L:5000, M:40000, N:120, O:0, P:0};
+
+  // A fleet row is a BLANK PLACEHOLDER (not currently shown) when it is excluded
+  // (B!==1) and carries no entered data in any data column -- mirroring
+  // H.includedFleet()'s render rule. The fixture already ships 100 paired rows
+  // (T001..T100) with matching replacement rows, so adding a truck activates the
+  // next blank placeholder and reuses its existing ID, which keeps the Fleet
+  // register and Replacement plan ID-consistent by construction.
+  var FLEET_PLACEHOLDER_COLS = ['C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q'];
+  function isBlankPlaceholder(r){
+    if (r.A==null) return false;      // no ID -> cannot pair; skip
+    if (r.B===1) return false;        // already included
+    for (var i=0;i<FLEET_PLACEHOLDER_COLS.length;i++){
+      var v=r[FLEET_PLACEHOLDER_COLS[i]];
+      if (v!=null && v!=='') return false;
+    }
+    return true;
+  }
+  function firstPlaceholderRow(rows){
+    for (var i=0;i<rows.length;i++){ if (isBlankPlaceholder(rows[i])) return rows[i]; }
+    return null;
+  }
+  function addTruck(){
+    var fleetRows=H.state.fleet_register.rows;
+    var replRows=H.state.replacement_plan.rows;
+    var fRow=firstPlaceholderRow(fleetRows);
+    if(!fRow){ return null; }          // respect the 100-row (A7:S106) ceiling
+    var id=fRow.A;                     // reuse the fixture's paired ID
+    fRow.B=1;
+    Object.keys(FLEET_GATE_DEFAULTS).forEach(function(k){ fRow[k]=FLEET_GATE_DEFAULTS[k]; });
+    fRow.C='New truck'; fRow.Q='User-added';
+    // Seed the MATCHING replacement row (same ID) with a Keep ICE action for
+    // both plans so computeFleet stays valid without an EV model up front.
+    var rRow=null;
+    for(var i=0;i<replRows.length;i++){ if(String(replRows[i].A)===String(id)){ rRow=replRows[i]; break; } }
+    if(rRow){ rRow.O='Keep ICE'; rRow.R='Keep ICE'; }
+    buildFleet();
+    H.recompute();
+    return id;
+  }
+  function removeTruck(id){
+    if(id==null) return;
+    var fleetRows=H.state.fleet_register.rows;
+    var replRows=H.state.replacement_plan.rows;
+    fleetRows.forEach(function(r){
+      if(String(r.A)===String(id)){
+        // Reset to an excluded blank placeholder but KEEP the paired ID so the
+        // fleet + replacement sheets always share one ID set.
+        FLEET_PLACEHOLDER_COLS.forEach(function(k){ r[k]=null; });
+        r.B=0;
+      }
+    });
+    replRows.forEach(function(r){
+      if(String(r.A)===String(id)){
+        Object.keys(r).forEach(function(k){ if(k!=='_row' && k!=='A') r[k]=null; });
+      }
+    });
+    buildFleet();
+    H.recompute();
+  }
+  function wireAddTruck(){
+    var btn=H.el('add-truck-btn');
+    if(btn) btn.addEventListener('click', function(){ addTruck(); });
+  }
+  // Expose for the harness + other controllers.
+  H.addTruck=addTruck; H.removeTruck=removeTruck; H.loadProductSpecs=loadProductSpecs;
+
+  // buildRepl is retained as a no-op alias: the replacement-plan fields now live
+  // inside each truck card (buildFleet), so buildAll() no longer renders a
+  // separate table. Kept so any external caller that expects the symbol is safe.
+  function buildRepl(){ /* merged into buildTruckCard */ }
+
+  // Non-editable label cell, still used by the energy/charging table (ecRowTr).
+  function tdText(v, ro){
+    var td=document.createElement('td');
+    if(ro){ td.textContent=v; td.style.fontWeight='600'; } else { td.textContent=v; }
+    return td;
   }
 
   // ---- Operating costs form ----
@@ -2223,15 +2452,26 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   // Plan A. The engine read path is unchanged; only the UI stops offering a
   // dead field.
   var EC_MIRRORED_C = {7:true, 10:true};
-  function ecRowTr(r){
+  // Build one energy row. withMeaning adds the 'Meaning / cell reference'
+  // provenance cell: the COLLAPSED advanced table keeps it, but the always-
+  // visible PRIMARY table does NOT (FEAT-002 de-clutter). The provenance is not
+  // lost on the primary surface -- it is relocated to a tooltip (title=...) on
+  // the input label cell, so it stays one hover away.
+  function ecRowTr(r, withMeaning){
     var tr=document.createElement('tr');
-    tr.appendChild(tdText(r.label||('Row '+r._row)));
+    var meaningText=(r.values.E==null?('Energy and charging!B'+r._row):r.values.E);
+    var labelTd=tdText(r.label||('Row '+r._row));
+    // Relocate provenance to a tooltip on the primary surface (kept, not deleted).
+    if(!withMeaning && labelTd.setAttribute) labelTd.setAttribute('title', String(meaningText));
+    tr.appendChild(labelTd);
     tr.appendChild(ecCell(r,'B'));
     tr.appendChild(EC_MIRRORED_C[r._row] ? ecMirroredC(r) : ecCell(r,'C'));
     tr.appendChild(tdText(r.values.D==null?'':r.values.D));
-    var meaning=document.createElement('td'); meaning.className='small';
-    meaning.textContent=(r.values.E==null?('Energy and charging!B'+r._row):r.values.E);
-    tr.appendChild(meaning);
+    if(withMeaning){
+      var meaning=document.createElement('td'); meaning.className='small';
+      meaning.textContent=meaningText;
+      tr.appendChild(meaning);
+    }
     return tr;
   }
   function buildEnergy(){
@@ -2239,8 +2479,11 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     var adv=H.el('ec-body-adv'); if (adv) adv.innerHTML='';
     H.state.energy_and_charging.rows.forEach(function(r){
       if (r.values==null) return;
-      var dest = PRIMARY_EC[r._row] ? body : (adv || body);
-      dest.appendChild(ecRowTr(r));
+      var primary = !!PRIMARY_EC[r._row];
+      var dest = primary ? body : (adv || body);
+      // Primary surface: no 'Meaning / cell reference' cell (provenance -> tooltip).
+      // Advanced surface (collapsed): keep the full provenance column.
+      dest.appendChild(ecRowTr(r, !primary && !!adv));
     });
   }
   function ecCell(r,col){
@@ -2549,7 +2792,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   }
 
   function buildAll(){
-    buildFleet(); buildRepl(); buildOperating(); buildEnergy(); buildSensitivity();
+    buildFleet(); buildOperating(); buildEnergy(); buildSensitivity();
   }
 
   // Expose the input-table rebuilder so other controllers (Prospects) can
@@ -2560,6 +2803,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   buildAll();
   wireReset();
   wireSidebar();
+  wireAddTruck();
   H.recompute();
 })();
 </script>

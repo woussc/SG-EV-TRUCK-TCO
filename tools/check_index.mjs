@@ -26,7 +26,11 @@ function makeEl(tag) {
   return {
     tagName: tag, _html: '', style: {}, children: [], attributes: {},
     listeners: {}, value: '',
-    set innerHTML(v) { this._html = v; }, get innerHTML() { return this._html; },
+    // Setting innerHTML replaces content: mirror the real DOM by also dropping
+    // any previously-appended children (so re-rendered containers do not
+    // accumulate stale nodes across repeated builds). Clearing to '' is the
+    // common reset the controller uses before rebuilding a table/card list.
+    set innerHTML(v) { this._html = v; this.children = []; }, get innerHTML() { return this._html; },
     set textContent(v) { this._text = v; }, get textContent() { return this._text || ''; },
     appendChild(c) { this.children.push(c); return c; },
     addEventListener(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); },
@@ -40,7 +44,7 @@ function makeEl(tag) {
 }
 const byId = {};
 const ids = ['decision-cards','decision-lead','decision-notice','results-body','site-body',
-  'gates-body','review-body','sens-body','sens-controls','fleet-body','repl-body',
+  'gates-body','review-body','sens-body','sens-controls','fleet-cards','add-truck-btn',
   'oc-form','ec-body','reset-btn','demo-banner',
   'prospect-body','prospect-sort','prospect-current-btn','prospect-note',
   // FEAT-002: curation split containers + toggleable sidebar hooks.
@@ -91,8 +95,24 @@ checks.push(['results shows 2,081,781', byId['results-body'].innerHTML.indexOf('
 checks.push(['n.a. rendered not 0', byId['results-body'].innerHTML.indexOf('n.a.') !== -1]);
 checks.push(['decision cards rendered', byId['decision-cards'].innerHTML.indexOf('Keep ICE') !== -1]);
 checks.push(['review rendered PASS', byId['review-body'].innerHTML.indexOf('PASS') !== -1]);
-checks.push(['fleet rows built', byId['fleet-body'].children.length === 6]);
-checks.push(['repl rows built', byId['repl-body'].children.length === 6]);
+// FEAT-002: the wide fleet/replacement tables are replaced by a per-truck card
+// stack (#fleet-cards). The demonstration 6-truck case must still render six
+// cards on initial load, and each card must carry a data-truck-id matching the
+// included fleet IDs (fleet + replacement are merged into one card per truck).
+function truckCards() {
+  return (byId['fleet-cards'].children || []).filter(
+    (c) => (c.attributes && c.attributes['data-truck-id'] != null));
+}
+checks.push(['fleet rows built (6 truck cards on demo load)', truckCards().length === 6]);
+const demoCardIds = truckCards().map((c) => c.attributes['data-truck-id']);
+checks.push(['truck cards carry the demo fleet IDs (T001..T006)',
+  ['T001', 'T002', 'T003', 'T004', 'T005', 'T006'].every((id) => demoCardIds.indexOf(id) !== -1)]);
+// Replacement plan stays ID-consistent with the fleet register: every included
+// fleet ID has a matching replacement_plan row with the same ID (col A).
+const replIds = windowObj.__HS.state.replacement_plan.rows
+  .filter((r) => r.A != null).map((r) => String(r.A));
+checks.push(['replacement rows ID-consistent with the 6 demo trucks',
+  demoCardIds.every((id) => replIds.indexOf(String(id)) !== -1)]);
 checks.push(['sensitivity rendered', byId['sens-body'].innerHTML.indexOf('Keep ICE') !== -1]);
 
 // ---- Prospects view checks -------------------------------------------------
@@ -424,10 +444,24 @@ const liveAfter = byId['chart-total'].innerHTML;
 checks.push(['firing input event redraws charts (would FAIL on change)',
   !!ecInput && liveBefore !== liveAfter && liveAfter.indexOf('<svg') !== -1]);
 
-// Also confirm a built fleet-body input is wired on 'input' (not change).
-const fleetInput = firstInputIn(byId['fleet-body']);
-checks.push(['fleet-body has a built editable input', !!fleetInput]);
-checks.push(['fleet editable field listens on input',
+// Also confirm a built truck-card input is wired on 'input' (not change). The
+// card fields are nested deeper than the old table rows (card > grid > fld >
+// input), so walk the tree for the first editable (non-checkbox) <input>.
+function findInputDeep(node, pred) {
+  if (!node || typeof node !== 'object') return null;
+  if ((node.tagName || '') === 'input' && node.type !== 'checkbox' &&
+      (!pred || pred(node))) return node;
+  const kids = node.children || [];
+  for (const child of kids) {
+    const hit = findInputDeep(child, pred);
+    if (hit) return hit;
+  }
+  return null;
+}
+const fleetInput = findInputDeep(byId['fleet-cards'],
+  (n) => Array.isArray(n.listeners.input) && n.listeners.input.length > 0);
+checks.push(['truck card has a built editable input', !!fleetInput]);
+checks.push(['card editable field listens on input',
   !!fleetInput && Array.isArray(fleetInput.listeners.input) && fleetInput.listeners.input.length > 0]);
 
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
@@ -444,6 +478,175 @@ checks.push(['advanced energy table populated', byId['ec-body-adv'].children.len
 // The advanced set holds strictly more rows than the small primary set.
 checks.push(['advanced op-cost holds more rows than primary',
   byId['oc-form-adv'].children.length > byId['oc-form'].children.length]);
+
+// ---- FEAT-002 (redesign): de-cluttered primary input surface ---------------
+// The primary energy-and-charging table must NOT carry the verbose 'Meaning /
+// cell reference' provenance column (it is relocated to a tooltip on the label
+// cell and kept in the collapsed Advanced table). Assert on the hand-written
+// chrome markup: the primary #ec-table header has NO 'Meaning / cell reference'
+// <th>, while the collapsed advanced #ec-table-adv still does (provenance kept,
+// not deleted). This UPDATES the old wide-surface expectation without weakening
+// coverage.
+const ecPrimaryHeadM = html.match(/<table id="ec-table">\s*<thead>([\s\S]*?)<\/thead>/i);
+const ecAdvHeadM = html.match(/<table id="ec-table-adv">\s*<thead>([\s\S]*?)<\/thead>/i);
+checks.push(['primary energy table drops Meaning / cell reference header',
+  !!ecPrimaryHeadM && ecPrimaryHeadM[1].indexOf('Meaning / cell reference') === -1]);
+checks.push(['advanced energy table keeps provenance column (kept, not deleted)',
+  !!ecAdvHeadM && ecAdvHeadM[1].indexOf('Meaning / cell reference') !== -1]);
+// The rendered primary rows carry exactly the de-cluttered column count: each
+// primary ec row is [label, Plan A, Plan B, unit] (4 cells, no meaning cell).
+const ecPrimaryRow = byId['ec-body'].children[0];
+checks.push(['primary energy row has no meaning cell (4 cells)',
+  !!ecPrimaryRow && (ecPrimaryRow.children || []).length === 4]);
+// Provenance is relocated, not lost: the primary label cell carries a title
+// tooltip (the cell reference) so it stays one hover away.
+const ecLabelCell = ecPrimaryRow && ecPrimaryRow.children && ecPrimaryRow.children[0];
+checks.push(['primary energy label keeps provenance as a tooltip (title=)',
+  !!ecLabelCell && ecLabelCell.attributes && typeof ecLabelCell.attributes.title === 'string' &&
+  ecLabelCell.attributes.title.length > 0]);
+
+// ---- FEAT-002 (redesign): minimum-critical primary fields present ----------
+// Each truck card must surface the minimum-critical inputs as always-visible
+// primary fields (per docs/minimum-critical-inputs.md): Work km/day, Days/year,
+// COE months left, Market value, plus the replacement EV model, New ICE quote,
+// EV quote, and the two plan-action selects. Collect every visible <label> text
+// inside the first truck card's PRIMARY area (outside its Advanced <details>)
+// and assert the critical labels are there.
+function collectLabels(node, acc) {
+  if (!node || typeof node !== 'object') return acc;
+  if ((node.tagName || '') === 'label') acc.push((node.textContent || '').trim());
+  // Do not descend into a per-card Advanced <details> (those are low-impact).
+  const isAdv = (node.tagName || '') === 'details' &&
+    /(^|\s)truck-adv(\s|$)/.test(node.className || '');
+  if (!isAdv) (node.children || []).forEach((c) => collectLabels(c, acc));
+  return acc;
+}
+const card0 = truckCards()[0];
+const primaryLabels = collectLabels(card0, []);
+const criticalLabels = ['Work km/day', 'Days/year', 'COE months left', 'Market value SGD',
+  'EV model', 'New ICE quote SGD', 'EV quote SGD', 'Plan A action', 'Plan B action'];
+checks.push(['truck card surfaces the minimum-critical primary fields',
+  criticalLabels.every((l) => primaryLabels.indexOf(l) !== -1)]);
+// The low-impact fields are behind the card's Advanced disclosure, not primary.
+checks.push(['low-impact fields demoted to the card Advanced disclosure',
+  primaryLabels.indexOf('Scrap SGD') === -1 && primaryLabels.indexOf('Peak route km') === -1 &&
+  primaryLabels.indexOf('Vehicle grant SGD') === -1]);
+
+// ---- FEAT-002 (redesign): EV product-spec loading + Unconfirmed caveat ------
+// Selecting an EV model for a truck must load the catalogue specs into the
+// row's editable fields as defaults matching the engine's blank-fallback
+// (EV quote = prod.I + oc[57]; battery = prod.D; kWh/km = prod.E), and surface
+// the payload/body-fit status WITH an explicit 'Unconfirmed' caveat (prod.L is
+// 'Unconfirmed' for every model today). Drive it directly through the exposed
+// loader on a replacement row, then confirm the card re-renders the caveat.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+const prodRows = windowObj.__HS.state.products.rows.filter((r) => r.A != null);
+const oc57 = windowObj.__HS.state.operating_costs.rows.find((r) => r._row === 57);
+const acqAdder = (oc57 && typeof oc57.values.B === 'number') ? oc57.values.B : 0;
+const demoRepl = windowObj.__HS.state.replacement_plan.rows.find((r) => r.A === 'T001');
+const pickProd = prodRows.find((p) => p.A === 'Farizon F3E') || prodRows[0];
+// Pick the model (as the UI does) then load its specs as editable defaults.
+demoRepl.B = pickProd.A;
+demoRepl.D = null; demoRepl.E = null; demoRepl.F = null;
+windowObj.__HS.loadProductSpecs(demoRepl, pickProd.A);
+checks.push(['EV model load sets EV quote = prod.I + oc[57] (engine blank-fallback)',
+  demoRepl.D === pickProd.I + acqAdder]);
+checks.push(['EV model load sets usable battery kWh = prod.D',
+  demoRepl.E === pickProd.D]);
+checks.push(['EV model load sets EV kWh/km = prod.E',
+  demoRepl.F === pickProd.E]);
+// prod.L is Unconfirmed for every catalogue model today.
+checks.push(['catalogue payload/body-fit is Unconfirmed (honesty precondition)',
+  prodRows.every((p) => p.L === 'Unconfirmed')]);
+// The loaded defaults equal the engine's blank-fallback, so loading a model and
+// NOT overriding introduces no new math. Prove via the engine: a run with the
+// EV quote loaded equals a run with it blank for the same truck.
+const stLoaded = JSON.parse(JSON.stringify(windowObj.__HS.state));
+const stBlank = JSON.parse(JSON.stringify(windowObj.__HS.state));
+stBlank.replacement_plan.rows.forEach((r) => { if (r.A === 'T001') { r.D = null; r.E = null; r.F = null; } });
+const outLoaded = windowObj.HSEngine.computeFleet(stLoaded).results.vehicleEconomicTco.plan_a;
+const outBlank = windowObj.HSEngine.computeFleet(stBlank).results.vehicleEconomicTco.plan_a;
+checks.push(['loaded EV defaults reproduce the blank-fallback number (no new math)',
+  typeof outLoaded === 'number' && typeof outBlank === 'number' &&
+  Math.abs(outLoaded - outBlank) < 0.5]);
+// The card UI renders the Unconfirmed caveat on the payload/body-fit spec strip.
+// Re-render the cards and search for a data-fit-status tag carrying 'Unconfirmed'.
+windowObj.__HS.rebuildInputs();
+function findFitStatus(node) {
+  if (!node || typeof node !== 'object') return null;
+  if ((node.tagName || '') === 'span' && node.attributes && 'data-fit-status' in node.attributes) return node;
+  const kids = node.children || [];
+  for (const c of kids) { const hit = findFitStatus(c); if (hit) return hit; }
+  return null;
+}
+const fitTag = findFitStatus(byId['fleet-cards']);
+checks.push(['card surfaces payload/body-fit status with Unconfirmed caveat',
+  !!fitTag && (fitTag.textContent || '').indexOf('Unconfirmed') !== -1 &&
+  /(^|\s)unknown(\s|$)/.test(fitTag.className || '')]);
+
+// ---- FEAT-002 (redesign): add / remove trucks (ID-consistent) --------------
+// An 'Add truck' control exists; firing it increases the rendered truck-card
+// count AND appends a matching replacement_plan row with the SAME new ID (the
+// two sheets always share one ID set). A per-card 'Remove' control decreases
+// both again.
+const addBtn = byId['add-truck-btn'];
+checks.push(['Add truck control present', !!addBtn &&
+  Array.isArray(addBtn.listeners.click) && addBtn.listeners.click.length > 0]);
+// A "shown" truck is one that renders a card (included or carrying data): that
+// is the live truck set the user sees. Adding activates one more; the fixture
+// ships paired fleet+replacement IDs, so the new ID must appear in the shown
+// set AND stay ID-consistent across both sheets.
+function shownTruckIds() { return truckCards().map((c) => String(c.attributes['data-truck-id'])); }
+const cardsBeforeAdd = truckCards().length;
+const shownBeforeAdd = shownTruckIds();
+addBtn.fire('click');
+const cardsAfterAdd = truckCards().length;
+const shownAfterAdd = shownTruckIds();
+checks.push(['Add truck increases rendered truck-card count', cardsAfterAdd === cardsBeforeAdd + 1]);
+const newId = shownAfterAdd.find((id) => shownBeforeAdd.indexOf(id) === -1);
+checks.push(['Add truck shows a new truck ID', !!newId]);
+// The new truck is included in the fleet register AND has a matching
+// replacement_plan row with the SAME ID (two sheets share one ID set).
+const newFleetRow = windowObj.__HS.state.fleet_register.rows.find((r) => String(r.A) === newId);
+const newReplRow = windowObj.__HS.state.replacement_plan.rows.find((r) => String(r.A) === newId);
+checks.push(['Add truck appends an included fleet row', !!newFleetRow && newFleetRow.B === 1]);
+checks.push(['Add truck has a MATCHING replacement row (same ID, valid action)',
+  !!newReplRow && newReplRow.O === 'Keep ICE' && newReplRow.R === 'Keep ICE']);
+// computeFleet still returns a valid result after the add.
+const outAfterAdd = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+checks.push(['computeFleet valid after add (truck count grew)',
+  !!outAfterAdd && outAfterAdd.results.truckCount.keep_ice === cardsAfterAdd]);
+// Remove the just-added truck via its card Remove button -> both sheets shrink.
+const addedCard = truckCards().find((c) => c.attributes['data-truck-id'] === newId);
+function findRemoveBtn(node) {
+  if (!node || typeof node !== 'object') return null;
+  if ((node.tagName || '') === 'button' && /(^|\s)remove-truck(\s|$)/.test(node.className || '')) return node;
+  const kids = node.children || [];
+  for (const c of kids) { const hit = findRemoveBtn(c); if (hit) return hit; }
+  return null;
+}
+const removeBtn = addedCard ? findRemoveBtn(addedCard) : null;
+checks.push(['added card exposes a Remove control', !!removeBtn &&
+  Array.isArray(removeBtn.listeners.click) && removeBtn.listeners.click.length > 0]);
+if (removeBtn) removeBtn.fire('click');
+const cardsAfterRemove = truckCards().length;
+checks.push(['Remove truck decreases rendered truck-card count', cardsAfterRemove === cardsBeforeAdd]);
+// The removed truck no longer renders a card and its fleet row is reset to an
+// excluded blank placeholder (B=0, no data); the paired ID is kept on both
+// sheets so they never diverge.
+checks.push(['Remove truck drops the ID from the shown set', shownTruckIds().indexOf(newId) === -1]);
+const removedFleetRow = windowObj.__HS.state.fleet_register.rows.find((r) => String(r.A) === newId);
+checks.push(['Removed fleet row is an excluded blank placeholder',
+  !!removedFleetRow && removedFleetRow.B === 0 && removedFleetRow.E == null && removedFleetRow.K == null]);
+const outAfterRemove = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+checks.push(['computeFleet valid after remove', !!outAfterRemove &&
+  outAfterRemove.results.truckCount.keep_ice === cardsAfterRemove]);
+// Reset-to-demonstration restores the original 6-truck card set unchanged.
+byId['reset-btn'].fire('click');
+checks.push(['Reset restores the 6-truck demonstration card set', truckCards().length === 6]);
+checks.push(['Reset keeps the money view at the demo Keep ICE TCO',
+  byId['results-body'].innerHTML.indexOf('2,081,781') !== -1]);
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- FEAT-004: input OVERLAY panel (fixed drawer over a scrim, no reflow) ---
 // The inputs now live in a position:fixed overlay (#input-col) floating over a
