@@ -26,7 +26,11 @@ function makeEl(tag) {
   return {
     tagName: tag, _html: '', style: {}, children: [], attributes: {},
     listeners: {}, value: '',
-    set innerHTML(v) { this._html = v; }, get innerHTML() { return this._html; },
+    // Setting innerHTML replaces content: mirror the real DOM by also dropping
+    // any previously-appended children (so re-rendered containers do not
+    // accumulate stale nodes across repeated builds). Clearing to '' is the
+    // common reset the controller uses before rebuilding a table/card list.
+    set innerHTML(v) { this._html = v; this.children = []; }, get innerHTML() { return this._html; },
     set textContent(v) { this._text = v; }, get textContent() { return this._text || ''; },
     appendChild(c) { this.children.push(c); return c; },
     addEventListener(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); },
@@ -40,7 +44,7 @@ function makeEl(tag) {
 }
 const byId = {};
 const ids = ['decision-cards','decision-lead','decision-notice','results-body','site-body',
-  'gates-body','review-body','sens-body','sens-controls','fleet-body','repl-body',
+  'gates-body','review-body','sens-body','sens-controls','fleet-cards','add-truck-btn',
   'oc-form','ec-body','reset-btn','demo-banner',
   'prospect-body','prospect-sort','prospect-current-btn','prospect-note',
   // FEAT-002: curation split containers + toggleable sidebar hooks.
@@ -51,7 +55,9 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   // FEAT-005: journey stepper, stage viewports + confidence badge hooks.
   'stepper','step-customer','step-portfolio','step-tco','step-charging','step-proposal',
   'stage-customer','stage-portfolio','stage-tco','stage-charging','stage-proposal',
-  'confidence-badge','confidence-dot','confidence-text','stage-open-inputs'];
+  'confidence-badge','confidence-dot','confidence-text','stage-open-inputs',
+  // FEAT-004 (portfolio): ranked model-matching guide hooks.
+  'portfolio-body','portfolio-duty-line','portfolio-honesty'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
 
 const document = {
@@ -91,21 +97,45 @@ checks.push(['results shows 2,081,781', byId['results-body'].innerHTML.indexOf('
 checks.push(['n.a. rendered not 0', byId['results-body'].innerHTML.indexOf('n.a.') !== -1]);
 checks.push(['decision cards rendered', byId['decision-cards'].innerHTML.indexOf('Keep ICE') !== -1]);
 checks.push(['review rendered PASS', byId['review-body'].innerHTML.indexOf('PASS') !== -1]);
-checks.push(['fleet rows built', byId['fleet-body'].children.length === 6]);
-checks.push(['repl rows built', byId['repl-body'].children.length === 6]);
+// FEAT-002: the wide fleet/replacement tables are replaced by a per-truck card
+// stack (#fleet-cards). The demonstration 6-truck case must still render six
+// cards on initial load, and each card must carry a data-truck-id matching the
+// included fleet IDs (fleet + replacement are merged into one card per truck).
+function truckCards() {
+  return (byId['fleet-cards'].children || []).filter(
+    (c) => (c.attributes && c.attributes['data-truck-id'] != null));
+}
+checks.push(['fleet rows built (6 truck cards on demo load)', truckCards().length === 6]);
+const demoCardIds = truckCards().map((c) => c.attributes['data-truck-id']);
+checks.push(['truck cards carry the demo fleet IDs (T001..T006)',
+  ['T001', 'T002', 'T003', 'T004', 'T005', 'T006'].every((id) => demoCardIds.indexOf(id) !== -1)]);
+// Replacement plan stays ID-consistent with the fleet register: every included
+// fleet ID has a matching replacement_plan row with the same ID (col A).
+const replIds = windowObj.__HS.state.replacement_plan.rows
+  .filter((r) => r.A != null).map((r) => String(r.A));
+checks.push(['replacement rows ID-consistent with the 6 demo trucks',
+  demoCardIds.every((id) => replIds.indexOf(String(id)) !== -1)]);
 checks.push(['sensitivity rendered', byId['sens-body'].innerHTML.indexOf('Keep ICE') !== -1]);
 
 // ---- Prospects view checks -------------------------------------------------
 const seeds = windowObj.HSProspectSeeds;
-checks.push(['prospect seeds embedded (4)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 4]);
+// FEAT-003: the Yong Wen / Venus reconstructions were replaced by four
+// illustrative presets (best / mid / bad / blank), so the seed set is now six
+// cases: evergreen, demo, best, mid, bad, blank.
+checks.push(['prospect seeds embedded (6)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 6]);
+checks.push(['no yong_wen/venus seeds remain',
+  !!seeds && !seeds.cases.some((c) => c.id === 'yong_wen' || c.id === 'venus')]);
 checks.push(['scoreProspect exposed', typeof windowObj.HSEngine.scoreProspect === 'function']);
 
 const pbodyBenefit = byId['prospect-body'].innerHTML;
 checks.push(['prospect table rendered', pbodyBenefit.indexOf('Why this rank') !== -1]);
 checks.push(['prospect lists Evergreen (illustrative)', pbodyBenefit.indexOf('Evergreen Logistics') !== -1]);
 checks.push(['prospect lists demo', pbodyBenefit.indexOf('DEMONSTRATION 6-truck case') !== -1]);
-checks.push(['prospect lists Yong Wen', pbodyBenefit.indexOf('Yong Wen') !== -1]);
-checks.push(['prospect lists Venus', pbodyBenefit.indexOf('Venus') !== -1]);
+// The four new illustrative presets must each render in the table.
+checks.push(['prospect lists Best case', pbodyBenefit.indexOf('Best case (illustrative, gates pass)') !== -1]);
+checks.push(['prospect lists Mid case', pbodyBenefit.indexOf('Mid case (illustrative, marginal saving)') !== -1]);
+checks.push(['prospect lists Bad case', pbodyBenefit.indexOf('Bad case (illustrative, EV not a fit)') !== -1]);
+checks.push(['prospect lists Blank profile', pbodyBenefit.indexOf('Blank profile (start a fresh client)') !== -1]);
 checks.push(['prospect exposes components', pbodyBenefit.indexOf('Account key') !== -1 && pbodyBenefit.indexOf('Benefit key') !== -1]);
 
 // ---- Confirmed-win assertion (review finding #2) ---------------------------
@@ -143,14 +173,32 @@ function orderFor(mode) {
 }
 const accountOrder = orderFor('account');
 const benefitOrder = orderFor('benefit');
-// The confirmed-win illustrative case (Evergreen) leads BOTH sort modes: it has
-// the largest absolute saving and it is the only gate-passing benefit figure.
+// The confirmed-win illustrative cases (Evergreen and its deep-copy Best) lead
+// BOTH sort modes: they share the largest absolute saving and the only strong
+// gate-passing benefit figure. (Ties keep the fixture order, so Evergreen -
+// listed first - stays ahead of Best.)
 checks.push(['account order evergreen first', accountOrder[0] === 'evergreen']);
 checks.push(['benefit order evergreen first', benefitOrder[0] === 'evergreen']);
-// Among the flagged reconstructions the 5-truck Yong Wen still ranks ahead of
-// the 3-truck Venus (larger vehicle-only benefit), and both ahead of the demo.
-checks.push(['account order yong_wen before venus', accountOrder.indexOf('yong_wen') < accountOrder.indexOf('venus')]);
-checks.push(['account order venus before demo', accountOrder.indexOf('venus') < accountOrder.indexOf('demo')]);
+checks.push(['best ranks as a gate-passing win (2nd in both modes)',
+  accountOrder[1] === 'best' && benefitOrder[1] === 'best']);
+// The illustrative presets rank by their engine-verified saving: best > mid >
+// bad in the benefit (saving %) order. This replaces the removed yong_wen >
+// venus ordering assertions with equivalent coverage on the new presets.
+checks.push(['benefit order best before mid before bad',
+  benefitOrder.indexOf('best') < benefitOrder.indexOf('mid') &&
+  benefitOrder.indexOf('mid') < benefitOrder.indexOf('bad')]);
+// The marginal MID still gate-passes with a positive saving, so it outranks the
+// negative-saving BAD in account order too.
+checks.push(['account order mid before bad',
+  accountOrder.indexOf('mid') < accountOrder.indexOf('bad')]);
+// Non-numeric ranking keys sort last: the honest-blank preset (Total n.a., no
+// EV plan) sinks to the bottom of BOTH sort modes, and the bad case (negative
+// saving) sits below the gate-passing winners.
+checks.push(['blank sinks to the bottom (both modes)',
+  accountOrder[accountOrder.length - 1] === 'blank' &&
+  benefitOrder[benefitOrder.length - 1] === 'blank']);
+checks.push(['bad outranks only blank in benefit order',
+  benefitOrder.indexOf('bad') < benefitOrder.indexOf('blank')]);
 
 // Toggle the live sort control and confirm the rendered order changes.
 const sel = byId['prospect-sort'];
@@ -159,12 +207,16 @@ sel.value = 'account';
 sel.fire('change');
 const afterHtml = byId['prospect-body'].innerHTML;
 checks.push(['sort toggle reorders table', beforeHtml !== afterHtml]);
-// In account order the confirmed-win Evergreen case leads, and among the
-// flagged reconstructions Yong Wen precedes the demonstration case.
+// In account order the confirmed-win Evergreen case still leads the rendered
+// table, the Best preset follows, and the honest-blank preset is rendered last.
 checks.push(['account sort puts Evergreen on top',
-  afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('Yong Wen') &&
+  afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('Best case (illustrative, gates pass)') &&
   afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('DEMONSTRATION')]);
-checks.push(['account sort Yong Wen before demo', afterHtml.indexOf('Yong Wen') < afterHtml.indexOf('DEMONSTRATION')]);
+checks.push(['account sort renders Blank profile last',
+  afterHtml.indexOf('Blank profile (start a fresh client)') >
+    afterHtml.indexOf('Best case (illustrative, gates pass)') &&
+  afterHtml.indexOf('Blank profile (start a fresh client)') >
+    afterHtml.indexOf('Mid case (illustrative, marginal saving)')]);
 
 // ---- Live inline-SVG charts (FEAT-003) ------------------------------------
 // The Charts module renders inline SVG strings into the chart containers from
@@ -424,10 +476,24 @@ const liveAfter = byId['chart-total'].innerHTML;
 checks.push(['firing input event redraws charts (would FAIL on change)',
   !!ecInput && liveBefore !== liveAfter && liveAfter.indexOf('<svg') !== -1]);
 
-// Also confirm a built fleet-body input is wired on 'input' (not change).
-const fleetInput = firstInputIn(byId['fleet-body']);
-checks.push(['fleet-body has a built editable input', !!fleetInput]);
-checks.push(['fleet editable field listens on input',
+// Also confirm a built truck-card input is wired on 'input' (not change). The
+// card fields are nested deeper than the old table rows (card > grid > fld >
+// input), so walk the tree for the first editable (non-checkbox) <input>.
+function findInputDeep(node, pred) {
+  if (!node || typeof node !== 'object') return null;
+  if ((node.tagName || '') === 'input' && node.type !== 'checkbox' &&
+      (!pred || pred(node))) return node;
+  const kids = node.children || [];
+  for (const child of kids) {
+    const hit = findInputDeep(child, pred);
+    if (hit) return hit;
+  }
+  return null;
+}
+const fleetInput = findInputDeep(byId['fleet-cards'],
+  (n) => Array.isArray(n.listeners.input) && n.listeners.input.length > 0);
+checks.push(['truck card has a built editable input', !!fleetInput]);
+checks.push(['card editable field listens on input',
   !!fleetInput && Array.isArray(fleetInput.listeners.input) && fleetInput.listeners.input.length > 0]);
 
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
@@ -444,6 +510,175 @@ checks.push(['advanced energy table populated', byId['ec-body-adv'].children.len
 // The advanced set holds strictly more rows than the small primary set.
 checks.push(['advanced op-cost holds more rows than primary',
   byId['oc-form-adv'].children.length > byId['oc-form'].children.length]);
+
+// ---- FEAT-002 (redesign): de-cluttered primary input surface ---------------
+// The primary energy-and-charging table must NOT carry the verbose 'Meaning /
+// cell reference' provenance column (it is relocated to a tooltip on the label
+// cell and kept in the collapsed Advanced table). Assert on the hand-written
+// chrome markup: the primary #ec-table header has NO 'Meaning / cell reference'
+// <th>, while the collapsed advanced #ec-table-adv still does (provenance kept,
+// not deleted). This UPDATES the old wide-surface expectation without weakening
+// coverage.
+const ecPrimaryHeadM = html.match(/<table id="ec-table">\s*<thead>([\s\S]*?)<\/thead>/i);
+const ecAdvHeadM = html.match(/<table id="ec-table-adv">\s*<thead>([\s\S]*?)<\/thead>/i);
+checks.push(['primary energy table drops Meaning / cell reference header',
+  !!ecPrimaryHeadM && ecPrimaryHeadM[1].indexOf('Meaning / cell reference') === -1]);
+checks.push(['advanced energy table keeps provenance column (kept, not deleted)',
+  !!ecAdvHeadM && ecAdvHeadM[1].indexOf('Meaning / cell reference') !== -1]);
+// The rendered primary rows carry exactly the de-cluttered column count: each
+// primary ec row is [label, Plan A, Plan B, unit] (4 cells, no meaning cell).
+const ecPrimaryRow = byId['ec-body'].children[0];
+checks.push(['primary energy row has no meaning cell (4 cells)',
+  !!ecPrimaryRow && (ecPrimaryRow.children || []).length === 4]);
+// Provenance is relocated, not lost: the primary label cell carries a title
+// tooltip (the cell reference) so it stays one hover away.
+const ecLabelCell = ecPrimaryRow && ecPrimaryRow.children && ecPrimaryRow.children[0];
+checks.push(['primary energy label keeps provenance as a tooltip (title=)',
+  !!ecLabelCell && ecLabelCell.attributes && typeof ecLabelCell.attributes.title === 'string' &&
+  ecLabelCell.attributes.title.length > 0]);
+
+// ---- FEAT-002 (redesign): minimum-critical primary fields present ----------
+// Each truck card must surface the minimum-critical inputs as always-visible
+// primary fields (per docs/minimum-critical-inputs.md): Work km/day, Days/year,
+// COE months left, Market value, plus the replacement EV model, New ICE quote,
+// EV quote, and the two plan-action selects. Collect every visible <label> text
+// inside the first truck card's PRIMARY area (outside its Advanced <details>)
+// and assert the critical labels are there.
+function collectLabels(node, acc) {
+  if (!node || typeof node !== 'object') return acc;
+  if ((node.tagName || '') === 'label') acc.push((node.textContent || '').trim());
+  // Do not descend into a per-card Advanced <details> (those are low-impact).
+  const isAdv = (node.tagName || '') === 'details' &&
+    /(^|\s)truck-adv(\s|$)/.test(node.className || '');
+  if (!isAdv) (node.children || []).forEach((c) => collectLabels(c, acc));
+  return acc;
+}
+const card0 = truckCards()[0];
+const primaryLabels = collectLabels(card0, []);
+const criticalLabels = ['Work km/day', 'Days/year', 'COE months left', 'Market value SGD',
+  'EV model', 'New ICE quote SGD', 'EV quote SGD', 'Plan A action', 'Plan B action'];
+checks.push(['truck card surfaces the minimum-critical primary fields',
+  criticalLabels.every((l) => primaryLabels.indexOf(l) !== -1)]);
+// The low-impact fields are behind the card's Advanced disclosure, not primary.
+checks.push(['low-impact fields demoted to the card Advanced disclosure',
+  primaryLabels.indexOf('Scrap SGD') === -1 && primaryLabels.indexOf('Peak route km') === -1 &&
+  primaryLabels.indexOf('Vehicle grant SGD') === -1]);
+
+// ---- FEAT-002 (redesign): EV product-spec loading + Unconfirmed caveat ------
+// Selecting an EV model for a truck must load the catalogue specs into the
+// row's editable fields as defaults matching the engine's blank-fallback
+// (EV quote = prod.I + oc[57]; battery = prod.D; kWh/km = prod.E), and surface
+// the payload/body-fit status WITH an explicit 'Unconfirmed' caveat (prod.L is
+// 'Unconfirmed' for every model today). Drive it directly through the exposed
+// loader on a replacement row, then confirm the card re-renders the caveat.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+const prodRows = windowObj.__HS.state.products.rows.filter((r) => r.A != null);
+const oc57 = windowObj.__HS.state.operating_costs.rows.find((r) => r._row === 57);
+const acqAdder = (oc57 && typeof oc57.values.B === 'number') ? oc57.values.B : 0;
+const demoRepl = windowObj.__HS.state.replacement_plan.rows.find((r) => r.A === 'T001');
+const pickProd = prodRows.find((p) => p.A === 'Farizon F3E') || prodRows[0];
+// Pick the model (as the UI does) then load its specs as editable defaults.
+demoRepl.B = pickProd.A;
+demoRepl.D = null; demoRepl.E = null; demoRepl.F = null;
+windowObj.__HS.loadProductSpecs(demoRepl, pickProd.A);
+checks.push(['EV model load sets EV quote = prod.I + oc[57] (engine blank-fallback)',
+  demoRepl.D === pickProd.I + acqAdder]);
+checks.push(['EV model load sets usable battery kWh = prod.D',
+  demoRepl.E === pickProd.D]);
+checks.push(['EV model load sets EV kWh/km = prod.E',
+  demoRepl.F === pickProd.E]);
+// prod.L is Unconfirmed for every catalogue model today.
+checks.push(['catalogue payload/body-fit is Unconfirmed (honesty precondition)',
+  prodRows.every((p) => p.L === 'Unconfirmed')]);
+// The loaded defaults equal the engine's blank-fallback, so loading a model and
+// NOT overriding introduces no new math. Prove via the engine: a run with the
+// EV quote loaded equals a run with it blank for the same truck.
+const stLoaded = JSON.parse(JSON.stringify(windowObj.__HS.state));
+const stBlank = JSON.parse(JSON.stringify(windowObj.__HS.state));
+stBlank.replacement_plan.rows.forEach((r) => { if (r.A === 'T001') { r.D = null; r.E = null; r.F = null; } });
+const outLoaded = windowObj.HSEngine.computeFleet(stLoaded).results.vehicleEconomicTco.plan_a;
+const outBlank = windowObj.HSEngine.computeFleet(stBlank).results.vehicleEconomicTco.plan_a;
+checks.push(['loaded EV defaults reproduce the blank-fallback number (no new math)',
+  typeof outLoaded === 'number' && typeof outBlank === 'number' &&
+  Math.abs(outLoaded - outBlank) < 0.5]);
+// The card UI renders the Unconfirmed caveat on the payload/body-fit spec strip.
+// Re-render the cards and search for a data-fit-status tag carrying 'Unconfirmed'.
+windowObj.__HS.rebuildInputs();
+function findFitStatus(node) {
+  if (!node || typeof node !== 'object') return null;
+  if ((node.tagName || '') === 'span' && node.attributes && 'data-fit-status' in node.attributes) return node;
+  const kids = node.children || [];
+  for (const c of kids) { const hit = findFitStatus(c); if (hit) return hit; }
+  return null;
+}
+const fitTag = findFitStatus(byId['fleet-cards']);
+checks.push(['card surfaces payload/body-fit status with Unconfirmed caveat',
+  !!fitTag && (fitTag.textContent || '').indexOf('Unconfirmed') !== -1 &&
+  /(^|\s)unknown(\s|$)/.test(fitTag.className || '')]);
+
+// ---- FEAT-002 (redesign): add / remove trucks (ID-consistent) --------------
+// An 'Add truck' control exists; firing it increases the rendered truck-card
+// count AND appends a matching replacement_plan row with the SAME new ID (the
+// two sheets always share one ID set). A per-card 'Remove' control decreases
+// both again.
+const addBtn = byId['add-truck-btn'];
+checks.push(['Add truck control present', !!addBtn &&
+  Array.isArray(addBtn.listeners.click) && addBtn.listeners.click.length > 0]);
+// A "shown" truck is one that renders a card (included or carrying data): that
+// is the live truck set the user sees. Adding activates one more; the fixture
+// ships paired fleet+replacement IDs, so the new ID must appear in the shown
+// set AND stay ID-consistent across both sheets.
+function shownTruckIds() { return truckCards().map((c) => String(c.attributes['data-truck-id'])); }
+const cardsBeforeAdd = truckCards().length;
+const shownBeforeAdd = shownTruckIds();
+addBtn.fire('click');
+const cardsAfterAdd = truckCards().length;
+const shownAfterAdd = shownTruckIds();
+checks.push(['Add truck increases rendered truck-card count', cardsAfterAdd === cardsBeforeAdd + 1]);
+const newId = shownAfterAdd.find((id) => shownBeforeAdd.indexOf(id) === -1);
+checks.push(['Add truck shows a new truck ID', !!newId]);
+// The new truck is included in the fleet register AND has a matching
+// replacement_plan row with the SAME ID (two sheets share one ID set).
+const newFleetRow = windowObj.__HS.state.fleet_register.rows.find((r) => String(r.A) === newId);
+const newReplRow = windowObj.__HS.state.replacement_plan.rows.find((r) => String(r.A) === newId);
+checks.push(['Add truck appends an included fleet row', !!newFleetRow && newFleetRow.B === 1]);
+checks.push(['Add truck has a MATCHING replacement row (same ID, valid action)',
+  !!newReplRow && newReplRow.O === 'Keep ICE' && newReplRow.R === 'Keep ICE']);
+// computeFleet still returns a valid result after the add.
+const outAfterAdd = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+checks.push(['computeFleet valid after add (truck count grew)',
+  !!outAfterAdd && outAfterAdd.results.truckCount.keep_ice === cardsAfterAdd]);
+// Remove the just-added truck via its card Remove button -> both sheets shrink.
+const addedCard = truckCards().find((c) => c.attributes['data-truck-id'] === newId);
+function findRemoveBtn(node) {
+  if (!node || typeof node !== 'object') return null;
+  if ((node.tagName || '') === 'button' && /(^|\s)remove-truck(\s|$)/.test(node.className || '')) return node;
+  const kids = node.children || [];
+  for (const c of kids) { const hit = findRemoveBtn(c); if (hit) return hit; }
+  return null;
+}
+const removeBtn = addedCard ? findRemoveBtn(addedCard) : null;
+checks.push(['added card exposes a Remove control', !!removeBtn &&
+  Array.isArray(removeBtn.listeners.click) && removeBtn.listeners.click.length > 0]);
+if (removeBtn) removeBtn.fire('click');
+const cardsAfterRemove = truckCards().length;
+checks.push(['Remove truck decreases rendered truck-card count', cardsAfterRemove === cardsBeforeAdd]);
+// The removed truck no longer renders a card and its fleet row is reset to an
+// excluded blank placeholder (B=0, no data); the paired ID is kept on both
+// sheets so they never diverge.
+checks.push(['Remove truck drops the ID from the shown set', shownTruckIds().indexOf(newId) === -1]);
+const removedFleetRow = windowObj.__HS.state.fleet_register.rows.find((r) => String(r.A) === newId);
+checks.push(['Removed fleet row is an excluded blank placeholder',
+  !!removedFleetRow && removedFleetRow.B === 0 && removedFleetRow.E == null && removedFleetRow.K == null]);
+const outAfterRemove = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+checks.push(['computeFleet valid after remove', !!outAfterRemove &&
+  outAfterRemove.results.truckCount.keep_ice === cardsAfterRemove]);
+// Reset-to-demonstration restores the original 6-truck card set unchanged.
+byId['reset-btn'].fire('click');
+checks.push(['Reset restores the 6-truck demonstration card set', truckCards().length === 6]);
+checks.push(['Reset keeps the money view at the demo Keep ICE TCO',
+  byId['results-body'].innerHTML.indexOf('2,081,781') !== -1]);
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- FEAT-004: input OVERLAY panel (fixed drawer over a scrim, no reflow) ---
 // The inputs now live in a position:fixed overlay (#input-col) floating over a
@@ -580,6 +815,177 @@ checks.push(['confidence badge wording is honest (not a confirmed win)',
   confText.innerHTML.indexOf('Confirmed win') === -1]);
 checks.push(['confidence badge driven by real claim status (names the status)',
   confText.innerHTML.indexOf('Total incomplete') !== -1]);
+
+// ---- FEAT-004: Portfolio stage ranked model-matching guide ------------------
+// The Portfolio stage (#stage-portfolio) is no longer an honest 'Coming next'
+// placeholder: it renders a ranked per-model table driven by the LIVE fleet
+// duty, with per-row reasons and the mandatory honesty caveats. The verdicts
+// come from the additive fit-rules module (window.HSPortfolioFit); they never
+// touch computeFleet. These assertions walk the built DOM nodes (the renderer
+// builds real nodes via createElement/appendChild, not an innerHTML string).
+
+// (1) The old placeholder assertion, UPDATED not deleted: the Portfolio stage
+// markup must NO LONGER carry the 'Coming next' placeholder, and must instead
+// carry the real ranked-guide chrome (a #portfolio-table + the Select wording).
+const portfolioStageMarkup = (() => {
+  const i = html.indexOf('id="stage-portfolio"');
+  if (i === -1) return '';
+  const j = html.indexOf('</section>', i);
+  return j === -1 ? html.slice(i) : html.slice(i, j);
+})();
+checks.push(['Portfolio stage drops the old Coming next placeholder',
+  portfolioStageMarkup.indexOf('Coming next') === -1]);
+checks.push(['Portfolio stage renders the real ranked guide chrome',
+  portfolioStageMarkup.indexOf('id="portfolio-table"') !== -1 &&
+  /Select\s*\/\s*Confirm this model/.test(portfolioStageMarkup)]);
+// The three verdict-tier words are explained in the stage chrome.
+checks.push(['Portfolio stage names the three verdict tiers',
+  /Best fit/.test(portfolioStageMarkup) && /Fits with caveats/.test(portfolioStageMarkup) &&
+  /Does not fit/.test(portfolioStageMarkup)]);
+// The honesty notice about Unconfirmed is present and prominent.
+checks.push(['Portfolio stage shows the Unconfirmed honesty notice',
+  portfolioStageMarkup.indexOf('Unconfirmed') !== -1]);
+
+// (2) The fit-rules module is exposed on the page namespace (inlined, not a
+// network import) and is SEPARATE from the engine namespace.
+checks.push(['portfolio fit module exposed on window.HSPortfolioFit',
+  !!windowObj.HSPortfolioFit && typeof windowObj.HSPortfolioFit.rankModelsForInputs === 'function']);
+checks.push(['portfolio fit module is separate from the engine',
+  windowObj.HSPortfolioFit !== windowObj.HSEngine &&
+  typeof windowObj.HSPortfolioFit.scoreModelFit === 'function']);
+
+// (3) The rendered body holds a RANKED model list. Walk the built rows and
+// collect the model names from the data-portfolio-model rows, plus the text of
+// each row, so we can assert tiers + caveats appear in the rendered output.
+const pfBody = byId['portfolio-body'];
+function textOf(node) {
+  if (!node || typeof node !== 'object') return '';
+  let t = (node._text || '');
+  (node.children || []).forEach((c) => { t += ' ' + textOf(c); });
+  return t;
+}
+const pfModelRows = (pfBody.children || []).filter(
+  (r) => r.attributes && r.attributes['data-portfolio-model'] != null);
+const pfModelNames = pfModelRows.map((r) => r.attributes['data-portfolio-model']);
+// All seven catalogue models rank in the live demo view.
+const catalogueNames = windowObj.__HS.state.products.rows
+  .filter((p) => p.A != null).map((p) => p.A);
+checks.push(['Portfolio renders a ranked row per catalogue model (7)',
+  pfModelRows.length === catalogueNames.length && catalogueNames.length === 7]);
+checks.push(['Portfolio ranked list carries the catalogue model names',
+  catalogueNames.every((n) => pfModelNames.indexOf(n) !== -1)]);
+// The rows are numbered 1..N in order (a ranking, not an unordered list).
+const pfRankCells = pfModelRows.map((r) => (r.children && r.children[0] && r.children[0]._text) || '');
+checks.push(['Portfolio rows are numbered in rank order (1..N)',
+  pfRankCells.every((c, i) => String(c) === String(i + 1))]);
+
+// (4) The verdict wording for the honest tier is rendered. Every catalogue
+// model is 'Unconfirmed' today, so each rendered verdict is the honest
+// 'Fits with caveats - insufficient data', and NONE is a clean 'Best fit'.
+const pfBodyText = textOf(pfBody);
+checks.push(['Portfolio renders the Fits-with-caveats insufficient-data verdict',
+  pfBodyText.indexOf('Fits with caveats - insufficient data') !== -1]);
+checks.push(['Portfolio shows NO clean Best fit while catalogue is Unconfirmed',
+  pfBodyText.indexOf('Best fit') === -1]);
+// At least one honesty caveat tag ('insufficient data') is rendered as a tag.
+function collectByAttr(node, attr, acc) {
+  if (!node || typeof node !== 'object') return acc;
+  if (node.attributes && attr in node.attributes) acc.push(node);
+  (node.children || []).forEach((c) => collectByAttr(c, attr, acc));
+  return acc;
+}
+const caveatTags = collectByAttr(pfBody, 'data-portfolio-caveat', []);
+checks.push(['Portfolio shows at least one insufficient-data honesty caveat tag',
+  caveatTags.length >= 1 &&
+  caveatTags.every((t) => /(^|\s)unknown(\s|$)/.test(t.className || ''))]);
+// Per-row reasons are rendered (the 'Why this verdict' audit rows with a list).
+const pfReasonRows = (pfBody.children || []).filter(
+  (r) => r.attributes && r.attributes['data-portfolio-reasons'] != null);
+checks.push(['Portfolio renders a per-row reasons audit row for each model',
+  pfReasonRows.length === pfModelRows.length]);
+checks.push(['Portfolio reasons name payload / range / charge checks',
+  textOf(pfBody).indexOf('Payload') !== -1 && textOf(pfBody).indexOf('Range/energy') !== -1 &&
+  textOf(pfBody).indexOf('Charge power') !== -1]);
+// The duty line reflects the live fleet duty (peak cargo / route).
+checks.push(['Portfolio duty line reflects the live fleet duty',
+  (byId['portfolio-duty-line']._text || '').indexOf('Peak cargo') !== -1]);
+
+// (5) Live re-rank: changing a DUTY input re-ranks the guide. Drive the peak
+// cargo (fleet col H) on every included truck above the smallest catalogue
+// payload (SRM T3EV = 3500 kg) so that model flips to 'Does not fit' and sinks
+// below the models that still clear payload. This proves the guide is driven by
+// the same recompute path as the money view.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+const beforeRankNames = pfModelNames.slice();
+checks.push(['SRM T3EV is not already Does-not-fit at the light demo duty',
+  (() => {
+    const srmRow = pfModelRows.find((r) => r.attributes['data-portfolio-model'] === 'SRM T3EV');
+    return !!srmRow && textOf(srmRow).indexOf('Does not fit') === -1;
+  })()]);
+windowObj.__HS.state.fleet_register.rows.forEach((r) => { if (r.B === 1) r.H = 4000; });
+windowObj.__HS.recompute();
+const pfBodyAfter = byId['portfolio-body'];
+const pfRowsAfter = (pfBodyAfter.children || []).filter(
+  (r) => r.attributes && r.attributes['data-portfolio-model'] != null);
+const srmAfter = pfRowsAfter.find((r) => r.attributes['data-portfolio-model'] === 'SRM T3EV');
+checks.push(['raising peak cargo flips SRM T3EV to Does not fit (live re-rank)',
+  !!srmAfter && textOf(srmAfter).indexOf('Does not fit') !== -1]);
+// The does-not-fit model now ranks AFTER a still-fitting model (re-ranking).
+const srmIdxAfter = pfRowsAfter.findIndex((r) => r.attributes['data-portfolio-model'] === 'SRM T3EV');
+const fittingIdxAfter = pfRowsAfter.findIndex(
+  (r) => textOf(r).indexOf('Does not fit') === -1);
+checks.push(['re-rank orders a fitting model ahead of the does-not-fit SRM',
+  fittingIdxAfter !== -1 && srmIdxAfter !== -1 && fittingIdxAfter < srmIdxAfter]);
+// Restore the demo duty.
+byId['reset-btn'].fire('click');
+
+// (6) Select / Confirm a model ties into FEAT-002 product-spec loading: it
+// loads the chosen model into the first EV-action replacement row and the
+// Unconfirmed caveat survives. Fire the Select button for a known model.
+function findSelectBtn(body, name) {
+  let hit = null;
+  (function walk(node) {
+    if (hit || !node || typeof node !== 'object') return;
+    if ((node.tagName || '') === 'button' && node.attributes &&
+        node.attributes['data-portfolio-select'] === name) { hit = node; return; }
+    (node.children || []).forEach(walk);
+  })(body);
+  return hit;
+}
+// Choose ChengLong L2EV (a mid-catalogue model distinct from any demo default).
+const pickName = 'ChengLong L2EV';
+const selBtn = findSelectBtn(byId['portfolio-body'], pickName);
+checks.push(['Portfolio row exposes a Select button', !!selBtn &&
+  Array.isArray(selBtn.listeners.click) && selBtn.listeners.click.length > 0]);
+const pickProdRow = windowObj.__HS.state.products.rows.find((p) => p.A === pickName);
+const oc57b = windowObj.__HS.state.operating_costs.rows.find((r) => r._row === 57);
+const acqAdderB = (oc57b && typeof oc57b.values.B === 'number') ? oc57b.values.B : 0;
+if (selBtn) selBtn.fire('click');
+// After Select, the first EV-action replacement row carries the chosen model
+// and the loaded specs (EV quote = prod.I + oc[57], battery = prod.D, kWh/km =
+// prod.E), matching the FEAT-002 loader.
+const replAfterSelect = windowObj.__HS.state.replacement_plan.rows.filter((r) => r.A != null);
+const loadedRow = replAfterSelect.find((r) => r.B === pickName && (r.O === 'EV' || r.R === 'EV'));
+checks.push(['Select loads the chosen model into an EV-action replacement row',
+  !!loadedRow]);
+checks.push(['Select loads EV quote = prod.I + oc[57] (FEAT-002 loader reused)',
+  !!loadedRow && loadedRow.D === pickProdRow.I + acqAdderB]);
+checks.push(['Select loads usable battery kWh = prod.D',
+  !!loadedRow && loadedRow.E === pickProdRow.D]);
+checks.push(['Select loads EV kWh/km = prod.E',
+  !!loadedRow && loadedRow.F === pickProdRow.E]);
+// The Unconfirmed caveat survives: the chosen catalogue model's payload/body-
+// fit status is still 'Unconfirmed', and the Portfolio verdict for it is still
+// the honest insufficient-data caveat (never silently upgraded by selection).
+checks.push(['Select preserves the Unconfirmed payload/body-fit status',
+  pickProdRow.L === 'Unconfirmed']);
+// computeFleet still returns a valid result after the selection (the tie-in did
+// not break the engine path).
+const outAfterSelect = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+checks.push(['computeFleet valid after Portfolio Select', !!outAfterSelect && !!outAfterSelect.results]);
+// Restore the demo so later assertions see the baseline.
+byId['reset-btn'].fire('click');
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html
