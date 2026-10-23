@@ -30,12 +30,15 @@ import { dirname, resolve } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '..');
 const enginePath = resolve(repoRoot, 'src/engine.js');
+const portfolioPath = resolve(repoRoot, 'src/portfolio_fit.js');
 const fixturePath = resolve(repoRoot, 'tools/fixtures/demo_case.json');
 const seedsPath = resolve(repoRoot, 'tools/fixtures/prospect_seeds.json');
 const indexPath = resolve(repoRoot, 'index.html');
 
 const engineSrc = readFileSync(enginePath, 'utf8');
 const engineHash = createHash('sha256').update(engineSrc).digest('hex');
+const portfolioSrc = readFileSync(portfolioPath, 'utf8');
+const portfolioHash = createHash('sha256').update(portfolioSrc).digest('hex');
 const fixture = JSON.parse(readFileSync(fixturePath, 'utf8'));
 const seeds = JSON.parse(readFileSync(seedsPath, 'utf8'));
 
@@ -48,6 +51,19 @@ let inlineEngine = engineSrc
 
 // Expose computeFleet + NA + scoreProspect on a namespace used by the page script.
 inlineEngine += '\nwindow.HSEngine = { computeFleet: computeFleet, NA: NA, scoreProspect: scoreProspect };\n';
+
+// Strip ES-module syntax from the ADDITIVE portfolio fit-rules module the same
+// way as the engine, and expose its API on a window namespace. This module is
+// NEW computation layered on top of the frozen engine: it does NOT import or
+// alter src/engine.js / computeFleet.
+let inlinePortfolio = portfolioSrc
+  .replace(/^export\s+default\s+\{[\s\S]*?\};\s*$/m, '')
+  .replace(/^export\s+/gm, '');
+inlinePortfolio += '\nwindow.HSPortfolioFit = { ' +
+  'rankModels: rankModels, rankModelsForInputs: rankModelsForInputs, ' +
+  'scoreModelFit: scoreModelFit, deriveDuty: deriveDuty, ' +
+  'productAttributes: productAttributes, FIT_THRESHOLDS: FIT_THRESHOLDS, ' +
+  'VERDICT_RANK: VERDICT_RANK, FIT_UNCONFIRMED: FIT_UNCONFIRMED };\n';
 
 const engineBlock =
   `<!-- ENGINE:BEGIN  generated from src/engine.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
@@ -64,6 +80,12 @@ const prospectsBlock =
   `<!-- PROSPECTS:BEGIN  generated from tools/fixtures/prospect_seeds.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<script>\nwindow.HSProspectSeeds = ${JSON.stringify(seeds)};\n</script>\n` +
   `<!-- PROSPECTS:END -->`;
+
+const portfolioBlock =
+  `<!-- PORTFOLIO:BEGIN  generated from src/portfolio_fit.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<!-- src/portfolio_fit.js SHA-256: ${portfolioHash} -->\n` +
+  `<script>\n${inlinePortfolio}</script>\n` +
+  `<!-- PORTFOLIO:END -->`;
 
 let html = readFileSync(indexPath, 'utf8');
 
@@ -98,9 +120,17 @@ html = replaceBlock(
   'PROSPECTS',
   prospectsBlock,
 );
+html = replaceBlock(
+  html,
+  /<!-- PORTFOLIO:BEGIN[\s\S]*?-->/,
+  /<!-- PORTFOLIO:END -->/,
+  'PORTFOLIO',
+  portfolioBlock,
+);
 
 writeFileSync(indexPath, html);
 console.log(`index.html regenerated.`);
 console.log(`  engine  : src/engine.js (${engineSrc.length} bytes, sha256 ${engineHash.slice(0, 16)}...)`);
+console.log(`  portfolio: src/portfolio_fit.js (${portfolioSrc.length} bytes, sha256 ${portfolioHash.slice(0, 16)}...)`);
 console.log(`  demo    : tools/fixtures/demo_case.json inputs embedded`);
 console.log(`  prospects: tools/fixtures/prospect_seeds.json (${seeds.cases.length} seed cases) embedded`);

@@ -55,7 +55,9 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   // FEAT-005: journey stepper, stage viewports + confidence badge hooks.
   'stepper','step-customer','step-portfolio','step-tco','step-charging','step-proposal',
   'stage-customer','stage-portfolio','stage-tco','stage-charging','stage-proposal',
-  'confidence-badge','confidence-dot','confidence-text','stage-open-inputs'];
+  'confidence-badge','confidence-dot','confidence-text','stage-open-inputs',
+  // FEAT-004 (portfolio): ranked model-matching guide hooks.
+  'portfolio-body','portfolio-duty-line','portfolio-honesty'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
 
 const document = {
@@ -813,6 +815,177 @@ checks.push(['confidence badge wording is honest (not a confirmed win)',
   confText.innerHTML.indexOf('Confirmed win') === -1]);
 checks.push(['confidence badge driven by real claim status (names the status)',
   confText.innerHTML.indexOf('Total incomplete') !== -1]);
+
+// ---- FEAT-004: Portfolio stage ranked model-matching guide ------------------
+// The Portfolio stage (#stage-portfolio) is no longer an honest 'Coming next'
+// placeholder: it renders a ranked per-model table driven by the LIVE fleet
+// duty, with per-row reasons and the mandatory honesty caveats. The verdicts
+// come from the additive fit-rules module (window.HSPortfolioFit); they never
+// touch computeFleet. These assertions walk the built DOM nodes (the renderer
+// builds real nodes via createElement/appendChild, not an innerHTML string).
+
+// (1) The old placeholder assertion, UPDATED not deleted: the Portfolio stage
+// markup must NO LONGER carry the 'Coming next' placeholder, and must instead
+// carry the real ranked-guide chrome (a #portfolio-table + the Select wording).
+const portfolioStageMarkup = (() => {
+  const i = html.indexOf('id="stage-portfolio"');
+  if (i === -1) return '';
+  const j = html.indexOf('</section>', i);
+  return j === -1 ? html.slice(i) : html.slice(i, j);
+})();
+checks.push(['Portfolio stage drops the old Coming next placeholder',
+  portfolioStageMarkup.indexOf('Coming next') === -1]);
+checks.push(['Portfolio stage renders the real ranked guide chrome',
+  portfolioStageMarkup.indexOf('id="portfolio-table"') !== -1 &&
+  /Select\s*\/\s*Confirm this model/.test(portfolioStageMarkup)]);
+// The three verdict-tier words are explained in the stage chrome.
+checks.push(['Portfolio stage names the three verdict tiers',
+  /Best fit/.test(portfolioStageMarkup) && /Fits with caveats/.test(portfolioStageMarkup) &&
+  /Does not fit/.test(portfolioStageMarkup)]);
+// The honesty notice about Unconfirmed is present and prominent.
+checks.push(['Portfolio stage shows the Unconfirmed honesty notice',
+  portfolioStageMarkup.indexOf('Unconfirmed') !== -1]);
+
+// (2) The fit-rules module is exposed on the page namespace (inlined, not a
+// network import) and is SEPARATE from the engine namespace.
+checks.push(['portfolio fit module exposed on window.HSPortfolioFit',
+  !!windowObj.HSPortfolioFit && typeof windowObj.HSPortfolioFit.rankModelsForInputs === 'function']);
+checks.push(['portfolio fit module is separate from the engine',
+  windowObj.HSPortfolioFit !== windowObj.HSEngine &&
+  typeof windowObj.HSPortfolioFit.scoreModelFit === 'function']);
+
+// (3) The rendered body holds a RANKED model list. Walk the built rows and
+// collect the model names from the data-portfolio-model rows, plus the text of
+// each row, so we can assert tiers + caveats appear in the rendered output.
+const pfBody = byId['portfolio-body'];
+function textOf(node) {
+  if (!node || typeof node !== 'object') return '';
+  let t = (node._text || '');
+  (node.children || []).forEach((c) => { t += ' ' + textOf(c); });
+  return t;
+}
+const pfModelRows = (pfBody.children || []).filter(
+  (r) => r.attributes && r.attributes['data-portfolio-model'] != null);
+const pfModelNames = pfModelRows.map((r) => r.attributes['data-portfolio-model']);
+// All seven catalogue models rank in the live demo view.
+const catalogueNames = windowObj.__HS.state.products.rows
+  .filter((p) => p.A != null).map((p) => p.A);
+checks.push(['Portfolio renders a ranked row per catalogue model (7)',
+  pfModelRows.length === catalogueNames.length && catalogueNames.length === 7]);
+checks.push(['Portfolio ranked list carries the catalogue model names',
+  catalogueNames.every((n) => pfModelNames.indexOf(n) !== -1)]);
+// The rows are numbered 1..N in order (a ranking, not an unordered list).
+const pfRankCells = pfModelRows.map((r) => (r.children && r.children[0] && r.children[0]._text) || '');
+checks.push(['Portfolio rows are numbered in rank order (1..N)',
+  pfRankCells.every((c, i) => String(c) === String(i + 1))]);
+
+// (4) The verdict wording for the honest tier is rendered. Every catalogue
+// model is 'Unconfirmed' today, so each rendered verdict is the honest
+// 'Fits with caveats - insufficient data', and NONE is a clean 'Best fit'.
+const pfBodyText = textOf(pfBody);
+checks.push(['Portfolio renders the Fits-with-caveats insufficient-data verdict',
+  pfBodyText.indexOf('Fits with caveats - insufficient data') !== -1]);
+checks.push(['Portfolio shows NO clean Best fit while catalogue is Unconfirmed',
+  pfBodyText.indexOf('Best fit') === -1]);
+// At least one honesty caveat tag ('insufficient data') is rendered as a tag.
+function collectByAttr(node, attr, acc) {
+  if (!node || typeof node !== 'object') return acc;
+  if (node.attributes && attr in node.attributes) acc.push(node);
+  (node.children || []).forEach((c) => collectByAttr(c, attr, acc));
+  return acc;
+}
+const caveatTags = collectByAttr(pfBody, 'data-portfolio-caveat', []);
+checks.push(['Portfolio shows at least one insufficient-data honesty caveat tag',
+  caveatTags.length >= 1 &&
+  caveatTags.every((t) => /(^|\s)unknown(\s|$)/.test(t.className || ''))]);
+// Per-row reasons are rendered (the 'Why this verdict' audit rows with a list).
+const pfReasonRows = (pfBody.children || []).filter(
+  (r) => r.attributes && r.attributes['data-portfolio-reasons'] != null);
+checks.push(['Portfolio renders a per-row reasons audit row for each model',
+  pfReasonRows.length === pfModelRows.length]);
+checks.push(['Portfolio reasons name payload / range / charge checks',
+  textOf(pfBody).indexOf('Payload') !== -1 && textOf(pfBody).indexOf('Range/energy') !== -1 &&
+  textOf(pfBody).indexOf('Charge power') !== -1]);
+// The duty line reflects the live fleet duty (peak cargo / route).
+checks.push(['Portfolio duty line reflects the live fleet duty',
+  (byId['portfolio-duty-line']._text || '').indexOf('Peak cargo') !== -1]);
+
+// (5) Live re-rank: changing a DUTY input re-ranks the guide. Drive the peak
+// cargo (fleet col H) on every included truck above the smallest catalogue
+// payload (SRM T3EV = 3500 kg) so that model flips to 'Does not fit' and sinks
+// below the models that still clear payload. This proves the guide is driven by
+// the same recompute path as the money view.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+const beforeRankNames = pfModelNames.slice();
+checks.push(['SRM T3EV is not already Does-not-fit at the light demo duty',
+  (() => {
+    const srmRow = pfModelRows.find((r) => r.attributes['data-portfolio-model'] === 'SRM T3EV');
+    return !!srmRow && textOf(srmRow).indexOf('Does not fit') === -1;
+  })()]);
+windowObj.__HS.state.fleet_register.rows.forEach((r) => { if (r.B === 1) r.H = 4000; });
+windowObj.__HS.recompute();
+const pfBodyAfter = byId['portfolio-body'];
+const pfRowsAfter = (pfBodyAfter.children || []).filter(
+  (r) => r.attributes && r.attributes['data-portfolio-model'] != null);
+const srmAfter = pfRowsAfter.find((r) => r.attributes['data-portfolio-model'] === 'SRM T3EV');
+checks.push(['raising peak cargo flips SRM T3EV to Does not fit (live re-rank)',
+  !!srmAfter && textOf(srmAfter).indexOf('Does not fit') !== -1]);
+// The does-not-fit model now ranks AFTER a still-fitting model (re-ranking).
+const srmIdxAfter = pfRowsAfter.findIndex((r) => r.attributes['data-portfolio-model'] === 'SRM T3EV');
+const fittingIdxAfter = pfRowsAfter.findIndex(
+  (r) => textOf(r).indexOf('Does not fit') === -1);
+checks.push(['re-rank orders a fitting model ahead of the does-not-fit SRM',
+  fittingIdxAfter !== -1 && srmIdxAfter !== -1 && fittingIdxAfter < srmIdxAfter]);
+// Restore the demo duty.
+byId['reset-btn'].fire('click');
+
+// (6) Select / Confirm a model ties into FEAT-002 product-spec loading: it
+// loads the chosen model into the first EV-action replacement row and the
+// Unconfirmed caveat survives. Fire the Select button for a known model.
+function findSelectBtn(body, name) {
+  let hit = null;
+  (function walk(node) {
+    if (hit || !node || typeof node !== 'object') return;
+    if ((node.tagName || '') === 'button' && node.attributes &&
+        node.attributes['data-portfolio-select'] === name) { hit = node; return; }
+    (node.children || []).forEach(walk);
+  })(body);
+  return hit;
+}
+// Choose ChengLong L2EV (a mid-catalogue model distinct from any demo default).
+const pickName = 'ChengLong L2EV';
+const selBtn = findSelectBtn(byId['portfolio-body'], pickName);
+checks.push(['Portfolio row exposes a Select button', !!selBtn &&
+  Array.isArray(selBtn.listeners.click) && selBtn.listeners.click.length > 0]);
+const pickProdRow = windowObj.__HS.state.products.rows.find((p) => p.A === pickName);
+const oc57b = windowObj.__HS.state.operating_costs.rows.find((r) => r._row === 57);
+const acqAdderB = (oc57b && typeof oc57b.values.B === 'number') ? oc57b.values.B : 0;
+if (selBtn) selBtn.fire('click');
+// After Select, the first EV-action replacement row carries the chosen model
+// and the loaded specs (EV quote = prod.I + oc[57], battery = prod.D, kWh/km =
+// prod.E), matching the FEAT-002 loader.
+const replAfterSelect = windowObj.__HS.state.replacement_plan.rows.filter((r) => r.A != null);
+const loadedRow = replAfterSelect.find((r) => r.B === pickName && (r.O === 'EV' || r.R === 'EV'));
+checks.push(['Select loads the chosen model into an EV-action replacement row',
+  !!loadedRow]);
+checks.push(['Select loads EV quote = prod.I + oc[57] (FEAT-002 loader reused)',
+  !!loadedRow && loadedRow.D === pickProdRow.I + acqAdderB]);
+checks.push(['Select loads usable battery kWh = prod.D',
+  !!loadedRow && loadedRow.E === pickProdRow.D]);
+checks.push(['Select loads EV kWh/km = prod.E',
+  !!loadedRow && loadedRow.F === pickProdRow.E]);
+// The Unconfirmed caveat survives: the chosen catalogue model's payload/body-
+// fit status is still 'Unconfirmed', and the Portfolio verdict for it is still
+// the honest insufficient-data caveat (never silently upgraded by selection).
+checks.push(['Select preserves the Unconfirmed payload/body-fit status',
+  pickProdRow.L === 'Unconfirmed']);
+// computeFleet still returns a valid result after the selection (the tie-in did
+// not break the engine path).
+const outAfterSelect = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+checks.push(['computeFleet valid after Portfolio Select', !!outAfterSelect && !!outAfterSelect.results]);
+// Restore the demo so later assertions see the baseline.
+byId['reset-btn'].fire('click');
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html
