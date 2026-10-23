@@ -154,6 +154,156 @@ checks.push(['account sort puts Evergreen on top',
   afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('DEMONSTRATION')]);
 checks.push(['account sort Yong Wen before demo', afterHtml.indexOf('Yong Wen') < afterHtml.indexOf('DEMONSTRATION')]);
 
+// ---- Live inline-SVG charts (FEAT-003) ------------------------------------
+// The Charts module renders inline SVG strings into the chart containers from
+// the SAME engine output as the table. These assertions prove: (a) each chart
+// container holds emitted SVG markup after the controllers run; (b) firing a
+// sensitivity slider 'input' event redraws the sensitivity chart (live update);
+// (c) changing an amber input redraws the comparison charts (live update);
+// (d) an n.a. total is drawn as a hatched 'n.a.' marker, never a zero bar.
+const chartIds = ['chart-cumulative','chart-total','chart-target','chart-day0','chart-sens'];
+chartIds.forEach((id) => {
+  const h = byId[id] ? byId[id].innerHTML : '';
+  checks.push([id + ' emits <svg>', h.indexOf('<svg') !== -1]);
+});
+// The cumulative chart draws real geometry (polyline/circle for the numeric runs).
+const cumHtml = byId['chart-cumulative'].innerHTML;
+checks.push(['cumulative chart draws polyline/point',
+  cumHtml.indexOf('polyline') !== -1 || cumHtml.indexOf('<circle') !== -1]);
+// The bar charts draw <rect> bars.
+checks.push(['total chart draws rect bars', byId['chart-total'].innerHTML.indexOf('<rect') !== -1]);
+checks.push(['day0 chart draws rect bars', byId['chart-day0'].innerHTML.indexOf('<rect') !== -1]);
+
+// n.a. is honoured, not drawn as a zero bar. For the demo case plan_a/plan_b
+// totalEconomicTco is n.a., so the TCO bar chart MUST carry an 'n.a.' marker and
+// MUST use the hatched placeholder pattern (url(#hatch_...)) rather than a solid
+// full-height-from-zero bar implying zero cost.
+checks.push(['demo plan_a Total is n.a.', r.totalEconomicTco.plan_a === NA]);
+checks.push(['demo plan_b Total is n.a.', r.totalEconomicTco.plan_b === NA]);
+const totalHtml = byId['chart-total'].innerHTML;
+checks.push(['total chart marks n.a. (not zero bar)',
+  totalHtml.indexOf('n.a.') !== -1 && totalHtml.indexOf('url(#hatch') !== -1]);
+const day0Html = byId['chart-day0'].innerHTML;
+checks.push(['day0 chart marks n.a. (not zero bar)',
+  day0Html.indexOf('n.a.') !== -1 && day0Html.indexOf('url(#hatch') !== -1]);
+
+// Live update #1: dragging a sensitivity slider ('input' event) redraws the
+// sensitivity-response chart. The sliders are appended under #sens-controls as
+// panels [h3, input[type=range], div]; grab the first slider and fire 'input'.
+const sensControls = byId['sens-controls'];
+let sensSlider = null;
+if (sensControls && sensControls.children.length) {
+  const panel0 = sensControls.children[0];
+  sensSlider = panel0.children.find((c) => c.tagName === 'input') || panel0.children[1];
+}
+checks.push(['sensitivity slider present', !!sensSlider]);
+const sensBefore = byId['chart-sens'].innerHTML;
+if (sensSlider) {
+  sensSlider.value = String(Number(sensSlider.value) + 1);
+  sensSlider.fire('input');
+}
+const sensAfter = byId['chart-sens'].innerHTML;
+checks.push(['sensitivity chart updates live on slider input',
+  !!sensSlider && sensBefore !== sensAfter && sensAfter.indexOf('<svg') !== -1]);
+
+// Live update #2: changing an amber input and recomputing redraws the
+// comparison charts (they read from the same computeFleet(state) output).
+const totalBefore = byId['chart-total'].innerHTML;
+windowObj.__HS.state.energy_and_charging.rows.forEach((row) => {
+  if (row._row === 7) { row.values.B = 99; row.values.C = 99; }
+});
+windowObj.__HS.recompute();
+const totalAfter = byId['chart-total'].innerHTML;
+checks.push(['comparison charts update live on input change',
+  totalBefore !== totalAfter && totalAfter.indexOf('<svg') !== -1]);
+
+// ---- App-screen layout + honesty invariants (FEAT-004) --------------------
+// Static checks a DOM harness CAN see, read straight from the raw index.html
+// markup (the `html` string already loaded above). These lock in the taste-skill
+// app-screen discipline applied in FEAT-002/003 WITHOUT weakening any prior
+// assertion: the screen's one question is the h1 and is de-branded; the two
+// calculator panels and the charts region exist and are populated; surfaces are
+// flat (no shadow/gradient in the page chrome); the page carries no external
+// runtime reference; one gutter + equal margins are defined as single tokens;
+// figures use tabular numerals; the amber-editable legend and evidence tags are
+// present; and the phone fold (<=700px media query) exists.
+
+// The chrome is everything before the first generated block. Scope the "no
+// external ref / no shadow / no gradient" checks to the hand-written chrome so
+// provenance URL strings inside the generated DEMO/PROSPECTS data never trip it.
+const chromeEnd = html.indexOf('<!-- ENGINE:BEGIN');
+const chrome = chromeEnd === -1 ? html : html.slice(0, chromeEnd);
+
+// h1: the screen's one question, de-branded.
+const h1m = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+const h1text = h1m ? h1m[1].replace(/<[^>]+>/g, '').trim() : '';
+checks.push(['h1 present', !!h1text]);
+checks.push(['h1 is the question (cheapest over 10 years)',
+  /cheapest over 10 years/i.test(h1text)]);
+checks.push(['h1 free of brand name', h1text.indexOf('Hong Seh') === -1]);
+
+// <title> de-branded.
+const titlem = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+const titletext = titlem ? titlem[1].trim() : '';
+checks.push(['title free of brand name', titletext.indexOf('Hong Seh') === -1]);
+
+// No page-visible 'Hong Seh' anywhere in the hand-written chrome (the only
+// remaining occurrences are the engine provenance comment + oc[68] data key +
+// generated DEMO/PROSPECTS data, all below ENGINE:BEGIN).
+checks.push(['no brand name in page chrome', chrome.indexOf('Hong Seh') === -1]);
+
+// Two-panel calculator layout: both column containers exist in the markup.
+checks.push(['input panel container present', /id="input-col"/.test(chrome)]);
+checks.push(['results panel container present', /id="results-col"/.test(chrome)]);
+checks.push(['two-panel workspace grid present', /class="workspace"/.test(chrome)]);
+
+// Charts region + the five chart containers exist and are populated (the chart
+// container id checks above already prove each holds emitted <svg>).
+checks.push(['charts region present', /id="charts-region"/.test(chrome)]);
+chartIds.forEach((id) => {
+  checks.push([id + ' container in markup', chrome.indexOf('id="' + id + '"') !== -1]);
+});
+
+// Flat surfaces: no decorative shadow or gradient at rest in the chrome.
+checks.push(['no box-shadow in chrome', !/box-shadow/i.test(chrome)]);
+checks.push(['no linear-gradient in chrome', !/linear-gradient/i.test(chrome)]);
+checks.push(['no radial-gradient in chrome', !/radial-gradient/i.test(chrome)]);
+
+// Offline / self-contained: no external runtime resource added to the chrome.
+checks.push(['no external <script src> in chrome', !/<script[^>]*\ssrc=/i.test(chrome)]);
+checks.push(['no external <link href> in chrome', !/<link[^>]*\shref=/i.test(chrome)]);
+
+// One gutter value and equal outer margins, defined once as CSS custom props.
+checks.push(['single --gutter token defined', /--gutter\s*:/.test(chrome)]);
+checks.push(['single --margin token defined', /--margin\s*:/.test(chrome)]);
+checks.push(['gutter applied via var(--gutter)', /gap:\s*var\(--gutter\)/.test(chrome)]);
+checks.push(['equal margins applied via var(--margin)',
+  /padding:\s*[^;]*var\(--margin\)/.test(chrome)]);
+
+// Figures are tabular numerals (aligned KPI/table digits).
+checks.push(['tabular-nums on figures', /font-variant-numeric:\s*tabular-nums/.test(chrome)]);
+
+// Nav / top bar folds on the phone: a <=700px media query exists.
+checks.push(['phone fold media query (<=700px) present',
+  /@media\s*\(\s*max-width:\s*700px\s*\)/.test(chrome)]);
+
+// Model-integrity signals preserved in the chrome: amber-editable legend text
+// and the four evidence tags are present.
+checks.push(['amber-editable legend present', /Amber\s*=\s*editable input/i.test(chrome)]);
+checks.push(['evidence tags present (Fact/Assumption/Inference/Unknown)',
+  /tag fact/.test(chrome) && /tag assumption/.test(chrome) &&
+  /tag inference/.test(chrome) && /tag unknown/.test(chrome)]);
+
+// One always-visible demonstration / diagnostic caveat (not a customer quote).
+checks.push(['demonstration caveat visible in chrome',
+  /not a customer quote/i.test(chrome) || /DEMONSTRATION/.test(chrome)]);
+
+// Results still render 'n.a.' and NOT a zero substituted for the sentinel: the
+// decision cards for the demo must show the n.a. headline for the n.a. plans,
+// never 'S$0' / '0%' in place of an unavailable figure.
+const decHtml = byId['decision-cards'].innerHTML;
+checks.push(['decision cards render n.a. (not 0 substitute)', decHtml.indexOf('n.a.') !== -1]);
+
 let ok = true;
 for (const [name, pass] of checks) {
   console.log((pass ? 'PASS  ' : 'FAIL  ') + name);

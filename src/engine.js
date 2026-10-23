@@ -949,7 +949,62 @@ export function computeFleet(inputs) {
   // Shape the headline results into the canonical structure.
   const results = shapeResults(perPlan, sites);
 
-  return { results, review, sites, perPlan, pathCount: allPaths.length, includedTruckCount };
+  // Purely additive: per-plan per-year cumulative economic-TCO series for charts.
+  // This reads the SAME frozen outputs (Annual build!N economic cost grouped by
+  // plan, plus the site economic schedule for plan codes 2/3) and changes no
+  // existing value. A year with no numeric contribution is the NA sentinel.
+  const annualSeries = buildAnnualSeries(annualByPlan, siteSchedules);
+
+  return { results, review, sites, perPlan, pathCount: allPaths.length, includedTruckCount, annualSeries };
+}
+
+/* Per-plan, per-year cumulative economic-TCO series (years 0..10), additive.
+ * For each plan code, each year's value is the sum of that year's numeric
+ * Annual-build economic costs (row.N); for site-bearing plans (2, 3) the
+ * per-year site economic cost is added when numeric. A year whose total has
+ * no numeric contribution is represented as the NA sentinel (never 0), so
+ * charts can show an honest gap rather than a false zero. */
+function buildAnnualSeries(annualByPlan, siteSchedules) {
+  const planKey = { 0: 'keep_ice', 1: 'all_new_ice', 2: 'plan_a', 3: 'plan_b' };
+  const out = {};
+  for (const code of [0, 1, 2, 3]) {
+    // Accumulate per-year numeric economic cost from Annual-build rows.
+    const yearSum = new Array(11).fill(0);
+    const yearHas = new Array(11).fill(false);
+    for (const r of annualByPlan[code]) {
+      const y = r.year;
+      if (y >= 0 && y <= 10 && isNum(r.N)) {
+        yearSum[y] += r.N;
+        yearHas[y] = true;
+      }
+    }
+    // Add the per-year site economic schedule for plan codes 2 and 3.
+    const sched = siteSchedules[code];
+    if (sched) {
+      for (let y = 0; y <= 10; y++) {
+        if (isNum(sched.econ[y])) {
+          yearSum[y] += sched.econ[y];
+          yearHas[y] = true;
+        }
+      }
+    }
+    const yearly = new Array(11);
+    const cumulative = new Array(11);
+    let running = 0;
+    let runningBroken = false;
+    for (let y = 0; y <= 10; y++) {
+      if (yearHas[y]) {
+        yearly[y] = yearSum[y];
+        running += yearSum[y];
+      } else {
+        yearly[y] = NA;
+        runningBroken = true;
+      }
+      cumulative[y] = runningBroken ? NA : running;
+    }
+    out[planKey[code]] = { yearly, cumulative };
+  }
+  return out;
 }
 
 function shapeResults(perPlan, sites) {
