@@ -32,7 +32,10 @@ function makeEl(tag) {
     addEventListener(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); },
     setAttribute(k, v) { this.attributes[k] = v; },
     getAttribute(k) { return this.attributes[k]; },
-    fire(ev) { (this.listeners[ev] || []).forEach((fn) => fn({ target: this, currentTarget: this })); },
+    fire(ev, extra) {
+      const evt = Object.assign({ target: this, currentTarget: this }, extra || {});
+      (this.listeners[ev] || []).forEach((fn) => fn(evt));
+    },
   };
 }
 const byId = {};
@@ -42,7 +45,9 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'prospect-body','prospect-sort','prospect-current-btn','prospect-note',
   // FEAT-002: curation split containers + toggleable sidebar hooks.
   'oc-form-adv','ec-body-adv','advanced-inputs',
-  'sidebar-toggle','sidebar-toggle-label','input-col','results-col'];
+  // FEAT-004: input overlay panel hooks (scrim + in-panel close button).
+  'sidebar-toggle','sidebar-toggle-label','input-col','results-col',
+  'input-scrim','input-overlay-close'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
 
 const document = {
@@ -409,23 +414,65 @@ checks.push(['advanced energy table populated', byId['ec-body-adv'].children.len
 checks.push(['advanced op-cost holds more rows than primary',
   byId['oc-form-adv'].children.length > byId['oc-form'].children.length]);
 
-// ---- FEAT-002 (B): sidebar toggle hides inputs / expands results -----------
-// The toggle exists, starts expanded (default OPEN), and a 'click' flips the
-// state: aria-expanded becomes 'false' and the input column is hidden
-// (display:none), which the shim tracks via style/attributes.
+// ---- FEAT-004: input OVERLAY panel (fixed drawer over a scrim, no reflow) ---
+// The inputs now live in a position:fixed overlay (#input-col) floating over a
+// scrim (#input-scrim); the results underneath keep full width and must NOT
+// reflow when the panel opens/closes. The trigger is a modal dialog opener:
+// aria-expanded on the trigger, aria-hidden on the panel, and an 'open' class
+// on both the panel and the scrim track the state. Default = CLOSED.
 const sbToggle = byId['sidebar-toggle'];
 const inputCol = byId['input-col'];
-checks.push(['sidebar-toggle exists', !!sbToggle]);
-checks.push(['sidebar-toggle registers a click listener',
+const inputScrim = byId['input-scrim'];
+const resultsCol = byId['results-col'];
+function hasOpen(elm) { return /(^|\s)open(\s|$)/.test(elm.className || ''); }
+checks.push(['overlay trigger exists', !!sbToggle]);
+checks.push(['overlay trigger registers a click listener',
   Array.isArray(sbToggle.listeners.click) && sbToggle.listeners.click.length > 0]);
-checks.push(['sidebar starts expanded (default open)',
-  sbToggle.getAttribute('aria-expanded') === 'true' && inputCol.style.display !== 'none']);
+checks.push(['overlay scrim element present', !!inputScrim]);
+checks.push(['overlay scrim registers a click listener',
+  Array.isArray(inputScrim.listeners.click) && inputScrim.listeners.click.length > 0]);
+// Default CLOSED: trigger collapsed, panel hidden, scrim not open.
+checks.push(['overlay starts closed (default)',
+  sbToggle.getAttribute('aria-expanded') === 'false' &&
+  inputCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(inputCol) && !hasOpen(inputScrim)]);
+// No-reflow invariant: capture the results column style before any open/close.
+// The results column must never have its width/display mutated by the overlay.
+const resWidthBefore = resultsCol.style.width;
+const resDisplayBefore = resultsCol.style.display;
+// Open via the trigger: aria-expanded true, panel aria-hidden false, both the
+// panel and the scrim carry the 'open' class.
 sbToggle.fire('click');
-checks.push(['sidebar toggle collapses input column on click',
-  sbToggle.getAttribute('aria-expanded') === 'false' && inputCol.style.display === 'none']);
+checks.push(['overlay opens on trigger click (aria + open class + scrim)',
+  sbToggle.getAttribute('aria-expanded') === 'true' &&
+  inputCol.getAttribute('aria-hidden') === 'false' &&
+  hasOpen(inputCol) && hasOpen(inputScrim)]);
+checks.push(['opening overlay does NOT reflow results column (no width/display change)',
+  resultsCol.style.width === resWidthBefore && resultsCol.style.display === resDisplayBefore]);
+// Toggle again closes it (trigger is a toggle).
 sbToggle.fire('click');
-checks.push(['sidebar toggle re-expands input column on second click',
-  sbToggle.getAttribute('aria-expanded') === 'true' && inputCol.style.display !== 'none']);
+checks.push(['overlay closes on second trigger click (toggle)',
+  sbToggle.getAttribute('aria-expanded') === 'false' &&
+  inputCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(inputCol) && !hasOpen(inputScrim)]);
+checks.push(['closing overlay does NOT reflow results column (no width/display change)',
+  resultsCol.style.width === resWidthBefore && resultsCol.style.display === resDisplayBefore]);
+// Scrim click dismisses: open, then fire a click on the scrim -> closed.
+sbToggle.fire('click');
+inputScrim.fire('click');
+checks.push(['overlay closes on scrim click',
+  sbToggle.getAttribute('aria-expanded') === 'false' &&
+  inputCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(inputCol) && !hasOpen(inputScrim)]);
+// Esc dismisses: open, then fire an Escape keydown on the panel -> closed. The
+// makeEl shim's fire(ev, extra) passes extra event props (here {key:'Escape'}).
+sbToggle.fire('click');
+checks.push(['overlay open before Esc', hasOpen(inputCol)]);
+inputCol.fire('keydown', { key: 'Escape' });
+checks.push(['overlay closes on Esc keydown',
+  sbToggle.getAttribute('aria-expanded') === 'false' &&
+  inputCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(inputCol) && !hasOpen(inputScrim)]);
 
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html
@@ -467,9 +514,15 @@ checks.push(['input panel container present', /id="input-col"/.test(chrome)]);
 checks.push(['results panel container present', /id="results-col"/.test(chrome)]);
 checks.push(['two-panel workspace grid present', /class="workspace"/.test(chrome)]);
 
-// Toggleable sidebar + curation hooks exist in the markup.
+// Input overlay trigger + curation hooks exist in the markup.
 checks.push(['sidebar-toggle present in markup', /id="sidebar-toggle"/.test(chrome)]);
-checks.push(['collapsed-workspace CSS present', /\.workspace\.collapsed/.test(chrome)]);
+// The inputs panel is a position:fixed overlay (no reflow) with a scrim.
+checks.push(['input overlay panel is position:fixed',
+  /#input-col\s*\{[^}]*position:\s*fixed/.test(chrome)]);
+checks.push(['input overlay scrim element present in markup',
+  /id="input-scrim"/.test(chrome)]);
+checks.push(['input overlay scrim CSS is position:fixed',
+  /#input-scrim\s*\{[^}]*position:\s*fixed/.test(chrome)]);
 checks.push(['advanced-inputs disclosure present', /id="advanced-inputs"/.test(chrome)]);
 checks.push(['advanced op-cost container present', /id="oc-form-adv"/.test(chrome)]);
 checks.push(['advanced energy container present', /id="ec-body-adv"/.test(chrome)]);
