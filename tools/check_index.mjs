@@ -57,6 +57,10 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   // FEAT-004: input overlay panel hooks (scrim + in-panel close button).
   'sidebar-toggle','sidebar-toggle-label','input-col','results-col',
   'input-scrim','input-overlay-close',
+  // FEAT-004: prospects top-accessed hover overlay hooks (mirrors the Inputs
+  // overlay): top-chrome trigger + scrim + in-panel close button + dialog.
+  'prospects-toggle','prospects-toggle-label','prospects-col',
+  'prospects-scrim','prospects-overlay-close','inputs',
   // FEAT-002: journey stepper (Customer stage removed -> 4 stages), stage
   // viewports + confidence badge hooks.
   'stepper','step-portfolio','step-tco','step-charging','step-proposal',
@@ -938,6 +942,101 @@ checks.push(['overlay closes on Esc keydown',
   sbToggle.getAttribute('aria-expanded') === 'false' &&
   inputCol.getAttribute('aria-hidden') === 'true' &&
   !hasOpen(inputCol) && !hasOpen(inputScrim)]);
+
+// ---- FEAT-004: PROSPECTS top-accessed hover overlay ------------------------
+// Fix 6 converts the former inline #prospects section into a top-accessed hover
+// screen built on the SAME overlay mechanism as the Inputs panel: a fixed drawer
+// (#prospects-col) over a scrim (#prospects-scrim), triggered from the top chrome
+// (#prospects-toggle). It is a modal dialog (role=dialog + aria-modal; aria-hidden
+// toggles with the open state), dismissed by the trigger (toggle), the in-panel
+// Close button, a scrim click, and Escape. Default = CLOSED. The results/content
+// underneath must NOT reflow when it opens/closes. These assertions mirror the
+// Inputs-overlay ones so the two share a consistent, polished pattern.
+const pxToggle = byId['prospects-toggle'];
+const pxCol = byId['prospects-col'];
+const pxScrim = byId['prospects-scrim'];
+const pxClose = byId['prospects-overlay-close'];
+// The prospects panel is a modal dialog in the markup with aria-modal + a
+// top-chrome trigger wired with aria-controls to it.
+checks.push(['prospects overlay panel is a dialog in markup (role=dialog + aria-modal)',
+  /id="prospects-col"[^>]*role="dialog"[^>]*aria-modal="true"/.test(html) ||
+  /id="prospects-col"[^>]*aria-modal="true"[^>]*role="dialog"/.test(html)]);
+checks.push(['prospects trigger in top chrome with aria-controls',
+  /id="prospects-toggle"[^>]*aria-controls="prospects-col"/.test(html)]);
+checks.push(['prospects trigger lives in the top chrome (topbar, before <main>)',
+  html.indexOf('class="topbar"') !== -1 &&
+  html.indexOf('id="prospects-toggle"') > html.indexOf('class="topbar"') &&
+  html.indexOf('id="prospects-toggle"') < html.indexOf('<main>')]);
+checks.push(['prospects overlay trigger exists', !!pxToggle]);
+checks.push(['prospects overlay trigger registers a click listener',
+  Array.isArray(pxToggle.listeners.click) && pxToggle.listeners.click.length > 0]);
+checks.push(['prospects overlay scrim present', !!pxScrim]);
+checks.push(['prospects overlay scrim registers a click listener',
+  Array.isArray(pxScrim.listeners.click) && pxScrim.listeners.click.length > 0]);
+checks.push(['prospects overlay close button registers a click listener',
+  Array.isArray(pxClose.listeners.click) && pxClose.listeners.click.length > 0]);
+// Default CLOSED.
+checks.push(['prospects overlay starts closed (default)',
+  pxToggle.getAttribute('aria-expanded') === 'false' &&
+  pxCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(pxCol) && !hasOpen(pxScrim)]);
+// Results column must not reflow when the prospects overlay opens/closes.
+const resWidthBeforeP = resultsCol.style.width;
+const resDisplayBeforeP = resultsCol.style.display;
+// Open via trigger.
+pxToggle.fire('click');
+checks.push(['prospects overlay opens on trigger click (aria + open class + scrim)',
+  pxToggle.getAttribute('aria-expanded') === 'true' &&
+  pxCol.getAttribute('aria-hidden') === 'false' &&
+  hasOpen(pxCol) && hasOpen(pxScrim)]);
+checks.push(['opening prospects overlay does NOT reflow results column',
+  resultsCol.style.width === resWidthBeforeP && resultsCol.style.display === resDisplayBeforeP]);
+// Toggle closes.
+pxToggle.fire('click');
+checks.push(['prospects overlay closes on second trigger click (toggle)',
+  pxToggle.getAttribute('aria-expanded') === 'false' &&
+  pxCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(pxCol) && !hasOpen(pxScrim)]);
+// Scrim click dismisses.
+pxToggle.fire('click');
+pxScrim.fire('click');
+checks.push(['prospects overlay closes on scrim click',
+  pxToggle.getAttribute('aria-expanded') === 'false' &&
+  pxCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(pxCol) && !hasOpen(pxScrim)]);
+// Esc dismisses.
+pxToggle.fire('click');
+checks.push(['prospects overlay open before Esc', hasOpen(pxCol)]);
+pxCol.fire('keydown', { key: 'Escape' });
+checks.push(['prospects overlay closes on Esc keydown',
+  pxToggle.getAttribute('aria-expanded') === 'false' &&
+  pxCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(pxCol) && !hasOpen(pxScrim)]);
+// The prospects view is no longer an inline always-visible section: it lives
+// inside the #prospects-col dialog wrapper.
+checks.push(['prospects view nested inside the hover overlay wrapper',
+  html.indexOf('id="prospects-col"') !== -1 &&
+  html.indexOf('id="prospects-col"') < html.indexOf('id="prospects"') &&
+  html.indexOf('id="prospects"') < html.indexOf('</div><!-- /prospects-col overlay -->')]);
+// Loading a prospect dismisses the hover screen (loadCase -> closeProspectsOverlay).
+// loadCase() REPLACES the live H.state, so snapshot it first and RESTORE it
+// afterwards (via the 'demo' seed) so later checks still see the demo state.
+const stateSnapshot = JSON.parse(JSON.stringify(windowObj.__HS.state));
+pxToggle.fire('click');
+checks.push(['prospects overlay open before load', hasOpen(pxCol)]);
+byId['prospect-body'].fire('click', { target: { getAttribute: (k) => (k === 'data-load' ? 'best' : null), parentNode: byId['prospect-body'] } });
+checks.push(['loading a prospect dismisses the hover screen',
+  pxToggle.getAttribute('aria-expanded') === 'false' &&
+  pxCol.getAttribute('aria-hidden') === 'true' && !hasOpen(pxCol)]);
+// Restore the demo state so downstream assertions (confidence badge, etc.) run
+// against the original demonstration case rather than the loaded 'best' case.
+Object.keys(windowObj.__HS.state).forEach((k) => { delete windowObj.__HS.state[k]; });
+Object.keys(stateSnapshot).forEach((k) => { windowObj.__HS.state[k] = stateSnapshot[k]; });
+if (windowObj.__HS.rebuildInputs) windowObj.__HS.rebuildInputs();
+windowObj.__HS.recompute();
+// No references to the removed evergreen case anywhere in the prospects markup.
+checks.push(['prospects markup has no evergreen reference',
+  html.toLowerCase().indexOf('evergreen') === -1]);
 
 // ---- FEAT-002: journey stepper + stage viewports + confidence badge --------
 // FEAT-002 removed the standalone Customer stage (its profile + duty inputs

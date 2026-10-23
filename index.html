@@ -33,6 +33,22 @@ h1{font-size:30px;line-height:1.18;margin:0 0 6px;font-weight:650;max-width:900p
    opens. */
 #input-scrim{position:fixed;inset:0;z-index:55;background:rgba(23,43,58,.32);opacity:0;visibility:hidden;transition:opacity .22s ease,visibility .22s ease}
 #input-scrim.open{opacity:1;visibility:visible}
+/* PROSPECTS OVERLAY PANEL + SCRIM (Fix 6).
+   Built on the SAME mechanism as #input-col so the two top-accessed overlays
+   share one polished pattern. It slides in from the RIGHT edge (the Inputs panel
+   enters from the left) so the two are visually distinct yet consistent; both
+   are >half-screen fixed drawers over a scrim that never reflow the content, and
+   both degrade to a full-width sheet on phones. */
+#prospects-col{position:fixed;top:0;right:0;bottom:0;width:min(62vw,960px);max-width:960px;z-index:60;background:var(--paper);border-left:1px solid var(--line2);padding:20px 24px;overflow-y:auto;overflow-x:hidden;transform:translateX(102%);visibility:hidden;transition:transform .24s cubic-bezier(.22,.61,.36,1),visibility .24s ease}
+#prospects-col.open{transform:translateX(0);visibility:visible}
+#prospects-scrim{position:fixed;inset:0;z-index:55;background:rgba(23,43,58,.32);opacity:0;visibility:hidden;transition:opacity .22s ease,visibility .22s ease}
+#prospects-scrim.open{opacity:1;visibility:visible}
+/* Reduced-motion: honour the user's OS preference across both overlays, the
+   stepper, charts and every transition so nothing animates when not wanted. */
+@media(prefers-reduced-motion:reduce){
+ #input-col,#prospects-col,#input-scrim,#prospects-scrim{transition:none}
+ *{transition-duration:.001ms !important;animation-duration:.001ms !important}
+}
 /* The panel keeps its own close affordance at the top (flat). */
 .input-overlay-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}
 .input-overlay-close{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;background:var(--paper);color:var(--accent);border:1px solid var(--line2);border-radius:5px;font:13px -apple-system,'Segoe UI',Arial;font-weight:600}
@@ -131,7 +147,20 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .field label{font-size:13px}
 .field .u{font-size:11.5px;color:var(--muted);min-width:88px;text-align:right}
 .rowctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.btn{padding:8px 14px;cursor:pointer;background:var(--accent);color:#fff;border:0;border-radius:5px;font:13px -apple-system,'Segoe UI',Arial}
+.btn{padding:8px 14px;cursor:pointer;background:var(--accent);color:#fff;border:0;border-radius:5px;font:13px -apple-system,'Segoe UI',Arial;transition:background .15s ease,transform .08s ease}
+.btn:hover{background:#0e4557}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Compact action button (prospect row Load) -- same system as .btn, small. */
+.btn-sm{padding:5px 11px;cursor:pointer;background:var(--accent);color:#fff;border:0;border-radius:4px;font:13px -apple-system,'Segoe UI',Arial;font-weight:600;transition:background .15s ease,transform .08s ease}
+.btn-sm:hover{background:#0e4557}
+.btn-sm:active{transform:translateY(1px)}
+.btn-sm:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Consistent focus ring + hover for the top-chrome overlay triggers and the
+   in-panel Close buttons shared by BOTH top-accessed overlays (Inputs +
+   Prospects), so the two hover screens feel like one polished system. */
+.sidebar-toggle:focus-visible,.input-overlay-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sidebar-toggle[aria-expanded="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
 /* Per-truck card stack. One card per included truck merges the truck's
    critical fleet + replacement fields into a compact, responsive form that
    needs no horizontal scroll on a laptop. Low-impact fields live in each
@@ -250,6 +279,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  /* Phone: the overlay becomes a full-width sheet (still a fixed overlay over a
     scrim, so the content behind still does not reflow). */
  #input-col{width:100vw;max-width:100vw;border-right:0}
+ #prospects-col{width:100vw;max-width:100vw;border-left:0}
  /* Phone: the stepper collapses to a horizontally scrollable chip row and the
     confidence badge drops onto its own line below it. */
  .journeybar{gap:10px}
@@ -281,6 +311,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <div class="brand">EV Truck TCO Calculator</div>
 <div class="scope">10-year fleet ownership &middot; Singapore</div>
 <button type="button" id="sidebar-toggle" class="sidebar-toggle noprint" aria-expanded="false" aria-controls="input-col"><span class="tgl-icon" aria-hidden="true">&#9776;</span><span id="sidebar-toggle-label">Inputs</span></button>
+<button type="button" id="prospects-toggle" class="sidebar-toggle noprint" aria-expanded="false" aria-controls="prospects-col"><span class="tgl-icon" aria-hidden="true">&#9783;</span><span id="prospects-toggle-label">Prospects</span></button>
 <div class="caveat">Demonstration / diagnostic figures, not a customer quote.</div>
 </div>
 <main>
@@ -527,7 +558,23 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 </div><!-- /results-col -->
 </div><!-- /workspace -->
 
-<section id="prospects" style="margin-top:var(--gutter)"><p class="block-title">Prospects</p>
+<!-- Scrim/backdrop behind the PROSPECTS overlay; clicking it dismisses the panel.
+     Mirrors the #input-scrim pattern used by the Inputs overlay. -->
+<div id="prospects-scrim" class="noprint" hidden></div>
+
+<!-- PROSPECTS OVERLAY PANEL (Fix 6). A top-accessed hover screen, converted from
+     the former inline #prospects section, built on the SAME overlay mechanism as
+     the Inputs panel (#input-col): a position:fixed drawer floating over a scrim
+     that does NOT reflow the content underneath. role=dialog + aria-modal;
+     aria-hidden toggles with the open state; dismissed by the trigger, the
+     in-panel Close button, a scrim click, or Escape, with focus-return to the
+     trigger. On phones it becomes a full-width sheet. Default = CLOSED. -->
+<div class="panel-col" id="prospects-col" role="dialog" aria-modal="true" aria-labelledby="prospects-overlay-title" aria-hidden="true">
+<div class="input-overlay-head noprint">
+<strong id="prospects-overlay-title">Prospects</strong>
+<button type="button" id="prospects-overlay-close" class="input-overlay-close">Close</button>
+</div>
+<section id="prospects"><p class="block-title">Prospects</p>
 <p class="lead">Rank prospective customers by the two questions the business asks: <strong>who benefits most from switching</strong> to EV trucks, and <strong>who is the biggest account opportunity</strong>. Every number in the table is a model output from the same engine that drives the Results section; no heuristic weights, no adoption probabilities.</p>
 <p class="small">Each case is a full input set. The seeded cases are a set of <span class="tag illustrative">Illustrative</span> presets (not real customers): a fully-specified <strong>Best case</strong> whose charging-site quote and verification evidence are complete, so it passes every gate and shows what a <strong>confirmed win</strong> looks like (numeric Total economic TCO and a positive saving); a marginal <strong>Mid case</strong> and a negative-saving <strong>Bad case</strong> tuned from the same baseline; a prefilled <strong>Blank profile</strong> for starting a fresh client (common Singapore-market shared assumptions filled, customer-specific duty and quotes left blank, so Total economic TCO stays n.a. until the critical inputs are supplied); plus the demonstration 6-truck case. <strong>&quot;Meets entered 15% target&quot;</strong> mirrors the Results &quot;Saving claim status&quot; and is <strong>conditional on the supplied figures, not an adoption probability.</strong></p>
 
@@ -546,6 +593,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="small" id="prospect-note">Benefit ranking uses best EV-plan Saving % vs Keep ICE; cases that fail entered limits or are diagnostic-only are flagged and sink to the bottom (they are not confirmed wins). Account ranking uses absolute 10-yr saving in S$; when a case has no confirmed numeric saving (for example the charging-site quote is not itemised so site cost stays n.a.) it falls back to the indicative vehicle-only benefit and is still flagged. Expand a row to see the exact model figures that drove its rank.</p>
 <p class="small"><em>Load</em> copies a prospect's full input set into the editable sections, so you can inspect or adjust it. Edits made do not change the saved prospect unless you duplicate it back.</p>
 </section>
+</div><!-- /prospects-col overlay -->
 
 <details id="methodology"><summary>Methodology &amp; assumptions, sources and audit trail</summary><div class="inner">
 <p class="small">The engine is deterministic: the same inputs always produce the same outputs, with no network, no randomness and no external service. The fixed horizon is 120 months (ten analysis years, 0 to 10). Demonstration inflation and discount are all zero, so year-band escalation is 1 and NPV equals nominal. &quot;n.a.&quot; propagates whenever a gating input is missing (a per-truck input status that is not Complete, a site completeness that is not Complete, or a path count that does not equal the included truck count); the model never substitutes zero for an unknown.</p>
@@ -4136,7 +4184,7 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
         '<td class="num">' + money(s.totalEconomicTco) + '</td>' +
         '<td class="num">' + money(s.day0Funding) + '</td>' +
         '<td class="' + gcls + '">' + txt(s.gateStatus) + '</td>' +
-        '<td class="noprint"><button type="button" data-load="' + esc(c.id) + '" style="padding:5px 9px;cursor:pointer;background:var(--accent);color:#fff;border:0;border-radius:3px;font:13px \'Segoe UI\',Arial">Load</button></td>' +
+        '<td class="noprint"><button type="button" class="btn-sm" data-load="' + esc(c.id) + '">Load into editor</button></td>' +
         '</tr>';
 
       // Audit row: expose the exact components that drove each rank.
@@ -4189,8 +4237,12 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     if (banner) banner.textContent = 'Loaded prospect: ' + c.name +
       (c.evidence==='illustrative' ? ' (illustrative fully-specified case, not a real customer).'
         : c.evidence==='assumption' ? ' (reconstructed assumptions, not a customer savings claim).' : '.');
-    var target = el('inputs'); if (target && target.scrollIntoView) target.scrollIntoView({behavior:'smooth'});
+    // Loading a prospect dismisses the hover screen so the recomputed results
+    // (which sit behind the overlay) become visible immediately.
+    if (typeof closeProspectsOverlay === 'function') closeProspectsOverlay();
   }
+  // Assigned by wireProspectsOverlay() below so loadCase can dismiss the panel.
+  var closeProspectsOverlay = null;
 
   // Duplicate the currently edited state as a new prospect.
   function duplicateCurrent(){
@@ -4214,6 +4266,85 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
   if (sel) sel.addEventListener('change', function(){ sortMode = sel.value; render(); });
   var dupBtn = el('prospect-current-btn');
   if (dupBtn) dupBtn.addEventListener('click', duplicateCurrent);
+
+  // ---- Prospects OVERLAY panel (Fix 6) ----
+  // Convert the prospects view into a top-accessed hover overlay that MIRRORS
+  // the Inputs overlay (#input-col) mechanism exactly: a position:fixed drawer
+  // (#prospects-col) over a full-viewport scrim (#prospects-scrim) that does NOT
+  // reflow the content underneath. The trigger in the top chrome carries
+  // aria-expanded + aria-controls; the panel is a modal dialog (role=dialog +
+  // aria-modal, aria-hidden toggles with the open state). Dismissal: the
+  // trigger (toggle), the in-panel Close button, a scrim click, and Escape.
+  // Focus management: FOCUS-RETURN (the chosen level, same as the Inputs panel)
+  // -- on open focus moves to the in-panel Close button; on close it returns to
+  // the trigger. State persists best-effort under its own localStorage key
+  // (try/catch so file:// works). Default = CLOSED so the results show first.
+  var PROSPECTS_KEY = 'hs_prospects_open_v1';
+  (function wireProspectsOverlay(){
+    var btn = el('prospects-toggle');
+    if (!btn) return;
+    var panel = el('prospects-col');
+    var scrim = el('prospects-scrim');
+    var closeBtn = el('prospects-overlay-close');
+    var isOpen = false;
+    function addClass(elm,c){
+      if (!elm) return;
+      if (elm.classList && elm.classList.add){ elm.classList.add(c); return; }
+      elm.className = ((elm.className||'').replace(new RegExp('\\s*'+c),'')) + ' ' + c;
+    }
+    function removeClass(elm,c){
+      if (!elm) return;
+      if (elm.classList && elm.classList.remove){ elm.classList.remove(c); return; }
+      elm.className = (elm.className||'').replace(new RegExp('\\s*'+c),'');
+    }
+    function readStored(){
+      try { if (window.localStorage){ var v = window.localStorage.getItem(PROSPECTS_KEY); if (v==='open') return true; if (v==='closed') return false; } } catch(e){}
+      return null;
+    }
+    function store(open){
+      try { if (window.localStorage) window.localStorage.setItem(PROSPECTS_KEY, open?'open':'closed'); } catch(e){}
+    }
+    function apply(open){
+      isOpen = !!open;
+      if (open){ addClass(panel,'open'); addClass(scrim,'open'); }
+      else { removeClass(panel,'open'); removeClass(scrim,'open'); }
+      if (panel && panel.setAttribute) panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+      if (scrim){
+        if (scrim.setAttribute) scrim.setAttribute('aria-hidden', open ? 'false' : 'true');
+        scrim.hidden = !open;
+      }
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    function open(){
+      // Re-render so any newly duplicated / edited prospect is reflected when
+      // the hover screen is opened from the top chrome.
+      render();
+      apply(true); store(true);
+      if (closeBtn && typeof closeBtn.focus === 'function'){ try { closeBtn.focus(); } catch(e){} }
+    }
+    function close(){
+      apply(false); store(false);
+      if (btn && typeof btn.focus === 'function'){ try { btn.focus(); } catch(e){} }
+    }
+    function toggle(){ if (isOpen) close(); else open(); }
+    // Expose the closer so loadCase() can dismiss the hover screen on load.
+    closeProspectsOverlay = function(){ if (isOpen) close(); };
+
+    var stored = readStored();
+    apply(stored===null ? false : stored);   // default CLOSED
+
+    btn.addEventListener('click', toggle);
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (scrim) scrim.addEventListener('click', close);
+    function onKeydown(e){
+      var key = e && (e.key || e.keyCode);
+      if (!isOpen) return;
+      if (key === 'Escape' || key === 'Esc' || key === 27){ close(); }
+    }
+    if (panel && panel.addEventListener) panel.addEventListener('keydown', onKeydown);
+    try { if (document && document.addEventListener) document.addEventListener('keydown', onKeydown); } catch(e){}
+    try { if (window && window.addEventListener) window.addEventListener('keydown', onKeydown); } catch(e){}
+  })();
 
   render();
 })();
