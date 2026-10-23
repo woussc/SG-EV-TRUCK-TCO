@@ -251,12 +251,39 @@ const dieselCtl = dieselPanel ? driverControls(dieselPanel) : {};
 const DRIVEN_DIESEL = 3.33;
 const sensBodyBeforeDiesel = byId['sens-body'].innerHTML;
 if (dieselCtl.box) { dieselCtl.box.value = String(DRIVEN_DIESEL); dieselCtl.box.fire('input'); }
-// Canonical state field the engine reads (ec row 7, Plan A col B + Plan B col C).
+// Canonical state field the engine reads for row 7: Plan A col B only.
 const ecRow7 = windowObj.__HS.state.energy_and_charging.rows.find((row) => row._row === 7);
-checks.push(['driver writes committed state (ec row7 B)',
+// The engine reads ec[7].B, so this is the assertion that proves per-plan
+// engine correctness for the driven commercial diesel value.
+checks.push(['driver writes committed state the engine reads (ec row7 B)',
   !!ecRow7 && ecRow7.values.B === DRIVEN_DIESEL]);
-checks.push(['driver writes committed state (ec row7 C = B, Q5 pair)',
-  !!ecRow7 && ecRow7.values.C === DRIVEN_DIESEL]);
+// The unified commercial control keeps the Plan A/B pair in sync (setter forces
+// C == B). The engine never reads ec[7].C, so this only proves the pair is
+// written consistently, NOT per-plan engine correctness (which col B covers).
+checks.push(['unified commercial control keeps Plan A/B pair in sync (ec row7 C == B)',
+  !!ecRow7 && ecRow7.values.C === ecRow7.values.B]);
+// Because ec[7].C is a dead (engine-unread, auto-synced) column, the primary
+// energy table must NOT offer it as an editable input: rows 7 and 10 render
+// their Plan B (col C) cell as a non-editable mirror of Plan A (a span carrying
+// data-mirror-of="B" + data-ec-row), not an <input>. Walk the shim tree to find
+// every mirror span and confirm one exists per driven row, and that no editable
+// <input> was rendered inside those rows' col C.
+function collectMirrorSpans(node, acc) {
+  if (!node || typeof node !== 'object') return acc;
+  const tag = (node.tagName || '').toLowerCase();
+  const isMirror = tag === 'span' &&
+    node.attributes && node.attributes['data-mirror-of'] === 'B' &&
+    node.attributes['data-ec-row'] != null;
+  if (isMirror) acc.push(node);
+  (node.children || []).forEach((child) => collectMirrorSpans(child, acc));
+  return acc;
+}
+const mirrorSpans = collectMirrorSpans(byId['ec-body'], []);
+const mirroredRows = [7, 10];
+const mirroredOk = mirroredRows.every((rowNum) =>
+  mirrorSpans.filter((s) => Number(s.attributes['data-ec-row']) === rowNum).length === 1);
+checks.push(['primary table rows 7/10 Plan B (col C) is non-editable mirror, not input',
+  mirroredOk && mirrorSpans.length === mirroredRows.length]);
 // The driver updates the number box and the slider together (single source).
 checks.push(['driver slider mirrors driven value',
   !!dieselCtl.slider && Number(dieselCtl.slider.value) === DRIVEN_DIESEL]);

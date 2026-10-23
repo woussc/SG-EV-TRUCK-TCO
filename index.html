@@ -106,6 +106,7 @@ td.num,th.num{text-align:right;white-space:nowrap}
 .plan-card .kpi{margin:6px 0 1px}
 .plan-card>div{font-variant-numeric:tabular-nums}
 .na{color:var(--muted);font-style:italic}
+.mirror-c{display:inline-block;color:var(--muted);font-variant-numeric:tabular-nums}
 details{margin:12px 0;border:1px solid var(--line);border-radius:8px;padding:0}
 details[open]{padding-bottom:4px}
 summary{cursor:pointer;color:var(--accent);font-weight:600;padding:12px 16px;font-size:14px}
@@ -2214,11 +2215,19 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   //   16 Installed chargers (units)            -- site build-up scale
   //   18 Charger equipment price (SGD/charger) -- site build-up scale
   var PRIMARY_EC = {7:true, 10:true, 16:true, 18:true};
+  // Rows whose Plan B (col C) is NOT an independent engine input: the engine
+  // reads only col B (ec[7].B / ec[10].B) and the unified commercial diesel/
+  // electricity driver keeps col C == col B. Presenting col C as an editable,
+  // authoritative field would offer a dead, silently auto-overwritten input,
+  // so for these rows col C renders as a non-editable value mirrored from
+  // Plan A. The engine read path is unchanged; only the UI stops offering a
+  // dead field.
+  var EC_MIRRORED_C = {7:true, 10:true};
   function ecRowTr(r){
     var tr=document.createElement('tr');
     tr.appendChild(tdText(r.label||('Row '+r._row)));
     tr.appendChild(ecCell(r,'B'));
-    tr.appendChild(ecCell(r,'C'));
+    tr.appendChild(EC_MIRRORED_C[r._row] ? ecMirroredC(r) : ecCell(r,'C'));
     tr.appendChild(tdText(r.values.D==null?'':r.values.D));
     var meaning=document.createElement('td'); meaning.className='small';
     meaning.textContent=(r.values.E==null?('Energy and charging!B'+r._row):r.values.E);
@@ -2246,6 +2255,23 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
       liveRecompute();
     });
     td.appendChild(inp); return td;
+  }
+
+  // Non-editable Plan B (col C) cell for the driver-mirrored rows (7, 10).
+  // The engine never reads ec[row].C for these rows and the shared commercial
+  // driver forces C == B, so this cell only reflects Plan A rather than
+  // accepting a dead edit. It carries the "mirror-c" class and
+  // data-mirror-of="B" so the harness can assert it is non-editable/mirrored.
+  function ecMirroredC(r){
+    var td=document.createElement('td');
+    var span=document.createElement('span');
+    span.className='mirror-c small';
+    span.setAttribute('data-mirror-of','B');
+    span.setAttribute('data-ec-row', String(r._row));
+    span.title='Mirrors Plan A (driven by the shared commercial control).';
+    var v=r.values.C;
+    span.textContent=(v==null?'':v);
+    td.appendChild(span); return td;
   }
 
   // ---- Shared cost-driver controls (Task A: single source of truth) --------
@@ -2365,6 +2391,20 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
       var c = sensCtl[s.id]; if(!c) return;
       var v = s.get();
       if (H.isNum(v)){ c.slider.value = v; c.box.value = v; c.show(v); }
+    });
+    syncMirroredC();
+  }
+
+  // Keep the non-editable Plan B (col C) mirror cells for rows 7/10 showing the
+  // committed Plan A value, since the shared commercial driver forces C == B.
+  function syncMirroredC(){
+    var body = H.el('ec-body');
+    if (!body || typeof body.querySelectorAll !== 'function') return;
+    body.querySelectorAll('span.mirror-c[data-ec-row]').forEach(function(span){
+      var row = H.ecRow(Number(span.getAttribute('data-ec-row')));
+      if (!row || row.values==null) return;
+      var v = row.values.C;
+      span.textContent = (v==null ? '' : v);
     });
   }
 
