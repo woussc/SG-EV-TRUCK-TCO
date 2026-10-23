@@ -32,7 +32,10 @@ function makeEl(tag) {
     addEventListener(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); },
     setAttribute(k, v) { this.attributes[k] = v; },
     getAttribute(k) { return this.attributes[k]; },
-    fire(ev) { (this.listeners[ev] || []).forEach((fn) => fn({ target: this, currentTarget: this })); },
+    fire(ev, extra) {
+      const evt = Object.assign({ target: this, currentTarget: this }, extra || {});
+      (this.listeners[ev] || []).forEach((fn) => fn(evt));
+    },
   };
 }
 const byId = {};
@@ -42,7 +45,13 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'prospect-body','prospect-sort','prospect-current-btn','prospect-note',
   // FEAT-002: curation split containers + toggleable sidebar hooks.
   'oc-form-adv','ec-body-adv','advanced-inputs',
-  'sidebar-toggle','sidebar-toggle-label','input-col','results-col'];
+  // FEAT-004: input overlay panel hooks (scrim + in-panel close button).
+  'sidebar-toggle','sidebar-toggle-label','input-col','results-col',
+  'input-scrim','input-overlay-close',
+  // FEAT-005: journey stepper, stage viewports + confidence badge hooks.
+  'stepper','step-customer','step-portfolio','step-tco','step-charging','step-proposal',
+  'stage-customer','stage-portfolio','stage-tco','stage-charging','stage-proposal',
+  'confidence-badge','confidence-dot','confidence-text','stage-open-inputs'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
 
 const document = {
@@ -190,14 +199,25 @@ const day0Html = byId['chart-day0'].innerHTML;
 checks.push(['day0 chart marks n.a. (not zero bar)',
   day0Html.indexOf('n.a.') !== -1 && day0Html.indexOf('url(#hatch') !== -1]);
 
-// Live update #1: dragging a sensitivity slider ('input' event) redraws the
-// sensitivity-response chart. The sliders are appended under #sens-controls as
-// panels [h3, input[type=range], div]; grab the first slider and fire 'input'.
+// Live update #1: dragging the UNIFIED shared-driver slider ('input' event)
+// redraws the sensitivity-response chart. The drivers are appended under
+// #sens-controls as panels [h3, input[type=range], input[type=number], div];
+// each slider now writes its canonical state field and runs the ONE recompute
+// (Task A), so firing it must be observed synchronously -> force sync mode.
+// Grab the first driver's slider (range) and fire 'input'.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
 const sensControls = byId['sens-controls'];
+function driverControls(panel) {
+  // Returns { slider, box } for a driver panel: slider is input[type=range],
+  // box is input[type=number].
+  const inputs = (panel.children || []).filter((c) => c.tagName === 'input');
+  const slider = inputs.find((c) => c.type === 'range') || inputs[0];
+  const box = inputs.find((c) => c.type === 'number') || inputs[1];
+  return { slider, box };
+}
 let sensSlider = null;
 if (sensControls && sensControls.children.length) {
-  const panel0 = sensControls.children[0];
-  sensSlider = panel0.children.find((c) => c.tagName === 'input') || panel0.children[1];
+  sensSlider = driverControls(sensControls.children[0]).slider;
 }
 checks.push(['sensitivity slider present', !!sensSlider]);
 const sensBefore = byId['chart-sens'].innerHTML;
@@ -208,6 +228,146 @@ if (sensSlider) {
 const sensAfter = byId['chart-sens'].innerHTML;
 checks.push(['sensitivity chart updates live on slider input',
   !!sensSlider && sensBefore !== sensAfter && sensAfter.indexOf('<svg') !== -1]);
+
+// ---- FEAT-003 (A): unified shared diesel driver, no clone divergence -------
+// The sensitivity section is a LIVE reflection of committed state (Q6 Option
+// A): driving the commercial-diesel driver through its control must update BOTH
+// the main results path AND the sensitivity table to the SAME value (the old
+// bug kept a separate JSON clone + sensVals store so the slider and the input
+// box diverged). Find the diesel driver (first panel, label mentions 'diesel'),
+// drive a new litre price through its number box, and assert that the engine
+// now reads that exact value on ec row 7 (B and C, the Q5 A/B pair) AND that
+// the sens-body renders the recomputed numbers (committed state, not a clone).
+function panelLabel(panel) {
+  const h = (panel.children || []).find((c) => c.tagName === 'h3');
+  return (h && (h.textContent || '')) || '';
+}
+let dieselPanel = null;
+for (const p of (sensControls.children || [])) {
+  if (/diesel/i.test(panelLabel(p))) { dieselPanel = p; break; }
+}
+checks.push(['unified diesel driver present', !!dieselPanel]);
+const dieselCtl = dieselPanel ? driverControls(dieselPanel) : {};
+const DRIVEN_DIESEL = 3.33;
+const sensBodyBeforeDiesel = byId['sens-body'].innerHTML;
+if (dieselCtl.box) { dieselCtl.box.value = String(DRIVEN_DIESEL); dieselCtl.box.fire('input'); }
+// Canonical state field the engine reads for row 7: Plan A col B only.
+const ecRow7 = windowObj.__HS.state.energy_and_charging.rows.find((row) => row._row === 7);
+// The engine reads ec[7].B, so this is the assertion that proves per-plan
+// engine correctness for the driven commercial diesel value.
+checks.push(['driver writes committed state the engine reads (ec row7 B)',
+  !!ecRow7 && ecRow7.values.B === DRIVEN_DIESEL]);
+// The unified commercial control keeps the Plan A/B pair in sync (setter forces
+// C == B). The engine never reads ec[7].C, so this only proves the pair is
+// written consistently, NOT per-plan engine correctness (which col B covers).
+checks.push(['unified commercial control keeps Plan A/B pair in sync (ec row7 C == B)',
+  !!ecRow7 && ecRow7.values.C === ecRow7.values.B]);
+// Because ec[7].C is a dead (engine-unread, auto-synced) column, the primary
+// energy table must NOT offer it as an editable input: rows 7 and 10 render
+// their Plan B (col C) cell as a non-editable mirror of Plan A (a span carrying
+// data-mirror-of="B" + data-ec-row), not an <input>. Walk the shim tree to find
+// every mirror span and confirm one exists per driven row, and that no editable
+// <input> was rendered inside those rows' col C.
+function collectMirrorSpans(node, acc) {
+  if (!node || typeof node !== 'object') return acc;
+  const tag = (node.tagName || '').toLowerCase();
+  const isMirror = tag === 'span' &&
+    node.attributes && node.attributes['data-mirror-of'] === 'B' &&
+    node.attributes['data-ec-row'] != null;
+  if (isMirror) acc.push(node);
+  (node.children || []).forEach((child) => collectMirrorSpans(child, acc));
+  return acc;
+}
+const mirrorSpans = collectMirrorSpans(byId['ec-body'], []);
+const mirroredRows = [7, 10];
+const mirroredOk = mirroredRows.every((rowNum) =>
+  mirrorSpans.filter((s) => Number(s.attributes['data-ec-row']) === rowNum).length === 1);
+checks.push(['primary table rows 7/10 Plan B (col C) is non-editable mirror, not input',
+  mirroredOk && mirrorSpans.length === mirroredRows.length]);
+// The driver updates the number box and the slider together (single source).
+checks.push(['driver slider mirrors driven value',
+  !!dieselCtl.slider && Number(dieselCtl.slider.value) === DRIVEN_DIESEL]);
+// The sensitivity table recomputed from the SAME committed state (no clone):
+// the rendered sens-body changed and the money view (results-body) reflects the
+// identical driven engine run. Recompute the engine from committed state and
+// confirm the sens-body Keep ICE total matches the main results Keep ICE total.
+const sensBodyAfterDiesel = byId['sens-body'].innerHTML;
+checks.push(['sens table reflects driven diesel (no clone divergence)',
+  sensBodyBeforeDiesel !== sensBodyAfterDiesel]);
+const drivenOut = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+function fmtMoneyCell(v) {
+  if (v === NA || v == null || typeof v !== 'number' || !isFinite(v)) return null;
+  const neg = v < 0, a = Math.abs(v);
+  const s = 'S$' + a.toLocaleString('en-SG', { maximumFractionDigits: 0 });
+  return neg ? '-' + s : s;
+}
+const keepTotalCell = fmtMoneyCell(drivenOut.results.totalEconomicTco.keep_ice);
+checks.push(['sens table + results agree on driven value (same source of truth)',
+  !!keepTotalCell &&
+  byId['sens-body'].innerHTML.indexOf(keepTotalCell) !== -1 &&
+  byId['results-body'].innerHTML.indexOf(keepTotalCell) !== -1]);
+
+// ---- FEAT-003 (B): live configurable saving-target control -----------------
+// A shared saving-target driver (slider + number, shown as a percentage) binds
+// to the top-level state.savingTarget field FEAT-002 introduced. It defaults to
+// 0.15 (the engine's resolveSavingTarget domain default; the demo fixture sets
+// no savingTarget). Moving it must change the rendered headroom / claim label
+// live, while the DEFAULT path still yields 'Meets entered 15% target'.
+let targetPanel = null;
+for (const p of (sensControls.children || [])) {
+  if (/target/i.test(panelLabel(p))) { targetPanel = p; break; }
+}
+checks.push(['saving-target control present', !!targetPanel]);
+const targetCtl = targetPanel ? driverControls(targetPanel) : {};
+// Initial value reflects the 0.15 default (the demo sets no savingTarget).
+checks.push(['saving-target defaults to 0.15',
+  !!targetCtl.slider && Math.abs(Number(targetCtl.slider.value) - 0.15) < 1e-9]);
+// With the default target the engine still emits the exact legacy claim label.
+const defaultTargetOut = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+// (state.savingTarget is still unset here -> engine defaults to 0.15.)
+const evForLabel = scoredSeeds.find((x) => x.id === 'evergreen');
+checks.push(['default target still yields Meets entered 15% target',
+  evForLabel && evForLabel.s.fifteenTargetMet === 'Meets entered 15% target']);
+// Moving the target changes the rendered headroom row + the claim label. Drive
+// the target to 0.25 and confirm the results-body headroom label + decision
+// claim both reflect the new committed target, then restore the default.
+const headroomBefore = byId['results-body'].innerHTML;
+if (targetCtl.box) { targetCtl.box.value = '0.25'; targetCtl.box.fire('input'); }
+checks.push(['saving-target writes committed state.savingTarget',
+  windowObj.__HS.state.savingTarget === 0.25]);
+const headroomAfter = byId['results-body'].innerHTML;
+checks.push(['moving target relabels headroom row (25%)',
+  headroomBefore !== headroomAfter && headroomAfter.indexOf('25% fleet saving headroom') !== -1]);
+// The sens-table headroom column header also tracks the committed target.
+checks.push(['moving target relabels sens headroom header (25%)',
+  byId['sens-body'] && byId['sens-headroom-th'] &&
+  byId['sens-headroom-th'].textContent === '25% headroom']);
+// The 'Meets/Below entered X% target' claim label is conditional (never an
+// adoption probability) and only renders for a gate-passing case. Prove the
+// label reflects the committed target through the engine on the gate-passing
+// Evergreen seed: at the default 0.15 it reads 'Meets entered 15% target'; at a
+// higher 0.30 target the SAME case flips to 'Below entered 30% target'.
+const everAtDefault = windowObj.HSEngine.scoreProspect(
+  windowObj.HSEngine.computeFleet(seeds.cases.find((c) => c.id === 'evergreen').inputs));
+const everInputsHi = JSON.parse(JSON.stringify(seeds.cases.find((c) => c.id === 'evergreen').inputs));
+everInputsHi.savingTarget = 0.30;
+const everAtHi = windowObj.HSEngine.scoreProspect(windowObj.HSEngine.computeFleet(everInputsHi));
+checks.push(['claim label reflects committed target (default 15% met)',
+  everAtDefault.fifteenTargetMet === 'Meets entered 15% target']);
+checks.push(['claim label reflects committed target (30% below, conditional)',
+  everAtHi.fifteenTargetMet === 'Below entered 30% target']);
+// n.a. propagation preserved at the extreme: driving the target does not turn
+// an n.a. headroom into a fake zero (the demo plan_a/plan_b totals are n.a.).
+checks.push(['target move keeps n.a. (no fake zero)',
+  byId['sens-body'].innerHTML.indexOf('n.a.') !== -1]);
+// Restore the default target so later assertions see the baseline.
+if (targetCtl.box) { targetCtl.box.value = '0.15'; targetCtl.box.fire('input'); }
+// Restore diesel so the later 'change' live-update assertions compare cleanly.
+if (dieselCtl.box) {
+  const demoDiesel = windowObj.HSDemoCase.inputs.energy_and_charging.rows.find((row) => row._row === 7);
+  if (demoDiesel) { dieselCtl.box.value = String(demoDiesel.values.B); dieselCtl.box.fire('input'); }
+}
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // Live update #2: changing an amber input and recomputing redraws the
 // comparison charts (they read from the same computeFleet(state) output).
@@ -285,23 +445,141 @@ checks.push(['advanced energy table populated', byId['ec-body-adv'].children.len
 checks.push(['advanced op-cost holds more rows than primary',
   byId['oc-form-adv'].children.length > byId['oc-form'].children.length]);
 
-// ---- FEAT-002 (B): sidebar toggle hides inputs / expands results -----------
-// The toggle exists, starts expanded (default OPEN), and a 'click' flips the
-// state: aria-expanded becomes 'false' and the input column is hidden
-// (display:none), which the shim tracks via style/attributes.
+// ---- FEAT-004: input OVERLAY panel (fixed drawer over a scrim, no reflow) ---
+// The inputs now live in a position:fixed overlay (#input-col) floating over a
+// scrim (#input-scrim); the results underneath keep full width and must NOT
+// reflow when the panel opens/closes. The trigger is a modal dialog opener:
+// aria-expanded on the trigger, aria-hidden on the panel, and an 'open' class
+// on both the panel and the scrim track the state. Default = CLOSED.
 const sbToggle = byId['sidebar-toggle'];
 const inputCol = byId['input-col'];
-checks.push(['sidebar-toggle exists', !!sbToggle]);
-checks.push(['sidebar-toggle registers a click listener',
+const inputScrim = byId['input-scrim'];
+const resultsCol = byId['results-col'];
+function hasOpen(elm) { return /(^|\s)open(\s|$)/.test(elm.className || ''); }
+checks.push(['overlay trigger exists', !!sbToggle]);
+checks.push(['overlay trigger registers a click listener',
   Array.isArray(sbToggle.listeners.click) && sbToggle.listeners.click.length > 0]);
-checks.push(['sidebar starts expanded (default open)',
-  sbToggle.getAttribute('aria-expanded') === 'true' && inputCol.style.display !== 'none']);
+checks.push(['overlay scrim element present', !!inputScrim]);
+checks.push(['overlay scrim registers a click listener',
+  Array.isArray(inputScrim.listeners.click) && inputScrim.listeners.click.length > 0]);
+// Default CLOSED: trigger collapsed, panel hidden, scrim not open.
+checks.push(['overlay starts closed (default)',
+  sbToggle.getAttribute('aria-expanded') === 'false' &&
+  inputCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(inputCol) && !hasOpen(inputScrim)]);
+// No-reflow invariant: capture the results column style before any open/close.
+// The results column must never have its width/display mutated by the overlay.
+const resWidthBefore = resultsCol.style.width;
+const resDisplayBefore = resultsCol.style.display;
+// Open via the trigger: aria-expanded true, panel aria-hidden false, both the
+// panel and the scrim carry the 'open' class.
 sbToggle.fire('click');
-checks.push(['sidebar toggle collapses input column on click',
-  sbToggle.getAttribute('aria-expanded') === 'false' && inputCol.style.display === 'none']);
+checks.push(['overlay opens on trigger click (aria + open class + scrim)',
+  sbToggle.getAttribute('aria-expanded') === 'true' &&
+  inputCol.getAttribute('aria-hidden') === 'false' &&
+  hasOpen(inputCol) && hasOpen(inputScrim)]);
+checks.push(['opening overlay does NOT reflow results column (no width/display change)',
+  resultsCol.style.width === resWidthBefore && resultsCol.style.display === resDisplayBefore]);
+// Toggle again closes it (trigger is a toggle).
 sbToggle.fire('click');
-checks.push(['sidebar toggle re-expands input column on second click',
-  sbToggle.getAttribute('aria-expanded') === 'true' && inputCol.style.display !== 'none']);
+checks.push(['overlay closes on second trigger click (toggle)',
+  sbToggle.getAttribute('aria-expanded') === 'false' &&
+  inputCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(inputCol) && !hasOpen(inputScrim)]);
+checks.push(['closing overlay does NOT reflow results column (no width/display change)',
+  resultsCol.style.width === resWidthBefore && resultsCol.style.display === resDisplayBefore]);
+// Scrim click dismisses: open, then fire a click on the scrim -> closed.
+sbToggle.fire('click');
+inputScrim.fire('click');
+checks.push(['overlay closes on scrim click',
+  sbToggle.getAttribute('aria-expanded') === 'false' &&
+  inputCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(inputCol) && !hasOpen(inputScrim)]);
+// Esc dismisses: open, then fire an Escape keydown on the panel -> closed. The
+// makeEl shim's fire(ev, extra) passes extra event props (here {key:'Escape'}).
+sbToggle.fire('click');
+checks.push(['overlay open before Esc', hasOpen(inputCol)]);
+inputCol.fire('keydown', { key: 'Escape' });
+checks.push(['overlay closes on Esc keydown',
+  sbToggle.getAttribute('aria-expanded') === 'false' &&
+  inputCol.getAttribute('aria-hidden') === 'true' &&
+  !hasOpen(inputCol) && !hasOpen(inputScrim)]);
+
+// ---- FEAT-005: journey stepper + stage viewports + confidence badge --------
+// A five-step, tablist-like control switches a single visible stage viewport
+// with NO routing and NO fetch (pure client-side show/hide). The active stage
+// persists in localStorage. The confidence badge is driven by the LIVE engine
+// output's gate / saving-claim status for the best EV plan -- never a fabricated
+// probability. For the demonstration case both EV plans are 'Total incomplete'
+// (site cost n.a.), so the badge MUST show the honest non-confirmed Diagnostic
+// state, not a fake 'confirmed'.
+const STAGES = ['customer','portfolio','tco','charging','proposal'];
+// Hand-written chrome (everything before the first generated block), so the
+// markup counts below never pick up generated DEMO/PROSPECTS data.
+const chromeEndFeat5 = html.indexOf('<!-- ENGINE:BEGIN');
+const chromeFeat5 = chromeEndFeat5 === -1 ? html : html.slice(0, chromeEndFeat5);
+// All five stage panels exist in the markup.
+STAGES.forEach((s) => {
+  checks.push(['stage section ' + s + ' present', chromeFeat5.indexOf('id="stage-' + s + '"') !== -1]);
+});
+// The stepper exists and carries exactly five step buttons in the markup.
+checks.push(['stepper present in markup', chromeFeat5.indexOf('id="stepper"') !== -1]);
+const stepMatches = (chromeFeat5.match(/class="step"/g) || []).length;
+checks.push(['stepper has five steps', stepMatches === 5]);
+
+// The confidence badge element exists in the markup.
+checks.push(['confidence badge present in markup', chromeFeat5.indexOf('id="confidence-badge"') !== -1]);
+
+// Default stage is TCO (the money view): its step is selected and its panel is
+// active, while the others are hidden.
+const stepTco = byId['step-tco'];
+const stageTco = byId['stage-tco'];
+const stepCharging = byId['step-charging'];
+const stageCharging = byId['stage-charging'];
+function stageActive(elm){ return /(^|\s)stage-active(\s|$)/.test(elm.className || ''); }
+function stageHidden(elm){ return /(^|\s)stage-hidden(\s|$)/.test(elm.className || ''); }
+checks.push(['default stage is TCO (step selected)', stepTco.getAttribute('aria-selected') === 'true']);
+checks.push(['default stage TCO panel active', stageActive(stageTco) && !stageHidden(stageTco)]);
+checks.push(['non-default stage (charging) starts hidden', stageHidden(stageCharging) && !stageActive(stageCharging)]);
+checks.push(['non-default step (charging) not selected', stepCharging.getAttribute('aria-selected') === 'false']);
+
+// Activating a non-default step shows that stage and hides the previously-active
+// one (fire the step's click and check the visibility classes on both panels).
+stepCharging.fire('click');
+checks.push(['activating Charging step shows its stage', stageActive(stageCharging) && !stageHidden(stageCharging)]);
+checks.push(['activating Charging step hides previously-active TCO stage', stageHidden(stageTco) && !stageActive(stageTco)]);
+checks.push(['activating Charging step selects it (aria-selected)', stepCharging.getAttribute('aria-selected') === 'true']);
+checks.push(['activating Charging step deselects TCO', stepTco.getAttribute('aria-selected') === 'false']);
+// Keyboard activation also switches: ArrowLeft from Charging moves to TCO.
+stepCharging.fire('keydown', { key: 'ArrowLeft', preventDefault() {} });
+checks.push(['keyboard ArrowLeft switches stage back to TCO',
+  stageActive(stageTco) && stageHidden(stageCharging) &&
+  stepTco.getAttribute('aria-selected') === 'true']);
+
+// The persistent demonstration honesty banner is NOT buried inside any one
+// stage: it sits above the stepper in the chrome, before the first stage panel.
+const bannerIdx = html.indexOf('id="demo-banner"');
+const firstStageIdx = html.indexOf('id="stage-customer"');
+checks.push(['honesty banner persists above the stages (not inside one)',
+  bannerIdx !== -1 && firstStageIdx !== -1 && bannerIdx < firstStageIdx]);
+
+// Confidence badge reflects the computed gate / saving-claim status. For the
+// demo case the best EV plan's savingClaimStatus is 'Total incomplete' (site
+// cost n.a.), so the badge must render the honest Diagnostic (non-confirmed)
+// state: class conf-diagnostic and NOT conf-confirmed, with 'not a confirmed
+// win' wording and no fake 'Confirmed win'.
+const confBadge = byId['confidence-badge'];
+const confText = byId['confidence-text'];
+checks.push(['demo best EV plan savingClaimStatus is non-confirmed (Total incomplete)',
+  r.savingClaimStatus.plan_a === 'Total incomplete' && r.savingClaimStatus.plan_b === 'Total incomplete']);
+checks.push(['confidence badge shows diagnostic (not confirmed) for demo',
+  /(^|\s)conf-diagnostic(\s|$)/.test(confBadge.className || '') &&
+  !/(^|\s)conf-confirmed(\s|$)/.test(confBadge.className || '')]);
+checks.push(['confidence badge wording is honest (not a confirmed win)',
+  confText.innerHTML.indexOf('not a confirmed win') !== -1 &&
+  confText.innerHTML.indexOf('Confirmed win') === -1]);
+checks.push(['confidence badge driven by real claim status (names the status)',
+  confText.innerHTML.indexOf('Total incomplete') !== -1]);
 
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html
@@ -343,9 +621,15 @@ checks.push(['input panel container present', /id="input-col"/.test(chrome)]);
 checks.push(['results panel container present', /id="results-col"/.test(chrome)]);
 checks.push(['two-panel workspace grid present', /class="workspace"/.test(chrome)]);
 
-// Toggleable sidebar + curation hooks exist in the markup.
+// Input overlay trigger + curation hooks exist in the markup.
 checks.push(['sidebar-toggle present in markup', /id="sidebar-toggle"/.test(chrome)]);
-checks.push(['collapsed-workspace CSS present', /\.workspace\.collapsed/.test(chrome)]);
+// The inputs panel is a position:fixed overlay (no reflow) with a scrim.
+checks.push(['input overlay panel is position:fixed',
+  /#input-col\s*\{[^}]*position:\s*fixed/.test(chrome)]);
+checks.push(['input overlay scrim element present in markup',
+  /id="input-scrim"/.test(chrome)]);
+checks.push(['input overlay scrim CSS is position:fixed',
+  /#input-scrim\s*\{[^}]*position:\s*fixed/.test(chrome)]);
 checks.push(['advanced-inputs disclosure present', /id="advanced-inputs"/.test(chrome)]);
 checks.push(['advanced op-cost container present', /id="oc-form-adv"/.test(chrome)]);
 checks.push(['advanced energy container present', /id="ec-body-adv"/.test(chrome)]);

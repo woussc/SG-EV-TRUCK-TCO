@@ -15,12 +15,28 @@ main{padding:28px var(--margin) 8px}
 .titlerow{margin:0 0 20px}
 h1{font-size:30px;line-height:1.18;margin:0 0 6px;font-weight:650;max-width:900px}
 .titlerow .sub{color:var(--muted);font-size:15px;margin:0;max-width:820px}
-/* Two-panel calculator grid */
-.workspace{display:grid;grid-template-columns:minmax(380px,460px) 1fr;gap:var(--gutter);align-items:start}
-/* Collapsed sidebar: the input column is hidden and results take the full width. */
-.workspace.collapsed{grid-template-columns:1fr}
-.workspace.collapsed #input-col{display:none}
+/* Calculator workspace. The inputs now live in a fixed overlay panel (see
+   #input-col below), so the results column occupies the full content width at
+   all times and NEVER reflows when the inputs open or close. */
+.workspace{display:grid;grid-template-columns:1fr;gap:var(--gutter);align-items:start}
 .panel-col{display:flex;flex-direction:column;gap:var(--gutter);min-width:0}
+/* INPUT OVERLAY PANEL.
+   #input-col is a position:fixed drawer that floats over the content from the
+   left edge; the results underneath keep their full width, so opening/closing
+   the inputs does not resize or reflow anything. Flat look (no shadow/gradient):
+   a 1px seam on the inner edge separates it from the scrim. It is internally
+   scrollable and hidden (translated off-screen + aria-hidden) until opened. */
+#input-col{position:fixed;top:0;left:0;bottom:0;width:min(460px,92vw);max-width:460px;z-index:60;background:var(--paper);border-right:1px solid var(--line2);padding:16px;overflow-y:auto;overflow-x:hidden;transform:translateX(-102%);visibility:hidden;transition:transform .22s ease,visibility .22s ease}
+#input-col.open{transform:translateX(0);visibility:visible}
+/* SCRIM / BACKDROP: a full-viewport semi-transparent layer below the panel and
+   above the content. Clicking it dismisses the panel. Hidden until the panel
+   opens. */
+#input-scrim{position:fixed;inset:0;z-index:55;background:rgba(23,43,58,.32);opacity:0;visibility:hidden;transition:opacity .22s ease,visibility .22s ease}
+#input-scrim.open{opacity:1;visibility:visible}
+/* The panel keeps its own close affordance at the top (flat). */
+.input-overlay-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}
+.input-overlay-close{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;background:var(--paper);color:var(--accent);border:1px solid var(--line2);border-radius:5px;font:13px -apple-system,'Segoe UI',Arial;font-weight:600}
+.input-overlay-close:hover{background:var(--soft)}
 /* Sidebar toggle button (flat, no shadow/gradient). */
 .sidebar-toggle{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;background:var(--paper);color:var(--accent);border:1px solid var(--line2);border-radius:5px;font:13px -apple-system,'Segoe UI',Arial;font-weight:600}
 .sidebar-toggle:hover{background:var(--soft)}
@@ -40,6 +56,35 @@ p{margin:8px 0 12px}
 .notice{border-left:3px solid var(--line2);padding:10px 14px;background:var(--soft);margin:12px 0;font-size:13px;color:var(--muted)}
 .note{padding:12px 14px;background:var(--soft);margin:12px 0;border-radius:6px}
 .banner{font-size:12.5px;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:7px 12px;margin:0 0 14px}
+/* JOURNEY STEPPER + CONFIDENCE BADGE.
+   A tablist-like row of five clickable, keyboard-navigable steps that switch a
+   single visible stage viewport (no routing, no fetch). Flat surfaces (no
+   shadow / gradient). The active step is highlighted via the accent colour. */
+.journeybar{display:flex;align-items:center;gap:var(--gutter);flex-wrap:wrap;margin:0 0 14px}
+.stepper{display:flex;gap:6px;flex:1 1 auto;min-width:0;overflow-x:auto}
+.step{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;cursor:pointer;background:var(--paper);color:var(--ink);border:1px solid var(--line2);border-radius:999px;font:13px -apple-system,'Segoe UI',Arial;font-weight:600;white-space:nowrap;transition:background .18s ease,border-color .18s ease,color .18s ease}
+.step:hover{background:var(--soft)}
+.step .step-no{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex:0 0 20px;border-radius:999px;border:1px solid var(--line2);font-size:12px;line-height:1;color:var(--muted);transition:background .18s ease,border-color .18s ease,color .18s ease}
+.step[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.step[aria-selected="true"] .step-no{background:#fff;border-color:#fff;color:var(--accent)}
+.step:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Persistent confidence badge: colour + wording are driven by the live gate /
+   saving-claim status for the best EV plan, never a fabricated probability. */
+.confidence{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;padding:7px 12px;border:1px solid var(--line2);border-radius:999px;background:var(--paper);font-size:12.5px;color:var(--muted)}
+.conf-dot{display:inline-block;width:10px;height:10px;flex:0 0 10px;border-radius:999px;background:var(--line2)}
+.confidence.conf-confirmed{border-color:#9ccbb0;background:#eef6f1;color:#1f6b3b}
+.confidence.conf-confirmed .conf-dot{background:#1f6b3b}
+.confidence.conf-below{border-color:var(--amberline);background:var(--amber);color:var(--warn)}
+.confidence.conf-below .conf-dot{background:var(--amberline)}
+.confidence.conf-diagnostic{border-color:var(--line2);background:var(--soft);color:var(--muted)}
+.confidence.conf-diagnostic .conf-dot{background:var(--muted)}
+/* STAGE VIEWPORTS: exactly one visible at a time. Simple, smooth fade/slide-in
+   on activation; hidden stages are removed from layout + the a11y tree. */
+.stage.stage-hidden{display:none}
+.stage.stage-active{display:flex;flex-direction:column;gap:var(--gutter);animation:stage-in .22s ease both}
+.stage>.block-title{margin-bottom:0}
+@keyframes stage-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.stage.stage-active{animation:none}}
 .table-wrap{overflow-x:auto;margin:10px 0 12px}
 table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.4}
 caption{text-align:left;color:var(--muted);padding:0 0 8px;font-size:13px}
@@ -61,6 +106,7 @@ td.num,th.num{text-align:right;white-space:nowrap}
 .plan-card .kpi{margin:6px 0 1px}
 .plan-card>div{font-variant-numeric:tabular-nums}
 .na{color:var(--muted);font-style:italic}
+.mirror-c{display:inline-block;color:var(--muted);font-variant-numeric:tabular-nums}
 details{margin:12px 0;border:1px solid var(--line);border-radius:8px;padding:0}
 details[open]{padding-bottom:4px}
 summary{cursor:pointer;color:var(--accent);font-weight:600;padding:12px 16px;font-size:14px}
@@ -96,9 +142,23 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 @media(max-width:860px){.charts-region{grid-template-columns:1fr}}
 @media(max-width:1023px){.workspace{grid-template-columns:1fr}}
 @media(max-width:860px){.grid,.formgrid{grid-template-columns:1fr}.grid4{grid-template-columns:1fr}}
-@media(max-width:700px){h1{font-size:24px}main{padding:18px 16px 8px}.topbar{flex-wrap:wrap;padding:10px 16px}.topbar .caveat{margin-left:0;flex-basis:100%;order:3}section{padding:16px}table{font-size:12.5px}th,td{padding:7px}}
+@media(max-width:700px){h1{font-size:24px}main{padding:18px 16px 8px}.topbar{flex-wrap:wrap;padding:10px 16px}.topbar .caveat{margin-left:0;flex-basis:100%;order:3}section{padding:16px}table{font-size:12.5px}th,td{padding:7px}
+ /* Phone: the overlay becomes a full-width sheet (still a fixed overlay over a
+    scrim, so the content behind still does not reflow). */
+ #input-col{width:100vw;max-width:100vw;border-right:0}
+ /* Phone: the stepper collapses to a horizontally scrollable chip row and the
+    confidence badge drops onto its own line below it. */
+ .journeybar{gap:10px}
+ .stepper{flex-basis:100%;-webkit-overflow-scrolling:touch}
+ .step{padding:7px 12px}
+ .confidence{flex-basis:100%}
+}
 @media print{
  body{background:white;font-size:10pt}
+ /* Print the complete diagnostic record: reveal every stage viewport (the
+    stepper itself is .noprint), so hidden stages are not dropped from the
+    printout. */
+ .stage.stage-hidden,.stage.stage-active{display:block!important;animation:none!important}
  .topbar{border:0;padding:10px 0}
  h1{font-size:22pt}
  .noprint{display:none!important}
@@ -116,7 +176,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <div class="mark" aria-hidden="true">EV</div>
 <div class="brand">EV Truck TCO Calculator</div>
 <div class="scope">10-year fleet ownership &middot; Singapore</div>
-<button type="button" id="sidebar-toggle" class="sidebar-toggle noprint" aria-expanded="true" aria-controls="input-col"><span class="tgl-icon" aria-hidden="true">&#9776;</span><span id="sidebar-toggle-label">Hide inputs</span></button>
+<button type="button" id="sidebar-toggle" class="sidebar-toggle noprint" aria-expanded="false" aria-controls="input-col"><span class="tgl-icon" aria-hidden="true">&#9776;</span><span id="sidebar-toggle-label">Inputs</span></button>
 <div class="caveat">Demonstration / diagnostic figures, not a customer quote.</div>
 </div>
 <main>
@@ -128,10 +188,38 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 
 <div class="banner" id="demo-banner">DEMONSTRATION. Not a customer savings claim.</div>
 
+<!-- JOURNEY STEPPER + CONFIDENCE BADGE.
+     A five-step, tablist-like control that switches a single visible stage
+     viewport with NO routing and NO fetch (client-only show/hide). The active
+     step persists in localStorage ('hs_stage_v1', try/catch so file:// works).
+     The confidence badge is driven by the LIVE engine output's gate / claim
+     status for the best EV plan; it is never a fabricated probability. -->
+<div class="journeybar noprint">
+<div class="stepper" id="stepper" role="tablist" aria-label="Fleet decision journey">
+<button type="button" class="step" id="step-customer" role="tab" data-stage="customer" aria-controls="stage-customer" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">1</span><span class="step-label">Customer</span></button>
+<button type="button" class="step" id="step-portfolio" role="tab" data-stage="portfolio" aria-controls="stage-portfolio" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">2</span><span class="step-label">Portfolio</span></button>
+<button type="button" class="step" id="step-tco" role="tab" data-stage="tco" aria-controls="stage-tco" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">3</span><span class="step-label">TCO</span></button>
+<button type="button" class="step" id="step-charging" role="tab" data-stage="charging" aria-controls="stage-charging" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">4</span><span class="step-label">Charging</span></button>
+<button type="button" class="step" id="step-proposal" role="tab" data-stage="proposal" aria-controls="stage-proposal" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">5</span><span class="step-label">Proposal</span></button>
+</div>
+<div class="confidence" id="confidence-badge" role="status" aria-live="polite" title="Driven by the live gate / saving-claim status; not an adoption probability.">
+<span class="conf-dot" id="confidence-dot" aria-hidden="true"></span><span class="conf-text" id="confidence-text">Confidence: &mdash;</span>
+</div>
+</div>
+
+<!-- Scrim/backdrop behind the input overlay; clicking it dismisses the panel. -->
+<div id="input-scrim" class="noprint" hidden></div>
+
 <div class="workspace">
 
-<!-- LEFT: INPUT PANEL -->
-<div class="panel-col" id="input-col">
+<!-- INPUT OVERLAY PANEL (position:fixed drawer over a scrim; does not reflow the
+     results underneath). role=dialog + aria-modal; aria-hidden toggles with the
+     open state; labelled by the overlay heading below. -->
+<div class="panel-col" id="input-col" role="dialog" aria-modal="true" aria-labelledby="input-overlay-title" aria-hidden="true">
+<div class="input-overlay-head noprint">
+<strong id="input-overlay-title">Inputs</strong>
+<button type="button" id="input-overlay-close" class="input-overlay-close">Close</button>
+</div>
 <section id="inputs"><p class="block-title">Inputs</p>
 <p class="small">Editable inputs use the amber convention. Unknowns are left blank or &quot;n.a.&quot; and are never auto-filled with zero: a blank is not a measured zero, and &quot;n.a.&quot; is not a value.</p>
 <p class="legend"><span class="swatch"></span>Amber = editable input. White = computed or reference. Evidence tags: <span class="tag fact">Fact</span><span class="tag assumption">Assumption</span><span class="tag inference">Inference</span><span class="tag unknown">Unknown</span></p>
@@ -171,8 +259,40 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 </section>
 </div>
 
-<!-- RIGHT: LIVE RESULTS + VISUALS PANEL -->
+<!-- RIGHT: LIVE RESULTS + VISUALS PANEL.
+     Holds the five stage viewports. Exactly one carries the 'stage-active'
+     class at a time (the stepper toggles it); the others are hidden with
+     'stage-hidden'. Content is relocated, not duplicated: the money view lives
+     in Stage 3 (TCO), the charging/site/gates view in Stage 4 (Charging). The
+     deferred Portfolio and Proposal stages are honest 'coming next' panels, not
+     faked outputs. #validation stays rendered inside Stage 3; #prospects stays
+     rendered below the workspace so its harness assertions still pass. -->
 <div class="panel-col" id="results-col">
+
+<!-- STAGE 1: CUSTOMER. Honest pointer to the inputs overlay (the duty /
+     current-truck / replacement inputs live in the overlay from FEAT-004). No
+     computed outputs are shown here. -->
+<section class="stage stage-hidden" id="stage-customer" role="tabpanel" aria-labelledby="step-customer">
+<p class="block-title">1 &middot; Customer</p>
+<p class="lead">Describe the fleet and its duty. Every number downstream is computed from these inputs; nothing is assumed about a company that is not entered here.</p>
+<p class="small">The editable inputs &mdash; fleet register, replacement plan, shared operating costs and energy / charging &mdash; live in the <strong>Inputs</strong> panel. Open it from the <strong>Inputs</strong> button in the top bar (or the button below), edit any amber field, and the TCO, charging and validation stages recompute live.</p>
+<p class="noprint"><button type="button" id="stage-open-inputs" class="btn">Open the Inputs panel</button></p>
+<p class="caveat-line">These are demonstration defaults reproducing the Excel cached figures. They are not an owned-fleet fact or a customer quotation.</p>
+</section>
+
+<!-- STAGE 2: PORTFOLIO (deferred). Honest 'coming next' placeholder: the
+     portfolio fit-rules / model-matching module is a later phase. No fabricated
+     outputs. -->
+<section class="stage stage-hidden" id="stage-portfolio" role="tabpanel" aria-labelledby="step-portfolio">
+<p class="block-title">2 &middot; Portfolio</p>
+<p class="lead">Match each truck to a suitable EV model from the catalogue by duty, payload and range.</p>
+<div class="notice"><strong>Coming next.</strong> Portfolio matching (fit rules that recommend an EV model per truck from duty, payload and route) is a later phase of this tool. It is not built yet, so this stage shows no recommendation rather than a fabricated one. For now the EV model per truck is entered directly in the replacement plan inside the <strong>Inputs</strong> panel, and the <strong>Prospects</strong> table below ranks whole cases by the model&rsquo;s own saving figures.</div>
+</section>
+
+<!-- STAGE 3: TCO (the money view). Relocated: decision + charts + results +
+     the shared cost drivers (sensitivity) + validation. -->
+<section class="stage stage-active" id="stage-tco" role="tabpanel" aria-labelledby="step-tco">
+<p class="block-title">3 &middot; Total cost of ownership</p>
 
 <section id="decision"><p class="block-title">Decision</p>
 <p class="lead" id="decision-lead">Live headline comparison of the four ownership paths at the current inputs.</p>
@@ -186,7 +306,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <div class="charts-region" id="charts-region">
   <figure class="chart-card"><figcaption class="chart-title">Cumulative economic TCO over 10 years</figcaption><div class="chart-box" id="chart-cumulative"></div><figcaption class="chart-cap">Per-path running economic cost, years 0&ndash;10. n.a. years appear as dashed gaps.</figcaption></figure>
   <figure class="chart-card"><figcaption class="chart-title">Total economic TCO by path</figcaption><div class="chart-box" id="chart-total"></div><figcaption class="chart-cap">Lower is cheaper. A hatched bar marked n.a. means the aggregate gate did not clear, not a zero cost.</figcaption></figure>
-  <figure class="chart-card"><figcaption class="chart-title">Saving vs Keep ICE against the 15% target</figcaption><div class="chart-box" id="chart-target"></div><figcaption class="chart-cap">Bars show each EV plan&rsquo;s saving % versus Keep ICE; the dashed line is the entered 15% target. Green meets it, amber is below.</figcaption></figure>
+  <figure class="chart-card"><figcaption class="chart-title">Saving vs Keep ICE against the <span id="chart-target-title-pct">15</span>% target</figcaption><div class="chart-box" id="chart-target"></div><figcaption class="chart-cap">Bars show each EV plan&rsquo;s saving % versus Keep ICE; the dashed line is the entered <span id="chart-target-cap-pct">15</span>% target. Green meets it, amber is below.</figcaption></figure>
   <figure class="chart-card"><figcaption class="chart-title">Day-0 funding by path</figcaption><div class="chart-box" id="chart-day0"></div><figcaption class="chart-cap">Cash needed at day 0. n.a. is shown hatched, never as zero.</figcaption></figure>
   <figure class="chart-card chart-card-wide"><figcaption class="chart-title">Sensitivity response &mdash; Total economic TCO at current sliders</figcaption><div class="chart-box" id="chart-sens"></div><figcaption class="chart-cap">Redraws as you drag the diesel, electricity, EV-price and discount sliders below.</figcaption></figure>
 </div>
@@ -197,22 +317,36 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <div class="table-wrap"><table id="results-table"><thead><tr>
 <th>Metric</th><th class="num">Keep ICE</th><th class="num">All-new ICE now</th><th class="num">Plan A</th><th class="num">Plan B</th>
 </tr></thead><tbody id="results-body"></tbody></table></div>
-<p class="small">Signed credits reduce cost. Saving % = (Keep ICE total &minus; plan total) / Keep ICE total. 15% headroom = 0.85 &times; Keep ICE total &minus; plan total. Full derivations in Methodology &amp; assumptions below.</p>
-</section>
-
-<section id="charging"><p class="block-title">Energy, charging and site budget</p>
-<p class="small">The charging site is costed once per plan and shared across its EVs. Completeness and access gates must pass before a numeric site cost is produced; otherwise the plan total is &quot;n.a.&quot;</p>
-<div class="table-wrap"><table id="site-table"><thead><tr><th>Site build-up</th><th class="num">Plan A</th><th class="num">Plan B</th><th>Meaning</th></tr></thead><tbody id="site-body"></tbody></table></div>
-<p class="small">Charger grant ceiling = MIN(30000, 0.5 &times; accepted cost per charger) &times; MIN(3, approved funded chargers). The ceiling is a budget estimate only; only an entered, checked award reduces TCO.</p>
+<p class="small">Signed credits reduce cost. Saving % = (Keep ICE total &minus; plan total) / Keep ICE total. Target headroom = (1 &minus; target) &times; Keep ICE total &minus; plan total, where the saving target defaults to 15%. Full derivations in Methodology &amp; assumptions below.</p>
 </section>
 
 <section id="sensitivity"><p class="block-title">Break-even and sensitivity</p>
 <p class="small">Each slider changes one cost driver and recomputes every path through the same engine. These are mathematical break-even conditions, not quoted prices. The baseline is always the current Keep ICE total at the unchanged inputs.</p>
 <div class="grid" id="sens-controls"></div>
 <div class="table-wrap"><table id="sens-table"><thead><tr>
-<th>Path</th><th class="num">Total economic TCO</th><th class="num">Saving vs Keep</th><th class="num">Saving %</th><th class="num">15% headroom</th>
+<th>Path</th><th class="num">Total economic TCO</th><th class="num">Saving vs Keep</th><th class="num">Saving %</th><th class="num" id="sens-headroom-th">15% headroom</th>
 </tr></thead><tbody id="sens-body"></tbody></table></div>
 <p class="small" id="sens-note">Average km cannot exceed peak km. A price change is a cost breakpoint, not a route-planning recommendation.</p>
+</section>
+
+<section id="validation"><p class="block-title">Validation</p>
+<p class="small">The engine runs an independent reconciliation (the workbook&apos;s Review sheet) on every recompute. These are internal consistency checks, not a probability that a company will save money.</p>
+<div class="table-wrap"><table id="review-table"><thead><tr><th>Reconciliation check</th><th class="num">Actual</th><th class="num">Expected</th><th>Status</th></tr></thead><tbody id="review-body"></tbody></table></div>
+<p class="caveat-line">Numerical reconciliation is strong; company-fit confidence is low because ownership, prices, COEs and charger rights are not established in the demonstration data. A pass count is not a savings forecast.</p>
+</section>
+
+</section><!-- /stage-tco -->
+
+<!-- STAGE 4: CHARGING. Relocated: energy / charging & site budget + the
+     adoption gates. The deeper charger-location integration is a later phase. -->
+<section class="stage stage-hidden" id="stage-charging" role="tabpanel" aria-labelledby="step-charging">
+<p class="block-title">4 &middot; Charging &amp; site</p>
+
+<section id="charging"><p class="block-title">Energy, charging and site budget</p>
+<p class="small">The charging site is costed once per plan and shared across its EVs. Completeness and access gates must pass before a numeric site cost is produced; otherwise the plan total is &quot;n.a.&quot;</p>
+<div class="table-wrap"><table id="site-table"><thead><tr><th>Site build-up</th><th class="num">Plan A</th><th class="num">Plan B</th><th>Meaning</th></tr></thead><tbody id="site-body"></tbody></table></div>
+<p class="small">Charger grant ceiling = MIN(30000, 0.5 &times; accepted cost per charger) &times; MIN(3, approved funded chargers). The ceiling is a budget estimate only; only an entered, checked award reduces TCO.</p>
+<p class="caveat-line">A later phase will match this site budget against surveyed charger-location and grid-capacity data; for now the chargers and site line items are entered in the <strong>Inputs</strong> panel and only an entered, checked award reduces TCO.</p>
 </section>
 
 <section id="gates"><p class="block-title">Conditions that must hold before adoption</p>
@@ -221,10 +355,14 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="small">Service screen is the per-plan vehicle service / evidence status. Capacity gate is the site completeness / access status. No plan reaches an evidence pass while any verification flag reads No or Unconfirmed.</p>
 </section>
 
-<section id="validation"><p class="block-title">Validation</p>
-<p class="small">The engine runs an independent reconciliation (the workbook&apos;s Review sheet) on every recompute. These are internal consistency checks, not a probability that a company will save money.</p>
-<div class="table-wrap"><table id="review-table"><thead><tr><th>Reconciliation check</th><th class="num">Actual</th><th class="num">Expected</th><th>Status</th></tr></thead><tbody id="review-body"></tbody></table></div>
-<p class="caveat-line">Numerical reconciliation is strong; company-fit confidence is low because ownership, prices, COEs and charger rights are not established in the demonstration data. A pass count is not a savings forecast.</p>
+</section><!-- /stage-charging -->
+
+<!-- STAGE 5: PROPOSAL (deferred). Honest 'coming next' placeholder: the
+     proposal / finance module is a later phase. No fabricated outputs. -->
+<section class="stage stage-hidden" id="stage-proposal" role="tabpanel" aria-labelledby="step-proposal">
+<p class="block-title">5 &middot; Proposal</p>
+<p class="lead">Assemble the chosen path, funding and grants into a shareable proposal.</p>
+<div class="notice"><strong>Coming next.</strong> The proposal / finance module (loan and lease structuring, grant timing, a printable customer-facing summary) is a later phase of this tool. It is not built yet, so this stage shows no figures rather than a fabricated quotation. The underlying economics are already in the <strong>TCO</strong> and <strong>Charging &amp; site</strong> stages, and the whole page prints as an internal diagnostic record.</div>
 </section>
 
 </div><!-- /results-col -->
@@ -265,8 +403,8 @@ Site TCO             = initial installed cost + recurring cost + renewal + resto
                        - checked charger grant   (counted once per plan)
 Fleet TCO            = sum of truck-path vehicle TCO + shared site TCO
 Saving %             = (Keep ICE total - plan total) / Keep ICE total
-15% headroom         = 0.85 x Keep ICE total - plan total
-Max site TCO for 15% = 0.85 x Keep ICE total - plan vehicle TCO
+Target headroom      = (1 - target) x Keep ICE total - plan total          (target defaults to 15%)
+Max site TCO target  = (1 - target) x Keep ICE total - plan vehicle TCO    (target defaults to 15%)
 Horizon              = fixed 120 months; demo inflation = 0, demo discount = 0</pre>
 
 <h3>Energy-and-charging evidence table (E01..U01)</h3>
@@ -291,11 +429,11 @@ Horizon              = fixed 120 months; demo inflation = 0, demo discount = 0</
 <tr><td>Net site ownership cost</td><td>Results!B13:E13</td><td>SUM of the per-year site economic schedule (Results!F45:I55)</td></tr>
 <tr><td>Total economic TCO</td><td>Results!B14:E14</td><td>Vehicle economic TCO + net site ownership cost</td></tr>
 <tr><td>Saving vs Keep ICE / %</td><td>Results!B15:E16</td><td>Keep ICE total &minus; plan total; divided by Keep ICE total</td></tr>
-<tr><td>15% fleet saving headroom</td><td>Results!B17:E17</td><td>0.85 &times; Keep ICE total &minus; plan total</td></tr>
+<tr><td>Fleet saving-target headroom</td><td>Results!B17:E17</td><td>(1 &minus; target) &times; Keep ICE total &minus; plan total (target defaults to 15%)</td></tr>
 <tr><td>Cash less year-10 assets</td><td>Results!B18:E18</td><td>SUM Annual build!O + site cash schedule</td></tr>
 <tr><td>Day-0 funding before loans</td><td>Results!B19:E19</td><td>SUMIFS Annual build!R + year-0 site cash</td></tr>
 <tr><td>Cost per productive km</td><td>Results!B21:E21</td><td>Total economic TCO / SUMIFS Annual build!S</td></tr>
-<tr><td>Max site TCO for 15% saving</td><td>Results!D26:E26</td><td>0.85 &times; Keep ICE total &minus; plan vehicle TCO</td></tr>
+<tr><td>Max site TCO for saving target</td><td>Results!D26:E26</td><td>(1 &minus; target) &times; Keep ICE total &minus; plan vehicle TCO (target defaults to 15%)</td></tr>
 <tr><td>Diesel visits</td><td>Paths (fuel block)</td><td>ROUNDUP(work km &times; available days &times; L/km / (refill &minus; detour &times; L/km))</td></tr>
 <tr><td>EV grid intensity</td><td>Paths!U</td><td>battery kWh/km / (1 &minus; charging loss)</td></tr>
 <tr><td>Public visits / EV grid year</td><td>Paths!W,X</td><td>ROUNDUP of the detour-energy balance; grid energy over available days</td></tr>
@@ -308,7 +446,7 @@ Horizon              = fixed 120 months; demo inflation = 0, demo discount = 0</
 <footer>EV Truck TCO Calculator. A reviewable planning simulation reverse-engineered from the authoritative workbook. It is not a fleet audit, grant approval, quotation, tax advice or acceptance by any company. Math source of truth: src/engine.js, regenerate this page with <code>node tools/build_index.js</code>.</footer>
 
 <!-- ENGINE:BEGIN  generated from src/engine.js by tools/build_index.js  DO NOT EDIT BY HAND -->
-<!-- src/engine.js SHA-256: 8e7e893cd21a09adcb65360050987cd2425a4965480d4c37a279c228970b232c -->
+<!-- src/engine.js SHA-256: 8a259b836686312336ef5bca60ca736d6b8a0cd0f09910b6f06794905802b407 -->
 <script>
 /*
  * Hong Seh EV Truck TCO engine
@@ -331,7 +469,7 @@ Horizon              = fixed 120 months; demo inflation = 0, demo discount = 0</
  *   Results!B14:E14  Total economic TCO          -> results.totalEconomicTco
  *   Results!B15:E15  Saving vs Keep ICE          -> results.savingVsKeep
  *   Results!B16:E16  Saving percentage           -> results.savingPct
- *   Results!B17:E17  15% fleet saving headroom   -> results.headroom15
+ *   Results!B17:E17  Fleet saving-target headroom-> results.headroom15 (target default 15%)
  *   Results!B18:E18  Cash less year-10 assets    -> results.cashLessTerminal   (SUM Annual build!O / site cash)
  *   Results!B19:E19  Day-0 funding before loans  -> results.day0Funding        (SUMIFS Annual build!R + site cash yr0)
  *   Results!B20:E20  Incremental day-0 funding   -> results.incrementalDay0
@@ -339,7 +477,7 @@ Horizon              = fixed 120 months; demo inflation = 0, demo discount = 0</
  *   Results!B22:E22  Site completeness / access  -> results.siteStatus         (Energy and charging!B67/C67)
  *   Results!B23:E23  Vehicle service / evidence  -> results.vehicleStatus      (Paths!Q cascade)
  *   Results!B24:E24  Saving claim status         -> results.savingClaimStatus
- *   Results!D26:E26  Max site TCO for 15% saving -> results.maxSiteTco15
+ *   Results!D26:E26  Max site TCO for saving tgt -> results.maxSiteTco15 (target default 15%)
  *   Energy and charging!B60:C60 Input completeness-> site.completeness
  *   Energy and charging!B61:C61 Gross initial site-> site.grossInitial
  *   Energy and charging!B62:C62 Annual site cost  -> site.annual
@@ -443,7 +581,26 @@ function buildModel(inputs) {
 
   const analysisStart = parseDate(oc[63]) || new Date(Date.UTC(2026, 9, 3));
 
-  return { oc, ec, products, fleet, fleetRows, repl, analysisStart };
+  // Configurable fleet-saving target (fraction, e.g. 0.15 = 15%).
+  // STATE SOURCE (bound by the FEAT-003 UI slider + number): the top-level
+  // `inputs.savingTarget` field. DEFAULTS to 0.15 when absent, null, non-numeric,
+  // <= 0, or >= 1, so the demo fixture (which does NOT set it) resolves to exactly
+  // 0.15 and reproduces every current number bit-for-bit. All existing
+  // operating_costs rows (7..68) are Excel-mapped and must not be repurposed, so a
+  // dedicated top-level field is used instead.
+  const savingTarget = resolveSavingTarget(inputs.savingTarget);
+
+  return { oc, ec, products, fleet, fleetRows, repl, analysisStart, savingTarget };
+}
+
+// Domain-guarded saving-target resolver. Returns a fraction strictly in (0, 1),
+// defaulting to 0.15 for any absent/invalid/out-of-domain input.
+function resolveSavingTarget(...candidates) {
+  for (const c of candidates) {
+    const n = (typeof c === 'number') ? c : (typeof c === 'string' && c.trim() !== '' ? Number(c) : NaN);
+    if (Number.isFinite(n) && n > 0 && n < 1) return n;
+  }
+  return 0.15;
 }
 
 // VLOOKUP into Fleet register A7:S106, column index (1-based) 2..19 -> B..S.
@@ -1140,13 +1297,17 @@ function aggregate(model, allPaths, annualByPlan, sites, siteSchedules) {
   // Derived cross-plan metrics (relative to Keep ICE = code 0).
   const keepTotal = perPlan[0].totalEconomicTco;
   const keepDay0 = perPlan[0].day0Funding;
+  // Configurable fleet-saving target (fraction); defaults to 0.15 via buildModel.
+  // With savingTarget === 0.15, (1 - savingTarget) === 0.85 exactly in IEEE-754,
+  // so headroom15/maxSiteTco15 reproduce the frozen Excel numbers bit-for-bit.
+  const savingTarget = model.savingTarget;
   for (const code of [0, 1, 2, 3]) {
     const pp = perPlan[code];
     pp.savingVsKeep = (isNum(keepTotal) && isNum(pp.totalEconomicTco)) ? keepTotal - pp.totalEconomicTco : NA;
     pp.savingPct = (isNum(pp.savingVsKeep) && isNum(keepTotal) && keepTotal > 0) ? pp.savingVsKeep / keepTotal : NA;
-    pp.headroom15 = (isNum(keepTotal) && isNum(pp.totalEconomicTco)) ? 0.85 * keepTotal - pp.totalEconomicTco : NA;
+    pp.headroom15 = (isNum(keepTotal) && isNum(pp.totalEconomicTco)) ? (1 - savingTarget) * keepTotal - pp.totalEconomicTco : NA;
     pp.incrementalDay0 = (isNum(pp.day0Funding) && isNum(keepDay0)) ? pp.day0Funding - keepDay0 : NA;
-    pp.maxSiteTco15 = (isNum(keepTotal) && isNum(pp.vehicleEconomicTco)) ? 0.85 * keepTotal - pp.vehicleEconomicTco : NA;
+    pp.maxSiteTco15 = (isNum(keepTotal) && isNum(pp.vehicleEconomicTco)) ? (1 - savingTarget) * keepTotal - pp.vehicleEconomicTco : NA;
     pp.savingClaimStatus = savingClaimStatus(model, pp, code);
   }
 
@@ -1177,7 +1338,19 @@ function savingClaimStatus(model, pp, code) {
     pp.vehicleStatus !== 'Within entered limits' ||
     !customerMode || !energyConfirmed;
   if (diagnostic) return 'Diagnostic only';
-  return pp.savingPct >= 0.15 ? 'Meets entered 15% target' : 'Below entered 15% target';
+  const target = model.savingTarget;
+  const pct = formatTargetPct(target);
+  return pp.savingPct >= target
+    ? `Meets entered ${pct}% target`
+    : `Below entered ${pct}% target`;
+}
+
+// Render a saving-target fraction as a percentage label with no spurious
+// decimals: 0.15 -> '15', 0.2 -> '20', 0.125 -> '12.5'. Uses a rounded
+// fixed-precision string with trailing zeros trimmed to avoid float artefacts
+// (e.g. 0.2 * 100 === 20.000000000000004 in IEEE-754).
+function formatTargetPct(target) {
+  return parseFloat((target * 100).toFixed(4)).toString();
 }
 
 /* ------------------------------------------------------------------ *
@@ -1371,8 +1544,11 @@ function shapeResults(perPlan, sites) {
  *
  *   benefitKey   = best EV-plan Saving % vs Keep ICE        (Results!B16:E16)
  *                  Secondary audit components (shown, not blended):
- *                    headroom15      = 0.85*KeepICE_total - plan_total  (Results!B17)
- *                    maxSiteTco15    = 0.85*KeepICE_total - plan_vehTCO (Results!D26:E26)
+ *                    headroom15      = (1-target)*KeepICE_total - plan_total  (Results!B17)
+ *                    maxSiteTco15    = (1-target)*KeepICE_total - plan_vehTCO (Results!D26:E26)
+ *                    (target = model.savingTarget, the committed saving target,
+ *                     default 0.15; field names keep the "15" suffix for
+ *                     continuity with the Excel map)
  *                    gatePass        = plan passes service/capacity/evidence
  *                  A case whose best plan "Fails entered limits" or is
  *                  "Diagnostic only" gets benefitKey = -Infinity so it sinks
@@ -1392,7 +1568,9 @@ function shapeResults(perPlan, sites) {
  *                  scale with gatePass=false flagging the caveat.
  *
  * "fifteenTargetMet" mirrors Results!B24:E24 ("Saving claim status"); it is a
- * conditional-on-inputs label, NOT an adoption probability.
+ * conditional-on-inputs label reporting the committed saving target
+ * ("Meets/Below entered X% target", X = model.savingTarget, default 15%),
+ * NOT an adoption probability.
  */
 function num(v) { return isNum(v) ? v : null; }
 
@@ -1638,8 +1816,18 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   var PLAN_KEYS = ['keep_ice','all_new_ice','plan_a','plan_b'];
   var PLAN_LABELS = {keep_ice:'Keep ICE', all_new_ice:'All-new ICE now', plan_a:'Plan A', plan_b:'Plan B'};
 
+  // Committed saving target as a percentage string (mirrors the engine's
+  // resolveSavingTarget domain guard + formatTargetPct); drives the dynamic
+  // '15%' labels so they track the live target instead of a frozen literal.
+  function committedTargetPct(){
+    var n = Number(state.savingTarget);
+    var t = (isFinite(n) && n>0 && n<1) ? n : 0.15;
+    return parseFloat((t*100).toFixed(4)).toString();
+  }
+
   function renderResults(out){
     var r = out.results;
+    var tp = committedTargetPct();
     var rows = [
       ['Truck count', r.truckCount, 'int'],
       ['Vehicle economic TCO', r.vehicleEconomicTco, 'money'],
@@ -1647,7 +1835,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
       ['Total economic TCO', r.totalEconomicTco, 'money'],
       ['Saving vs Keep ICE', r.savingVsKeep, 'money'],
       ['Saving %', r.savingPct, 'pct'],
-      ['15% fleet saving headroom', r.headroom15, 'money'],
+      [tp + '% fleet saving headroom', r.headroom15, 'money'],
       ['Cash less year-10 assets', r.cashLessTerminal, 'money'],
       ['Day-0 funding before loans', r.day0Funding, 'money'],
       ['Cost per productive km', r.costPerKm, 'km'],
@@ -1665,7 +1853,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
       html += '</tr>';
     });
     // Max site TCO row (Plan A / Plan B only).
-    html += '<tr class="resultline"><td>Max site TCO for 15% saving</td>' +
+    html += '<tr class="resultline"><td>Max site TCO for ' + tp + '% saving</td>' +
       cell('<span class="na">&mdash;</span>') + cell('<span class="na">&mdash;</span>') +
       cell(fmtMoney(r.maxSiteTco15.plan_a)) + cell(fmtMoney(r.maxSiteTco15.plan_b)) + '</tr>';
     el('results-body').innerHTML = html;
@@ -1764,6 +1952,56 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   function roundDp(v){ if(!isNum(v)) return 0; return Number.isInteger(v)?0:2; }
   function ocVal(n){ var r = ocRow(n); return r && r.values ? r.values.B : undefined; }
 
+  // ---- Confidence badge (persistent across stages) -----------------
+  // Honest, gate-driven. Picks the "best EV plan" (Plan A / Plan B) exactly as
+  // the decision story does: the one with the better numeric saving %. The
+  // badge text/colour mirror that plan's savingClaimStatus from the engine:
+  //   'Meets entered X% target'  -> Confirmed (green)
+  //   'Below entered X% target'  -> Below target (amber)
+  //   'Total incomplete' / 'Diagnostic only' -> Diagnostic (grey, NOT confirmed)
+  // It is never a fabricated probability. For the demonstration case both EV
+  // plans are 'Total incomplete' (site cost n.a.), so the badge shows the honest
+  // non-confirmed Diagnostic state.
+  function bestEvPlanKey(out){
+    var sp = out.results.savingPct;
+    var a = sp.plan_a, b = sp.plan_b;
+    var an = isNum(a), bn = isNum(b);
+    if (an && bn) return a >= b ? 'plan_a' : 'plan_b';
+    if (an) return 'plan_a';
+    if (bn) return 'plan_b';
+    return 'plan_a';   // fall back to Plan A when neither has a numeric saving
+  }
+  function renderConfidence(out){
+    var badge = el('confidence-badge');
+    var dot = el('confidence-dot');
+    var txt = el('confidence-text');
+    if (!txt) return;
+    var key = bestEvPlanKey(out);
+    var claim = out.results.savingClaimStatus[key];
+    var label = PLAN_LABELS[key];
+    var cls, message;
+    if (typeof claim === 'string' && claim.indexOf('Meets entered') === 0){
+      cls = 'conf-confirmed';
+      message = 'Confirmed win &middot; ' + label + ' ' + claim.toLowerCase();
+    } else if (typeof claim === 'string' && claim.indexOf('Below entered') === 0){
+      cls = 'conf-below';
+      message = 'Below target &middot; ' + label + ' ' + claim.toLowerCase();
+    } else {
+      // 'Total incomplete', 'Diagnostic only', n.a. or anything else.
+      cls = 'conf-diagnostic';
+      message = 'Diagnostic &middot; not a confirmed win (' + label + ': ' + fmtText(claim) + ')';
+    }
+    txt.innerHTML = 'Confidence: ' + message;
+    // Swap the single status class without clobbering the base 'confidence'.
+    if (badge){
+      var base = (badge.className || 'confidence')
+        .replace(/\s*conf-confirmed/g,'').replace(/\s*conf-below/g,'').replace(/\s*conf-diagnostic/g,'');
+      if (base.indexOf('confidence') === -1) base = 'confidence ' + base;
+      badge.className = base.trim() + ' ' + cls;
+    }
+    if (dot && dot.setAttribute) dot.setAttribute('data-status', cls);
+  }
+
   recompute = function(){
     if (!computeFleet){ return; }
     var out = computeFleet(state);
@@ -1772,8 +2010,9 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     renderSite(out);
     renderGates(out);
     renderReview(out);
-    renderSensitivity();
+    renderSensitivity(out);
     renderCharts(out);
+    renderConfidence(out);
   };
 
   /* ---- INPUT UI rendering ---------------------------------------- */
@@ -1976,11 +2215,19 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   //   16 Installed chargers (units)            -- site build-up scale
   //   18 Charger equipment price (SGD/charger) -- site build-up scale
   var PRIMARY_EC = {7:true, 10:true, 16:true, 18:true};
+  // Rows whose Plan B (col C) is NOT an independent engine input: the engine
+  // reads only col B (ec[7].B / ec[10].B) and the unified commercial diesel/
+  // electricity driver keeps col C == col B. Presenting col C as an editable,
+  // authoritative field would offer a dead, silently auto-overwritten input,
+  // so for these rows col C renders as a non-editable value mirrored from
+  // Plan A. The engine read path is unchanged; only the UI stops offering a
+  // dead field.
+  var EC_MIRRORED_C = {7:true, 10:true};
   function ecRowTr(r){
     var tr=document.createElement('tr');
     tr.appendChild(tdText(r.label||('Row '+r._row)));
     tr.appendChild(ecCell(r,'B'));
-    tr.appendChild(ecCell(r,'C'));
+    tr.appendChild(EC_MIRRORED_C[r._row] ? ecMirroredC(r) : ecCell(r,'C'));
     tr.appendChild(tdText(r.values.D==null?'':r.values.D));
     var meaning=document.createElement('td'); meaning.className='small';
     meaning.textContent=(r.values.E==null?('Energy and charging!B'+r._row):r.values.E);
@@ -2010,18 +2257,49 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     td.appendChild(inp); return td;
   }
 
-  // ---- Sensitivity controls ----
-  // Vary diesel price (EC row 7 B/C), electricity price (EC row 10 B/C),
-  // EV purchase price (Replacement plan col D for every truck), discount rate (OC row 54).
-  var SENS = [
-    {id:'diesel', label:'Commercial diesel (SGD/litre)', min:1.5, max:5, step:0.05, get:getDiesel},
-    {id:'elec', label:'Depot electricity (SGD/grid kWh)', min:0.2, max:0.8, step:0.01, get:getElec},
-    {id:'evprice', label:'EV purchase price (SGD/truck)', min:120000, max:260000, step:1000, get:getEvPrice},
-    {id:'disc', label:'Discount rate (fraction/year)', min:0, max:0.12, step:0.005, get:getDisc}
-  ];
-  function getDiesel(){ return H.ecRow(7).values.B; }
-  function getElec(){ return H.ecRow(10).values.B; }
-  function getDisc(){ return H.ocRow(54).values.B; }
+  // Non-editable Plan B (col C) cell for the driver-mirrored rows (7, 10).
+  // The engine never reads ec[row].C for these rows and the shared commercial
+  // driver forces C == B, so this cell only reflects Plan A rather than
+  // accepting a dead edit. It carries the "mirror-c" class and
+  // data-mirror-of="B" so the harness can assert it is non-editable/mirrored.
+  function ecMirroredC(r){
+    var td=document.createElement('td');
+    var span=document.createElement('span');
+    span.className='mirror-c small';
+    span.setAttribute('data-mirror-of','B');
+    span.setAttribute('data-ec-row', String(r._row));
+    span.title='Mirrors Plan A (driven by the shared commercial control).';
+    var v=r.values.C;
+    span.textContent=(v==null?'':v);
+    td.appendChild(span); return td;
+  }
+
+  // ---- Shared cost-driver controls (Task A: single source of truth) --------
+  // Each driver is bound to the SAME canonical state field that computeFleet
+  // reads (no clone, no parallel store). Both a <input type=range> slider and a
+  // <input type=number> box read and write that one field; editing either writes
+  // the value into state and calls the ONE liveRecompute() path, so the money
+  // view, the charts, the gates AND the sensitivity table all move in lockstep.
+  // The sensitivity section is therefore a LIVE reflection of committed state
+  // (Q6 Option A), not a throwaway JSON clone.
+  //
+  // Q5 structure preserved: the unified commercial diesel/electricity driver
+  // writes BOTH Plan A (col B) and Plan B (col C) together (matching the old
+  // setEc). Public diesel and the per-plan A/B overrides stay editable in the
+  // Advanced area (#ec-body-adv / #oc-form-adv); only the commercial A/B pair is
+  // driven here. The EV-quote driver fans col D to every EV-action truck.
+  //
+  // The saving-target (Task B) is one more shared driver bound to the top-level
+  // H.state.savingTarget field FEAT-002 introduced (the engine defaults it to
+  // 0.15 when absent / out of (0,1)); moving it recomputes headroom15,
+  // maxSiteTco15 and the 'Meets entered X% target' claim live.
+  var DEFAULT_SAVING_TARGET = 0.15;
+  function getDiesel(){ var r=H.ecRow(7); return r?r.values.B:undefined; }
+  function setDiesel(v){ var r=H.ecRow(7); if(r){ r.values.B=v; r.values.C=v; } }
+  function getElec(){ var r=H.ecRow(10); return r?r.values.B:undefined; }
+  function setElec(v){ var r=H.ecRow(10); if(r){ r.values.B=v; r.values.C=v; } }
+  function getDisc(){ var r=H.ocRow(54); return r?r.values.B:undefined; }
+  function setDisc(v){ var r=H.ocRow(54); if(r){ r.values.B=v; } }
   function getEvPrice(){
     // Use the first EV quote present, else fall back to the ChengLong L2EV demo quote 181000.
     var map=H.replByIdMap();
@@ -2029,38 +2307,114 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     for(var i=0;i<ids.length;i++){ var rp=map[ids[i]]; if(rp && H.isNum(rp.D)) return rp.D; }
     return 181000;
   }
+  function setEvPrice(v){
+    // Fan the single EV quote to col D for every truck whose Plan A or Plan B
+    // action is EV (the quote basis the engine reads for the EV paths).
+    var map=H.replByIdMap();
+    var ids=H.includedFleet().map(function(r){return r.A;});
+    ids.forEach(function(id){ var rp=map[id]; if(rp && (rp.O==='EV'||rp.R==='EV')) rp.D=v; });
+  }
+  function getTarget(){
+    // Mirror the engine's resolveSavingTarget domain guard so the control shows
+    // the value computeFleet will actually use (default 0.15 when out of range).
+    var raw=H.state.savingTarget; var n=Number(raw);
+    return (isFinite(n) && n>0 && n<1) ? n : DEFAULT_SAVING_TARGET;
+  }
+  function setTarget(v){ H.state.savingTarget = v; }
 
-  var sensVals = {};
+  // Format a target fraction as a percentage with no spurious decimals, matching
+  // the engine's formatTargetPct (0.15 -> '15', 0.2 -> '20', 0.125 -> '12.5').
+  function fmtTargetPct(t){ return parseFloat((t*100).toFixed(4)).toString(); }
+  H.fmtTargetPct = fmtTargetPct;
+  H.committedTarget = getTarget;
+
+  // The four price/rate drivers feed the sensitivity table; the saving-target
+  // driver is a fifth shared control rendered alongside them.
+  var SENS = [
+    {id:'diesel', label:'Commercial diesel (SGD/litre)', min:1.5, max:5, step:0.05, get:getDiesel, set:setDiesel, kind:'num'},
+    {id:'elec', label:'Depot electricity (SGD/grid kWh)', min:0.2, max:0.8, step:0.01, get:getElec, set:setElec, kind:'num'},
+    {id:'evprice', label:'EV purchase price (SGD/truck)', min:120000, max:260000, step:1000, get:getEvPrice, set:setEvPrice, kind:'num'},
+    {id:'disc', label:'Discount rate (fraction/year)', min:0, max:0.12, step:0.005, get:getDisc, set:setDisc, kind:'disc'},
+    {id:'target', label:'Fleet saving target (%)', min:0.05, max:0.30, step:0.005, get:getTarget, set:setTarget, kind:'pct'}
+  ];
+
+  // Live references to each driver's slider + number box so renderSensitivity()
+  // can re-sync their displayed values to committed state (e.g. after an
+  // Advanced-area edit or a Reset moves the same canonical field).
+  var sensCtl = {};
+
+  function fmtDriver(s, v){
+    if (!H.isNum(v)) return '';
+    if (s.kind==='disc') return v.toFixed(3);
+    if (s.kind==='pct') return fmtTargetPct(v) + '%';
+    return v.toLocaleString('en-SG');
+  }
+
   function buildSensitivity(){
     var wrap=H.el('sens-controls'); wrap.innerHTML='';
+    sensCtl = {};
     SENS.forEach(function(s){
-      sensVals[s.id] = s.get();
+      var cur = s.get();
       var panel=document.createElement('div'); panel.className='panel';
       var h=document.createElement('h3'); h.textContent=s.label; h.style.fontSize='16px';
       var out=document.createElement('div'); out.style.fontWeight='600'; out.style.margin='4px 0';
       var slider=document.createElement('input'); slider.type='range';
-      slider.min=s.min; slider.max=s.max; slider.step=s.step; slider.value=sensVals[s.id];
+      slider.min=s.min; slider.max=s.max; slider.step=s.step; slider.value=cur;
       slider.style.width='100%'; slider.className='amber';
-      function label(){ out.textContent = (s.id==='disc') ? (sensVals[s.id]).toFixed(3) : sensVals[s.id].toLocaleString('en-SG'); }
-      label();
-      slider.addEventListener('input',function(){ sensVals[s.id]=Number(slider.value); label(); renderSensitivity(); });
-      panel.appendChild(h); panel.appendChild(slider); panel.appendChild(out);
+      var box=document.createElement('input'); box.type='number';
+      box.min=s.min; box.max=s.max; box.step=s.step; box.value=cur;
+      box.className='amber'; box.style.width='120px';
+      function show(v){ out.textContent = fmtDriver(s, v); }
+      show(cur);
+      // Both controls write the SAME canonical state field, keep each other in
+      // sync, and trigger the one live recompute. renderSensitivity (called by
+      // recompute) re-reads committed state, so there is no divergence.
+      function commit(v){
+        if (!isFinite(v)) return;
+        s.set(v);
+        slider.value = v; box.value = v; show(v);
+        liveRecompute();
+      }
+      slider.addEventListener('input',function(){ commit(Number(slider.value)); });
+      box.addEventListener('input',function(){ if(box.value!=='') commit(Number(box.value)); });
+      sensCtl[s.id] = {slider:slider, box:box, show:show, def:s};
+      panel.appendChild(h); panel.appendChild(slider); panel.appendChild(box); panel.appendChild(out);
       wrap.appendChild(panel);
     });
   }
 
-  function renderSensitivity(){
-    // Clone state, apply sensitivity overrides, recompute, render.
-    var s = JSON.parse(JSON.stringify(H.state));
-    setEc(s,7,sensVals.diesel);   // commercial diesel (public diesel left unchanged)
-    setEc(s,10,sensVals.elec);    // depot electricity
-    setOc(s,54,sensVals.disc);
-    // EV purchase price: set col D for every truck whose Plan A or Plan B action is EV.
-    s.replacement_plan.rows.forEach(function(rp){
-      if(rp.A==null) return;
-      if(rp.O==='EV' || rp.R==='EV'){ rp.D = sensVals.evprice; }
+  // Re-sync every driver control to the committed state value. Called on each
+  // recompute so an edit made in the Advanced area (which writes the same
+  // canonical field) or a Reset is reflected on the slider + number box.
+  function syncSensControls(){
+    SENS.forEach(function(s){
+      var c = sensCtl[s.id]; if(!c) return;
+      var v = s.get();
+      if (H.isNum(v)){ c.slider.value = v; c.box.value = v; c.show(v); }
     });
-    var out = H.computeFleet(s);
+    syncMirroredC();
+  }
+
+  // Keep the non-editable Plan B (col C) mirror cells for rows 7/10 showing the
+  // committed Plan A value, since the shared commercial driver forces C == B.
+  function syncMirroredC(){
+    var body = H.el('ec-body');
+    if (!body || typeof body.querySelectorAll !== 'function') return;
+    body.querySelectorAll('span.mirror-c[data-ec-row]').forEach(function(span){
+      var row = H.ecRow(Number(span.getAttribute('data-ec-row')));
+      if (!row || row.values==null) return;
+      var v = row.values.C;
+      span.textContent = (v==null ? '' : v);
+    });
+  }
+
+  // Render the sensitivity table from COMMITTED state (Q6 Option A). recompute()
+  // passes the already-computed engine output, so the sens table reflects the
+  // identical value shown in the money view (no clone divergence). Also publish
+  // it to H.onSensResult / H.lastSensOut so the Charts module redraws chart-sens.
+  function renderSensitivity(out){
+    if (!out){ out = H.computeFleet(H.state); }
+    syncSensControls();
     var r = out.results;
     var html='';
     ['keep_ice','all_new_ice','plan_a','plan_b'].forEach(function(k){
@@ -2072,13 +2426,12 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
         tdNumHtml(r.headroom15[k],'money')+'</tr>';
     });
     H.el('sens-body').innerHTML=html;
-    // Publish the slider-overridden result so the Charts module can redraw the
-    // sensitivity-response chart live as the sliders drag (input event).
+    // Keep the dynamic '15% headroom' column header in step with the target.
+    var hdr = H.el('sens-headroom-th');
+    if (hdr) hdr.textContent = fmtTargetPct(getTarget()) + '% headroom';
     H.lastSensOut = out;
-    if (typeof H.onSensResult === 'function') H.onSensResult(out, sensVals);
+    if (typeof H.onSensResult === 'function') H.onSensResult(out);
   }
-  function setEc(s,rowNum,val){ var r=s.energy_and_charging.rows.filter(function(x){return x._row===rowNum;})[0]; if(r){ r.values.B=val; r.values.C=val; } }
-  function setOc(s,rowNum,val){ var r=s.operating_costs.rows.filter(function(x){return x._row===rowNum;})[0]; if(r){ r.values.B=val; } }
   function tdNumHtml(v,t){
     if(v===NA||v==null||typeof v!=='number'||!isFinite(v)) return '<td class="num"><span class="na">n.a.</span></td>';
     if(t==='pct') return '<td class="num">'+(v*100).toFixed(2)+'%</td>';
@@ -2102,55 +2455,97 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     });
   }
 
-  // ---- Toggleable input sidebar ----
-  // The toggle shows/hides the #input-col sidebar by flipping a 'collapsed'
-  // class on the .workspace grid; when collapsed the grid becomes a single
-  // column so #results-col takes the full width (CSS .workspace.collapsed).
-  // Default = OPEN. State is persisted (best-effort) under a new localStorage
-  // key, wrapped in try/catch like the prospects store so file:// still works.
+  // ---- Input overlay panel ----
+  // The inputs live in a position:fixed drawer (#input-col) that floats over a
+  // full-viewport scrim (#input-scrim). Opening/closing the panel adds/removes
+  // the 'open' class on both; the results underneath keep their full width and
+  // NEVER reflow (no grid column is collapsed any more). The panel is a modal
+  // dialog: role=dialog + aria-modal, aria-hidden toggles with the open state,
+  // the trigger carries aria-expanded + aria-controls=input-col.
+  //
+  // Dismissal: the toggle, the in-panel Close button, a scrim click, and Esc.
+  // Focus management: FOCUS-RETURN (documented level). On open, focus moves to
+  // the first focusable control inside the panel; on close, focus returns to the
+  // trigger. (A full focus trap is intentionally not implemented; focus-return
+  // is the chosen level and is noted here and in the feature findings.)
+  //
+  // Default = CLOSED, so the results are visible first (natural for an overlay).
+  // State persists best-effort under a localStorage key (try/catch so file://
+  // still works); the key is 'hs_sidebar_v1' reused with 'open'/'closed' values.
   var SIDEBAR_KEY = 'hs_sidebar_v1';
   function wireSidebar(){
     var btn = H.el('sidebar-toggle');
     if (!btn) return;
-    var ws = document.querySelector ? document.querySelector('.workspace') : null;
-    // Fallback for the harness shim (no querySelector): track state on the btn.
-    var label = H.el('sidebar-toggle-label');
-    var inputCol = H.el('input-col');
+    var panel = H.el('input-col');
+    var scrim = H.el('input-scrim');
+    var closeBtn = H.el('input-overlay-close');
+    var isOpen = false;
 
     function readStored(){
-      try { if (window.localStorage){ var v = window.localStorage.getItem(SIDEBAR_KEY); if (v==='collapsed') return true; if (v==='open') return false; } } catch(e){}
+      try { if (window.localStorage){ var v = window.localStorage.getItem(SIDEBAR_KEY); if (v==='open') return true; if (v==='closed') return false; } } catch(e){}
       return null;
     }
-    function store(collapsed){
-      try { if (window.localStorage) window.localStorage.setItem(SIDEBAR_KEY, collapsed?'collapsed':'open'); } catch(e){}
+    function store(open){
+      try { if (window.localStorage) window.localStorage.setItem(SIDEBAR_KEY, open?'open':'closed'); } catch(e){}
     }
-    function apply(collapsed){
-      if (ws){
-        if (ws.classList && ws.classList.add){
-          if (collapsed) ws.classList.add('collapsed'); else ws.classList.remove('collapsed');
-        } else {
-          // shim: className string
-          ws.className = (ws.className||'').replace(/\s*collapsed/,'') + (collapsed?' collapsed':'');
-        }
-      }
-      // Reflect hidden state on the input column so the DOM/harness can see it.
-      if (inputCol){
-        inputCol.style.display = collapsed ? 'none' : '';
-        if (inputCol.setAttribute) inputCol.setAttribute('aria-hidden', collapsed ? 'true' : 'false');
-      }
-      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-      if (label) label.textContent = collapsed ? 'Show inputs' : 'Hide inputs';
+    function addClass(elm,c){
+      if (!elm) return;
+      if (elm.classList && elm.classList.add){ elm.classList.add(c); return; }
+      elm.className = ((elm.className||'').replace(new RegExp('\\s*'+c),'')) + ' ' + c;
     }
+    function removeClass(elm,c){
+      if (!elm) return;
+      if (elm.classList && elm.classList.remove){ elm.classList.remove(c); return; }
+      elm.className = (elm.className||'').replace(new RegExp('\\s*'+c),'');
+    }
+    function firstFocusable(){
+      // Prefer the in-panel Close button; fall back to any focusable control.
+      if (closeBtn) return closeBtn;
+      return null;
+    }
+    function apply(open){
+      isOpen = !!open;
+      if (open){ addClass(panel,'open'); addClass(scrim,'open'); }
+      else { removeClass(panel,'open'); removeClass(scrim,'open'); }
+      // Reflect modal state for assistive tech + the harness.
+      if (panel && panel.setAttribute) panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+      if (scrim){
+        // Keep the scrim out of the a11y tree + layout when closed.
+        if (scrim.setAttribute) scrim.setAttribute('aria-hidden', open ? 'false' : 'true');
+        scrim.hidden = !open;
+      }
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    function open(){
+      apply(true); store(true);
+      var f = firstFocusable();
+      if (f && typeof f.focus === 'function'){ try { f.focus(); } catch(e){} }
+    }
+    function close(){
+      apply(false); store(false);
+      // Focus-return: send focus back to the trigger.
+      if (btn && typeof btn.focus === 'function'){ try { btn.focus(); } catch(e){} }
+    }
+    function toggle(){ if (isOpen) close(); else open(); }
 
     var stored = readStored();
-    var collapsed = (stored===null) ? false : stored;   // default OPEN
-    apply(collapsed);
+    apply(stored===null ? false : stored);   // default CLOSED
 
-    btn.addEventListener('click', function(){
-      collapsed = !collapsed;
-      apply(collapsed);
-      store(collapsed);
-    });
+    btn.addEventListener('click', toggle);
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (scrim) scrim.addEventListener('click', close);
+
+    // Esc dismissal. Attach a keydown handler to the panel (which the harness
+    // can fire) AND to the document/window when available (real browsers), so a
+    // global Esc also closes it.
+    function onKeydown(e){
+      var key = e && (e.key || e.keyCode);
+      if (!isOpen) return;
+      if (key === 'Escape' || key === 'Esc' || key === 27){ close(); }
+    }
+    if (panel && panel.addEventListener) panel.addEventListener('keydown', onKeydown);
+    try { if (document && document.addEventListener) document.addEventListener('keydown', onKeydown); } catch(e){}
+    try { if (window && window.addEventListener) window.addEventListener('keydown', onKeydown); } catch(e){}
   }
 
   function buildAll(){
@@ -2166,6 +2561,125 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   wireReset();
   wireSidebar();
   H.recompute();
+})();
+</script>
+
+<script>
+/* ================================================================== *
+ * Journey stepper controller.
+ * Switches a single visible stage viewport (Customer / Portfolio / TCO /
+ * Charging / Proposal) with NO routing and NO fetch -- pure client-side
+ * show/hide via the 'stage-active' / 'stage-hidden' classes. The active stage
+ * persists best-effort under localStorage 'hs_stage_v1' (try/catch so file://
+ * still works). Keyboard-navigable: arrows move focus between steps, Enter /
+ * Space activate, Home / End jump to the ends (tablist pattern).
+ * ================================================================== */
+(function(){
+  "use strict";
+  var H = window.__HS;
+  var STAGE_KEY = 'hs_stage_v1';
+  var ORDER = ['customer','portfolio','tco','charging','proposal'];
+  var DEFAULT_STAGE = 'tco';
+
+  function el(id){ return document.getElementById(id); }
+  function stepEl(stage){ return el('step-' + stage); }
+  function stageEl(stage){ return el('stage-' + stage); }
+
+  function addClass(elm,c){
+    if (!elm) return;
+    if (elm.classList && elm.classList.add){ elm.classList.add(c); return; }
+    elm.className = ((elm.className||'').replace(new RegExp('\\s*'+c,'g'),'')) + ' ' + c;
+  }
+  function removeClass(elm,c){
+    if (!elm) return;
+    if (elm.classList && elm.classList.remove){ elm.classList.remove(c); return; }
+    elm.className = (elm.className||'').replace(new RegExp('\\s*'+c,'g'),'');
+  }
+
+  function readStored(){
+    try { if (window.localStorage){ var v = window.localStorage.getItem(STAGE_KEY); if (ORDER.indexOf(v) !== -1) return v; } } catch(e){}
+    return null;
+  }
+  function store(stage){
+    try { if (window.localStorage) window.localStorage.setItem(STAGE_KEY, stage); } catch(e){}
+  }
+
+  var current = null;
+
+  function show(stage, focusStep){
+    if (ORDER.indexOf(stage) === -1) stage = DEFAULT_STAGE;
+    ORDER.forEach(function(s){
+      var step = stepEl(s);
+      var panel = stageEl(s);
+      var active = (s === stage);
+      if (panel){
+        if (active){ removeClass(panel,'stage-hidden'); addClass(panel,'stage-active'); }
+        else { removeClass(panel,'stage-active'); addClass(panel,'stage-hidden'); }
+      }
+      if (step && step.setAttribute){
+        step.setAttribute('aria-selected', active ? 'true' : 'false');
+        step.setAttribute('tabindex', active ? '0' : '-1');
+      }
+    });
+    current = stage;
+    store(stage);
+    if (focusStep){
+      var st = stepEl(stage);
+      if (st && typeof st.focus === 'function'){ try { st.focus(); } catch(e){} }
+    }
+  }
+
+  function wireStepper(){
+    var stepper = el('stepper');
+    if (!stepper) return;
+    ORDER.forEach(function(s){
+      var step = stepEl(s);
+      if (!step) return;
+      step.addEventListener('click', function(){ show(s); });
+      step.addEventListener('keydown', function(e){
+        var key = e && (e.key || e.keyCode);
+        var idx = ORDER.indexOf(s);
+        if (key === 'ArrowRight' || key === 'ArrowDown' || key === 39 || key === 40){
+          if (e.preventDefault) e.preventDefault();
+          show(ORDER[(idx + 1) % ORDER.length], true);
+        } else if (key === 'ArrowLeft' || key === 'ArrowUp' || key === 37 || key === 38){
+          if (e.preventDefault) e.preventDefault();
+          show(ORDER[(idx - 1 + ORDER.length) % ORDER.length], true);
+        } else if (key === 'Home' || key === 36){
+          if (e.preventDefault) e.preventDefault();
+          show(ORDER[0], true);
+        } else if (key === 'End' || key === 35){
+          if (e.preventDefault) e.preventDefault();
+          show(ORDER[ORDER.length - 1], true);
+        } else if (key === 'Enter' || key === ' ' || key === 'Spacebar' || key === 13 || key === 32){
+          if (e.preventDefault) e.preventDefault();
+          show(s);
+        }
+      });
+    });
+
+    // The Customer stage's button opens the inputs overlay (reuses the top-bar
+    // trigger so there is a single overlay code path).
+    var openBtn = el('stage-open-inputs');
+    if (openBtn){
+      openBtn.addEventListener('click', function(){
+        var trigger = el('sidebar-toggle');
+        if (trigger && trigger.getAttribute && trigger.getAttribute('aria-expanded') !== 'true' && typeof trigger.fire === 'function'){
+          trigger.fire('click');
+        } else if (trigger && trigger.click){
+          if (trigger.getAttribute && trigger.getAttribute('aria-expanded') === 'true') return;
+          trigger.click();
+        }
+      });
+    }
+
+    var stored = readStored();
+    show(stored || DEFAULT_STAGE, false);
+  }
+
+  // Expose a programmatic switch for the harness + other controllers.
+  if (H){ H.showStage = function(stage){ show(stage); }; }
+  wireStepper();
 })();
 </script>
 
@@ -2557,7 +3071,11 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     var res=out&&out.results;
     var pct=res&&res.savingPct, hr=res&&res.headroom15;
     var evPaths=['plan_a','plan_b','all_new_ice'];
-    var target=0.15;
+    var target=(typeof H.committedTarget==='function') ? H.committedTarget() : 0.15;
+    var targetPct=(typeof H.fmtTargetPct==='function') ? H.fmtTargetPct(target) : '15';
+    // Keep the figcaption percentages in step with the committed target.
+    var ttl=el('chart-target-title-pct'); if(ttl) ttl.textContent=targetPct;
+    var cap=el('chart-target-cap-pct'); if(cap) cap.textContent=targetPct;
     // Scale: show from min(0, lowest) to max(target*1.3, highest) in percent.
     var vs=evPaths.map(function(p){ return pct?pct[p]:NA; }).filter(isNum);
     var lo=Math.min(0, target); var hi=Math.max(target*1.3, target);
@@ -2571,7 +3089,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     // zero baseline + 15% target reference line
     svg+='<line x1="'+zx.toFixed(1)+'" y1="'+mT+'" x2="'+zx.toFixed(1)+'" y2="'+(mT+plotH)+'" stroke="'+C.line2+'" stroke-width="1"/>';
     svg+='<line x1="'+tx.toFixed(1)+'" y1="'+(mT-2)+'" x2="'+tx.toFixed(1)+'" y2="'+(mT+plotH)+'" stroke="'+C.warn+'" stroke-width="1.5" stroke-dasharray="4 3"/>';
-    svg+='<text x="'+tx.toFixed(1)+'" y="'+(mT+plotH+16)+'" text-anchor="middle" fill="'+C.warn+'">15% target</text>';
+    svg+='<text x="'+tx.toFixed(1)+'" y="'+(mT+plotH+16)+'" text-anchor="middle" fill="'+C.warn+'">'+targetPct+'% target</text>';
     var n=evPaths.length, slot=plotH/n, bh=slot*0.5;
     evPaths.forEach(function(p,i){
       var cy=mT+slot*i+slot/2, y=cy-bh/2;
