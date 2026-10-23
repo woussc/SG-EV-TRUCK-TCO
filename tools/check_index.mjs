@@ -39,7 +39,10 @@ const byId = {};
 const ids = ['decision-cards','decision-lead','decision-notice','results-body','site-body',
   'gates-body','review-body','sens-body','sens-controls','fleet-body','repl-body',
   'oc-form','ec-body','reset-btn','demo-banner',
-  'prospect-body','prospect-sort','prospect-current-btn','prospect-note'];
+  'prospect-body','prospect-sort','prospect-current-btn','prospect-note',
+  // FEAT-002: curation split containers + toggleable sidebar hooks.
+  'oc-form-adv','ec-body-adv','advanced-inputs',
+  'sidebar-toggle','sidebar-toggle-label','input-col','results-col'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
 
 const document = {
@@ -217,6 +220,89 @@ const totalAfter = byId['chart-total'].innerHTML;
 checks.push(['comparison charts update live on input change',
   totalBefore !== totalAfter && totalAfter.indexOf('<svg') !== -1]);
 
+// ---- FEAT-002 (A): live update fires on 'input', NOT 'change' --------------
+// The editable fleet/energy fields must recompute as the user TYPES (the
+// 'input' event), matching the sensitivity sliders. This assertion is honest:
+// it (a) proves a built editable input is registered under 'input' and NOT
+// under 'change', and (b) proves firing that 'input' listener actually redraws
+// a chart. Reverting any builder to addEventListener('change', ...) would make
+// the input listener absent and FAIL this block.
+//
+// Force synchronous recompute so the debounce (setTimeout) is observable.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+
+// Grab a built editable input from the energy (ec-body) primary table: each row
+// is [labelTd, bCellTd, cCellTd, unitTd, meaningTd]; the Plan A cell holds the
+// amber <input>.
+function firstInputIn(container){
+  if (!container) return null;
+  for (const row of container.children) {
+    const kids = (row && row.children) || [];
+    for (const td of kids) {
+      const gk = (td && td.children) || [];
+      // Skip the discrete include checkbox (wired on 'change' by design); the
+      // live-update contract is about the editable text/number fields.
+      for (const node of gk) { if (node && node.tagName === 'input' && node.type !== 'checkbox') return node; }
+    }
+  }
+  return null;
+}
+const ecInput = firstInputIn(byId['ec-body']);
+checks.push(['ec-body has a built editable input', !!ecInput]);
+// The field is wired on 'input' (live), not 'change' (blur-only).
+checks.push(['editable field listens on input (live update)',
+  !!ecInput && Array.isArray(ecInput.listeners.input) && ecInput.listeners.input.length > 0]);
+checks.push(['editable field NOT wired on change (blur-only)',
+  !!ecInput && !(Array.isArray(ecInput.listeners.change) && ecInput.listeners.change.length > 0)]);
+// Firing 'input' on that field must redraw a chart (same engine output path).
+const liveBefore = byId['chart-total'].innerHTML;
+if (ecInput) {
+  ecInput.value = String((Number(ecInput.value) || 0) + 1234);
+  ecInput.fire('input');
+}
+const liveAfter = byId['chart-total'].innerHTML;
+checks.push(['firing input event redraws charts (would FAIL on change)',
+  !!ecInput && liveBefore !== liveAfter && liveAfter.indexOf('<svg') !== -1]);
+
+// Also confirm a built fleet-body input is wired on 'input' (not change).
+const fleetInput = firstInputIn(byId['fleet-body']);
+checks.push(['fleet-body has a built editable input', !!fleetInput]);
+checks.push(['fleet editable field listens on input',
+  !!fleetInput && Array.isArray(fleetInput.listeners.input) && fleetInput.listeners.input.length > 0]);
+
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
+
+// ---- FEAT-002 (C): input curation split (primary vs advanced) --------------
+// The always-visible primary containers hold the high-impact drivers; the
+// advanced containers (inside the Advanced <details>) hold the rest. Both are
+// populated and both bind the same state, so no computed figure changed (the
+// 2,081,781 / n.a. assertions above still pass unchanged).
+checks.push(['primary op-cost form populated', byId['oc-form'].children.length > 0]);
+checks.push(['advanced op-cost form populated', byId['oc-form-adv'].children.length > 0]);
+checks.push(['primary energy table populated', byId['ec-body'].children.length > 0]);
+checks.push(['advanced energy table populated', byId['ec-body-adv'].children.length > 0]);
+// The advanced set holds strictly more rows than the small primary set.
+checks.push(['advanced op-cost holds more rows than primary',
+  byId['oc-form-adv'].children.length > byId['oc-form'].children.length]);
+
+// ---- FEAT-002 (B): sidebar toggle hides inputs / expands results -----------
+// The toggle exists, starts expanded (default OPEN), and a 'click' flips the
+// state: aria-expanded becomes 'false' and the input column is hidden
+// (display:none), which the shim tracks via style/attributes.
+const sbToggle = byId['sidebar-toggle'];
+const inputCol = byId['input-col'];
+checks.push(['sidebar-toggle exists', !!sbToggle]);
+checks.push(['sidebar-toggle registers a click listener',
+  Array.isArray(sbToggle.listeners.click) && sbToggle.listeners.click.length > 0]);
+checks.push(['sidebar starts expanded (default open)',
+  sbToggle.getAttribute('aria-expanded') === 'true' && inputCol.style.display !== 'none']);
+sbToggle.fire('click');
+checks.push(['sidebar toggle collapses input column on click',
+  sbToggle.getAttribute('aria-expanded') === 'false' && inputCol.style.display === 'none']);
+sbToggle.fire('click');
+checks.push(['sidebar toggle re-expands input column on second click',
+  sbToggle.getAttribute('aria-expanded') === 'true' && inputCol.style.display !== 'none']);
+
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html
 // markup (the `html` string already loaded above). These lock in the taste-skill
@@ -256,6 +342,16 @@ checks.push(['no brand name in page chrome', chrome.indexOf('Hong Seh') === -1])
 checks.push(['input panel container present', /id="input-col"/.test(chrome)]);
 checks.push(['results panel container present', /id="results-col"/.test(chrome)]);
 checks.push(['two-panel workspace grid present', /class="workspace"/.test(chrome)]);
+
+// Toggleable sidebar + curation hooks exist in the markup.
+checks.push(['sidebar-toggle present in markup', /id="sidebar-toggle"/.test(chrome)]);
+checks.push(['collapsed-workspace CSS present', /\.workspace\.collapsed/.test(chrome)]);
+checks.push(['advanced-inputs disclosure present', /id="advanced-inputs"/.test(chrome)]);
+checks.push(['advanced op-cost container present', /id="oc-form-adv"/.test(chrome)]);
+checks.push(['advanced energy container present', /id="ec-body-adv"/.test(chrome)]);
+// Responsive: workspace stacks at <=1023px and the page folds at <=700px.
+checks.push(['tablet stack media query (<=1023px) present',
+  /@media\s*\(\s*max-width:\s*1023px\s*\)/.test(chrome)]);
 
 // Charts region + the five chart containers exist and are populated (the chart
 // container id checks above already prove each holds emitted <svg>).
