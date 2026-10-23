@@ -15,6 +15,18 @@
  * deterministic ranking. It is deliberately a coarse feasibility screen, not a
  * route/charging scheduler.
  *
+ * Two layers live here:
+ *   (1) FIT VERDICTS - deriveDuty / scoreModelFit / rankModels: feasibility
+ *       screen (payload / range / charge) with honesty caveats.
+ *   (2) COST-EFFECTIVENESS MATCHER (Fix 2) - rankModelsByCost / matchBestModel
+ *       / matchFleetToPortfolio: given ONE ICE truck's duty, rank the FEASIBLE
+ *       EV models by an INDICATIVE catalogue-only cost score so the UI can
+ *       recommend a sensible default EV per truck. This is a RECOMMENDATION,
+ *       NOT an engine TCO; it reuses the fit verdicts above, excludes
+ *       'Does not fit' models, and keeps the Unconfirmed body-fit caveat. The
+ *       authoritative economics still come only from computeFleet, and this new
+ *       'most cost-effective' logic carries its own validation requirement.
+ *
  * HONESTY DISCIPLINE (mandatory)
  * ------------------------------
  * The source product data carries an explicit payload/body-fit status column
@@ -448,6 +460,271 @@ export function rankModelsForInputs(inputs) {
   return { duty: duty, verdicts: rankModels(duty, products) };
 }
 
+/* ===========================================================================
+ * COST-EFFECTIVENESS MATCHER (additive, Fix 2 logic layer)
+ * ===========================================================================
+ * GOAL: given ONE ICE truck's duty (how far it drives, how many days, how much
+ * it carries) and the product catalogue, recommend the MOST COST-EFFECTIVE EV
+ * model that can plausibly do the job.
+ *
+ * WHAT THIS IS (and is NOT) - read this before trusting a number
+ * --------------------------------------------------------------
+ * This is a NEW COMPARISON HEURISTIC layered on the catalogue attributes. It is
+ * NOT an engine output. It does NOT import, call, or alter computeFleet and it
+ * changes NO frozen economic number. The authoritative TCO still comes only
+ * from src/engine.js. The ranking here is a quick per-truck shortlist to steer
+ * the UI's side-by-side comparison toward a sensible default EV; the user can
+ * always override the EV choice, and the real TCO is what decides adoption.
+ *
+ * Because it is new logic, 'most cost-effective' here needs its OWN validation
+ * (tools/check_portfolio_fit.mjs) before it is ever presented as authoritative.
+ * It deliberately uses only published catalogue figures, never a fabricated
+ * quote or grant.
+ *
+ * HONESTY DISCIPLINE (same rules as the fit verdicts above)
+ * ---------------------------------------------------------
+ *  - A model that 'Does not fit' the duty is EXCLUDED from the recommendation
+ *    outright (it cannot be cost-effective if it cannot do the work).
+ *  - Every surviving candidate still carries its fit verdict and its
+ *    Unconfirmed body-fit caveat: a cheap model whose body fit is Unconfirmed
+ *    is flagged, not silently crowned.
+ *  - When a required figure (list price, service rate, energy) is missing the
+ *    candidate is still shown but marked with an insufficient-data cost caveat;
+ *    it can never outrank a fully-costed candidate on a fabricated figure.
+ *
+ * COST MODEL (coarse, catalogue-only, documented)
+ * -----------------------------------------------
+ * For each feasible model we build an INDICATIVE relative cost score over the
+ * truck's own duty, NOT an engine TCO:
+ *   capex      = list price prod.I (catalogue, pre-COE; the UI separately shows
+ *                the vehicle price vs the COE adder, which is engine business).
+ *   energyCost = annualKm * (prod.E kWh/km) * energyPricePerKwh
+ *   serviceCost= annualKm * (prod.P service S$/km)
+ * annualKm = workKmPerDay * daysPerYear (falls back to a documented default
+ * when days are not entered). The relative score over a HORIZON_YEARS horizon:
+ *   score = capex + HORIZON_YEARS * (energyCost + serviceCost)
+ * This is purely for RANKING feasible models against each other on the SAME
+ * duty; it is not a customer TCO and is never summed across the fleet.
+ * ========================================================================= */
+
+export const MATCH_DEFAULTS = {
+  // Horizon used only to weigh running cost against capex when ranking. The
+  // engine's real horizon is 120 months; this is a comparison weighting, not a
+  // forecast.
+  HORIZON_YEARS: 10,
+  // Fallback annual distance when days/year is not entered (conservative SG
+  // light-commercial duty). Documented so it is never a hidden assumption.
+  DEFAULT_DAYS_PER_YEAR: 300,
+  // Fallback depot energy price (S$/kWh) when the duty carries none. A typical
+  // SG commercial depot tariff; used ONLY for relative ranking.
+  DEFAULT_ENERGY_PRICE: 0.30,
+};
+
+// Normalise one ICE truck's duty from a fleet_register row (+ optional energy
+// context) into the shape the matcher consumes. A fleet row uses:
+//   E work km/day, F days/year, G demanding-day route km, H peak cargo kg.
+export function truckDutyFromRow(row, energyContext) {
+  if (!row) return null;
+  var workKmPerDay = isNum(row.E) ? row.E : null;
+  var daysPerYear = isNum(row.F) ? row.F : null;
+  var routeKm = isNum(row.G) ? row.G : null;
+  var peakCargoKg = isNum(row.H) ? row.H : null;
+  var energyPrice = (energyContext && isNum(energyContext.energyPricePerKwh))
+    ? energyContext.energyPricePerKwh : null;
+  var chargeWindowH = (energyContext && isNum(energyContext.chargeWindowH))
+    ? energyContext.chargeWindowH : null;
+  return {
+    id: row.A != null ? String(row.A) : null,
+    peakCargoKg: peakCargoKg,
+    routeKm: routeKm,
+    workKmPerDay: workKmPerDay,
+    daysPerYear: daysPerYear,
+    energyPricePerKwh: energyPrice,
+    chargeWindowH: isNum(chargeWindowH) ? chargeWindowH : FIT_THRESHOLDS.DEFAULT_CHARGE_WINDOW_H,
+    availableChargeKw: null,
+    blank: {
+      peakCargoKg: missing(peakCargoKg),
+      routeKm: missing(routeKm),
+      workKmPerDay: missing(workKmPerDay),
+      daysPerYear: missing(daysPerYear),
+    },
+  };
+}
+
+// Indicative relative cost figures for one model over one truck's duty. Returns
+// { capex, energyCost, serviceCost, score, annualKm, insufficient, reasons }.
+export function indicativeCost(attr, duty, opts) {
+  opts = opts || {};
+  var horizon = isNum(opts.horizonYears) ? opts.horizonYears : MATCH_DEFAULTS.HORIZON_YEARS;
+  var reasons = [];
+  var insufficient = false;
+
+  var daysPerYear = (duty && isNum(duty.daysPerYear)) ? duty.daysPerYear : null;
+  if (daysPerYear == null) {
+    daysPerYear = MATCH_DEFAULTS.DEFAULT_DAYS_PER_YEAR;
+    insufficient = true;
+    reasons.push('Days/year not entered; used a default of ' + daysPerYear +
+      ' days for the cost comparison only (insufficient data).');
+  }
+  var workKmPerDay = (duty && isNum(duty.workKmPerDay)) ? duty.workKmPerDay
+    : ((duty && isNum(duty.routeKm)) ? duty.routeKm : null);
+  var annualKm = null;
+  if (isNum(workKmPerDay)) {
+    annualKm = workKmPerDay * daysPerYear;
+  } else {
+    insufficient = true;
+    reasons.push('Work km/day not entered; running cost cannot be estimated (insufficient data).');
+  }
+
+  var energyPrice = (duty && isNum(duty.energyPricePerKwh)) ? duty.energyPricePerKwh : null;
+  if (energyPrice == null) {
+    energyPrice = MATCH_DEFAULTS.DEFAULT_ENERGY_PRICE;
+    insufficient = true;
+    reasons.push('Depot energy price not entered; used S$' + energyPrice.toFixed(2) +
+      '/kWh for the comparison only (insufficient data).');
+  }
+
+  var capex = isNum(attr.listPrice) ? attr.listPrice : null;
+  if (capex == null) {
+    insufficient = true;
+    reasons.push('Catalogue list price missing; capex excluded from the score (insufficient data).');
+  }
+
+  var energyCost = null;
+  if (isNum(annualKm) && isNum(attr.kwhPerKm)) {
+    energyCost = annualKm * attr.kwhPerKm * energyPrice;
+  } else if (isNum(annualKm)) {
+    insufficient = true;
+    reasons.push('Model kWh/km missing; energy cost excluded (insufficient data).');
+  }
+
+  var serviceCost = null;
+  if (isNum(annualKm) && isNum(attr.serviceRate)) {
+    serviceCost = annualKm * attr.serviceRate;
+  } else if (isNum(annualKm)) {
+    insufficient = true;
+    reasons.push('Model service S$/km missing; service cost excluded (insufficient data).');
+  }
+
+  // Score = whatever we can defensibly add. Missing legs are simply not added
+  // (never a fabricated figure); an insufficient-data flag keeps such a
+  // candidate from outranking a fully-costed one via the sort tie-break.
+  var score = 0, anyLeg = false;
+  if (isNum(capex)) { score += capex; anyLeg = true; }
+  if (isNum(energyCost)) { score += horizon * energyCost; anyLeg = true; }
+  if (isNum(serviceCost)) { score += horizon * serviceCost; anyLeg = true; }
+  if (!anyLeg) score = null;
+
+  return {
+    capex: capex,
+    energyCost: energyCost,
+    serviceCost: serviceCost,
+    annualKm: annualKm,
+    energyPricePerKwh: energyPrice,
+    daysPerYear: daysPerYear,
+    horizonYears: horizon,
+    score: score,
+    insufficient: insufficient,
+    reasons: reasons,
+  };
+}
+
+// Rank the feasible models for one truck's duty by cost-effectiveness. Returns
+// an array of candidates, cheapest-feasible first, each carrying its fit
+// verdict and cost breakdown. 'Does not fit' models are excluded; Unconfirmed
+// body-fit candidates remain but keep their caveat.
+export function rankModelsByCost(duty, products, opts) {
+  var verdicts = rankModels(duty, products);
+  var candidates = verdicts
+    .filter(function (v) { return v.verdict !== 'Does not fit'; })
+    .map(function (v) {
+      var attr = v.attributes || {};
+      // Attach list price (col I) which the base fit attributes do not carry.
+      var listPrice = null;
+      var prod = (products || []).find(function (p) { return p && p.A === attr.name; });
+      if (prod && isNum(prod.I)) listPrice = prod.I;
+      var attrWithPrice = {};
+      for (var k in attr) { if (Object.prototype.hasOwnProperty.call(attr, k)) attrWithPrice[k] = attr[k]; }
+      attrWithPrice.listPrice = listPrice;
+      var cost = indicativeCost(attrWithPrice, duty, opts);
+      return {
+        name: v.name,
+        verdict: v.verdict,
+        label: v.label,
+        insufficientData: v.insufficientData,
+        fitStatus: v.fitStatus,
+        attributes: attrWithPrice,
+        cost: cost,
+        reasons: v.reasons.concat(cost.reasons),
+      };
+    });
+
+  // Sort: fully-scored candidates (score known, not insufficient) first, then
+  // by ascending indicative score (cheaper = better), then a clean fit verdict
+  // ahead of a caveated one, then by name for determinism.
+  candidates.sort(function (a, b) {
+    var aScore = (a.cost && isNum(a.cost.score)) ? a.cost.score : Infinity;
+    var bScore = (b.cost && isNum(b.cost.score)) ? b.cost.score : Infinity;
+    var aIns = (a.cost && a.cost.insufficient) ? 1 : 0;
+    var bIns = (b.cost && b.cost.insufficient) ? 1 : 0;
+    if (aIns !== bIns) return aIns - bIns;        // fully-costed ahead of partial
+    if (aScore !== bScore) return aScore - bScore; // cheaper ahead
+    var aV = VERDICT_RANK[a.verdict], bV = VERDICT_RANK[b.verdict];
+    if (aV !== bV) return aV - bV;
+    return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0);
+  });
+  return candidates;
+}
+
+// Top-level helper: given ONE truck's duty and the catalogue, return the most
+// cost-effective feasible model plus the ranked shortlist. Returns null match
+// when nothing is feasible (honest 'no EV in the portfolio fits this duty').
+export function matchBestModel(duty, products, opts) {
+  var ranked = rankModelsByCost(duty, products, opts);
+  var best = ranked.length ? ranked[0] : null;
+  return {
+    duty: duty,
+    best: best,
+    shortlist: ranked,
+    feasibleCount: ranked.length,
+    // Honest note the UI can surface verbatim.
+    note: best == null
+      ? 'No catalogue EV model can do this truck\u2019s duty on the entered figures (honest no-fit, not an error).'
+      : 'Recommendation is a catalogue-attribute comparison, not an engine TCO. Confirm body fit and get a real quote before presenting.',
+  };
+}
+
+// Per-truck wrapper over a whole ICE fleet register: for each INCLUDED ICE
+// truck row (col B === 1), derive its duty and recommend the best EV model.
+// Pure; reads inputs the same way the engine does. Returns one entry per
+// included truck, in register order.
+export function matchFleetToPortfolio(inputs, opts) {
+  var out = [];
+  if (!inputs || !inputs.fleet_register || !inputs.fleet_register.rows) return out;
+  var products = (inputs.products && inputs.products.rows) ? inputs.products.rows : [];
+  // Shared energy context: depot electricity price (row 10) + charging window
+  // (row 51) from Plan A (col B) where present, for the cost comparison only.
+  var energyContext = { energyPricePerKwh: null, chargeWindowH: null };
+  if (inputs.energy_and_charging && inputs.energy_and_charging.rows) {
+    var ec = inputs.energy_and_charging.rows;
+    function ecVal(n) {
+      for (var i = 0; i < ec.length; i++) {
+        if (ec[i]._row === n && ec[i].values && isNum(ec[i].values.B)) return ec[i].values.B;
+      }
+      return null;
+    }
+    energyContext.energyPricePerKwh = ecVal(10);
+    energyContext.chargeWindowH = ecVal(51);
+  }
+  inputs.fleet_register.rows.forEach(function (row) {
+    if (!row || row.B !== 1) return;
+    var duty = truckDutyFromRow(row, energyContext);
+    var match = matchBestModel(duty, products, opts);
+    out.push({ truckId: duty.id, duty: duty, match: match });
+  });
+  return out;
+}
+
 export default {
   FIT_UNCONFIRMED: FIT_UNCONFIRMED,
   VERDICT_RANK: VERDICT_RANK,
@@ -457,4 +734,10 @@ export default {
   scoreModelFit: scoreModelFit,
   rankModels: rankModels,
   rankModelsForInputs: rankModelsForInputs,
+  MATCH_DEFAULTS: MATCH_DEFAULTS,
+  truckDutyFromRow: truckDutyFromRow,
+  indicativeCost: indicativeCost,
+  rankModelsByCost: rankModelsByCost,
+  matchBestModel: matchBestModel,
+  matchFleetToPortfolio: matchFleetToPortfolio,
 };

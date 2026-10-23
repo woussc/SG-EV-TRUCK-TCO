@@ -6,28 +6,33 @@ operating_costs / energy_and_charging / products / service_costs) in the same
 shape consumed by src/engine.js -> computeFleet(inputs).
 
 Cases:
-  1. evergreen     - illustrative, fully-specified confirmed-win demonstrator.
-  2. demo          - the frozen DEMONSTRATION 6-truck case (from the workbook).
-  3. best          - ILLUSTRATIVE best case: a deep copy of the evergreen
-                     fully-specified, gate-passing input set (strong positive
-                     saving). Engine-verified best EV plan PLAN_B.
-  4. mid           - ILLUSTRATIVE mid case: the same input set with the
+  1. demo          - the frozen DEMONSTRATION 6-truck case (from the workbook).
+  2. best          - ILLUSTRATIVE best case: a fully-specified, gate-passing
+                     input set (strong positive saving). It is a GENERIC
+                     illustrative confirmed-win demonstrator, NOT a named
+                     customer. Engine-verified best EV plan PLAN_B.
+  3. mid           - ILLUSTRATIVE mid case: the same input set with the
                      high-impact drivers tuned (higher EV quote, lower diesel
                      price, lighter utilisation) so the best-EV-plan saving is
                      marginal but still > 0, all gates still passing.
-  5. bad           - ILLUSTRATIVE bad case: tuned further (EV quote high,
+  4. bad           - ILLUSTRATIVE bad case: tuned further (EV quote high,
                      diesel low) so the EV does NOT beat Keep ICE: a negative
                      saving. Still scores via the gate (honest "not a fit").
-  6. blank         - ILLUSTRATIVE blank profile: a minimal starting template
-                     with a shared truck-ID set and Include toggles present but
-                     every gate-critical value left blank/n.a. (NOT zero), so
-                     computeFleet returns n.a. honestly for a fresh client.
+  5. blank         - ILLUSTRATIVE blank profile: a starting template with a
+                     shared truck-ID set and Include toggles present. Common
+                     Singapore-market SHARED assumptions (energy prices, ICE
+                     fuel L/km, recurring operating costs, AC/DC-respecting
+                     grant defaults, non-customer gate defaults) are prefilled,
+                     while every CUSTOMER-SPECIFIC duty/quote/terminal value is
+                     left blank/n.a. (NOT zero), so computeFleet still returns
+                     n.a. honestly until the minimum critical inputs are added.
 
 NONE of these are real named customers. Every figure is a realistic
 Singapore-market illustration. The best/mid/bad numbers are derived from the
-previously tabulated model behaviour (the Evergreen baseline and the sensitivity
-sweep in docs/input-sensitivity-findings.md): best EV plan PLAN_B, Total
-economic TCO S$1,147,129, Saving 22.81%, Keep ICE total S$1,486,117. The high-
+previously tabulated model behaviour (the illustrative fully-specified baseline
+and the sensitivity sweep in docs/input-sensitivity-findings.md): best EV plan
+PLAN_B, Total economic TCO S$1,147,129, Saving 22.81%, Keep ICE total
+S$1,486,117. The high-
 impact drivers tuned for mid/bad are, in rank order, the EV purchase quote
 (rank 1, ~14% lever), the commercial diesel price (rank 4) and the duty
 intensity (work km/day + days/year, ranks 6-7).
@@ -280,6 +285,65 @@ BAD_TUNE = {"ev_quote": 270000, "diesel": 1.80, "km_factor": 1.0, "days_factor":
 
 BLANK_TRUCKS = ["NEW-1", "NEW-2", "NEW-3", "NEW-4"]
 
+# ---------------------------------------------------------------------------
+# Blank-profile PREFILL of COMMON Singapore-market shared assumptions
+# ---------------------------------------------------------------------------
+# These are NON-customer-specific figures a Hong Seh consultant would otherwise
+# re-type for every fresh prospect: market energy prices, the shared ICE fuel
+# consumption, common recurring operating costs, and the non-customer gate
+# defaults. They are prefilled so a blank profile is a useful starting point,
+# NOT a crash-test empty.
+#
+# What is DELIBERATELY NOT prefilled (stays blank/null so the case is honest):
+#   * customer-specific DUTY (work km/day, days/year, peak cargo, route km) -
+#     left blank in the fleet register.
+#   * customer-specific QUOTES and terminal values (ICE/EV price, year-10
+#     values, COE months) - left blank in the replacement plan.
+#   * the itemised CHARGING-SITE quote (equipment, civil, connection, rent,
+#     deposit, etc.) - left blank so site cost + Total economic TCO stay n.a.
+#
+# GRANT DISCIPLINE (v4 quick guide section 4), honored by what we prefill:
+#   * NO vehicle incentive is prefilled (replacement col Z stays blank) - no
+#     CVES/HVZES award is auto-selected from a brand or plate.
+#   * NO charger grant AWARD is prefilled (energy_and_charging row 44 stays
+#     blank) - the worksheet ceiling is not an award; only an entered, checked
+#     amount reduces TCO.
+#   * The default charger config is prefilled as DC (row 15 'DC60', row 56
+#     rated power 60 kW) precisely because EHVCG does NOT fund a 22 kW AC
+#     charger; we never prefill an AC grant for an ineligible AC charger.
+#   * Major electrical upgrade / general civil / SP connection stay blank (not
+#     auto-eligible), so nobody inherits an ineligible "eligible cost".
+
+# operating_costs shared defaults (col B). Common SG recurring costs + ICE fuel
+# consumption; customer-specific utilisation overrides stay out of here.
+BLANK_OC = {
+    7: 0.14,      # ICE fuel consumption litres/km (shared SG light-commercial)
+    44: 0.10,     # charging energy loss fraction (physics default)
+    45: 0.20,     # usable battery reserve fraction (operating policy default)
+    46: 0.02,     # annual battery fade fraction (default)
+    48: 0,        # extra auxiliary energy (explicit zero default)
+    49: 0,        # peak auxiliary energy (explicit zero default)
+    50: 0.02,     # purchase-price inflation (shared macro default)
+    53: 0.02,     # recurring-cost escalation (shared macro default)
+}
+
+# energy_and_charging SHARED defaults (applied to both Plan A col B and Plan B
+# col C). Market energy prices + shares + grant-config defaults ONLY. The
+# itemised site quote is intentionally omitted (stays blank -> site n.a.).
+BLANK_EC = {
+    7: 2.50,      # commercial diesel SGD/litre (SG market)
+    8: 3.25,      # public diesel SGD/litre (SG market)
+    9: 1,         # commercial diesel share (default: all commercial)
+    10: 0.30,     # depot electricity SGD/kWh (SG commercial tariff)
+    11: 0.75,     # public charging SGD/kWh (SG market)
+    12: 0,        # public electricity share (default: depot-only)
+    15: "DC60",   # charger type label: DC (AC22 would be EHVCG-ineligible)
+    44: None,     # approved charger GRANT award: BLANK (not an award; must be
+                  # entered + checked). Never prefilled.
+    46: "No",     # award checked: No (no grant claimed by default)
+    47: 0,        # approved funded chargers: 0 (no grant claimed by default)
+}
+
 
 def _ec_row(rows, n):
     for r in rows:
@@ -358,11 +422,18 @@ def _blank_repl_rows():
 
 
 def build_blank(demo_inputs):
-    """A clean-slate template: the structure is present (truck rows across both
-    sheets sharing IDs, Include toggles on) but gate-critical values are blank
-    (n.a., not zero). energy_and_charging prices are blanked too so the engine
-    returns n.a. honestly. operating_costs / products / service_costs keep their
-    catalogue structure so the UI can render the editable panel."""
+    """A PREFILLED starting template: the structure is present (truck rows
+    across both sheets sharing IDs, Include toggles on) and common SG shared
+    assumptions are prefilled (energy prices, ICE fuel L/km, recurring operating
+    costs, AC/DC-respecting grant config defaults), but every CUSTOMER-SPECIFIC
+    value (duty, quotes, terminal values) and the itemised charging-site quote
+    are left blank (n.a., not zero). The engine therefore still returns n.a. for
+    site cost and Total economic TCO until the minimum critical inputs are
+    supplied - honest empty, no crash.
+
+    products / service_costs keep their catalogue structure so the UI can render
+    the editable panel."""
+    # --- energy_and_charging: blank everything, then overlay shared defaults ---
     ec = copy.deepcopy(demo_inputs["energy_and_charging"])
     for r in ec["rows"]:
         if "values" in r and isinstance(r["values"], dict):
@@ -370,10 +441,24 @@ def build_blank(demo_inputs):
                 r["values"]["B"] = None
             if "C" in r["values"]:
                 r["values"]["C"] = None
+    for r in ec["rows"]:
+        if r["_row"] in BLANK_EC and "values" in r and isinstance(r["values"], dict):
+            val = BLANK_EC[r["_row"]]
+            if "B" in r["values"]:
+                r["values"]["B"] = val
+            if "C" in r["values"]:
+                r["values"]["C"] = val
+
+    # --- operating_costs: keep catalogue structure, overlay shared defaults ---
+    oc = copy.deepcopy(demo_inputs["operating_costs"])
+    for r in oc["rows"]:
+        if r["_row"] in BLANK_OC and "values" in r and isinstance(r["values"], dict):
+            r["values"]["B"] = BLANK_OC[r["_row"]]
+
     return {
         "fleet_register": {"range": "A7:S106", "rows": _blank_fleet_rows()},
         "replacement_plan": {"range": "A7:AI106", "rows": _blank_repl_rows()},
-        "operating_costs": copy.deepcopy(demo_inputs["operating_costs"]),
+        "operating_costs": oc,
         "energy_and_charging": ec,
         "products": copy.deepcopy(demo_inputs["products"]),
         "service_costs": copy.deepcopy(demo_inputs["service_costs"]),
@@ -388,24 +473,6 @@ def main():
 
     illustrative = build_illustrative(demo_inputs)
 
-    # Case 0: illustrative, fully-specified confirmed-win demonstrator.
-    cases.append({
-        "id": "evergreen",
-        "name": "Evergreen Logistics (illustrative, fully specified)",
-        "evidence": "illustrative",
-        "note": (
-            "ILLUSTRATIVE assumption case, NOT a real customer. Every input is "
-            "a realistic Singapore-market figure chosen so the model passes all "
-            "gates: vehicle service/evidence 'Within entered limits', charging-"
-            "site 'Complete' with an itemised depot quote, 'Within entered site "
-            "limits', a numeric Total economic TCO and a positive Saving vs Keep "
-            "ICE. It shows what a confirmed-win prospect looks like once the "
-            "charging-site quote and verification evidence are supplied, in "
-            "contrast to the illustrative best/mid/bad/blank presets below."
-        ),
-        "inputs": illustrative,
-    })
-
     # Case 1: the demonstration 6-truck case straight from the workbook.
     cases.append({
         "id": "demo",
@@ -419,19 +486,23 @@ def main():
         "inputs": demo_inputs,
     })
 
-    # Case 2: BEST - a deep copy of the fully-specified illustrative set.
+    # Case 2: BEST - the fully-specified illustrative confirmed-win set.
     cases.append({
         "id": "best",
-        "name": "Best case (illustrative, gates pass)",
+        "name": "Best case (illustrative, fully specified, gates pass)",
         "evidence": "illustrative",
         "note": (
-            "ILLUSTRATIVE preset, NOT a real customer. A fully-specified, gate-"
-            "passing scenario (a deep copy of the Evergreen input set) whose "
-            "best EV plan is PLAN_B with a strong positive saving: Total "
-            "economic TCO ~S$1,147,129, Saving ~22.81% vs Keep ICE ~S$1,486,117 "
-            "(the sensitivity-sweep baseline). This is what a confirmed win looks "
-            "like once the charging-site quote and verification evidence are "
-            "supplied."
+            "ILLUSTRATIVE confirmed-win demonstrator, NOT a real customer. A "
+            "fully-specified, gate-passing scenario built from realistic "
+            "Singapore-market figures: vehicle service/evidence 'Within entered "
+            "limits', charging-site 'Complete' with an itemised depot quote, "
+            "'Within entered site limits', a numeric Total economic TCO and a "
+            "positive Saving vs Keep ICE. Its best EV plan is PLAN_B with a "
+            "strong positive saving: Total economic TCO ~S$1,147,129, Saving "
+            "~22.81% vs Keep ICE ~S$1,486,117 (the sensitivity-sweep baseline). "
+            "This is what a confirmed win looks like once the charging-site "
+            "quote and verification evidence are supplied, in contrast to the "
+            "illustrative mid/bad/blank presets."
         ),
         "inputs": copy.deepcopy(illustrative),
     })
@@ -492,10 +563,12 @@ def main():
         "_meta": {
             "description": (
                 "Seed customer cases for the Prospects view. Each case is a full "
-                "engine input set. evergreen/best/mid/bad/blank are ILLUSTRATIVE "
-                "presets (not real customers); demo is the workbook demonstration "
-                "case. best/mid/bad are derived from the Evergreen sensitivity "
-                "baseline; blank is a clean-slate template with honest blanks."
+                "engine input set. best/mid/bad/blank are ILLUSTRATIVE presets "
+                "(not real customers); demo is the workbook demonstration case. "
+                "best/mid/bad are derived from the illustrative fully-specified "
+                "sensitivity baseline; blank is a prefilled starting template "
+                "(common SG shared assumptions filled, customer-specific values "
+                "left as honest blanks)."
             ),
             "generated_by": "tools/build_prospects.py",
         },

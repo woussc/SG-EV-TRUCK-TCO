@@ -120,19 +120,23 @@ checks.push(['sensitivity rendered', byId['sens-body'].innerHTML.indexOf('Keep I
 // ---- Prospects view checks -------------------------------------------------
 const seeds = windowObj.HSProspectSeeds;
 // FEAT-003: the Yong Wen / Venus reconstructions were replaced by four
-// illustrative presets (best / mid / bad / blank), so the seed set is now six
-// cases: evergreen, demo, best, mid, bad, blank.
-checks.push(['prospect seeds embedded (6)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 6]);
+// illustrative presets (best / mid / bad / blank). FEAT-001 (loophole fixes)
+// removed the misleading named 'evergreen' seed (the 'best' case is the same
+// fully-specified confirmed-win input set), so the seed set is now five cases:
+// demo, best, mid, bad, blank.
+checks.push(['prospect seeds embedded (5)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 5]);
 checks.push(['no yong_wen/venus seeds remain',
   !!seeds && !seeds.cases.some((c) => c.id === 'yong_wen' || c.id === 'venus')]);
+checks.push(['no evergreen named-customer seed remains',
+  !!seeds && !seeds.cases.some((c) => c.id === 'evergreen')]);
 checks.push(['scoreProspect exposed', typeof windowObj.HSEngine.scoreProspect === 'function']);
 
 const pbodyBenefit = byId['prospect-body'].innerHTML;
 checks.push(['prospect table rendered', pbodyBenefit.indexOf('Why this rank') !== -1]);
-checks.push(['prospect lists Evergreen (illustrative)', pbodyBenefit.indexOf('Evergreen Logistics') !== -1]);
+checks.push(['prospect does NOT name Evergreen Logistics', pbodyBenefit.indexOf('Evergreen Logistics') === -1]);
 checks.push(['prospect lists demo', pbodyBenefit.indexOf('DEMONSTRATION 6-truck case') !== -1]);
-// The four new illustrative presets must each render in the table.
-checks.push(['prospect lists Best case', pbodyBenefit.indexOf('Best case (illustrative, gates pass)') !== -1]);
+// The four illustrative presets must each render in the table.
+checks.push(['prospect lists Best case', pbodyBenefit.indexOf('Best case (illustrative, fully specified, gates pass)') !== -1]);
 checks.push(['prospect lists Mid case', pbodyBenefit.indexOf('Mid case (illustrative, marginal saving)') !== -1]);
 checks.push(['prospect lists Bad case', pbodyBenefit.indexOf('Bad case (illustrative, EV not a fit)') !== -1]);
 checks.push(['prospect lists Blank profile', pbodyBenefit.indexOf('Blank profile (start a fresh client)') !== -1]);
@@ -151,12 +155,14 @@ const confirmedWins = scoredSeeds.filter((x) =>
   typeof x.s.savingAbs === 'number' && x.s.savingAbs > 0 &&
   typeof x.s.savingPct === 'number' && x.s.savingPct > 0);
 checks.push(['at least one confirmed-win seed', confirmedWins.length >= 1]);
-checks.push(['confirmed win is Evergreen', confirmedWins.some((x) => x.id === 'evergreen')]);
-const evergreen = scoredSeeds.find((x) => x.id === 'evergreen');
-checks.push(['Evergreen gatePass true', evergreen && evergreen.s.gatePass === true]);
-checks.push(['Evergreen numeric Total', evergreen && typeof evergreen.s.totalEconomicTco === 'number']);
-checks.push(['Evergreen positive saving S$', evergreen && evergreen.s.savingAbs > 0]);
-checks.push(['Evergreen meets 15% target label', evergreen && evergreen.s.fifteenTargetMet === 'Meets entered 15% target']);
+// The confirmed win is now the 'best' case (same fully-specified input set the
+// removed 'evergreen' seed used). Assertions are unchanged in strength.
+checks.push(['confirmed win is Best case', confirmedWins.some((x) => x.id === 'best')]);
+const bestWin = scoredSeeds.find((x) => x.id === 'best');
+checks.push(['Best case gatePass true', bestWin && bestWin.s.gatePass === true]);
+checks.push(['Best case numeric Total', bestWin && typeof bestWin.s.totalEconomicTco === 'number']);
+checks.push(['Best case positive saving S$', bestWin && bestWin.s.savingAbs > 0]);
+checks.push(['Best case meets 15% target label', bestWin && bestWin.s.fifteenTargetMet === 'Meets entered 15% target']);
 
 // Direct score check on the seeds through the inlined engine.
 function orderFor(mode) {
@@ -173,14 +179,12 @@ function orderFor(mode) {
 }
 const accountOrder = orderFor('account');
 const benefitOrder = orderFor('benefit');
-// The confirmed-win illustrative cases (Evergreen and its deep-copy Best) lead
-// BOTH sort modes: they share the largest absolute saving and the only strong
-// gate-passing benefit figure. (Ties keep the fixture order, so Evergreen -
-// listed first - stays ahead of Best.)
-checks.push(['account order evergreen first', accountOrder[0] === 'evergreen']);
-checks.push(['benefit order evergreen first', benefitOrder[0] === 'evergreen']);
-checks.push(['best ranks as a gate-passing win (2nd in both modes)',
-  accountOrder[1] === 'best' && benefitOrder[1] === 'best']);
+// The confirmed-win illustrative Best case leads BOTH sort modes: it has the
+// largest absolute saving and the only strong gate-passing benefit figure.
+// (Formerly the removed 'evergreen' seed led and 'best' followed; 'best' is the
+// same fully-specified input set, so it now leads directly.)
+checks.push(['account order best first', accountOrder[0] === 'best']);
+checks.push(['benefit order best first', benefitOrder[0] === 'best']);
 // The illustrative presets rank by their engine-verified saving: best > mid >
 // bad in the benefit (saving %) order. This replaces the removed yong_wen >
 // venus ordering assertions with equivalent coverage on the new presets.
@@ -207,14 +211,14 @@ sel.value = 'account';
 sel.fire('change');
 const afterHtml = byId['prospect-body'].innerHTML;
 checks.push(['sort toggle reorders table', beforeHtml !== afterHtml]);
-// In account order the confirmed-win Evergreen case still leads the rendered
-// table, the Best preset follows, and the honest-blank preset is rendered last.
-checks.push(['account sort puts Evergreen on top',
-  afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('Best case (illustrative, gates pass)') &&
-  afterHtml.indexOf('Evergreen Logistics') < afterHtml.indexOf('DEMONSTRATION')]);
+// In account order the confirmed-win Best case leads the rendered table, ahead
+// of the demonstration case, and the honest-blank preset is rendered last.
+checks.push(['account sort puts Best case on top',
+  afterHtml.indexOf('Best case (illustrative, fully specified, gates pass)') <
+    afterHtml.indexOf('DEMONSTRATION')]);
 checks.push(['account sort renders Blank profile last',
   afterHtml.indexOf('Blank profile (start a fresh client)') >
-    afterHtml.indexOf('Best case (illustrative, gates pass)') &&
+    afterHtml.indexOf('Best case (illustrative, fully specified, gates pass)') &&
   afterHtml.indexOf('Blank profile (start a fresh client)') >
     afterHtml.indexOf('Mid case (illustrative, marginal saving)')]);
 
@@ -377,7 +381,7 @@ checks.push(['saving-target defaults to 0.15',
 // With the default target the engine still emits the exact legacy claim label.
 const defaultTargetOut = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
 // (state.savingTarget is still unset here -> engine defaults to 0.15.)
-const evForLabel = scoredSeeds.find((x) => x.id === 'evergreen');
+const evForLabel = scoredSeeds.find((x) => x.id === 'best');
 checks.push(['default target still yields Meets entered 15% target',
   evForLabel && evForLabel.s.fifteenTargetMet === 'Meets entered 15% target']);
 // Moving the target changes the rendered headroom row + the claim label. Drive
@@ -397,11 +401,12 @@ checks.push(['moving target relabels sens headroom header (25%)',
 // The 'Meets/Below entered X% target' claim label is conditional (never an
 // adoption probability) and only renders for a gate-passing case. Prove the
 // label reflects the committed target through the engine on the gate-passing
-// Evergreen seed: at the default 0.15 it reads 'Meets entered 15% target'; at a
-// higher 0.30 target the SAME case flips to 'Below entered 30% target'.
+// Best-case seed (the fully-specified set the removed 'evergreen' seed used):
+// at the default 0.15 it reads 'Meets entered 15% target'; at a higher 0.30
+// target the SAME case flips to 'Below entered 30% target'.
 const everAtDefault = windowObj.HSEngine.scoreProspect(
-  windowObj.HSEngine.computeFleet(seeds.cases.find((c) => c.id === 'evergreen').inputs));
-const everInputsHi = JSON.parse(JSON.stringify(seeds.cases.find((c) => c.id === 'evergreen').inputs));
+  windowObj.HSEngine.computeFleet(seeds.cases.find((c) => c.id === 'best').inputs));
+const everInputsHi = JSON.parse(JSON.stringify(seeds.cases.find((c) => c.id === 'best').inputs));
 everInputsHi.savingTarget = 0.30;
 const everAtHi = windowObj.HSEngine.scoreProspect(windowObj.HSEngine.computeFleet(everInputsHi));
 checks.push(['claim label reflects committed target (default 15% met)',
