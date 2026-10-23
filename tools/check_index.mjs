@@ -47,7 +47,11 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'oc-form-adv','ec-body-adv','advanced-inputs',
   // FEAT-004: input overlay panel hooks (scrim + in-panel close button).
   'sidebar-toggle','sidebar-toggle-label','input-col','results-col',
-  'input-scrim','input-overlay-close'];
+  'input-scrim','input-overlay-close',
+  // FEAT-005: journey stepper, stage viewports + confidence badge hooks.
+  'stepper','step-customer','step-portfolio','step-tco','step-charging','step-proposal',
+  'stage-customer','stage-portfolio','stage-tco','stage-charging','stage-proposal',
+  'confidence-badge','confidence-dot','confidence-text','stage-open-inputs'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
 
 const document = {
@@ -473,6 +477,82 @@ checks.push(['overlay closes on Esc keydown',
   sbToggle.getAttribute('aria-expanded') === 'false' &&
   inputCol.getAttribute('aria-hidden') === 'true' &&
   !hasOpen(inputCol) && !hasOpen(inputScrim)]);
+
+// ---- FEAT-005: journey stepper + stage viewports + confidence badge --------
+// A five-step, tablist-like control switches a single visible stage viewport
+// with NO routing and NO fetch (pure client-side show/hide). The active stage
+// persists in localStorage. The confidence badge is driven by the LIVE engine
+// output's gate / saving-claim status for the best EV plan -- never a fabricated
+// probability. For the demonstration case both EV plans are 'Total incomplete'
+// (site cost n.a.), so the badge MUST show the honest non-confirmed Diagnostic
+// state, not a fake 'confirmed'.
+const STAGES = ['customer','portfolio','tco','charging','proposal'];
+// Hand-written chrome (everything before the first generated block), so the
+// markup counts below never pick up generated DEMO/PROSPECTS data.
+const chromeEndFeat5 = html.indexOf('<!-- ENGINE:BEGIN');
+const chromeFeat5 = chromeEndFeat5 === -1 ? html : html.slice(0, chromeEndFeat5);
+// All five stage panels exist in the markup.
+STAGES.forEach((s) => {
+  checks.push(['stage section ' + s + ' present', chromeFeat5.indexOf('id="stage-' + s + '"') !== -1]);
+});
+// The stepper exists and carries exactly five step buttons in the markup.
+checks.push(['stepper present in markup', chromeFeat5.indexOf('id="stepper"') !== -1]);
+const stepMatches = (chromeFeat5.match(/class="step"/g) || []).length;
+checks.push(['stepper has five steps', stepMatches === 5]);
+
+// The confidence badge element exists in the markup.
+checks.push(['confidence badge present in markup', chromeFeat5.indexOf('id="confidence-badge"') !== -1]);
+
+// Default stage is TCO (the money view): its step is selected and its panel is
+// active, while the others are hidden.
+const stepTco = byId['step-tco'];
+const stageTco = byId['stage-tco'];
+const stepCharging = byId['step-charging'];
+const stageCharging = byId['stage-charging'];
+function stageActive(elm){ return /(^|\s)stage-active(\s|$)/.test(elm.className || ''); }
+function stageHidden(elm){ return /(^|\s)stage-hidden(\s|$)/.test(elm.className || ''); }
+checks.push(['default stage is TCO (step selected)', stepTco.getAttribute('aria-selected') === 'true']);
+checks.push(['default stage TCO panel active', stageActive(stageTco) && !stageHidden(stageTco)]);
+checks.push(['non-default stage (charging) starts hidden', stageHidden(stageCharging) && !stageActive(stageCharging)]);
+checks.push(['non-default step (charging) not selected', stepCharging.getAttribute('aria-selected') === 'false']);
+
+// Activating a non-default step shows that stage and hides the previously-active
+// one (fire the step's click and check the visibility classes on both panels).
+stepCharging.fire('click');
+checks.push(['activating Charging step shows its stage', stageActive(stageCharging) && !stageHidden(stageCharging)]);
+checks.push(['activating Charging step hides previously-active TCO stage', stageHidden(stageTco) && !stageActive(stageTco)]);
+checks.push(['activating Charging step selects it (aria-selected)', stepCharging.getAttribute('aria-selected') === 'true']);
+checks.push(['activating Charging step deselects TCO', stepTco.getAttribute('aria-selected') === 'false']);
+// Keyboard activation also switches: ArrowLeft from Charging moves to TCO.
+stepCharging.fire('keydown', { key: 'ArrowLeft', preventDefault() {} });
+checks.push(['keyboard ArrowLeft switches stage back to TCO',
+  stageActive(stageTco) && stageHidden(stageCharging) &&
+  stepTco.getAttribute('aria-selected') === 'true']);
+
+// The persistent demonstration honesty banner is NOT buried inside any one
+// stage: it sits above the stepper in the chrome, before the first stage panel.
+const bannerIdx = html.indexOf('id="demo-banner"');
+const firstStageIdx = html.indexOf('id="stage-customer"');
+checks.push(['honesty banner persists above the stages (not inside one)',
+  bannerIdx !== -1 && firstStageIdx !== -1 && bannerIdx < firstStageIdx]);
+
+// Confidence badge reflects the computed gate / saving-claim status. For the
+// demo case the best EV plan's savingClaimStatus is 'Total incomplete' (site
+// cost n.a.), so the badge must render the honest Diagnostic (non-confirmed)
+// state: class conf-diagnostic and NOT conf-confirmed, with 'not a confirmed
+// win' wording and no fake 'Confirmed win'.
+const confBadge = byId['confidence-badge'];
+const confText = byId['confidence-text'];
+checks.push(['demo best EV plan savingClaimStatus is non-confirmed (Total incomplete)',
+  r.savingClaimStatus.plan_a === 'Total incomplete' && r.savingClaimStatus.plan_b === 'Total incomplete']);
+checks.push(['confidence badge shows diagnostic (not confirmed) for demo',
+  /(^|\s)conf-diagnostic(\s|$)/.test(confBadge.className || '') &&
+  !/(^|\s)conf-confirmed(\s|$)/.test(confBadge.className || '')]);
+checks.push(['confidence badge wording is honest (not a confirmed win)',
+  confText.innerHTML.indexOf('not a confirmed win') !== -1 &&
+  confText.innerHTML.indexOf('Confirmed win') === -1]);
+checks.push(['confidence badge driven by real claim status (names the status)',
+  confText.innerHTML.indexOf('Total incomplete') !== -1]);
 
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html

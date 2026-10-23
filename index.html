@@ -56,6 +56,35 @@ p{margin:8px 0 12px}
 .notice{border-left:3px solid var(--line2);padding:10px 14px;background:var(--soft);margin:12px 0;font-size:13px;color:var(--muted)}
 .note{padding:12px 14px;background:var(--soft);margin:12px 0;border-radius:6px}
 .banner{font-size:12.5px;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:7px 12px;margin:0 0 14px}
+/* JOURNEY STEPPER + CONFIDENCE BADGE.
+   A tablist-like row of five clickable, keyboard-navigable steps that switch a
+   single visible stage viewport (no routing, no fetch). Flat surfaces (no
+   shadow / gradient). The active step is highlighted via the accent colour. */
+.journeybar{display:flex;align-items:center;gap:var(--gutter);flex-wrap:wrap;margin:0 0 14px}
+.stepper{display:flex;gap:6px;flex:1 1 auto;min-width:0;overflow-x:auto}
+.step{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;cursor:pointer;background:var(--paper);color:var(--ink);border:1px solid var(--line2);border-radius:999px;font:13px -apple-system,'Segoe UI',Arial;font-weight:600;white-space:nowrap;transition:background .18s ease,border-color .18s ease,color .18s ease}
+.step:hover{background:var(--soft)}
+.step .step-no{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex:0 0 20px;border-radius:999px;border:1px solid var(--line2);font-size:12px;line-height:1;color:var(--muted);transition:background .18s ease,border-color .18s ease,color .18s ease}
+.step[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.step[aria-selected="true"] .step-no{background:#fff;border-color:#fff;color:var(--accent)}
+.step:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Persistent confidence badge: colour + wording are driven by the live gate /
+   saving-claim status for the best EV plan, never a fabricated probability. */
+.confidence{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;padding:7px 12px;border:1px solid var(--line2);border-radius:999px;background:var(--paper);font-size:12.5px;color:var(--muted)}
+.conf-dot{display:inline-block;width:10px;height:10px;flex:0 0 10px;border-radius:999px;background:var(--line2)}
+.confidence.conf-confirmed{border-color:#9ccbb0;background:#eef6f1;color:#1f6b3b}
+.confidence.conf-confirmed .conf-dot{background:#1f6b3b}
+.confidence.conf-below{border-color:var(--amberline);background:var(--amber);color:var(--warn)}
+.confidence.conf-below .conf-dot{background:var(--amberline)}
+.confidence.conf-diagnostic{border-color:var(--line2);background:var(--soft);color:var(--muted)}
+.confidence.conf-diagnostic .conf-dot{background:var(--muted)}
+/* STAGE VIEWPORTS: exactly one visible at a time. Simple, smooth fade/slide-in
+   on activation; hidden stages are removed from layout + the a11y tree. */
+.stage.stage-hidden{display:none}
+.stage.stage-active{display:flex;flex-direction:column;gap:var(--gutter);animation:stage-in .22s ease both}
+.stage>.block-title{margin-bottom:0}
+@keyframes stage-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.stage.stage-active{animation:none}}
 .table-wrap{overflow-x:auto;margin:10px 0 12px}
 table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.4}
 caption{text-align:left;color:var(--muted);padding:0 0 8px;font-size:13px}
@@ -116,9 +145,19 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  /* Phone: the overlay becomes a full-width sheet (still a fixed overlay over a
     scrim, so the content behind still does not reflow). */
  #input-col{width:100vw;max-width:100vw;border-right:0}
+ /* Phone: the stepper collapses to a horizontally scrollable chip row and the
+    confidence badge drops onto its own line below it. */
+ .journeybar{gap:10px}
+ .stepper{flex-basis:100%;-webkit-overflow-scrolling:touch}
+ .step{padding:7px 12px}
+ .confidence{flex-basis:100%}
 }
 @media print{
  body{background:white;font-size:10pt}
+ /* Print the complete diagnostic record: reveal every stage viewport (the
+    stepper itself is .noprint), so hidden stages are not dropped from the
+    printout. */
+ .stage.stage-hidden,.stage.stage-active{display:block!important;animation:none!important}
  .topbar{border:0;padding:10px 0}
  h1{font-size:22pt}
  .noprint{display:none!important}
@@ -147,6 +186,25 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 </div>
 
 <div class="banner" id="demo-banner">DEMONSTRATION. Not a customer savings claim.</div>
+
+<!-- JOURNEY STEPPER + CONFIDENCE BADGE.
+     A five-step, tablist-like control that switches a single visible stage
+     viewport with NO routing and NO fetch (client-only show/hide). The active
+     step persists in localStorage ('hs_stage_v1', try/catch so file:// works).
+     The confidence badge is driven by the LIVE engine output's gate / claim
+     status for the best EV plan; it is never a fabricated probability. -->
+<div class="journeybar noprint">
+<div class="stepper" id="stepper" role="tablist" aria-label="Fleet decision journey">
+<button type="button" class="step" id="step-customer" role="tab" data-stage="customer" aria-controls="stage-customer" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">1</span><span class="step-label">Customer</span></button>
+<button type="button" class="step" id="step-portfolio" role="tab" data-stage="portfolio" aria-controls="stage-portfolio" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">2</span><span class="step-label">Portfolio</span></button>
+<button type="button" class="step" id="step-tco" role="tab" data-stage="tco" aria-controls="stage-tco" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">3</span><span class="step-label">TCO</span></button>
+<button type="button" class="step" id="step-charging" role="tab" data-stage="charging" aria-controls="stage-charging" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">4</span><span class="step-label">Charging</span></button>
+<button type="button" class="step" id="step-proposal" role="tab" data-stage="proposal" aria-controls="stage-proposal" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">5</span><span class="step-label">Proposal</span></button>
+</div>
+<div class="confidence" id="confidence-badge" role="status" aria-live="polite" title="Driven by the live gate / saving-claim status; not an adoption probability.">
+<span class="conf-dot" id="confidence-dot" aria-hidden="true"></span><span class="conf-text" id="confidence-text">Confidence: &mdash;</span>
+</div>
+</div>
 
 <!-- Scrim/backdrop behind the input overlay; clicking it dismisses the panel. -->
 <div id="input-scrim" class="noprint" hidden></div>
@@ -200,8 +258,40 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 </section>
 </div>
 
-<!-- RIGHT: LIVE RESULTS + VISUALS PANEL -->
+<!-- RIGHT: LIVE RESULTS + VISUALS PANEL.
+     Holds the five stage viewports. Exactly one carries the 'stage-active'
+     class at a time (the stepper toggles it); the others are hidden with
+     'stage-hidden'. Content is relocated, not duplicated: the money view lives
+     in Stage 3 (TCO), the charging/site/gates view in Stage 4 (Charging). The
+     deferred Portfolio and Proposal stages are honest 'coming next' panels, not
+     faked outputs. #validation stays rendered inside Stage 3; #prospects stays
+     rendered below the workspace so its harness assertions still pass. -->
 <div class="panel-col" id="results-col">
+
+<!-- STAGE 1: CUSTOMER. Honest pointer to the inputs overlay (the duty /
+     current-truck / replacement inputs live in the overlay from FEAT-004). No
+     computed outputs are shown here. -->
+<section class="stage stage-hidden" id="stage-customer" role="tabpanel" aria-labelledby="step-customer">
+<p class="block-title">1 &middot; Customer</p>
+<p class="lead">Describe the fleet and its duty. Every number downstream is computed from these inputs; nothing is assumed about a company that is not entered here.</p>
+<p class="small">The editable inputs &mdash; fleet register, replacement plan, shared operating costs and energy / charging &mdash; live in the <strong>Inputs</strong> panel. Open it from the <strong>Inputs</strong> button in the top bar (or the button below), edit any amber field, and the TCO, charging and validation stages recompute live.</p>
+<p class="noprint"><button type="button" id="stage-open-inputs" class="btn">Open the Inputs panel</button></p>
+<p class="caveat-line">These are demonstration defaults reproducing the Excel cached figures. They are not an owned-fleet fact or a customer quotation.</p>
+</section>
+
+<!-- STAGE 2: PORTFOLIO (deferred). Honest 'coming next' placeholder: the
+     portfolio fit-rules / model-matching module is a later phase. No fabricated
+     outputs. -->
+<section class="stage stage-hidden" id="stage-portfolio" role="tabpanel" aria-labelledby="step-portfolio">
+<p class="block-title">2 &middot; Portfolio</p>
+<p class="lead">Match each truck to a suitable EV model from the catalogue by duty, payload and range.</p>
+<div class="notice"><strong>Coming next.</strong> Portfolio matching (fit rules that recommend an EV model per truck from duty, payload and route) is a later phase of this tool. It is not built yet, so this stage shows no recommendation rather than a fabricated one. For now the EV model per truck is entered directly in the replacement plan inside the <strong>Inputs</strong> panel, and the <strong>Prospects</strong> table below ranks whole cases by the model&rsquo;s own saving figures.</div>
+</section>
+
+<!-- STAGE 3: TCO (the money view). Relocated: decision + charts + results +
+     the shared cost drivers (sensitivity) + validation. -->
+<section class="stage stage-active" id="stage-tco" role="tabpanel" aria-labelledby="step-tco">
+<p class="block-title">3 &middot; Total cost of ownership</p>
 
 <section id="decision"><p class="block-title">Decision</p>
 <p class="lead" id="decision-lead">Live headline comparison of the four ownership paths at the current inputs.</p>
@@ -229,12 +319,6 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="small">Signed credits reduce cost. Saving % = (Keep ICE total &minus; plan total) / Keep ICE total. Target headroom = (1 &minus; target) &times; Keep ICE total &minus; plan total, where the saving target defaults to 15%. Full derivations in Methodology &amp; assumptions below.</p>
 </section>
 
-<section id="charging"><p class="block-title">Energy, charging and site budget</p>
-<p class="small">The charging site is costed once per plan and shared across its EVs. Completeness and access gates must pass before a numeric site cost is produced; otherwise the plan total is &quot;n.a.&quot;</p>
-<div class="table-wrap"><table id="site-table"><thead><tr><th>Site build-up</th><th class="num">Plan A</th><th class="num">Plan B</th><th>Meaning</th></tr></thead><tbody id="site-body"></tbody></table></div>
-<p class="small">Charger grant ceiling = MIN(30000, 0.5 &times; accepted cost per charger) &times; MIN(3, approved funded chargers). The ceiling is a budget estimate only; only an entered, checked award reduces TCO.</p>
-</section>
-
 <section id="sensitivity"><p class="block-title">Break-even and sensitivity</p>
 <p class="small">Each slider changes one cost driver and recomputes every path through the same engine. These are mathematical break-even conditions, not quoted prices. The baseline is always the current Keep ICE total at the unchanged inputs.</p>
 <div class="grid" id="sens-controls"></div>
@@ -244,16 +328,40 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="small" id="sens-note">Average km cannot exceed peak km. A price change is a cost breakpoint, not a route-planning recommendation.</p>
 </section>
 
+<section id="validation"><p class="block-title">Validation</p>
+<p class="small">The engine runs an independent reconciliation (the workbook&apos;s Review sheet) on every recompute. These are internal consistency checks, not a probability that a company will save money.</p>
+<div class="table-wrap"><table id="review-table"><thead><tr><th>Reconciliation check</th><th class="num">Actual</th><th class="num">Expected</th><th>Status</th></tr></thead><tbody id="review-body"></tbody></table></div>
+<p class="caveat-line">Numerical reconciliation is strong; company-fit confidence is low because ownership, prices, COEs and charger rights are not established in the demonstration data. A pass count is not a savings forecast.</p>
+</section>
+
+</section><!-- /stage-tco -->
+
+<!-- STAGE 4: CHARGING. Relocated: energy / charging & site budget + the
+     adoption gates. The deeper charger-location integration is a later phase. -->
+<section class="stage stage-hidden" id="stage-charging" role="tabpanel" aria-labelledby="step-charging">
+<p class="block-title">4 &middot; Charging &amp; site</p>
+
+<section id="charging"><p class="block-title">Energy, charging and site budget</p>
+<p class="small">The charging site is costed once per plan and shared across its EVs. Completeness and access gates must pass before a numeric site cost is produced; otherwise the plan total is &quot;n.a.&quot;</p>
+<div class="table-wrap"><table id="site-table"><thead><tr><th>Site build-up</th><th class="num">Plan A</th><th class="num">Plan B</th><th>Meaning</th></tr></thead><tbody id="site-body"></tbody></table></div>
+<p class="small">Charger grant ceiling = MIN(30000, 0.5 &times; accepted cost per charger) &times; MIN(3, approved funded chargers). The ceiling is a budget estimate only; only an entered, checked award reduces TCO.</p>
+<p class="caveat-line">A later phase will match this site budget against surveyed charger-location and grid-capacity data; for now the chargers and site line items are entered in the <strong>Inputs</strong> panel and only an entered, checked award reduces TCO.</p>
+</section>
+
 <section id="gates"><p class="block-title">Conditions that must hold before adoption</p>
 <p class="small">A numeric range or payload pass is an <strong>assumed technical pass</strong>, not an evidence pass. The gates below are the model&apos;s own screens at the current inputs.</p>
 <div class="table-wrap"><table id="gates-table"><thead><tr><th>Gate</th><th>Plan A</th><th>Plan B</th><th>Evidence needed</th></tr></thead><tbody id="gates-body"></tbody></table></div>
 <p class="small">Service screen is the per-plan vehicle service / evidence status. Capacity gate is the site completeness / access status. No plan reaches an evidence pass while any verification flag reads No or Unconfirmed.</p>
 </section>
 
-<section id="validation"><p class="block-title">Validation</p>
-<p class="small">The engine runs an independent reconciliation (the workbook&apos;s Review sheet) on every recompute. These are internal consistency checks, not a probability that a company will save money.</p>
-<div class="table-wrap"><table id="review-table"><thead><tr><th>Reconciliation check</th><th class="num">Actual</th><th class="num">Expected</th><th>Status</th></tr></thead><tbody id="review-body"></tbody></table></div>
-<p class="caveat-line">Numerical reconciliation is strong; company-fit confidence is low because ownership, prices, COEs and charger rights are not established in the demonstration data. A pass count is not a savings forecast.</p>
+</section><!-- /stage-charging -->
+
+<!-- STAGE 5: PROPOSAL (deferred). Honest 'coming next' placeholder: the
+     proposal / finance module is a later phase. No fabricated outputs. -->
+<section class="stage stage-hidden" id="stage-proposal" role="tabpanel" aria-labelledby="step-proposal">
+<p class="block-title">5 &middot; Proposal</p>
+<p class="lead">Assemble the chosen path, funding and grants into a shareable proposal.</p>
+<div class="notice"><strong>Coming next.</strong> The proposal / finance module (loan and lease structuring, grant timing, a printable customer-facing summary) is a later phase of this tool. It is not built yet, so this stage shows no figures rather than a fabricated quotation. The underlying economics are already in the <strong>TCO</strong> and <strong>Charging &amp; site</strong> stages, and the whole page prints as an internal diagnostic record.</div>
 </section>
 
 </div><!-- /results-col -->
@@ -1843,6 +1951,56 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   function roundDp(v){ if(!isNum(v)) return 0; return Number.isInteger(v)?0:2; }
   function ocVal(n){ var r = ocRow(n); return r && r.values ? r.values.B : undefined; }
 
+  // ---- Confidence badge (persistent across stages) -----------------
+  // Honest, gate-driven. Picks the "best EV plan" (Plan A / Plan B) exactly as
+  // the decision story does: the one with the better numeric saving %. The
+  // badge text/colour mirror that plan's savingClaimStatus from the engine:
+  //   'Meets entered X% target'  -> Confirmed (green)
+  //   'Below entered X% target'  -> Below target (amber)
+  //   'Total incomplete' / 'Diagnostic only' -> Diagnostic (grey, NOT confirmed)
+  // It is never a fabricated probability. For the demonstration case both EV
+  // plans are 'Total incomplete' (site cost n.a.), so the badge shows the honest
+  // non-confirmed Diagnostic state.
+  function bestEvPlanKey(out){
+    var sp = out.results.savingPct;
+    var a = sp.plan_a, b = sp.plan_b;
+    var an = isNum(a), bn = isNum(b);
+    if (an && bn) return a >= b ? 'plan_a' : 'plan_b';
+    if (an) return 'plan_a';
+    if (bn) return 'plan_b';
+    return 'plan_a';   // fall back to Plan A when neither has a numeric saving
+  }
+  function renderConfidence(out){
+    var badge = el('confidence-badge');
+    var dot = el('confidence-dot');
+    var txt = el('confidence-text');
+    if (!txt) return;
+    var key = bestEvPlanKey(out);
+    var claim = out.results.savingClaimStatus[key];
+    var label = PLAN_LABELS[key];
+    var cls, message;
+    if (typeof claim === 'string' && claim.indexOf('Meets entered') === 0){
+      cls = 'conf-confirmed';
+      message = 'Confirmed win &middot; ' + label + ' ' + claim.toLowerCase();
+    } else if (typeof claim === 'string' && claim.indexOf('Below entered') === 0){
+      cls = 'conf-below';
+      message = 'Below target &middot; ' + label + ' ' + claim.toLowerCase();
+    } else {
+      // 'Total incomplete', 'Diagnostic only', n.a. or anything else.
+      cls = 'conf-diagnostic';
+      message = 'Diagnostic &middot; not a confirmed win (' + label + ': ' + fmtText(claim) + ')';
+    }
+    txt.innerHTML = 'Confidence: ' + message;
+    // Swap the single status class without clobbering the base 'confidence'.
+    if (badge){
+      var base = (badge.className || 'confidence')
+        .replace(/\s*conf-confirmed/g,'').replace(/\s*conf-below/g,'').replace(/\s*conf-diagnostic/g,'');
+      if (base.indexOf('confidence') === -1) base = 'confidence ' + base;
+      badge.className = base.trim() + ' ' + cls;
+    }
+    if (dot && dot.setAttribute) dot.setAttribute('data-status', cls);
+  }
+
   recompute = function(){
     if (!computeFleet){ return; }
     var out = computeFleet(state);
@@ -1853,6 +2011,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     renderReview(out);
     renderSensitivity(out);
     renderCharts(out);
+    renderConfidence(out);
   };
 
   /* ---- INPUT UI rendering ---------------------------------------- */
@@ -2362,6 +2521,125 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   wireReset();
   wireSidebar();
   H.recompute();
+})();
+</script>
+
+<script>
+/* ================================================================== *
+ * Journey stepper controller.
+ * Switches a single visible stage viewport (Customer / Portfolio / TCO /
+ * Charging / Proposal) with NO routing and NO fetch -- pure client-side
+ * show/hide via the 'stage-active' / 'stage-hidden' classes. The active stage
+ * persists best-effort under localStorage 'hs_stage_v1' (try/catch so file://
+ * still works). Keyboard-navigable: arrows move focus between steps, Enter /
+ * Space activate, Home / End jump to the ends (tablist pattern).
+ * ================================================================== */
+(function(){
+  "use strict";
+  var H = window.__HS;
+  var STAGE_KEY = 'hs_stage_v1';
+  var ORDER = ['customer','portfolio','tco','charging','proposal'];
+  var DEFAULT_STAGE = 'tco';
+
+  function el(id){ return document.getElementById(id); }
+  function stepEl(stage){ return el('step-' + stage); }
+  function stageEl(stage){ return el('stage-' + stage); }
+
+  function addClass(elm,c){
+    if (!elm) return;
+    if (elm.classList && elm.classList.add){ elm.classList.add(c); return; }
+    elm.className = ((elm.className||'').replace(new RegExp('\\s*'+c,'g'),'')) + ' ' + c;
+  }
+  function removeClass(elm,c){
+    if (!elm) return;
+    if (elm.classList && elm.classList.remove){ elm.classList.remove(c); return; }
+    elm.className = (elm.className||'').replace(new RegExp('\\s*'+c,'g'),'');
+  }
+
+  function readStored(){
+    try { if (window.localStorage){ var v = window.localStorage.getItem(STAGE_KEY); if (ORDER.indexOf(v) !== -1) return v; } } catch(e){}
+    return null;
+  }
+  function store(stage){
+    try { if (window.localStorage) window.localStorage.setItem(STAGE_KEY, stage); } catch(e){}
+  }
+
+  var current = null;
+
+  function show(stage, focusStep){
+    if (ORDER.indexOf(stage) === -1) stage = DEFAULT_STAGE;
+    ORDER.forEach(function(s){
+      var step = stepEl(s);
+      var panel = stageEl(s);
+      var active = (s === stage);
+      if (panel){
+        if (active){ removeClass(panel,'stage-hidden'); addClass(panel,'stage-active'); }
+        else { removeClass(panel,'stage-active'); addClass(panel,'stage-hidden'); }
+      }
+      if (step && step.setAttribute){
+        step.setAttribute('aria-selected', active ? 'true' : 'false');
+        step.setAttribute('tabindex', active ? '0' : '-1');
+      }
+    });
+    current = stage;
+    store(stage);
+    if (focusStep){
+      var st = stepEl(stage);
+      if (st && typeof st.focus === 'function'){ try { st.focus(); } catch(e){} }
+    }
+  }
+
+  function wireStepper(){
+    var stepper = el('stepper');
+    if (!stepper) return;
+    ORDER.forEach(function(s){
+      var step = stepEl(s);
+      if (!step) return;
+      step.addEventListener('click', function(){ show(s); });
+      step.addEventListener('keydown', function(e){
+        var key = e && (e.key || e.keyCode);
+        var idx = ORDER.indexOf(s);
+        if (key === 'ArrowRight' || key === 'ArrowDown' || key === 39 || key === 40){
+          if (e.preventDefault) e.preventDefault();
+          show(ORDER[(idx + 1) % ORDER.length], true);
+        } else if (key === 'ArrowLeft' || key === 'ArrowUp' || key === 37 || key === 38){
+          if (e.preventDefault) e.preventDefault();
+          show(ORDER[(idx - 1 + ORDER.length) % ORDER.length], true);
+        } else if (key === 'Home' || key === 36){
+          if (e.preventDefault) e.preventDefault();
+          show(ORDER[0], true);
+        } else if (key === 'End' || key === 35){
+          if (e.preventDefault) e.preventDefault();
+          show(ORDER[ORDER.length - 1], true);
+        } else if (key === 'Enter' || key === ' ' || key === 'Spacebar' || key === 13 || key === 32){
+          if (e.preventDefault) e.preventDefault();
+          show(s);
+        }
+      });
+    });
+
+    // The Customer stage's button opens the inputs overlay (reuses the top-bar
+    // trigger so there is a single overlay code path).
+    var openBtn = el('stage-open-inputs');
+    if (openBtn){
+      openBtn.addEventListener('click', function(){
+        var trigger = el('sidebar-toggle');
+        if (trigger && trigger.getAttribute && trigger.getAttribute('aria-expanded') !== 'true' && typeof trigger.fire === 'function'){
+          trigger.fire('click');
+        } else if (trigger && trigger.click){
+          if (trigger.getAttribute && trigger.getAttribute('aria-expanded') === 'true') return;
+          trigger.click();
+        }
+      });
+    }
+
+    var stored = readStored();
+    show(stored || DEFAULT_STAGE, false);
+  }
+
+  // Expose a programmatic switch for the harness + other controllers.
+  if (H){ H.showStage = function(stage){ show(stage); }; }
+  wireStepper();
 })();
 </script>
 
