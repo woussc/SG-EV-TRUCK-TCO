@@ -64,6 +64,8 @@ A few drivers show a near-zero swing **in this scenario** for structural reasons
 
 The high-impact drivers (top of the ranking) are the ones that should be promoted to an always-visible **primary input** set in the toggleable sidebar. The low-impact drivers (bottom of the ranking, near-zero swing, plus the conditional/finance items above) are rarely-changed fine print that can be demoted behind an **Advanced** disclosure, keeping their current demonstration defaults so every computed number is unchanged and `python tools/validate.py` still passes 19/19.
 
+> Note on what shipped: the **Advanced** disclosure demotes only the low-impact *operating-cost rows* and the detailed *per-charger energy/site line items*. The fleet-register and replacement-plan tables stay fully visible in the sidebar, so fleet/replacement columns (including each truck's year-10 / terminal values and replacement months) are kept primary by virtue of the whole table being shown, not demoted into Advanced.
+
 ### Proposed primary (always-visible) inputs
 
 1. EV purchase quote per truck (Replacement plan, col D) - the single biggest lever (~14% impact).
