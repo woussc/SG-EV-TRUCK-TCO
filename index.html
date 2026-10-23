@@ -17,7 +17,16 @@ h1{font-size:30px;line-height:1.18;margin:0 0 6px;font-weight:650;max-width:900p
 .titlerow .sub{color:var(--muted);font-size:15px;margin:0;max-width:820px}
 /* Two-panel calculator grid */
 .workspace{display:grid;grid-template-columns:minmax(380px,460px) 1fr;gap:var(--gutter);align-items:start}
+/* Collapsed sidebar: the input column is hidden and results take the full width. */
+.workspace.collapsed{grid-template-columns:1fr}
+.workspace.collapsed #input-col{display:none}
 .panel-col{display:flex;flex-direction:column;gap:var(--gutter);min-width:0}
+/* Sidebar toggle button (flat, no shadow/gradient). */
+.sidebar-toggle{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;background:var(--paper);color:var(--accent);border:1px solid var(--line2);border-radius:5px;font:13px -apple-system,'Segoe UI',Arial;font-weight:600}
+.sidebar-toggle:hover{background:var(--soft)}
+.sidebar-toggle .tgl-icon{font-size:14px;line-height:1}
+/* Advanced-input disclosure holds rarely-changed assumptions at demonstration defaults. */
+.adv-help{font-size:12px;color:var(--muted);margin:0 0 8px}
 section{background:var(--paper);padding:20px;margin:0;border:1px solid var(--line);border-radius:10px}
 .block-title{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:0 0 14px}
 h2{font-size:18px;line-height:1.25;margin:0 0 12px;font-weight:620}
@@ -107,6 +116,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <div class="mark" aria-hidden="true">EV</div>
 <div class="brand">EV Truck TCO Calculator</div>
 <div class="scope">10-year fleet ownership &middot; Singapore</div>
+<button type="button" id="sidebar-toggle" class="sidebar-toggle noprint" aria-expanded="true" aria-controls="input-col"><span class="tgl-icon" aria-hidden="true">&#9776;</span><span id="sidebar-toggle-label">Hide inputs</span></button>
 <div class="caveat">Demonstration / diagnostic figures, not a customer quote.</div>
 </div>
 <main>
@@ -139,12 +149,24 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 </tr></thead><tbody id="repl-body"></tbody></table></div>
 
 <h3>Shared operating costs <span class="tag assumption">Assumption</span></h3>
-<p class="small">Fleet-wide operating assumptions and forecast controls. Demonstration inflation and discount are all zero.</p>
+<p class="small">The high-impact recurring costs. Demonstration inflation and discount are all zero. Rarely-changed rows are under &ldquo;Advanced&rdquo; below, each kept at its demonstration default.</p>
 <div class="formgrid" id="oc-form"></div>
 
 <h3>Energy and charging (Plan A / Plan B) <span class="tag assumption">Assumption</span></h3>
-<p class="small">Energy prices and the charging-site cost build-up for Plan A (column B) and Plan B (column C).</p>
+<p class="small">The high-impact energy prices and charger build-up for Plan A (column B) and Plan B (column C).</p>
 <div class="table-wrap editwrap"><table id="ec-table"><thead><tr><th>Input</th><th>Plan A</th><th>Plan B</th><th>Unit</th><th>Meaning / cell reference</th></tr></thead><tbody id="ec-body"></tbody></table></div>
+
+<details id="advanced-inputs">
+<summary>Advanced assumptions (rarely changed)</summary>
+<div class="inner">
+<p class="adv-help">This holds the low-impact, rarely-changed <em>operating-cost rows</em> demoted from the form above (tyres, inspection, contract surcharges, unavailable-days and all-in backup rates, battery reserve and fade, auxiliary energy, growth and discount rates, operating-cost scheduled-repair timing, the new-ICE operating terminal value, and the data-mode and quote-basis flags) together with the <em>detailed per-charger energy and site line items</em> beyond the primary four (distribution board, electrical worker, cabling and install, upgrades, civil work, connection and other site preparation, grant and deposit rows, and so on). The fleet register and replacement-plan tables stay fully visible in the sidebar, so their columns &mdash; including each truck's year-10 / terminal values and replacement months &mdash; are not hidden here. Each demoted field stays at its demonstration default and feeds the engine exactly as before, so hiding it changes no computed number.</p>
+<h4>Operating costs &mdash; advanced <span class="tag assumption">Assumption</span></h4>
+<div class="formgrid" id="oc-form-adv"></div>
+<h4>Energy and charging &mdash; advanced <span class="tag assumption">Assumption</span></h4>
+<div class="table-wrap editwrap"><table id="ec-table-adv"><thead><tr><th>Input</th><th>Plan A</th><th>Plan B</th><th>Unit</th><th>Meaning / cell reference</th></tr></thead><tbody id="ec-body-adv"></tbody></table></div>
+</div>
+</details>
+
 <p class="noprint"><button type="button" id="reset-btn" class="btn">Reset to demonstration case</button></p>
 </section>
 </div>
@@ -1788,6 +1810,21 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   if (!H) return;
   var NA = H.NA;
 
+  // Shared debounce for live recompute. Editable fields fire 'input' (live as
+  // you type) rather than 'change' (blur only); the fleet and replacement
+  // tables are large, so rapid typing coalesces into one recompute after a
+  // short idle. A synchronous test hook (H.__syncRecompute) bypasses the timer
+  // so the DOM harness can observe the update deterministically.
+  var LIVE_DELAY = 120;
+  var liveTimer = null;
+  function liveRecompute(){
+    if (H.__syncRecompute){ H.recompute(); return; }
+    if (liveTimer) clearTimeout(liveTimer);
+    liveTimer = setTimeout(function(){ liveTimer = null; H.recompute(); }, LIVE_DELAY);
+  }
+  // Expose so the harness can force synchronous recompute for assertions.
+  H.setSyncRecompute = function(on){ H.__syncRecompute = !!on; };
+
   // ---- Fleet register editable table ----
   // Columns used: B include, C duty, D body, E work km/day, F days/year,
   // G peak route km, H peak cargo, I jobs/day, J COE months left,
@@ -1814,15 +1851,17 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
         else if (c.type==='inc'){
           var cb = document.createElement('input'); cb.type='checkbox'; cb.className='amber';
           cb.style.width='18px'; cb.checked = (row.B===1);
+          // Include toggle is discrete: recompute immediately (not debounced).
           cb.addEventListener('change', function(){ row.B = cb.checked?1:0; H.recompute(); });
           td.appendChild(cb);
         } else {
           var inp = document.createElement('input'); inp.className='amber';
           inp.type = (c.type==='num')?'number':'text';
           inp.value = (row[c.k]==null?'':row[c.k]);
-          inp.addEventListener('change', function(){
+          // Live update: recompute (debounced) as the user types, not on blur.
+          inp.addEventListener('input', function(){
             row[c.k] = (c.type==='num') ? H.parseEditable(inp.value) : (inp.value===''?null:inp.value);
-            H.recompute();
+            liveRecompute();
           });
           td.appendChild(inp);
         }
@@ -1870,7 +1909,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     var td=document.createElement('td');
     var inp=document.createElement('input'); inp.type='number'; inp.className='amber';
     inp.value=(obj[k]==null?'':obj[k]);
-    inp.addEventListener('change',function(){ obj[k]=H.parseEditable(inp.value); H.recompute(); });
+    inp.addEventListener('input',function(){ obj[k]=H.parseEditable(inp.value); liveRecompute(); });
     td.appendChild(inp); return td;
   }
   function tdSelect(obj,k,opts){
@@ -1880,51 +1919,81 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
       var op=document.createElement('option'); op.value=o; op.textContent=o;
       if(obj[k]===o) op.selected=true; sel.appendChild(op);
     });
-    sel.addEventListener('change',function(){ obj[k]=sel.value; H.recompute(); });
+    // <select> is discrete; both 'input' and 'change' fire on pick. Use 'input'
+    // for consistency with the editable fields, recompute immediately.
+    sel.addEventListener('input',function(){ obj[k]=sel.value; H.recompute(); });
     td.appendChild(sel); return td;
   }
 
   // ---- Operating costs form ----
-  // A curated, labelled subset plus everything else as generic rows.
+  // Curation: high-impact recurring costs render in the always-visible primary
+  // form (#oc-form); every other row renders in the advanced form
+  // (#oc-form-adv) inside the Advanced <details>. Both forms bind to the SAME
+  // state.operating_costs.rows objects, so values and defaults reach the engine
+  // unchanged (hiding a row changes no computed number). Per
+  // docs/input-sensitivity-findings.md PRIMARY op-cost rows are:
+  //   7  ICE fuel consumption (L/km)   -- the diesel running-cost lever
+  //   29 ICE insurance                 -- a largest recurring fixed cost
+  //   30 EV insurance                  -- a largest recurring fixed cost
+  var PRIMARY_OC = {7:true, 29:true, 30:true};
+  function ocField(r){
+    var div = document.createElement('div'); div.className='field';
+    var lab = document.createElement('label'); lab.textContent = (r.label||('Row '+r._row));
+    var val = r.values.B;
+    var ctl;
+    if (typeof val==='number'){
+      ctl=document.createElement('input'); ctl.type='number'; ctl.step='any'; ctl.className='amber';
+      ctl.value=(val==null?'':val);
+      ctl.addEventListener('input',function(){ r.values.B=H.parseEditable(ctl.value); liveRecompute(); });
+    } else {
+      ctl=document.createElement('input'); ctl.type='text'; ctl.className='amber';
+      ctl.value=(val==null?'':val);
+      ctl.addEventListener('input',function(){ r.values.B=(ctl.value===''?null:ctl.value); liveRecompute(); });
+    }
+    var unit=document.createElement('span'); unit.className='u'; unit.textContent=(r.values.C==null?'':r.values.C);
+    div.appendChild(lab); div.appendChild(ctl); div.appendChild(unit);
+    return div;
+  }
   function buildOperating(){
     var form = H.el('oc-form'); form.innerHTML='';
+    var adv = H.el('oc-form-adv'); if (adv) adv.innerHTML='';
     var rows = H.state.operating_costs.rows;
     rows.forEach(function(r){
       if (r.values==null) return;
-      var row = H.el; // noop
-      var div = document.createElement('div'); div.className='field';
-      var lab = document.createElement('label'); lab.textContent = (r.label||('Row '+r._row));
-      var val = r.values.B;
-      var ctl;
-      if (typeof val==='number'){
-        ctl=document.createElement('input'); ctl.type='number'; ctl.step='any'; ctl.className='amber';
-        ctl.value=(val==null?'':val);
-        ctl.addEventListener('change',function(){ r.values.B=H.parseEditable(ctl.value); H.recompute(); });
-      } else {
-        ctl=document.createElement('input'); ctl.type='text'; ctl.className='amber';
-        ctl.value=(val==null?'':val);
-        ctl.addEventListener('change',function(){ r.values.B=(ctl.value===''?null:ctl.value); H.recompute(); });
-      }
-      var unit=document.createElement('span'); unit.className='u'; unit.textContent=(r.values.C==null?'':r.values.C);
-      div.appendChild(lab); div.appendChild(ctl); div.appendChild(unit);
-      form.appendChild(div);
+      var dest = PRIMARY_OC[r._row] ? form : (adv || form);
+      dest.appendChild(ocField(r));
     });
   }
 
   // ---- Energy and charging table (Plan A col B, Plan B col C) ----
+  // Curation: high-impact energy prices and charger build-up render in the
+  // always-visible primary table (#ec-body); all other rows render in the
+  // advanced table (#ec-body-adv) inside the Advanced <details>. Both bind to
+  // the SAME state.energy_and_charging.rows objects. Per
+  // docs/input-sensitivity-findings.md PRIMARY energy rows are:
+  //   7  Commercial diesel price (SGD/litre)   -- diesel running-cost lever
+  //   10 Depot electricity (SGD/grid kWh)      -- EV running-cost lever
+  //   16 Installed chargers (units)            -- site build-up scale
+  //   18 Charger equipment price (SGD/charger) -- site build-up scale
+  var PRIMARY_EC = {7:true, 10:true, 16:true, 18:true};
+  function ecRowTr(r){
+    var tr=document.createElement('tr');
+    tr.appendChild(tdText(r.label||('Row '+r._row)));
+    tr.appendChild(ecCell(r,'B'));
+    tr.appendChild(ecCell(r,'C'));
+    tr.appendChild(tdText(r.values.D==null?'':r.values.D));
+    var meaning=document.createElement('td'); meaning.className='small';
+    meaning.textContent=(r.values.E==null?('Energy and charging!B'+r._row):r.values.E);
+    tr.appendChild(meaning);
+    return tr;
+  }
   function buildEnergy(){
     var body=H.el('ec-body'); body.innerHTML='';
+    var adv=H.el('ec-body-adv'); if (adv) adv.innerHTML='';
     H.state.energy_and_charging.rows.forEach(function(r){
       if (r.values==null) return;
-      var tr=document.createElement('tr');
-      tr.appendChild(tdText(r.label||('Row '+r._row)));
-      tr.appendChild(ecCell(r,'B'));
-      tr.appendChild(ecCell(r,'C'));
-      tr.appendChild(tdText(r.values.D==null?'':r.values.D));
-      var meaning=document.createElement('td'); meaning.className='small';
-      meaning.textContent=(r.values.E==null?('Energy and charging!B'+r._row):r.values.E);
-      tr.appendChild(meaning);
-      body.appendChild(tr);
+      var dest = PRIMARY_EC[r._row] ? body : (adv || body);
+      dest.appendChild(ecRowTr(r));
     });
   }
   function ecCell(r,col){
@@ -1934,9 +2003,9 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     inp.type=(typeof v==='number')?'number':'text';
     if(inp.type==='number') inp.step='any';
     inp.value=(v==null?'':v);
-    inp.addEventListener('change',function(){
+    inp.addEventListener('input',function(){
       r.values[col]=(typeof v==='number')?H.parseEditable(inp.value):(inp.value===''?null:inp.value);
-      H.recompute();
+      liveRecompute();
     });
     td.appendChild(inp); return td;
   }
@@ -2033,6 +2102,57 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
     });
   }
 
+  // ---- Toggleable input sidebar ----
+  // The toggle shows/hides the #input-col sidebar by flipping a 'collapsed'
+  // class on the .workspace grid; when collapsed the grid becomes a single
+  // column so #results-col takes the full width (CSS .workspace.collapsed).
+  // Default = OPEN. State is persisted (best-effort) under a new localStorage
+  // key, wrapped in try/catch like the prospects store so file:// still works.
+  var SIDEBAR_KEY = 'hs_sidebar_v1';
+  function wireSidebar(){
+    var btn = H.el('sidebar-toggle');
+    if (!btn) return;
+    var ws = document.querySelector ? document.querySelector('.workspace') : null;
+    // Fallback for the harness shim (no querySelector): track state on the btn.
+    var label = H.el('sidebar-toggle-label');
+    var inputCol = H.el('input-col');
+
+    function readStored(){
+      try { if (window.localStorage){ var v = window.localStorage.getItem(SIDEBAR_KEY); if (v==='collapsed') return true; if (v==='open') return false; } } catch(e){}
+      return null;
+    }
+    function store(collapsed){
+      try { if (window.localStorage) window.localStorage.setItem(SIDEBAR_KEY, collapsed?'collapsed':'open'); } catch(e){}
+    }
+    function apply(collapsed){
+      if (ws){
+        if (ws.classList && ws.classList.add){
+          if (collapsed) ws.classList.add('collapsed'); else ws.classList.remove('collapsed');
+        } else {
+          // shim: className string
+          ws.className = (ws.className||'').replace(/\s*collapsed/,'') + (collapsed?' collapsed':'');
+        }
+      }
+      // Reflect hidden state on the input column so the DOM/harness can see it.
+      if (inputCol){
+        inputCol.style.display = collapsed ? 'none' : '';
+        if (inputCol.setAttribute) inputCol.setAttribute('aria-hidden', collapsed ? 'true' : 'false');
+      }
+      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      if (label) label.textContent = collapsed ? 'Show inputs' : 'Hide inputs';
+    }
+
+    var stored = readStored();
+    var collapsed = (stored===null) ? false : stored;   // default OPEN
+    apply(collapsed);
+
+    btn.addEventListener('click', function(){
+      collapsed = !collapsed;
+      apply(collapsed);
+      store(collapsed);
+    });
+  }
+
   function buildAll(){
     buildFleet(); buildRepl(); buildOperating(); buildEnergy(); buildSensitivity();
   }
@@ -2044,6 +2164,7 @@ window.HSProspectSeeds = {"_meta":{"description":"Seed customer cases for the Pr
   // ---- init ----
   buildAll();
   wireReset();
+  wireSidebar();
   H.recompute();
 })();
 </script>
