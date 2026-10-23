@@ -49,7 +49,7 @@ function makeEl(tag) {
 }
 const byId = {};
 const ids = ['decision-cards','decision-lead','decision-notice','results-body','site-body',
-  'gates-body','review-body','sens-body','sens-controls','fleet-cards','add-truck-btn',
+  'gates-body','review-body','sens-controls','fleet-cards','add-truck-btn',
   'oc-form','ec-body','reset-btn','demo-banner',
   'prospect-body','prospect-sort','prospect-current-btn','prospect-note',
   // FEAT-002: curation split containers + toggleable sidebar hooks.
@@ -69,11 +69,18 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   // FEAT-004 (portfolio): ranked model-matching guide hooks.
   'portfolio-body','portfolio-duty-line','portfolio-honesty',
   // FEAT-003: TCO interactive dashboard + Part A fleet matched-models summary.
-  'chart-cumulative','chart-breakdown','chart-sens','chart-total','chart-day0',
-  'results-table','day0-cards','tco-tooltip',
+  // dashboard-A: the redundant sensitivity-response bar (chart-sens) was removed
+  // (it duplicated the breakdown bar total); the three TCO surfaces are the line,
+  // the breakdown bar and the sensitivity controls, now on one band (#tco-band).
+  'chart-cumulative','chart-breakdown',
+  'results-table','day0-cards','tco-tooltip','tco-band',
   'portfolio-matched-models','portfolio-fleet-body','portfolio-config-text',
   // FEAT-002: folded-in customer profile + consolidated per-truck Advanced.
-  'customer-form','fleet-adv'];
+  'customer-form','fleet-adv',
+  // FEAT-002 (Part C): Stage-4 charging assessment panels.
+  'charge-site-read','charge-detour-read','charge-public-totals',
+  'charge-public-bands','charge-region-body','charge-operator-body',
+  'charge-attribution'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
 
 const document = {
@@ -131,7 +138,15 @@ const replIds = windowObj.__HS.state.replacement_plan.rows
   .filter((r) => r.A != null).map((r) => String(r.A));
 checks.push(['replacement rows ID-consistent with the 6 demo trucks',
   demoCardIds.every((id) => replIds.indexOf(String(id)) !== -1)]);
-checks.push(['sensitivity rendered', byId['sens-body'].innerHTML.indexOf('Keep ICE') !== -1]);
+// dashboard-A A2/A3: the sensitivity CONTROLS card is rendered (slider panels),
+// while the redundant sensitivity-response bar (#chart-sens) and the sensitivity
+// TABLE (#sens-table/#sens-body) are removed. The controls container populates.
+checks.push(['sensitivity controls rendered', byId['sens-controls'].children.length > 0]);
+checks.push(['sensitivity-response bar removed (no #chart-sens in markup)',
+  html.indexOf('id="chart-sens"') === -1]);
+checks.push(['sensitivity table removed (no #sens-table / #sens-body in markup)',
+  html.indexOf('id="sens-table"') === -1 && html.indexOf('id="sens-body"') === -1 &&
+  html.indexOf('id="sens-headroom-th"') === -1]);
 
 // ---- Prospects view checks -------------------------------------------------
 const seeds = windowObj.HSProspectSeeds;
@@ -148,7 +163,17 @@ checks.push(['no evergreen named-customer seed remains',
 checks.push(['scoreProspect exposed', typeof windowObj.HSEngine.scoreProspect === 'function']);
 
 const pbodyBenefit = byId['prospect-body'].innerHTML;
-checks.push(['prospect table rendered', pbodyBenefit.indexOf('Why this rank') !== -1]);
+// dashboard-A A6: prospects render as CLEAN CARDS (one <article class="prospect-
+// card"> per prospect), streamlined from the old verbose table rows. The card
+// container (#prospect-body) is a card grid in markup, and each card carries a
+// data-prospect-id + a Details disclosure (collapsed ranking prose).
+checks.push(['prospects render as cards (prospect-card articles)',
+  pbodyBenefit.indexOf('prospect-card') !== -1 && pbodyBenefit.indexOf('data-prospect-id=') !== -1]);
+checks.push(['prospect cards collapse detail behind a Details disclosure',
+  pbodyBenefit.indexOf('<details') !== -1 && /why this rank/i.test(pbodyBenefit)]);
+checks.push(['prospect card container is a card grid (not a table) in markup',
+  /<div class="prospect-cards" id="prospect-body">/.test(html) &&
+  html.indexOf('id="prospect-table"') === -1]);
 checks.push(['prospect does NOT name Evergreen Logistics', pbodyBenefit.indexOf('Evergreen Logistics') === -1]);
 checks.push(['prospect lists demo', pbodyBenefit.indexOf('DEMONSTRATION 6-truck case') !== -1]);
 // The four illustrative presets must each render in the table.
@@ -156,7 +181,19 @@ checks.push(['prospect lists Best case', pbodyBenefit.indexOf('Best case (illust
 checks.push(['prospect lists Mid case', pbodyBenefit.indexOf('Mid case (illustrative, marginal saving)') !== -1]);
 checks.push(['prospect lists Bad case', pbodyBenefit.indexOf('Bad case (illustrative, EV not a fit)') !== -1]);
 checks.push(['prospect lists Blank profile', pbodyBenefit.indexOf('Blank profile (start a fresh client)') !== -1]);
-checks.push(['prospect exposes components', pbodyBenefit.indexOf('Account key') !== -1 && pbodyBenefit.indexOf('Benefit key') !== -1]);
+checks.push(['prospect cards expose ranking components (in Details)',
+  pbodyBenefit.indexOf('Account key') !== -1 && pbodyBenefit.indexOf('Benefit key') !== -1]);
+// A6: the honesty tags (Illustrative/Assumption) survive on the cards, the Load
+// action keeps its data-load hook, and n.a. is shown (never zeroed). The demo
+// case Total is n.a. for the EV plans, so an n.a. appears in the rendered cards.
+checks.push(['prospect cards keep the Illustrative/Assumption honesty tags',
+  pbodyBenefit.indexOf('tag illustrative') !== -1 || pbodyBenefit.indexOf('tag assumption') !== -1]);
+checks.push(['prospect cards keep the Load-into-editor action (data-load)',
+  pbodyBenefit.indexOf('data-load=') !== -1]);
+checks.push(['prospect cards keep the conditional-savings caveat',
+  pbodyBenefit.indexOf('conditional on the supplied inputs') !== -1]);
+checks.push(['prospect cards show n.a. (not a zero substitute)',
+  pbodyBenefit.indexOf('n.a.') !== -1]);
 
 // ---- Confirmed-win assertion (review finding #2) ---------------------------
 // At least one seeded prospect must be a gate-passing confirmed win: gatePass
@@ -245,12 +282,13 @@ checks.push(['account sort renders Blank profile last',
 // sensitivity slider 'input' event redraws the sensitivity chart (live update);
 // (c) changing an amber input redraws the comparison charts (live update);
 // (d) an n.a. total is drawn as a hatched 'n.a.' marker, never a zero bar.
-// FEAT-003 re-layout: the TCO stage is now an interactive dashboard. The hero
-// is the cumulative-TCO LINE (chart-cumulative); below it the cost-component
-// BREAKDOWN BAR (chart-breakdown); beside them the sensitivity chart
-// (chart-sens). The old chart-total / chart-target / chart-day0 boxes were
-// folded away (day-0 is now a card grid; total/target live in the hero + table).
-const chartIds = ['chart-cumulative','chart-breakdown','chart-sens'];
+// FEAT-003 re-layout + dashboard-A: the TCO stage is an interactive dashboard.
+// The hero is the cumulative-TCO LINE (chart-cumulative); the cost-component
+// BREAKDOWN BAR (chart-breakdown) sits beside it in ONE band with the
+// sensitivity controls. dashboard-A removed the redundant sensitivity-response
+// bar (chart-sens) - it duplicated the breakdown bar's per-path total - so the
+// two live chart surfaces are the line and the breakdown bar.
+const chartIds = ['chart-cumulative','chart-breakdown'];
 chartIds.forEach((id) => {
   const h = byId[id] ? byId[id].innerHTML : '';
   checks.push([id + ' emits <svg>', h.indexOf('<svg') !== -1]);
@@ -335,13 +373,16 @@ if (sensControls && sensControls.children.length) {
   sensSlider = driverControls(sensControls.children[0]).slider;
 }
 checks.push(['sensitivity slider present', !!sensSlider]);
-const sensBefore = byId['chart-sens'].innerHTML;
+// dashboard-A A2: there is no separate sensitivity-response chart any more.
+// Moving a headline slider redraws the shared BREAKDOWN BAR (and the cumulative
+// line) live via the main recompute path, so assert the breakdown bar updates.
+const sensBefore = byId['chart-breakdown'].innerHTML;
 if (sensSlider) {
   sensSlider.value = String(Number(sensSlider.value) + 1);
   sensSlider.fire('input');
 }
-const sensAfter = byId['chart-sens'].innerHTML;
-checks.push(['sensitivity chart updates live on slider input',
+const sensAfter = byId['chart-breakdown'].innerHTML;
+checks.push(['breakdown bar updates live on sensitivity slider input',
   !!sensSlider && sensBefore !== sensAfter && sensAfter.indexOf('<svg') !== -1]);
 
 // ---- FEAT-003 (A): unified shared diesel driver, no clone divergence -------
@@ -364,7 +405,10 @@ for (const p of (sensControls.children || [])) {
 checks.push(['unified diesel driver present', !!dieselPanel]);
 const dieselCtl = dieselPanel ? driverControls(dieselPanel) : {};
 const DRIVEN_DIESEL = 3.33;
-const sensBodyBeforeDiesel = byId['sens-body'].innerHTML;
+// dashboard-A A3: the sensitivity TABLE was removed; the committed value is now
+// read off the main #results-table + the breakdown bar. Snapshot those.
+const resultsBodyBeforeDiesel = byId['results-body'].innerHTML;
+const breakdownBeforeDiesel = byId['chart-breakdown'].innerHTML;
 if (dieselCtl.box) { dieselCtl.box.value = String(DRIVEN_DIESEL); dieselCtl.box.fire('input'); }
 // Canonical state field the engine reads for row 7: Plan A col B only.
 const ecRow7 = windowObj.__HS.state.energy_and_charging.rows.find((row) => row._row === 7);
@@ -402,13 +446,15 @@ checks.push(['primary table rows 7/10 Plan B (col C) is non-editable mirror, not
 // The driver updates the number box and the slider together (single source).
 checks.push(['driver slider mirrors driven value',
   !!dieselCtl.slider && Number(dieselCtl.slider.value) === DRIVEN_DIESEL]);
-// The sensitivity table recomputed from the SAME committed state (no clone):
-// the rendered sens-body changed and the money view (results-body) reflects the
-// identical driven engine run. Recompute the engine from committed state and
-// confirm the sens-body Keep ICE total matches the main results Keep ICE total.
-const sensBodyAfterDiesel = byId['sens-body'].innerHTML;
-checks.push(['sens table reflects driven diesel (no clone divergence)',
-  sensBodyBeforeDiesel !== sensBodyAfterDiesel]);
+// The money view recomputed from the SAME committed state (no clone): the main
+// results-body changed AND the breakdown bar redrew. Recompute the engine from
+// committed state and confirm the results-body Keep ICE total matches it.
+const resultsBodyAfterDiesel = byId['results-body'].innerHTML;
+const breakdownAfterDiesel = byId['chart-breakdown'].innerHTML;
+checks.push(['results table reflects driven diesel (committed state)',
+  resultsBodyBeforeDiesel !== resultsBodyAfterDiesel]);
+checks.push(['breakdown bar reflects driven diesel (same committed output)',
+  breakdownBeforeDiesel !== breakdownAfterDiesel]);
 const drivenOut = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
 function fmtMoneyCell(v) {
   if (v === NA || v == null || typeof v !== 'number' || !isFinite(v)) return null;
@@ -417,9 +463,8 @@ function fmtMoneyCell(v) {
   return neg ? '-' + s : s;
 }
 const keepTotalCell = fmtMoneyCell(drivenOut.results.totalEconomicTco.keep_ice);
-checks.push(['sens table + results agree on driven value (same source of truth)',
+checks.push(['results table agrees with the driven engine value (same source of truth)',
   !!keepTotalCell &&
-  byId['sens-body'].innerHTML.indexOf(keepTotalCell) !== -1 &&
   byId['results-body'].innerHTML.indexOf(keepTotalCell) !== -1]);
 
 // ---- FEAT-003 (B): live configurable saving-target control -----------------
@@ -453,10 +498,14 @@ checks.push(['saving-target writes committed state.savingTarget',
 const headroomAfter = byId['results-body'].innerHTML;
 checks.push(['moving target relabels headroom row (25%)',
   headroomBefore !== headroomAfter && headroomAfter.indexOf('25% fleet saving headroom') !== -1]);
-// The sens-table headroom column header also tracks the committed target.
-checks.push(['moving target relabels sens headroom header (25%)',
-  byId['sens-body'] && byId['sens-headroom-th'] &&
-  byId['sens-headroom-th'].textContent === '25% headroom']);
+// dashboard-A A5: the saving-target reference marker on the cumulative chart
+// tracks the committed target %. Moving it to 25% must re-render the cumulative
+// SVG with a 'Meet 25% target' label on the data-tco-target line (and the demo's
+// Keep ICE total is numeric, so the marker is drawn).
+const cumTargetHtml = byId['chart-cumulative'].innerHTML;
+checks.push(['moving target moves the cumulative saving-target marker (25%)',
+  cumTargetHtml.indexOf('data-tco-target') !== -1 &&
+  cumTargetHtml.indexOf('Meet 25% target') !== -1]);
 // The 'Meets/Below entered X% target' claim label is conditional (never an
 // adoption probability) and only renders for a gate-passing case. Prove the
 // label reflects the committed target through the engine on the gate-passing
@@ -475,7 +524,7 @@ checks.push(['claim label reflects committed target (30% below, conditional)',
 // n.a. propagation preserved at the extreme: driving the target does not turn
 // an n.a. headroom into a fake zero (the demo plan_a/plan_b totals are n.a.).
 checks.push(['target move keeps n.a. (no fake zero)',
-  byId['sens-body'].innerHTML.indexOf('n.a.') !== -1]);
+  byId['results-body'].innerHTML.indexOf('n.a.') !== -1]);
 // Restore the default target so later assertions see the baseline.
 if (targetCtl.box) { targetCtl.box.value = '0.15'; targetCtl.box.fire('input'); }
 // Restore diesel so the later 'change' live-update assertions compare cleanly.
@@ -1410,27 +1459,74 @@ checks.push(['tablet stack media query (<=1023px) present',
 // FEAT-003: the interactive TCO dashboard region + its chart containers exist
 // and are populated (the chart id checks above already prove each holds <svg>).
 checks.push(['TCO dashboard region present', /id="tco-dashboard"/.test(chrome)]);
-checks.push(['dashboard charts column present', /id="tco-charts"/.test(chrome)]);
-checks.push(['dashboard sensitivity-beside column present', /id="tco-side"/.test(chrome)]);
+// dashboard-A A1: the three TCO surfaces (line, breakdown bar, sensitivity
+// controls) now sit in ONE responsive band (#tco-band), not a charts column +
+// a separate sensitivity-beside column. Assert the one-band container exists.
+checks.push(['dashboard one-level band present (#tco-band)', /id="tco-band"/.test(chrome)]);
+checks.push(['dashboard band holds the line (#tco-charts)', /id="tco-charts"/.test(chrome)]);
+checks.push(['dashboard band holds the sensitivity controls (#sensitivity)', /id="sensitivity"/.test(chrome)]);
 chartIds.forEach((id) => {
   checks.push([id + ' container in markup', chrome.indexOf('id="' + id + '"') !== -1]);
 });
-// FEAT-003: the dashboard DOM order is line hero -> breakdown bar -> sensitivity
-// beside -> results table + Day-0 below. Assert the source order of the ids.
+// A1: the three surfaces appear in one band in source order line -> breakdown
+// bar -> sensitivity controls, then the results table + Day-0 below the band.
 (() => {
+  const iBand = chrome.indexOf('id="tco-band"');
   const iHero = chrome.indexOf('id="chart-cumulative"');
   const iBar  = chrome.indexOf('id="chart-breakdown"');
   const iSens = chrome.indexOf('id="sensitivity"');
   const iRes  = chrome.indexOf('id="results"');
   const iDay0 = chrome.indexOf('id="day0-funding"');
-  checks.push(['dashboard order: line hero before breakdown bar',
-    iHero !== -1 && iBar !== -1 && iHero < iBar]);
-  checks.push(['dashboard order: sensitivity card beside the charts (after bar in source)',
-    iSens !== -1 && iBar < iSens]);
-  checks.push(['dashboard order: results table below the three top elements',
+  checks.push(['band order: line, breakdown bar and sensitivity all inside #tco-band',
+    iBand !== -1 && iBand < iHero && iHero < iBar && iBar < iSens]);
+  checks.push(['dashboard order: results table below the one-level band',
     iRes !== -1 && iSens < iRes]);
   checks.push(['dashboard order: Day-0 funding below the results table',
     iDay0 !== -1 && iRes < iDay0]);
+})();
+// A5: the cumulative chart renders a labelled saving-target reference marker
+// drawn from the committed output, and the breakdown bar carries a matching
+// target tick. (Default 15% on the demo; Keep ICE total is numeric, so drawn.)
+checks.push(['cumulative chart renders a saving-target marker (data-tco-target)',
+  byId['chart-cumulative'].innerHTML.indexOf('data-tco-target') !== -1 &&
+  /Meet \d/.test(byId['chart-cumulative'].innerHTML)]);
+checks.push(['breakdown bar renders a matching saving-target tick',
+  byId['chart-breakdown'].innerHTML.indexOf('data-tco-target') !== -1]);
+// A4: the headline sensitivity controls include diesel / electricity / EV price
+// / saving-target but NOT the discount rate, which is relocated to the Advanced
+// assumptions area (rendered with its note).
+(() => {
+  const sensLabels = (byId['sens-controls'].children || []).map((p) => {
+    const h = (p.children || []).find((c) => c.tagName === 'h3');
+    return (h && (h.textContent || '')) || '';
+  });
+  const joined = sensLabels.join(' | ');
+  checks.push(['headline sens controls include diesel/elec/EV price/target',
+    /diesel/i.test(joined) && /electricity/i.test(joined) &&
+    /EV purchase price/i.test(joined) && /saving target/i.test(joined)]);
+  checks.push(['headline sens controls do NOT include the discount rate',
+    !/discount/i.test(joined)]);
+})();
+// A4: the discount rate is editable in the Advanced area, carrying its relocate
+// note. buildOperating() renders it into #oc-form-adv with a data-oc-discount hook.
+(() => {
+  function findDiscount(node) {
+    if (!node || typeof node !== 'object') return null;
+    if (node.attributes && node.attributes['data-oc-discount'] != null) return node;
+    const kids = node.children || [];
+    for (const c of kids) { const hit = findDiscount(c); if (hit) return hit; }
+    return null;
+  }
+  const disc = findDiscount(byId['oc-form-adv']);
+  checks.push(['discount rate relocated to the Advanced area (data-oc-discount)', !!disc]);
+  function textOfD(node) {
+    if (!node || typeof node !== 'object') return '';
+    let t = (node._text || '');
+    (node.children || []).forEach((c) => { t += ' ' + textOfD(c); });
+    return t;
+  }
+  checks.push(['Advanced discount carries the only-bites-when-non-zero note',
+    !!disc && /Only bites/i.test(textOfD(disc))]);
 })();
 
 // Flat surfaces: no decorative shadow or gradient at rest in the chrome.
@@ -1472,6 +1568,213 @@ checks.push(['demonstration caveat visible in chrome',
 // never 'S$0' / '0%' in place of an unavailable figure.
 const decHtml = byId['decision-cards'].innerHTML;
 checks.push(['decision cards render n.a. (not 0 substitute)', decHtml.indexOf('n.a.') !== -1]);
+
+// ---- FEAT-002 (Part C): Stage-4 charging assessment ------------------------
+// The Charging stage is now a real assessment with THREE read-only panels, all
+// fed from in-page data (no runtime network): (P1) route-energy / capacity +
+// site build-up read; (P2) a COARSE detour / queue / recovery read of the
+// engine's public-visit intermediates; (P3) public-charging context from the
+// compact build-time aggregates (window.HSChargingContext). Honesty signals
+// must survive: a visible coarse-screen label, the LTA DataMall / Singapore
+// Open Data Licence + BoCharge attribution, and n.a. preserved (never zeroed)
+// for incomplete sites.
+
+// The compact charging context is inlined and non-empty (NOT a runtime fetch).
+const chgCtx = windowObj.HSChargingContext;
+checks.push(['window.HSChargingContext present and non-empty',
+  !!chgCtx && !!chgCtx.totals && typeof chgCtx.totals.chargingPoints === 'number' &&
+  chgCtx.totals.chargingPoints > 0]);
+checks.push(['charging context carries provenance + attribution',
+  !!chgCtx && typeof chgCtx.attribution === 'string' &&
+  /LTA DataMall/.test(chgCtx.attribution) && /Singapore Open Data Licence/.test(chgCtx.attribution) &&
+  /BoCharge/.test(chgCtx.attribution)]);
+checks.push(['charging context has power bands + per-kWh tariff + region + operator aggregates',
+  !!chgCtx && Array.isArray(chgCtx.powerBands) && chgCtx.powerBands.length > 0 &&
+  !!chgCtx.tariffPerKwh && Array.isArray(chgCtx.byRegion) && chgCtx.byRegion.length > 0 &&
+  Array.isArray(chgCtx.byOperator) && chgCtx.byOperator.length > 0]);
+
+// The three Stage-4 panel containers exist in the hand-written chrome.
+checks.push(['Stage-4 panel 1 (route-energy/site read) present in markup',
+  chrome.indexOf('id="charge-site-read"') !== -1 && chrome.indexOf('id="charging"') !== -1]);
+checks.push(['Stage-4 panel 2 (detour/queue/recovery read) present in markup',
+  chrome.indexOf('id="charge-detour-read"') !== -1 && chrome.indexOf('id="charging-detour"') !== -1]);
+checks.push(['Stage-4 panel 3 (public-charging context) present in markup',
+  chrome.indexOf('id="charging-public"') !== -1 && chrome.indexOf('id="charge-public-totals"') !== -1 &&
+  chrome.indexOf('id="charge-public-bands"') !== -1 &&
+  chrome.indexOf('id="charge-region-body"') !== -1 && chrome.indexOf('id="charge-operator-body"') !== -1]);
+
+// P1: the per-plan site read rendered PASS/FAIL verdicts and human-language
+// build-up values (recompute runs on load). The demo plan_a/plan_b site cost is
+// n.a., so the read must preserve n.a. (not a fake zero).
+const siteReadHtml = byId['charge-site-read'].innerHTML;
+checks.push(['Stage-4 P1 renders a per-plan site read',
+  siteReadHtml.indexOf('Peak depot energy') !== -1 && siteReadHtml.indexOf('Grant budget ceiling') !== -1]);
+checks.push(['Stage-4 P1 preserves n.a. for the incomplete demo site (not zeroed)',
+  siteReadHtml.indexOf('n.a.') !== -1]);
+
+// P2: the coarse detour/queue read rendered, with the honesty COARSE-SCREEN
+// label visible in the markup and the public-top-up read present. The engine
+// surfaced publicVisits/publicVisitEnergy as ADDITIVE read-only fields.
+const detourHtml = byId['charge-detour-read'].innerHTML;
+checks.push(['Stage-4 P2 renders the coarse detour/queue read',
+  detourHtml.indexOf('Public top-up visits') !== -1 && detourHtml.indexOf('Detour grid energy') !== -1]);
+checks.push(['engine surfaces additive read-only public-visit intermediates',
+  !!out.sites[2] && typeof out.sites[2].publicVisits !== 'undefined' &&
+  typeof out.sites[2].publicVisitEnergy !== 'undefined']);
+checks.push(['Stage-4 COARSE-SCREEN honesty label present in the DOM/markup',
+  /coarse screen/i.test(chrome) && /not an arrival-by-arrival scheduler/i.test(chrome)]);
+checks.push(['Stage-4 P2 frames recovery as a what-if, not a measured outcome',
+  chrome.indexOf('id="charge-detour-note"') !== -1 && /what-if/i.test(chrome)]);
+
+// P3: the public-charging context rendered from the compact aggregates, framed
+// as context (not a routing recommendation), with the LTA/BoCharge attribution
+// VISIBLE in the rendered DOM.
+const totalsHtml = byId['charge-public-totals'].innerHTML;
+const bandsHtml = byId['charge-public-bands'].innerHTML;
+const regionHtml = byId['charge-region-body'].innerHTML;
+const operatorHtml = byId['charge-operator-body'].innerHTML;
+checks.push(['Stage-4 P3 renders network totals (points/AC/DC)',
+  totalsHtml.indexOf('Charging points') !== -1 && totalsHtml.indexOf('AC points') !== -1 &&
+  totalsHtml.indexOf('DC (fast) points') !== -1]);
+checks.push(['Stage-4 P3 renders the power-band bars',
+  bandsHtml.indexOf('charge-band') !== -1 && bandsHtml.indexOf('cb-fill') !== -1]);
+checks.push(['Stage-4 P3 renders region + operator tariff tables',
+  regionHtml.indexOf('<tr>') !== -1 && operatorHtml.indexOf('<tr>') !== -1]);
+checks.push(['Stage-4 P3 framed as public context, not a routing recommendation',
+  /public context, not a routing recommendation/i.test(chrome)]);
+checks.push(['Stage-4 P3 renders the LTA DataMall / Open Data Licence + BoCharge attribution in the DOM',
+  (byId['charge-attribution']._text || '').indexOf('LTA DataMall') !== -1 &&
+  (byId['charge-attribution']._text || '').indexOf('Singapore Open Data Licence') !== -1 &&
+  (byId['charge-attribution']._text || '').indexOf('BoCharge') !== -1]);
+
+// No runtime network anywhere on the page (offline invariant): no fetch/XHR/
+// import() reaching for the raw snapshot or any URL. The chrome carries no
+// fetch/XMLHttpRequest, and the raw 6.3MB snapshot is NOT inlined (the inlined
+// context is the compact aggregates only - a tiny locations count, no raw rows).
+checks.push(['no runtime fetch/XHR in the page chrome (offline)',
+  // Match real network-call signatures, not the word "fetch" in prose/comments:
+  // a fetch() call takes a quoted URL / template / variable argument.
+  !/fetch\(\s*['"`]/.test(chrome) && !/\.fetch\s*\(/.test(chrome) &&
+  !/XMLHttpRequest/.test(chrome) && !/new\s+WebSocket/.test(chrome)]);
+checks.push(['raw charger snapshot is NOT inlined (compact aggregates only)',
+  // the inlined context has no per-location rows / addresses / lat-long
+  JSON.stringify(chgCtx).indexOf('evLocationsData') === -1 &&
+  JSON.stringify(chgCtx).indexOf('latitude') === -1 &&
+  JSON.stringify(chgCtx).length < 20000]);
+
+// ---- FEAT-003 (Part C): Stage-5 standard proposal --------------------------
+// The Proposal stage (#stage-proposal) is no longer an honest 'Coming next'
+// placeholder: it renders a presentation-only, print-friendly leave-behind
+// built ENTIRELY from existing engine outputs (no new economic math). The best
+// EV plan is chosen via window.HSEngine.scoreProspect; the three blocks
+// (quotation / servicing coverage / unresolved conditions) read that result's
+// committed figures. The header badge + quotation INHERIT the gate / claim
+// status: a diagnostic / illustrative / not-all-gates-clear case renders (and
+// prints) as 'INDICATIVE / pending evidence', never a firm quotation; only a
+// fully-cleared case reads as a confirmed quotation. Finance is DEFERRED to a
+// clearly-labelled separate opt-in module (no half-wired control here).
+
+// (1) The old placeholder is gone; the real proposal chrome is present.
+const proposalStageMarkup = (() => {
+  const i = html.indexOf('id="stage-proposal"');
+  if (i === -1) return '';
+  const j = html.indexOf('</section>\n\n</div><!-- /results-col', i);
+  return j === -1 ? html.slice(i, i + 6000) : html.slice(i, j);
+})();
+checks.push(['Proposal stage drops the old Coming next placeholder',
+  proposalStageMarkup.indexOf('Coming next') === -1]);
+checks.push(['Proposal stage renders the quotation / servicing / unresolved-conditions chrome',
+  proposalStageMarkup.indexOf('id="proposal-quotation-table"') !== -1 &&
+  proposalStageMarkup.indexOf('id="proposal-servicing-table"') !== -1 &&
+  proposalStageMarkup.indexOf('id="proposal-conditions-table"') !== -1]);
+checks.push(['Proposal stage carries the gate-inherited badge element',
+  proposalStageMarkup.indexOf('id="proposal-badge"') !== -1]);
+
+// Make sure the controller is on the clean demo state before reading.
+byId['reset-btn'].fire('click');
+windowObj.__HS.recompute();
+
+// (2) DEMO case -> INDICATIVE. For the demo both EV plans are 'Total incomplete'
+// (site cost n.a.), so the proposal must NOT read as a firm quotation: the badge
+// is pb-indicative (not pb-confirmed) and the wording says pending evidence.
+const propBadge = byId['proposal-badge'];
+const propStage = byId['stage-proposal'];
+checks.push(['Proposal renders the quotation block from engine output',
+  byId['proposal-quotation-body'].innerHTML.indexOf('Total economic TCO') !== -1 &&
+  byId['proposal-quotation-body'].innerHTML.indexOf('Day-0 funding') !== -1]);
+checks.push(['Proposal quotation preserves n.a. for the diagnostic demo (not zeroed)',
+  byId['proposal-quotation-body'].innerHTML.indexOf('n.a.') !== -1]);
+checks.push(['Proposal renders the servicing coverage block (cost/km + service status)',
+  byId['proposal-servicing-body'].innerHTML.indexOf('productive km') !== -1 &&
+  byId['proposal-servicing-body'].innerHTML.indexOf('service / evidence') !== -1]);
+checks.push(['Proposal servicing block states the 200,000 km schedule basis + caveat',
+  byId['proposal-servicing-body'].innerHTML.indexOf('200,000') !== -1 &&
+  proposalStageMarkup.indexOf('beyond 200,000') !== -1]);
+checks.push(['Proposal unresolved-conditions block lists the gates',
+  byId['proposal-conditions-body'].innerHTML.indexOf('Service screen') !== -1 &&
+  byId['proposal-conditions-body'].innerHTML.indexOf('Capacity gate') !== -1]);
+checks.push(['Proposal unresolved-conditions block lists an n.a. / diagnostic flag for the demo',
+  byId['proposal-conditions-body'].innerHTML.indexOf('n.a.') !== -1 ||
+  byId['proposal-conditions-body'].innerHTML.indexOf('Total incomplete') !== -1]);
+checks.push(['Proposal badge is INDICATIVE for the diagnostic demo (not a firm quotation)',
+  /(^|\s)pb-indicative(\s|$)/.test(propBadge.className || '') &&
+  !/(^|\s)pb-confirmed(\s|$)/.test(propBadge.className || '') &&
+  propBadge.innerHTML.indexOf('INDICATIVE') !== -1 &&
+  propBadge.innerHTML.indexOf('Confirmed quotation') === -1]);
+checks.push(['Proposal stage carries the proposal-pending state class for the demo',
+  /(^|\s)proposal-pending(\s|$)/.test(propStage.className || '') &&
+  !/(^|\s)proposal-confirmed(\s|$)/.test(propStage.className || '')]);
+checks.push(['Proposal status line names the chosen plan and the indicative framing',
+  byId['proposal-status-line'].innerHTML.toLowerCase().indexOf('indicative') !== -1]);
+
+// (3) Finance is DEFERRED: there is NO half-wired finance control (no rate/term/
+// deposit input), and the honest 'separate opt-in module, next phase' note is
+// present inside the proposal stage.
+checks.push(['Proposal defers finance with the honest separate opt-in note',
+  proposalStageMarkup.indexOf('separate opt-in module, next phase') !== -1]);
+checks.push(['Proposal has NO half-wired finance control (no rate/term/deposit input)',
+  !/id="(finance|loan|instalment)-(rate|term|deposit)"/i.test(proposalStageMarkup) &&
+  !/data-finance-(rate|term|deposit)/i.test(proposalStageMarkup)]);
+
+// (4) Print styles exist so the proposal prints as a leave-behind: the badge is
+// preserved in print (with its colour forced) and the finance note is .noprint.
+checks.push(['Proposal badge is preserved + colour-forced in @media print',
+  /@media\s*print[\s\S]*\.proposal-badge\s*\{[^}]*print-color-adjust/i.test(html)]);
+checks.push(['Proposal finance note is .noprint (hidden in the leave-behind)',
+  /id="proposal-finance-note"[^>]*class="[^"]*noprint/.test(html) ||
+  /class="[^"]*noprint[^"]*"[^>]*id="proposal-finance-note"/.test(html)]);
+
+// (5) CONFIRMED case -> flips the badge. Loading the gate-passing 'best' seed
+// (numeric Total, gates pass, saving claim met) must flip the badge to
+// pb-confirmed and read as a confirmed quotation, proving the badge reads
+// directly from the live status (not a frozen literal). Snapshot + restore the
+// demo state around the load so nothing downstream is disturbed.
+const propSnapshot = JSON.parse(JSON.stringify(windowObj.__HS.state));
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+byId['prospect-body'].fire('click', { target: { getAttribute: (k) => (k === 'data-load' ? 'best' : null), parentNode: byId['prospect-body'] } });
+windowObj.__HS.recompute();
+const bestScore = windowObj.HSEngine.scoreProspect(windowObj.HSEngine.computeFleet(windowObj.__HS.state));
+checks.push(['loaded Best case is a gate-passing confirmed win (precondition)',
+  bestScore.gatePass === true &&
+  typeof bestScore.totalEconomicTco === 'number' && isFinite(bestScore.totalEconomicTco) &&
+  bestScore.fifteenTargetMet === 'Meets entered 15% target']);
+checks.push(['Proposal badge flips to CONFIRMED quotation for the cleared Best case',
+  /(^|\s)pb-confirmed(\s|$)/.test(byId['proposal-badge'].className || '') &&
+  byId['proposal-badge'].innerHTML.indexOf('Confirmed quotation') !== -1 &&
+  byId['proposal-badge'].innerHTML.indexOf('INDICATIVE') === -1]);
+checks.push(['Proposal stage carries the proposal-confirmed state class for the cleared case',
+  /(^|\s)proposal-confirmed(\s|$)/.test(byId['stage-proposal'].className || '')]);
+checks.push(['Confirmed proposal quotation shows a numeric 2dp Total (not n.a.)',
+  /S\$[\d,]+\.\d\d/.test(byId['proposal-quotation-body'].innerHTML)]);
+checks.push(['Confirmed proposal keeps the conditional-on-supplied-figures caveat (not an adoption probability)',
+  byId['proposal-status-line'].innerHTML.toLowerCase().indexOf('conditional on the supplied figures') !== -1 ||
+  byId['proposal-quotation-caveat'].innerHTML.toLowerCase().indexOf('supplied figures') !== -1]);
+// Restore the demo state so later assertions (if any) see the baseline.
+Object.keys(windowObj.__HS.state).forEach((k) => { delete windowObj.__HS.state[k]; });
+Object.keys(propSnapshot).forEach((k) => { windowObj.__HS.state[k] = propSnapshot[k]; });
+if (windowObj.__HS.rebuildInputs) windowObj.__HS.rebuildInputs();
+windowObj.__HS.recompute();
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 let ok = true;
 for (const [name, pass] of checks) {
