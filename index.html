@@ -26,7 +26,7 @@ h1{font-size:30px;line-height:1.18;margin:0 0 6px;font-weight:650;max-width:900p
    the inputs does not resize or reflow anything. Flat look (no shadow/gradient):
    a 1px seam on the inner edge separates it from the scrim. It is internally
    scrollable and hidden (translated off-screen + aria-hidden) until opened. */
-#input-col{position:fixed;top:0;left:0;bottom:0;width:min(460px,92vw);max-width:460px;z-index:60;background:var(--paper);border-right:1px solid var(--line2);padding:16px;overflow-y:auto;overflow-x:hidden;transform:translateX(-102%);visibility:hidden;transition:transform .22s ease,visibility .22s ease}
+#input-col{position:fixed;top:0;left:0;bottom:0;width:min(62vw,960px);max-width:960px;z-index:60;background:var(--paper);border-right:1px solid var(--line2);padding:20px 24px;overflow-y:auto;overflow-x:hidden;transform:translateX(-102%);visibility:hidden;transition:transform .24s cubic-bezier(.22,.61,.36,1),visibility .24s ease}
 #input-col.open{transform:translateX(0);visibility:visible}
 /* SCRIM / BACKDROP: a full-viewport semi-transparent layer below the panel and
    above the content. Clicking it dismisses the panel. Hidden until the panel
@@ -136,26 +136,54 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
    critical fleet + replacement fields into a compact, responsive form that
    needs no horizontal scroll on a laptop. Low-impact fields live in each
    card's own Advanced <details>. */
-.truck-cards{display:flex;flex-direction:column;gap:12px}
-.truck-card{border:1px solid var(--line2);border-radius:8px;padding:12px;background:var(--paper)}
-.truck-card .tc-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 8px}
-.truck-card .tc-head .tc-id{flex:1 1 auto;min-width:120px}
+.truck-cards{display:flex;flex-direction:column;gap:14px}
+.truck-card{border:1px solid var(--line2);border-radius:10px;padding:16px;background:var(--paper);min-width:0;transition:border-color .18s ease}
+.truck-card:hover{border-color:var(--line2)}
+.truck-card .tc-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+.truck-card .tc-head .tc-id{flex:1 1 auto;min-width:0}
 .truck-card .tc-head .tc-id input{width:100%}
-.truck-card .tc-inc{display:inline-flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap}
-.truck-card .tc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+.truck-card .tc-inc{display:inline-flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap;min-width:0}
+.truck-card .tc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
 .truck-card .tc-grid.one{grid-template-columns:1fr}
-.truck-card .fld{display:flex;flex-direction:column;gap:3px;padding:3px 0}
+.truck-card .tc-grid.three{grid-template-columns:1fr 1fr 1fr}
+/* OVERFLOW FIX (Fix 3): grid/flex children default to min-width:auto, so a
+   number input's intrinsic width forces the 1fr track to overflow the card.
+   Pinning every grid/flex child to min-width:0 lets the track shrink and the
+   box-sizing:border-box width:100% input contain itself inside the column. */
+.truck-card .fld{display:flex;flex-direction:column;gap:4px;padding:3px 0;min-width:0}
 .truck-card .fld label{font-size:12px;color:var(--muted)}
-.truck-card .fld input,.truck-card .fld select{width:100%;text-align:left}
+.truck-card .fld input,.truck-card .fld select{width:100%;min-width:0;max-width:100%;box-sizing:border-box;text-align:left}
 .truck-card .fld input[type=number]{text-align:right}
-.truck-card .tc-spec{font-size:11.5px;color:var(--muted);margin:6px 0 0;line-height:1.4}
+.truck-card .tc-spec{font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.45}
 .truck-card .tc-caveat{color:var(--warn);font-style:italic}
-.truck-card .remove-truck{padding:5px 10px;cursor:pointer;background:var(--paper);color:var(--warn);border:1px solid var(--amberline);border-radius:5px;font:12px -apple-system,'Segoe UI',Arial;font-weight:600}
+.truck-card .remove-truck{padding:5px 10px;cursor:pointer;background:var(--paper);color:var(--warn);border:1px solid var(--amberline);border-radius:5px;font:12px -apple-system,'Segoe UI',Arial;font-weight:600;transition:background .18s ease}
 .truck-card .remove-truck:hover{background:var(--amber)}
-.truck-card details.truck-adv{margin:10px 0 0;border-top:1px dotted var(--line)}
-.truck-card details.truck-adv>summary{cursor:pointer;font-size:12.5px;color:var(--accent);padding:8px 0 4px}
-.truck-card details.truck-adv .tc-grid{margin-top:6px}
-@media(max-width:520px){.truck-card .tc-grid{grid-template-columns:1fr}}
+.truck-card .tc-section{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:14px 0 6px}
+.truck-card .tc-section:first-of-type{margin-top:2px}
+/* SIDE-BY-SIDE ICE vs matched-EV comparison. Two equal columns inside the card
+   that reveal as the duty fills in. Each child pins min-width:0 to contain. */
+.tc-compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0 0;border-top:1px dotted var(--line);padding-top:12px}
+.tc-compare.one{grid-template-columns:1fr}
+.tc-col{min-width:0;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--soft)}
+.tc-col.tc-col-ev{background:#eef5f3;border-color:#bfd8ce}
+.tc-col h5{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.tc-line{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:4px 0;border-bottom:1px dotted var(--line);min-width:0}
+.tc-line:last-child{border-bottom:0}
+.tc-line .tc-lab{font-size:12px;color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.tc-line .tc-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.tc-line.tc-total{margin-top:4px;border-top:1px solid var(--line2);border-bottom:0;padding-top:8px}
+.tc-line.tc-total .tc-lab{font-weight:600;color:var(--ink)}
+.tc-match-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px;min-width:0}
+.tc-match-head .tc-rec{font-size:11.5px;color:var(--muted)}
+.tc-match-note{font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.4}
+.tc-compare-empty{font-size:12px;color:var(--muted);font-style:italic;margin:12px 0 0;padding-top:12px;border-top:1px dotted var(--line)}
+@media(max-width:620px){.truck-card .tc-grid,.truck-card .tc-grid.three,.tc-compare{grid-template-columns:1fr}}
+/* Customer / company profile header folded into the top of the input panel. */
+.customer-head{border:1px solid var(--line2);border-radius:10px;padding:16px;background:var(--soft);margin:0 0 16px}
+.customer-head h3{margin:0 0 4px}
+.customer-head .formgrid{margin-top:10px}
+.customer-head .field{min-width:0}
+.customer-head .field input{min-width:0;max-width:100%;box-sizing:border-box}
 .charts-region{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gutter)}
 .chart-card{margin:0;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--paper);min-width:0}
 .chart-card-wide{grid-column:1 / -1}
@@ -213,18 +241,20 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <div class="banner" id="demo-banner">DEMONSTRATION. Not a customer savings claim.</div>
 
 <!-- JOURNEY STEPPER + CONFIDENCE BADGE.
-     A five-step, tablist-like control that switches a single visible stage
-     viewport with NO routing and NO fetch (client-only show/hide). The active
-     step persists in localStorage ('hs_stage_v1', try/catch so file:// works).
+     A four-step, tablist-like control (Portfolio / TCO / Charging / Proposal)
+     that switches a single visible stage viewport with NO routing and NO fetch
+     (client-only show/hide). The former standalone Customer stage was removed in
+     FEAT-002: the customer / company profile and the fleet duty now live inside
+     the widened Inputs overlay panel. The active step persists in localStorage
+     ('hs_stage_v1', try/catch so file:// works).
      The confidence badge is driven by the LIVE engine output's gate / claim
      status for the best EV plan; it is never a fabricated probability. -->
 <div class="journeybar noprint">
 <div class="stepper" id="stepper" role="tablist" aria-label="Fleet decision journey">
-<button type="button" class="step" id="step-customer" role="tab" data-stage="customer" aria-controls="stage-customer" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">1</span><span class="step-label">Customer</span></button>
-<button type="button" class="step" id="step-portfolio" role="tab" data-stage="portfolio" aria-controls="stage-portfolio" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">2</span><span class="step-label">Portfolio</span></button>
-<button type="button" class="step" id="step-tco" role="tab" data-stage="tco" aria-controls="stage-tco" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">3</span><span class="step-label">TCO</span></button>
-<button type="button" class="step" id="step-charging" role="tab" data-stage="charging" aria-controls="stage-charging" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">4</span><span class="step-label">Charging</span></button>
-<button type="button" class="step" id="step-proposal" role="tab" data-stage="proposal" aria-controls="stage-proposal" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">5</span><span class="step-label">Proposal</span></button>
+<button type="button" class="step" id="step-portfolio" role="tab" data-stage="portfolio" aria-controls="stage-portfolio" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">1</span><span class="step-label">Portfolio</span></button>
+<button type="button" class="step" id="step-tco" role="tab" data-stage="tco" aria-controls="stage-tco" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">2</span><span class="step-label">TCO</span></button>
+<button type="button" class="step" id="step-charging" role="tab" data-stage="charging" aria-controls="stage-charging" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">3</span><span class="step-label">Charging</span></button>
+<button type="button" class="step" id="step-proposal" role="tab" data-stage="proposal" aria-controls="stage-proposal" aria-selected="false" tabindex="-1"><span class="step-no" aria-hidden="true">4</span><span class="step-label">Proposal</span></button>
 </div>
 <div class="confidence" id="confidence-badge" role="status" aria-live="polite" title="Driven by the live gate / saving-claim status; not an adoption probability.">
 <span class="conf-dot" id="confidence-dot" aria-hidden="true"></span><span class="conf-text" id="confidence-text">Confidence: &mdash;</span>
@@ -245,26 +275,45 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <button type="button" id="input-overlay-close" class="input-overlay-close">Close</button>
 </div>
 <section id="inputs"><p class="block-title">Inputs</p>
-<p class="small">Editable inputs use the amber convention. Unknowns are left blank or &quot;n.a.&quot; and are never auto-filled with zero: a blank is not a measured zero, and &quot;n.a.&quot; is not a value.</p>
-<p class="legend"><span class="swatch"></span>Amber = editable input. White = computed or reference. Evidence tags: <span class="tag fact">Fact</span><span class="tag assumption">Assumption</span><span class="tag inference">Inference</span><span class="tag unknown">Unknown</span></p>
+<p class="legend"><span class="swatch"></span>Amber = editable. White = computed / reference. A blank is never a zero; &quot;n.a.&quot; is not a value. Evidence tags: <span class="tag fact">Fact</span><span class="tag assumption">Assumption</span><span class="tag inference">Inference</span><span class="tag unknown">Unknown</span></p>
 
-<h3>Fleet &amp; replacement (one card per truck) <span class="tag assumption">Assumption</span></h3>
-<p class="small">One compact card per truck merges its current-fleet duty and its replacement plan. The minimum critical inputs are shown first; the rest sit under each card&rsquo;s &ldquo;Advanced&rdquo; disclosure. The Truck ID links the two sheets. A blank replacement month inherits COE months left.</p>
+<!-- CUSTOMER / COMPANY PROFILE (folded in from the removed Customer stage).
+     Describes who the fleet belongs to; non-economic, so it never changes a
+     computed number. Populated by buildCustomer() in the input controller. -->
+<div class="customer-head" id="customer-profile">
+<h3>Customer profile <span class="tag assumption">Assumption</span></h3>
+<p class="small">Who this fleet belongs to. Context only &mdash; these fields do not enter the TCO maths.</p>
+<div class="formgrid" id="customer-form"></div>
+</div>
+
+<h3>Current ICE fleet &rarr; matched EV <span class="tag assumption">Assumption</span></h3>
+<p class="small">One card per <strong>current ICE truck</strong>: enter its duty (work km/day, days/year, peak jobs and cargo, demanding-day route) and the most cost-effective catalogue EV is matched live, side by side. The matched EV is a <em>recommendation</em> and stays editable.</p>
 <div id="fleet-cards" class="truck-cards"></div>
 <p class="noprint"><button type="button" id="add-truck-btn" class="btn">+ Add truck</button></p>
 
 <h3>Shared operating costs <span class="tag assumption">Assumption</span></h3>
-<p class="small">The high-impact recurring costs. Demonstration inflation and discount are all zero. Rarely-changed rows are under &ldquo;Advanced&rdquo; below, each kept at its demonstration default.</p>
+<p class="small">High-impact recurring costs. Rarely-changed rows sit under &ldquo;Advanced&rdquo; below at their demonstration default.</p>
 <div class="formgrid" id="oc-form"></div>
 
 <h3>Energy and charging (Plan A / Plan B) <span class="tag assumption">Assumption</span></h3>
-<p class="small">The high-impact energy prices and charger build-up for Plan A (column B) and Plan B (column C).</p>
+<p class="small">High-impact energy prices and charger build-up for Plan A and Plan B.</p>
 <div class="table-wrap editwrap"><table id="ec-table"><thead><tr><th>Input</th><th>Plan A</th><th>Plan B</th><th>Unit</th></tr></thead><tbody id="ec-body"></tbody></table></div>
 
+<!-- CONSOLIDATED ADVANCED ASSUMPTIONS (Fix 3).
+     ONE Advanced area now holds EVERY low-impact, rarely-changed field: the
+     demoted operating-cost rows, the detailed per-charger energy/site line
+     items, AND the per-truck low-impact fields that used to live in a separate
+     per-card 'Advanced (rarely changed)' disclosure. The per-truck advanced
+     fields render into #fleet-adv (one labelled group per truck). Every demoted
+     field keeps its demonstration default and feeds the engine exactly as
+     before, so hiding it changes no computed number. -->
 <details id="advanced-inputs">
 <summary>Advanced assumptions (rarely changed)</summary>
 <div class="inner">
-<p class="adv-help">This holds the low-impact, rarely-changed <em>operating-cost rows</em> demoted from the form above (tyres, inspection, contract surcharges, unavailable-days and all-in backup rates, battery reserve and fade, auxiliary energy, growth and discount rates, operating-cost scheduled-repair timing, the new-ICE operating terminal value, and the data-mode and quote-basis flags) together with the <em>detailed per-charger energy and site line items</em> beyond the primary four (distribution board, electrical worker, cabling and install, upgrades, civil work, connection and other site preparation, grant and deposit rows, and so on). Each truck now has its own compact card above, whose primary fields are the minimum-critical inputs and whose per-card &ldquo;Advanced&rdquo; disclosure holds that truck's low-impact fields (scrap, straight-line, COE term, debt, sale fee, peak km, jobs, body, battery and kWh/km specs, per-plan months and year-10 / terminal values, and the vehicle grant). Each demoted field stays at its demonstration default and feeds the engine exactly as before, so hiding it changes no computed number.</p>
+<p class="adv-help">One place for every low-impact, rarely-changed input: the demoted operating-cost rows (tyres, road tax, inspection, contract surcharges, unavailable-days and backup rates, battery reserve and fade, auxiliary energy, price-growth and discount rates, repair timing, terminal-value fine print, and the data-mode / quote-basis flags), the detailed per-charger energy and site line items beyond the primary set, and each truck&rsquo;s own low-impact fields (duty, body, peak route km, peak cargo, jobs/day, scrap, straight-line, COE term, debt, sale fee, battery and kWh/km specs, per-plan months and year-10 / terminal values, charge mode and the vehicle grant). Every field stays at its demonstration default and feeds the engine unchanged, so hiding it changes no computed number.</p>
+<h4>Per-truck advanced fields <span class="tag assumption">Assumption</span></h4>
+<p class="adv-help">The low-impact fields for each truck, grouped by Truck ID.</p>
+<div id="fleet-adv" class="truck-cards"></div>
 <h4>Operating costs &mdash; advanced <span class="tag assumption">Assumption</span></h4>
 <div class="formgrid" id="oc-form-adv"></div>
 <h4>Energy and charging &mdash; advanced <span class="tag assumption">Assumption</span></h4>
@@ -277,7 +326,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 </div>
 
 <!-- RIGHT: LIVE RESULTS + VISUALS PANEL.
-     Holds the five stage viewports. Exactly one carries the 'stage-active'
+     Holds the four stage viewports. Exactly one carries the 'stage-active'
      class at a time (the stepper toggles it); the others are hidden with
      'stage-hidden'. Content is relocated, not duplicated: the money view lives
      in Stage 3 (TCO), the charging/site/gates view in Stage 4 (Charging). The
@@ -286,18 +335,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      rendered below the workspace so its harness assertions still pass. -->
 <div class="panel-col" id="results-col">
 
-<!-- STAGE 1: CUSTOMER. Honest pointer to the inputs overlay (the duty /
-     current-truck / replacement inputs live in the overlay from FEAT-004). No
-     computed outputs are shown here. -->
-<section class="stage stage-hidden" id="stage-customer" role="tabpanel" aria-labelledby="step-customer">
-<p class="block-title">1 &middot; Customer</p>
-<p class="lead">Describe the fleet and its duty. Every number downstream is computed from these inputs; nothing is assumed about a company that is not entered here.</p>
-<p class="small">The editable inputs &mdash; fleet register, replacement plan, shared operating costs and energy / charging &mdash; live in the <strong>Inputs</strong> panel. Open it from the <strong>Inputs</strong> button in the top bar (or the button below), edit any amber field, and the TCO, charging and validation stages recompute live.</p>
-<p class="noprint"><button type="button" id="stage-open-inputs" class="btn">Open the Inputs panel</button></p>
-<p class="caveat-line">These are demonstration defaults reproducing the Excel cached figures. They are not an owned-fleet fact or a customer quotation.</p>
-</section>
-
-<!-- STAGE 2: PORTFOLIO. A live, ranked model-matching guide. The verdicts are
+<!-- STAGE 1: PORTFOLIO. A live, ranked model-matching guide. The verdicts are
      computed by the ADDITIVE fit-rules module (src/portfolio_fit.js, inlined in
      the PORTFOLIO block) from the live fleet-register duty in state; they do
      NOT touch the frozen TCO engine. Honesty: every catalogue model carries an
@@ -305,7 +343,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      'Best fit' -- the honest verdict is 'Fits with caveats - insufficient
      data', with the reasons spelled out per row. -->
 <section class="stage stage-hidden" id="stage-portfolio" role="tabpanel" aria-labelledby="step-portfolio">
-<p class="block-title">2 &middot; Portfolio</p>
+<p class="block-title">1 &middot; Portfolio</p>
 <p class="lead">Which catalogue EV models suit this fleet&rsquo;s duty? Each model is ranked against the live fleet-register duty (peak cargo, demanding-day route and daily distance, and the depot charge power) and given a verdict with the reasons shown. Edit any duty input in the <strong>Inputs</strong> panel and this re-ranks live.</p>
 <p class="small" id="portfolio-duty-line">Duty read from the included fleet rows.</p>
 <div class="notice" id="portfolio-honesty"><strong>Honesty first.</strong> The catalogue&rsquo;s payload / body-fit status is <strong>&ldquo;Unconfirmed&rdquo;</strong> for every model today, so no model can earn a clean <em>Best fit</em> until that is verified for this duty. Models that clear payload, range and charge power on the numbers are shown as <strong>&ldquo;Fits with caveats &ndash; insufficient data&rdquo;</strong>, never as a confirmed pass. A blank duty input is reported as <em>insufficient data</em>, never a fabricated fit; <code>n.a.</code> is never treated as a fit.</p>
@@ -316,10 +354,10 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="small"><em>Select / Confirm this model</em> loads the chosen model&rsquo;s catalogue specs into the first EV-action truck in the replacement plan (the same loader used in the Inputs panel), so Portfolio flows into the Stage&nbsp;3 TCO. The loaded payload/body-fit keeps its <strong>Unconfirmed</strong> caveat.</p>
 </section>
 
-<!-- STAGE 3: TCO (the money view). Relocated: decision + charts + results +
+<!-- STAGE 2: TCO (the money view). Relocated: decision + charts + results +
      the shared cost drivers (sensitivity) + validation. -->
 <section class="stage stage-active" id="stage-tco" role="tabpanel" aria-labelledby="step-tco">
-<p class="block-title">3 &middot; Total cost of ownership</p>
+<p class="block-title">2 &middot; Total cost of ownership</p>
 
 <section id="decision"><p class="block-title">Decision</p>
 <p class="lead" id="decision-lead">Live headline comparison of the four ownership paths at the current inputs.</p>
@@ -364,10 +402,10 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 
 </section><!-- /stage-tco -->
 
-<!-- STAGE 4: CHARGING. Relocated: energy / charging & site budget + the
+<!-- STAGE 3: CHARGING. Relocated: energy / charging & site budget + the
      adoption gates. The deeper charger-location integration is a later phase. -->
 <section class="stage stage-hidden" id="stage-charging" role="tabpanel" aria-labelledby="step-charging">
-<p class="block-title">4 &middot; Charging &amp; site</p>
+<p class="block-title">3 &middot; Charging &amp; site</p>
 
 <section id="charging"><p class="block-title">Energy, charging and site budget</p>
 <p class="small">The charging site is costed once per plan and shared across its EVs. Completeness and access gates must pass before a numeric site cost is produced; otherwise the plan total is &quot;n.a.&quot;</p>
@@ -384,10 +422,10 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 
 </section><!-- /stage-charging -->
 
-<!-- STAGE 5: PROPOSAL (deferred). Honest 'coming next' placeholder: the
+<!-- STAGE 4: PROPOSAL (deferred). Honest 'coming next' placeholder: the
      proposal / finance module is a later phase. No fabricated outputs. -->
 <section class="stage stage-hidden" id="stage-proposal" role="tabpanel" aria-labelledby="step-proposal">
-<p class="block-title">5 &middot; Proposal</p>
+<p class="block-title">4 &middot; Proposal</p>
 <p class="lead">Assemble the chosen path, funding and grants into a shareable proposal.</p>
 <div class="notice"><strong>Coming next.</strong> The proposal / finance module (loan and lease structuring, grant timing, a printable customer-facing summary) is a later phase of this tool. It is not built yet, so this stage shows no figures rather than a fabricated quotation. The underlying economics are already in the <strong>TCO</strong> and <strong>Charging &amp; site</strong> stages, and the whole page prints as an internal diagnostic record.</div>
 </section>
@@ -2496,7 +2534,7 @@ function matchFleetToPortfolio(inputs, opts) {
 }
 
 
-window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModelsForInputs, scoreModelFit: scoreModelFit, deriveDuty: deriveDuty, productAttributes: productAttributes, FIT_THRESHOLDS: FIT_THRESHOLDS, VERDICT_RANK: VERDICT_RANK, FIT_UNCONFIRMED: FIT_UNCONFIRMED };
+window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModelsForInputs, scoreModelFit: scoreModelFit, deriveDuty: deriveDuty, productAttributes: productAttributes, FIT_THRESHOLDS: FIT_THRESHOLDS, VERDICT_RANK: VERDICT_RANK, FIT_UNCONFIRMED: FIT_UNCONFIRMED, MATCH_DEFAULTS: MATCH_DEFAULTS, truckDutyFromRow: truckDutyFromRow, indicativeCost: indicativeCost, rankModelsByCost: rankModelsByCost, matchBestModel: matchBestModel, matchFleetToPortfolio: matchFleetToPortfolio };
 </script>
 <!-- PORTFOLIO:END -->
 
@@ -2776,6 +2814,7 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     renderCharts(out);
     renderConfidence(out);
     renderPortfolio(out);
+    renderFleetComparisons(out);
   };
 
   /* ---- INPUT UI rendering ---------------------------------------- */
@@ -2806,6 +2845,13 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
   // computeFleet or any economic number.
   var renderPortfolio = function(){};
   window.__HS.setPortfolioRenderer = function(fn){ renderPortfolio = fn; };
+
+  // renderFleetComparisons re-renders the per-truck ICE-vs-EV side-by-side in
+  // place on every recompute so it progresses as the duty fields fill, without
+  // rebuilding the whole card (which would steal input focus). Defined by the
+  // input-UI script below; it writes no number, so figures are unchanged.
+  var renderFleetComparisons = function(){};
+  window.__HS.setFleetComparisonRenderer = function(fn){ renderFleetComparisons = fn; };
 
 })();
 </script>
@@ -2945,18 +2991,163 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     return p;
   }
 
+  // Shared energy context for the cost matcher: depot electricity price (ec row
+  // 10) + charging window (ec row 51), Plan A column B, for the comparison only.
+  function matchEnergyContext(){
+    var e=H.ecRow(10), w=H.ecRow(51);
+    return {
+      energyPricePerKwh: (e && H.isNum(e.values.B)) ? e.values.B : null,
+      chargeWindowH: (w && H.isNum(w.values.B)) ? w.values.B : null,
+    };
+  }
+
+  // Run the FEAT-001 cost-effectiveness matcher for one ICE fleet row. Returns
+  // the matcher result ({best, shortlist, feasibleCount, note}) or null when the
+  // additive fit module is unavailable. Pure/cheap; safe to call per card on the
+  // live recompute path. It NEVER touches computeFleet or changes a number.
+  function matchForRow(row){
+    var FIT = window.HSPortfolioFit;
+    if(!FIT || typeof FIT.truckDutyFromRow!=='function') return null;
+    var duty=FIT.truckDutyFromRow(row, matchEnergyContext());
+    return FIT.matchBestModel(duty, H.state.products.rows);
+  }
+
+  // Money formatter for the side-by-side (S$ with no cents, '-' when blank).
+  function money0(v){ return H.isNum(v) ? ('S$'+Math.round(v).toLocaleString('en-SG')) : '\u2014'; }
+
+  // A single ICE-vs-EV comparison line (label + value on the right).
+  function compLine(label, value, opts){
+    opts=opts||{};
+    var row=document.createElement('div'); row.className='tc-line'+(opts.total?' tc-total':'');
+    var lab=document.createElement('span'); lab.className='tc-lab'; lab.textContent=label;
+    if(opts.title) lab.setAttribute('title', opts.title);
+    var val=document.createElement('span'); val.className='tc-val'; val.textContent=value;
+    row.appendChild(lab); row.appendChild(val);
+    return row;
+  }
+
+  // SIDE-BY-SIDE ICE vs matched/selected EV panel (Fix 2). Reveals as the duty
+  // fills in. The EV column splits the VEHICLE PRICE (catalogue prod.I) from the
+  // COE PRICE (oc[57] acquisition adder) as DISTINCT line items, and shows the
+  // combined default EV quote = prod.I + oc[57] -- EXACTLY the value the frozen
+  // engine uses as its blank-fallback when the EV quote override (rp.D) is
+  // blank. When the user has entered an override rp.D it is shown and flagged as
+  // replacing the split default. Nothing here writes a number back to state, so
+  // no computed figure changes.
+  function buildCompare(row, rp){
+    var wrap=document.createElement('div');
+    // The duty is 'started' once work km/day (col E) is entered -- the minimum
+    // the matcher needs to compare running cost.
+    var hasDuty = H.isNum(row.E);
+    if(!hasDuty){
+      wrap.className='tc-compare-empty';
+      wrap.textContent='Enter the current ICE duty (work km/day) to see the matched EV comparison.';
+      return wrap;
+    }
+    wrap.className='tc-compare';
+
+    // Which EV model to show: an explicitly chosen rp.B, else the matcher's
+    // most cost-effective feasible recommendation.
+    var match=matchForRow(row);
+    var chosen = (rp && rp.B!=null && String(rp.B)!=='') ? String(rp.B) : null;
+    var recName = (match && match.best) ? match.best.name : null;
+    var showName = chosen || recName;
+    var prod = showName ? productByName(showName) : null;
+
+    // ---- ICE column ----
+    var ice=document.createElement('div'); ice.className='tc-col tc-col-ice';
+    var iceH=document.createElement('h5'); iceH.textContent='Current ICE'; ice.appendChild(iceH);
+    ice.appendChild(compLine('New-ICE quote', money0(rp?rp.C:null), {title:'Replacement-plan new-ICE quote (col C).'}));
+    ice.appendChild(compLine('Market value now', money0(row.K)));
+    ice.appendChild(compLine('Work km/day', H.isNum(row.E)?row.E.toLocaleString('en-SG'):'\u2014'));
+    wrap.appendChild(ice);
+
+    // ---- EV column ----
+    var ev=document.createElement('div'); ev.className='tc-col tc-col-ev';
+    var evH=document.createElement('h5'); evH.textContent='Matched EV'; ev.appendChild(evH);
+    if(!prod){
+      ev.appendChild(compLine('Recommendation', 'No catalogue EV fits this duty'));
+      var noteN=document.createElement('p'); noteN.className='tc-match-note';
+      noteN.textContent=(match&&match.note)?match.note:'No feasible EV on the entered figures (honest no-fit, not an error).';
+      ev.appendChild(noteN);
+      wrap.appendChild(ev);
+      return wrap;
+    }
+    var vehPrice = H.isNum(prod.I) ? prod.I : null;
+    var coePrice = evAcqAdder();
+    var combined = (vehPrice!=null) ? (vehPrice + coePrice) : null;
+    var override = (rp && H.isNum(rp.D)) ? rp.D : null;
+    ev.appendChild(compLine('Vehicle price', money0(vehPrice), {title:'Catalogue list price (products col I).'}));
+    ev.appendChild(compLine('COE price', money0(coePrice), {title:'Acquisition / COE adder (operating costs row 57).'}));
+    ev.appendChild(compLine('Default EV quote', money0(combined), {total:true, title:'Vehicle price + COE price = the value the engine uses when no EV-quote override is entered.'}));
+    if(override!=null && Math.abs(override-(combined||0))>0.5){
+      ev.appendChild(compLine('Your EV quote (override)', money0(override), {title:'Entered override (col D) replaces the split default.'}));
+    }
+    wrap.appendChild(ev);
+
+    // ---- match note (recommendation vs user choice + honesty) ----
+    var note=document.createElement('p'); note.className='tc-match-note';
+    note.setAttribute('data-match-note','1');
+    if(chosen){
+      note.textContent='Showing your selected EV ('+chosen+'). '+(recName&&recName!==chosen?('Most cost-effective match: '+recName+'. '):'')+'Recommendation is a catalogue comparison, not an engine TCO; body fit is Unconfirmed until verified.';
+    } else {
+      note.textContent='Recommended as the most cost-effective feasible EV for this duty ('+recName+', '+((match&&match.feasibleCount)||0)+' feasible). A recommendation, not an engine TCO; body fit is Unconfirmed until verified.';
+    }
+    wrap.appendChild(note);
+    return wrap;
+  }
+
   function buildFleet(){
     var cards = H.el('fleet-cards');
     if(!cards) return;
     cards.innerHTML='';
+    var adv = H.el('fleet-adv');
+    if(adv) adv.innerHTML='';
     var rows = H.includedFleet();
     var map = H.replByIdMap();
     var prods = H.productNames();
     rows.forEach(function(row){
       var rp = map[row.A];
       cards.appendChild(buildTruckCard(row, rp, prods));
+      if(adv) adv.appendChild(buildTruckAdvGroup(row, rp, prods));
     });
   }
+
+  // LIVE SIDE-BY-SIDE REFRESH. The per-truck ICE-vs-EV comparison must update as
+  // the duty fields fill in, but WITHOUT rebuilding the whole card (that would
+  // steal input focus mid-type). So on every recompute we replace just the
+  // comparison node inside each card in place. Called from the recompute path
+  // via H.setFleetComparisonRefresher. Pure display; writes no number.
+  function refreshComparisons(){
+    var cards = H.el('fleet-cards');
+    if(!cards || !cards.children) return;
+    var map = H.replByIdMap();
+    (cards.children || []).forEach(function(card){
+      if(!card || !card.getAttribute) return;
+      var id = card.getAttribute('data-truck-id');
+      if(id==null || id==='') return;
+      var row = null, fr = H.state.fleet_register.rows;
+      for(var i=0;i<fr.length;i++){ if(String(fr[i].A)===String(id)){ row=fr[i]; break; } }
+      if(!row) return;
+      var rp = map[row.A];
+      if(!rp) return;
+      var fresh = buildCompare(row, rp);
+      // Find the existing comparison node (.tc-compare or .tc-compare-empty) and
+      // swap it; if none exists yet (older card), append the fresh one.
+      var kids = card.children || [];
+      var replaced = false;
+      for(var j=0;j<kids.length;j++){
+        var cn = (kids[j].className||'');
+        if(/(^|\s)tc-compare(\s|$)/.test(cn) || /(^|\s)tc-compare-empty(\s|$)/.test(cn)){
+          if(card.replaceChild) card.replaceChild(fresh, kids[j]);
+          replaced = true; break;
+        }
+      }
+      if(!replaced && card.appendChild) card.appendChild(fresh);
+    });
+  }
+  H.refreshComparisons = refreshComparisons;
+  if (typeof H.setFleetComparisonRenderer === 'function') H.setFleetComparisonRenderer(refreshComparisons);
 
   function buildTruckCard(row, rp, prods){
     var card=document.createElement('div'); card.className='truck-card';
@@ -2977,9 +3168,9 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     var idInp=document.createElement('input'); idInp.className='amber'; idInp.type='text';
     idInp.value=(row.A==null?'':row.A);
     idInp.addEventListener('input',function(){
-      var oldId=row.A; var newId=(idInp.value===''?null:idInp.value);
-      // Keep the matching replacement row's ID (col A) and link (col AF) in sync
-      // so the two sheets always share one ID set.
+      var newId=(idInp.value===''?null:idInp.value);
+      // Keep the matching replacement row's ID (col A) in sync so the two sheets
+      // always share one ID set.
       if(rp){ rp.A=newId; }
       row.A=newId;
       card.setAttribute('data-truck-id', newId==null?'':String(newId));
@@ -2994,15 +3185,24 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     head.appendChild(rm);
     card.appendChild(head);
 
-    // ---- primary minimum-critical grid ----
+    // ---- CURRENT ICE DUTY (minimum-critical primary inputs) ----
+    var dutySec=document.createElement('p'); dutySec.className='tc-section'; dutySec.textContent='Current ICE duty';
+    card.appendChild(dutySec);
     var grid=document.createElement('div'); grid.className='tc-grid';
     grid.appendChild(cardField('Work km/day', row, 'E', 'num'));
     grid.appendChild(cardField('Days/year', row, 'F', 'num'));
+    grid.appendChild(cardField('Peak jobs/day', row, 'I', 'num'));
+    grid.appendChild(cardField('Peak cargo kg', row, 'H', 'num'));
+    grid.appendChild(cardField('Demanding-day route km', row, 'G', 'num'));
     grid.appendChild(cardField('COE months left', row, 'J', 'num'));
     grid.appendChild(cardField('Market value SGD', row, 'K', 'num'));
     card.appendChild(grid);
 
     if(rp){
+      // ---- MATCHED EV (recommendation, user-overridable) ----
+      var evSec=document.createElement('p'); evSec.className='tc-section'; evSec.textContent='Matched EV (recommended, editable)';
+      card.appendChild(evSec);
+
       // EV model select (loads catalogue specs on pick) + spec strip.
       var modelGrid=document.createElement('div'); modelGrid.className='tc-grid one';
       var specHolder=document.createElement('div');
@@ -3010,8 +3210,9 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
       specHolder.appendChild(specStrip);
       var modelSel=cardSelect('EV model', rp, 'B', prods, function(name){
         loadProductSpecs(rp, name);
-        // Refresh the whole card so the loaded EV quote / battery / kWh-km
-        // defaults and the Unconfirmed spec strip re-render.
+        // Refresh the whole card + its advanced group so the loaded EV quote /
+        // battery / kWh-km defaults, the Unconfirmed spec strip and the
+        // side-by-side all re-render.
         var fresh=buildTruckCard(row, rp, prods);
         if(card.parentNode) card.parentNode.replaceChild(fresh, card);
       });
@@ -3021,23 +3222,33 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
 
       var qGrid=document.createElement('div'); qGrid.className='tc-grid';
       qGrid.appendChild(cardField('New ICE quote SGD', rp, 'C', 'num'));
-      qGrid.appendChild(cardField('EV quote SGD', rp, 'D', 'num'));
+      qGrid.appendChild(cardField('EV quote SGD (override)', rp, 'D', 'num'));
       qGrid.appendChild(cardSelect('Plan A action', rp, 'O', ACTIONS));
       qGrid.appendChild(cardSelect('Plan B action', rp, 'R', ACTIONS));
       card.appendChild(qGrid);
+
+      // ---- SIDE-BY-SIDE ICE vs EV with the vehicle/COE price split ----
+      card.appendChild(buildCompare(row, rp));
     }
 
-    // ---- per-card Advanced (low-impact fields) ----
-    var adv=document.createElement('details'); adv.className='truck-adv';
-    var sum=document.createElement('summary'); sum.textContent='Advanced (rarely changed)';
-    adv.appendChild(sum);
+    return card;
+  }
+
+  // CONSOLIDATED PER-TRUCK ADVANCED (Fix 3). The low-impact per-truck fields no
+  // longer live in a per-card 'Advanced (rarely changed)' <details>; they render
+  // into the single global Advanced area (#fleet-adv), one labelled group per
+  // truck. Binding is unchanged (same row/rp objects), so hiding them from the
+  // primary card changes no computed number.
+  function buildTruckAdvGroup(row, rp, prods){
+    var group=document.createElement('div'); group.className='truck-card';
+    group.setAttribute('data-truck-adv-id', row.A==null?'':String(row.A));
+    var head=document.createElement('p'); head.className='tc-section';
+    head.textContent='Truck '+(row.A==null?'(unnamed)':row.A);
+    group.appendChild(head);
     var fg=document.createElement('div'); fg.className='tc-grid';
     // Fleet low-impact
     fg.appendChild(cardField('Duty', row, 'C', 'text'));
     fg.appendChild(cardField('Body', row, 'D', 'text'));
-    fg.appendChild(cardField('Peak route km', row, 'G', 'num'));
-    fg.appendChild(cardField('Peak cargo kg', row, 'H', 'num'));
-    fg.appendChild(cardField('Jobs/day', row, 'I', 'num'));
     fg.appendChild(cardField('Scrap SGD', row, 'L', 'num'));
     fg.appendChild(cardField('Straight-line SGD', row, 'M', 'num'));
     fg.appendChild(cardField('COE term mo', row, 'N', 'num'));
@@ -3056,10 +3267,8 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
       fg.appendChild(cardField('New ICE yr-10 SGD', rp, 'AI', 'num'));
       fg.appendChild(cardField('Vehicle grant SGD', rp, 'Z', 'num'));
     }
-    adv.appendChild(fg);
-    card.appendChild(adv);
-
-    return card;
+    group.appendChild(fg);
+    return group;
   }
 
   // ---- Add / remove trucks (keep Fleet + Replacement ID-consistent) ----
@@ -3545,8 +3754,35 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
     try { if (window && window.addEventListener) window.addEventListener('keydown', onKeydown); } catch(e){}
   }
 
+  // CUSTOMER / COMPANY PROFILE (Fix 1 fold-in). Non-economic context stored on
+  // a dedicated H.state.customer object that the frozen engine never reads, so
+  // editing it changes no computed number. Rendered into #customer-form as a
+  // compact labelled grid at the top of the input panel.
+  var CUSTOMER_FIELDS = [
+    {k:'company', label:'Company'},
+    {k:'contact', label:'Contact'},
+    {k:'evidenceRef', label:'Evidence reference'},
+    {k:'notes', label:'Notes'},
+  ];
+  function buildCustomer(){
+    var form=H.el('customer-form');
+    if(!form) return;
+    form.innerHTML='';
+    if(!H.state.customer || typeof H.state.customer!=='object') H.state.customer={};
+    var cust=H.state.customer;
+    CUSTOMER_FIELDS.forEach(function(f){
+      var div=document.createElement('div'); div.className='field';
+      var lab=document.createElement('label'); lab.textContent=f.label;
+      var inp=document.createElement('input'); inp.type='text'; inp.className='amber';
+      inp.value=(cust[f.k]==null?'':cust[f.k]);
+      inp.addEventListener('input',function(){ cust[f.k]=(inp.value===''?null:inp.value); });
+      div.appendChild(lab); div.appendChild(inp);
+      form.appendChild(div);
+    });
+  }
+
   function buildAll(){
-    buildFleet(); buildOperating(); buildEnergy(); buildSensitivity();
+    buildCustomer(); buildFleet(); buildOperating(); buildEnergy(); buildSensitivity();
   }
 
   // Expose the input-table rebuilder so other controllers (Prospects) can
@@ -3565,9 +3801,11 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
 <script>
 /* ================================================================== *
  * Journey stepper controller.
- * Switches a single visible stage viewport (Customer / Portfolio / TCO /
- * Charging / Proposal) with NO routing and NO fetch -- pure client-side
- * show/hide via the 'stage-active' / 'stage-hidden' classes. The active stage
+ * Switches a single visible stage viewport (Portfolio / TCO / Charging /
+ * Proposal) with NO routing and NO fetch -- pure client-side show/hide via the
+ * 'stage-active' / 'stage-hidden' classes. The standalone Customer stage was
+ * removed in FEAT-002 (its profile + duty inputs moved into the widened Inputs
+ * overlay); the default active stage is TCO. The active stage
  * persists best-effort under localStorage 'hs_stage_v1' (try/catch so file://
  * still works). Keyboard-navigable: arrows move focus between steps, Enter /
  * Space activate, Home / End jump to the ends (tablist pattern).
@@ -3576,7 +3814,7 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
   "use strict";
   var H = window.__HS;
   var STAGE_KEY = 'hs_stage_v1';
-  var ORDER = ['customer','portfolio','tco','charging','proposal'];
+  var ORDER = ['portfolio','tco','charging','proposal'];
   var DEFAULT_STAGE = 'tco';
 
   function el(id){ return document.getElementById(id); }
@@ -3655,21 +3893,6 @@ window.HSPortfolioFit = { rankModels: rankModels, rankModelsForInputs: rankModel
         }
       });
     });
-
-    // The Customer stage's button opens the inputs overlay (reuses the top-bar
-    // trigger so there is a single overlay code path).
-    var openBtn = el('stage-open-inputs');
-    if (openBtn){
-      openBtn.addEventListener('click', function(){
-        var trigger = el('sidebar-toggle');
-        if (trigger && trigger.getAttribute && trigger.getAttribute('aria-expanded') !== 'true' && typeof trigger.fire === 'function'){
-          trigger.fire('click');
-        } else if (trigger && trigger.click){
-          if (trigger.getAttribute && trigger.getAttribute('aria-expanded') === 'true') return;
-          trigger.click();
-        }
-      });
-    }
 
     var stored = readStored();
     show(stored || DEFAULT_STAGE, false);

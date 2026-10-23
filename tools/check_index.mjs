@@ -33,6 +33,11 @@ function makeEl(tag) {
     set innerHTML(v) { this._html = v; this.children = []; }, get innerHTML() { return this._html; },
     set textContent(v) { this._text = v; }, get textContent() { return this._text || ''; },
     appendChild(c) { this.children.push(c); return c; },
+    replaceChild(nw, old) {
+      const i = this.children.indexOf(old);
+      if (i !== -1) this.children[i] = nw; else this.children.push(nw);
+      return old;
+    },
     addEventListener(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); },
     setAttribute(k, v) { this.attributes[k] = v; },
     getAttribute(k) { return this.attributes[k]; },
@@ -52,12 +57,15 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   // FEAT-004: input overlay panel hooks (scrim + in-panel close button).
   'sidebar-toggle','sidebar-toggle-label','input-col','results-col',
   'input-scrim','input-overlay-close',
-  // FEAT-005: journey stepper, stage viewports + confidence badge hooks.
-  'stepper','step-customer','step-portfolio','step-tco','step-charging','step-proposal',
-  'stage-customer','stage-portfolio','stage-tco','stage-charging','stage-proposal',
-  'confidence-badge','confidence-dot','confidence-text','stage-open-inputs',
+  // FEAT-002: journey stepper (Customer stage removed -> 4 stages), stage
+  // viewports + confidence badge hooks.
+  'stepper','step-portfolio','step-tco','step-charging','step-proposal',
+  'stage-portfolio','stage-tco','stage-charging','stage-proposal',
+  'confidence-badge','confidence-dot','confidence-text',
   // FEAT-004 (portfolio): ranked model-matching guide hooks.
-  'portfolio-body','portfolio-duty-line','portfolio-honesty'];
+  'portfolio-body','portfolio-duty-line','portfolio-honesty',
+  // FEAT-002: folded-in customer profile + consolidated per-truck Advanced.
+  'customer-form','fleet-adv'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
 
 const document = {
@@ -560,14 +568,80 @@ function collectLabels(node, acc) {
 }
 const card0 = truckCards()[0];
 const primaryLabels = collectLabels(card0, []);
-const criticalLabels = ['Work km/day', 'Days/year', 'COE months left', 'Market value SGD',
-  'EV model', 'New ICE quote SGD', 'EV quote SGD', 'Plan A action', 'Plan B action'];
-checks.push(['truck card surfaces the minimum-critical primary fields',
+// FEAT-002: the card now captures the CURRENT ICE duty front-and-centre (work
+// km/day, days/year, peak jobs, peak cargo, demanding-day route, COE months,
+// market value), plus the matched-EV controls (model select, override quote,
+// plan actions). These feed fleet_register / replacement_plan EXACTLY as before.
+const criticalLabels = ['Work km/day', 'Days/year', 'Peak jobs/day', 'Peak cargo kg',
+  'Demanding-day route km', 'COE months left', 'Market value SGD',
+  'EV model', 'New ICE quote SGD', 'EV quote SGD (override)', 'Plan A action', 'Plan B action'];
+checks.push(['truck card surfaces the ICE-duty + matched-EV primary fields',
   criticalLabels.every((l) => primaryLabels.indexOf(l) !== -1)]);
-// The low-impact fields are behind the card's Advanced disclosure, not primary.
-checks.push(['low-impact fields demoted to the card Advanced disclosure',
-  primaryLabels.indexOf('Scrap SGD') === -1 && primaryLabels.indexOf('Peak route km') === -1 &&
-  primaryLabels.indexOf('Vehicle grant SGD') === -1]);
+// FEAT-002: there is NO per-card Advanced <details> any more (the per-truck
+// low-impact fields moved into the single global Advanced area #fleet-adv).
+function hasTruckAdvDetails(node) {
+  if (!node || typeof node !== 'object') return false;
+  if ((node.tagName || '') === 'details' && /(^|\s)truck-adv(\s|$)/.test(node.className || '')) return true;
+  return (node.children || []).some(hasTruckAdvDetails);
+}
+checks.push(['no per-card Advanced <details> remains (consolidated globally)',
+  !hasTruckAdvDetails(card0)]);
+// The low-impact fields are NOT in the primary card any more.
+checks.push(['low-impact fields removed from the primary card',
+  primaryLabels.indexOf('Scrap SGD') === -1 && primaryLabels.indexOf('Vehicle grant SGD') === -1 &&
+  primaryLabels.indexOf('Straight-line SGD') === -1]);
+// They ARE present in the single consolidated global Advanced area (#fleet-adv).
+const advLabels = collectLabels(byId['fleet-adv'], []);
+checks.push(['per-truck low-impact fields live in the consolidated Advanced area',
+  advLabels.indexOf('Scrap SGD') !== -1 && advLabels.indexOf('Vehicle grant SGD') !== -1 &&
+  advLabels.indexOf('Straight-line SGD') !== -1]);
+// The consolidated #fleet-adv renders one group per shown truck (6 for demo).
+function truckAdvGroups() {
+  return (byId['fleet-adv'].children || []).filter(
+    (c) => c.attributes && c.attributes['data-truck-adv-id'] != null);
+}
+checks.push(['consolidated Advanced renders one group per truck (6 demo trucks)',
+  truckAdvGroups().length === 6]);
+
+// FEAT-002 (Fix 1): the customer / company profile is folded into the top of
+// the input panel (non-economic context) and renders editable fields.
+checks.push(['customer profile form populated', byId['customer-form'].children.length > 0]);
+const custLabels = collectLabels(byId['customer-form'], []);
+checks.push(['customer profile carries company + contact + evidence fields',
+  custLabels.indexOf('Company') !== -1 && custLabels.indexOf('Contact') !== -1 &&
+  custLabels.indexOf('Evidence reference') !== -1]);
+// Editing the customer profile must NOT change a computed number (it lives on a
+// field the frozen engine never reads).
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+const beforeCustEdit = windowObj.HSEngine.computeFleet(windowObj.__HS.state).results.vehicleEconomicTco.keep_ice;
+windowObj.__HS.state.customer = windowObj.__HS.state.customer || {};
+windowObj.__HS.state.customer.company = 'Acme Haulage Pte Ltd';
+const afterCustEdit = windowObj.HSEngine.computeFleet(windowObj.__HS.state).results.vehicleEconomicTco.keep_ice;
+checks.push(['customer profile is non-economic (no computed number changes)',
+  afterCustEdit === beforeCustEdit]);
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
+
+// FEAT-002 (Fix 1): the input overlay panel occupies MORE THAN HALF the desktop
+// viewport (width rule exceeds 50vw) yet still degrades to a full-width mobile
+// sheet. Assert on the hand-written chrome CSS.
+const chromeForPanel = html.slice(0, html.indexOf('<!-- ENGINE:BEGIN') === -1 ? html.length : html.indexOf('<!-- ENGINE:BEGIN'));
+const inputColRule = (chromeForPanel.match(/#input-col\s*\{[^}]*\}/) || [''])[0];
+const vwM = inputColRule.match(/width:\s*min\(\s*(\d+(?:\.\d+)?)vw/);
+checks.push(['input panel width exceeds 50vw (more than half the desktop)',
+  !!vwM && Number(vwM[1]) > 50]);
+checks.push(['input panel still folds to a full-width mobile sheet',
+  /#input-col\s*\{\s*width:\s*100vw/.test(chromeForPanel)]);
+
+// FEAT-002 (Fix 3): overflow containment. The .fld grid children must carry
+// min-width:0 and inputs box-sizing:border-box + width:100% so wide number
+// inputs cannot force the 1fr tracks to overflow the card.
+checks.push(['overflow fix: .fld grid child has min-width:0',
+  /\.truck-card\s+\.fld\s*\{[^}]*min-width:\s*0/.test(chromeForPanel)]);
+checks.push(['overflow fix: card inputs are box-sizing:border-box width:100%',
+  /\.truck-card\s+\.fld\s+input[^{]*\{[^}]*width:\s*100%[^}]*box-sizing:\s*border-box/.test(chromeForPanel) ||
+  /\.truck-card\s+\.fld\s+input[^{]*\{[^}]*box-sizing:\s*border-box[^}]*width:\s*100%/.test(chromeForPanel)]);
+checks.push(['overflow fix: side-by-side columns pin min-width:0',
+  /\.tc-col\s*\{[^}]*min-width:\s*0/.test(chromeForPanel)]);
 
 // ---- FEAT-002 (redesign): EV product-spec loading + Unconfirmed caveat ------
 // Selecting an EV model for a truck must load the catalogue specs into the
@@ -620,6 +694,79 @@ const fitTag = findFitStatus(byId['fleet-cards']);
 checks.push(['card surfaces payload/body-fit status with Unconfirmed caveat',
   !!fitTag && (fitTag.textContent || '').indexOf('Unconfirmed') !== -1 &&
   /(^|\s)unknown(\s|$)/.test(fitTag.className || '')]);
+
+// ---- FEAT-002 (Fix 2): side-by-side ICE-vs-matched-EV + vehicle/COE split ---
+// Each truck card renders a live side-by-side comparison (.tc-compare) once the
+// duty is started. The EV column must split the VEHICLE PRICE (catalogue
+// prod.I) from the COE PRICE (oc[57]) as DISTINCT line items and show the
+// combined default EV quote = prod.I + oc[57] (the engine's blank-fallback).
+// The matcher (window.HSPortfolioFit) drives the recommended model; it stays
+// user-overridable. None of this writes a number back, so figures are unchanged.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+byId['reset-btn'].fire('click');            // restore the clean demo cards
+const compareCard = truckCards()[0];
+function textOfNode(node) {
+  if (!node || typeof node !== 'object') return '';
+  let t = (node._text || '');
+  (node.children || []).forEach((c) => { t += ' ' + textOfNode(c); });
+  return t;
+}
+function findByClass(node, cls) {
+  if (!node || typeof node !== 'object') return null;
+  if (new RegExp('(^|\\s)' + cls + '(\\s|$)').test(node.className || '')) return node;
+  const kids = node.children || [];
+  for (const c of kids) { const hit = findByClass(c, cls); if (hit) return hit; }
+  return null;
+}
+const compareEl = findByClass(compareCard, 'tc-compare');
+checks.push(['truck card renders a side-by-side ICE-vs-EV comparison (duty started)',
+  !!compareEl]);
+const evCol = compareEl ? findByClass(compareEl, 'tc-col-ev') : null;
+const iceCol = compareEl ? findByClass(compareEl, 'tc-col-ice') : null;
+checks.push(['comparison has both an ICE column and a matched-EV column',
+  !!evCol && !!iceCol]);
+const evColText = textOfNode(evCol);
+checks.push(['EV column splits Vehicle price and COE price as distinct line items',
+  evColText.indexOf('Vehicle price') !== -1 && evColText.indexOf('COE price') !== -1]);
+checks.push(['EV column shows the combined default EV quote line',
+  evColText.indexOf('Default EV quote') !== -1]);
+// The displayed split sums to the engine's blank-fallback: pick the recommended
+// (or shown) model and confirm vehicle price (prod.I) + COE (oc[57]) is what the
+// matcher-driven default shows, and that it equals prod.I + oc[57].
+const fitMod = windowObj.HSPortfolioFit;
+const oc57c = windowObj.__HS.state.operating_costs.rows.find((r) => r._row === 57);
+const acqAdderC = (oc57c && typeof oc57c.values.B === 'number') ? oc57c.values.B : 0;
+const demoRow0 = windowObj.__HS.includedFleet()[0];
+const dutyC = fitMod.truckDutyFromRow(demoRow0, {
+  energyPricePerKwh: (windowObj.__HS.ecRow(10) || { values: {} }).values.B,
+  chargeWindowH: (windowObj.__HS.ecRow(51) || { values: {} }).values.B,
+});
+const matchC = fitMod.matchBestModel(dutyC, windowObj.__HS.state.products.rows);
+const shownModelName = (() => {
+  const rp0 = windowObj.__HS.replByIdMap()[demoRow0.A];
+  return (rp0 && rp0.B != null && String(rp0.B) !== '') ? String(rp0.B)
+    : (matchC && matchC.best ? matchC.best.name : null);
+})();
+const shownProd = windowObj.__HS.state.products.rows.find((p) => p.A === shownModelName);
+checks.push(['side-by-side vehicle+COE split equals engine blank-fallback (prod.I + oc[57])',
+  !!shownProd && typeof shownProd.I === 'number' &&
+  (compareEl ? textOfNode(compareEl).indexOf(String(Math.round(shownProd.I + acqAdderC).toLocaleString('en-SG'))) !== -1 : false)]);
+// The matcher is the SAME additive module FEAT-001 exposed, used as a per-truck
+// recommendation that stays overridable via the EV model select.
+checks.push(['card uses the additive matcher for the EV recommendation',
+  typeof fitMod.matchBestModel === 'function' && !!matchC]);
+// The comparison reveals progressively: a card whose duty is BLANK shows the
+// empty prompt, not a fabricated comparison.
+const stProbe = windowObj.__HS.state;
+const savedE = demoRow0.E;
+demoRow0.E = null;
+windowObj.__HS.recompute();
+const blankDutyCard = truckCards()[0];
+checks.push(['comparison is hidden until the duty is entered (progressive reveal)',
+  !findByClass(blankDutyCard, 'tc-compare') && !!findByClass(blankDutyCard, 'tc-compare-empty')]);
+demoRow0.E = savedE;
+byId['reset-btn'].fire('click');
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- FEAT-002 (redesign): add / remove trucks (ID-consistent) --------------
 // An 'Add truck' control exists; firing it increases the rendered truck-card
@@ -745,27 +892,34 @@ checks.push(['overlay closes on Esc keydown',
   inputCol.getAttribute('aria-hidden') === 'true' &&
   !hasOpen(inputCol) && !hasOpen(inputScrim)]);
 
-// ---- FEAT-005: journey stepper + stage viewports + confidence badge --------
-// A five-step, tablist-like control switches a single visible stage viewport
-// with NO routing and NO fetch (pure client-side show/hide). The active stage
-// persists in localStorage. The confidence badge is driven by the LIVE engine
-// output's gate / saving-claim status for the best EV plan -- never a fabricated
-// probability. For the demonstration case both EV plans are 'Total incomplete'
-// (site cost n.a.), so the badge MUST show the honest non-confirmed Diagnostic
-// state, not a fake 'confirmed'.
-const STAGES = ['customer','portfolio','tco','charging','proposal'];
+// ---- FEAT-002: journey stepper + stage viewports + confidence badge --------
+// FEAT-002 removed the standalone Customer stage (its profile + duty inputs
+// moved into the widened Inputs overlay), leaving a FOUR-step, tablist-like
+// control (Portfolio / TCO / Charging / Proposal). It switches a single visible
+// stage viewport with NO routing and NO fetch (pure client-side show/hide). The
+// active stage persists in localStorage. The confidence badge is driven by the
+// LIVE engine output's gate / saving-claim status for the best EV plan -- never
+// a fabricated probability. For the demonstration case both EV plans are 'Total
+// incomplete' (site cost n.a.), so the badge MUST show the honest non-confirmed
+// Diagnostic state, not a fake 'confirmed'.
+const STAGES = ['portfolio','tco','charging','proposal'];
 // Hand-written chrome (everything before the first generated block), so the
 // markup counts below never pick up generated DEMO/PROSPECTS data.
 const chromeEndFeat5 = html.indexOf('<!-- ENGINE:BEGIN');
 const chromeFeat5 = chromeEndFeat5 === -1 ? html : html.slice(0, chromeEndFeat5);
-// All five stage panels exist in the markup.
+// All four stage panels exist in the markup.
 STAGES.forEach((s) => {
   checks.push(['stage section ' + s + ' present', chromeFeat5.indexOf('id="stage-' + s + '"') !== -1]);
 });
-// The stepper exists and carries exactly five step buttons in the markup.
+// The removed Customer stage is GONE (no dangling step button or stage panel).
+checks.push(['Customer stage removed (no step-customer button)',
+  chromeFeat5.indexOf('id="step-customer"') === -1]);
+checks.push(['Customer stage removed (no stage-customer panel)',
+  chromeFeat5.indexOf('id="stage-customer"') === -1]);
+// The stepper exists and carries exactly four step buttons in the markup.
 checks.push(['stepper present in markup', chromeFeat5.indexOf('id="stepper"') !== -1]);
 const stepMatches = (chromeFeat5.match(/class="step"/g) || []).length;
-checks.push(['stepper has five steps', stepMatches === 5]);
+checks.push(['stepper has four steps (Customer removed)', stepMatches === 4]);
 
 // The confidence badge element exists in the markup.
 checks.push(['confidence badge present in markup', chromeFeat5.indexOf('id="confidence-badge"') !== -1]);
@@ -799,7 +953,7 @@ checks.push(['keyboard ArrowLeft switches stage back to TCO',
 // The persistent demonstration honesty banner is NOT buried inside any one
 // stage: it sits above the stepper in the chrome, before the first stage panel.
 const bannerIdx = html.indexOf('id="demo-banner"');
-const firstStageIdx = html.indexOf('id="stage-customer"');
+const firstStageIdx = html.indexOf('id="stage-portfolio"');
 checks.push(['honesty banner persists above the stages (not inside one)',
   bannerIdx !== -1 && firstStageIdx !== -1 && bannerIdx < firstStageIdx]);
 
@@ -858,6 +1012,12 @@ checks.push(['portfolio fit module exposed on window.HSPortfolioFit',
 checks.push(['portfolio fit module is separate from the engine',
   windowObj.HSPortfolioFit !== windowObj.HSEngine &&
   typeof windowObj.HSPortfolioFit.scoreModelFit === 'function']);
+// FEAT-002: the cost-effectiveness matcher functions are exposed so the
+// per-truck side-by-side comparison can recommend the best EV live.
+checks.push(['cost-effectiveness matcher exposed (truckDutyFromRow + matchBestModel)',
+  typeof windowObj.HSPortfolioFit.truckDutyFromRow === 'function' &&
+  typeof windowObj.HSPortfolioFit.matchBestModel === 'function' &&
+  typeof windowObj.HSPortfolioFit.rankModelsByCost === 'function']);
 
 // (3) The rendered body holds a RANKED model list. Walk the built rows and
 // collect the model names from the data-portfolio-model rows, plus the text of
@@ -1080,7 +1240,7 @@ checks.push(['phone fold media query (<=700px) present',
 
 // Model-integrity signals preserved in the chrome: amber-editable legend text
 // and the four evidence tags are present.
-checks.push(['amber-editable legend present', /Amber\s*=\s*editable input/i.test(chrome)]);
+checks.push(['amber-editable legend present', /Amber\s*=\s*editable/i.test(chrome)]);
 checks.push(['evidence tags present (Fact/Assumption/Inference/Unknown)',
   /tag fact/.test(chrome) && /tag assumption/.test(chrome) &&
   /tag inference/.test(chrome) && /tag unknown/.test(chrome)]);
