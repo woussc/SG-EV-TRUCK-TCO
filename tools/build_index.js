@@ -33,6 +33,8 @@ const enginePath = resolve(repoRoot, 'src/engine.js');
 const portfolioPath = resolve(repoRoot, 'src/portfolio_fit.js');
 const routingPath = resolve(repoRoot, 'src/routing_sim.js');
 const financePath = resolve(repoRoot, 'src/finance.js');
+const sgMapPath = resolve(repoRoot, 'src/sg_map.js');
+const basemapPath = resolve(repoRoot, 'tools/fixtures/sg_basemap.json');
 const fixturePath = resolve(repoRoot, 'tools/fixtures/demo_case.json');
 const seedsPath = resolve(repoRoot, 'tools/fixtures/prospect_seeds.json');
 const chargingPath = resolve(repoRoot, 'tools/fixtures/charging_context.json');
@@ -47,6 +49,8 @@ const routingSrc = readFileSync(routingPath, 'utf8');
 const routingHash = createHash('sha256').update(routingSrc).digest('hex');
 const financeSrc = readFileSync(financePath, 'utf8');
 const financeHash = createHash('sha256').update(financeSrc).digest('hex');
+const sgMapSrc = readFileSync(sgMapPath, 'utf8');
+const sgMapHash = createHash('sha256').update(sgMapSrc).digest('hex');
 const fixture = JSON.parse(readFileSync(fixturePath, 'utf8'));
 const seeds = JSON.parse(readFileSync(seedsPath, 'utf8'));
 // Compact charging aggregates derived at build time by tools/build_charging_data.mjs
@@ -62,6 +66,14 @@ const charging = JSON.parse(chargingRaw);
 // network / map-API call. Re-generate with `node tools/build_charging_data.mjs`.
 const chargingLocationsRaw = readFileSync(chargingLocationsPath, 'utf8');
 const chargingLocations = JSON.parse(chargingLocationsRaw);
+
+// Simplified, fully-offline Singapore basemap (tools/fixtures/sg_basemap.json),
+// produced at build time by tools/build_basemap.mjs from the high-detail source
+// boundary (assets/sg-adm0-source.geojson). A small bundled asset (well under
+// ~60KB), inlined so the map makes NO runtime network / tile / map-API call.
+// Re-generate with `node tools/build_basemap.mjs` if the source changes.
+const basemapRaw = readFileSync(basemapPath, 'utf8');
+const basemap = JSON.parse(basemapRaw);
 
 // Strip ES-module syntax so the engine runs inside a classic <script>.
 // 1) `export const NA` / `export function foo` -> drop the leading `export `.
@@ -117,6 +129,22 @@ inlineFinance += '\nwindow.HSFinance = { ' +
   'amortise: amortise, financedAmount: financedAmount, ' +
   'summarise: summarise, naResult: naResult };\n';
 
+// Strip ES-module syntax from the ADDITIVE geographic/projection module the same
+// way and expose its API on a window namespace. This is NEW computation layered
+// on top of the frozen engine: it does NOT import or call computeFleet, makes NO
+// network / map-tile / geocoder call, and reads only the bundled basemap
+// (window.HSBasemap) and charger subset (window.HSChargingLocations). Its ONLY
+// ES import is { haversineKm } from './routing_sim.js'; inline, that primitive
+// is already on window.HSRoutingSim, so we drop the import line and alias it.
+let inlineSgMap = sgMapSrc
+  .replace(/^import\s+\{[^}]*\}\s+from\s+'\.\/routing_sim\.js';\s*$/m, 'var haversineKm = window.HSRoutingSim.haversineKm;')
+  .replace(/^export\s+default\s+\{[\s\S]*?\};\s*$/m, '')
+  .replace(/^export\s+/gm, '');
+inlineSgMap += '\nwindow.HSSgMap = { ' +
+  'SG_BBOX: SG_BBOX, SG_AREAS: SG_AREAS, project: project, unproject: unproject, ' +
+  'routeDistanceKm: routeDistanceKm, distanceToRouteKm: distanceToRouteKm, ' +
+  'reachableChargers: reachableChargers, depotFeasibility: depotFeasibility };\n';
+
 const engineBlock =
   `<!-- ENGINE:BEGIN  generated from src/engine.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<!-- src/engine.js SHA-256: ${engineHash} -->\n` +
@@ -132,6 +160,22 @@ const prospectsBlock =
   `<!-- PROSPECTS:BEGIN  generated from tools/fixtures/prospect_seeds.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<script>\nwindow.HSProspectSeeds = ${JSON.stringify(seeds)};\n</script>\n` +
   `<!-- PROSPECTS:END -->`;
+
+// DEFAULT LANDING = the MID (SRM) illustrative case. The page controller reads
+// window.HSLandingCase.inputs via freshInputs() as the initial landing state,
+// so the app opens on an SRM scenario (TCO dashboard, routing sim active EV =
+// SRM, and proposal all render from mid on first load). This is a deep copy of
+// the mid seed's inputs, carrying the full product catalogue under
+// inputs.products.rows. If the mid seed is ever missing, fail loudly at build
+// time rather than silently ship the wrong landing case.
+const landingCase = seeds.cases.find((c) => c.id === 'mid');
+if (!landingCase) {
+  throw new Error('prospect_seeds.json has no "mid" case to use as default landing');
+}
+const landingBlock =
+  `<!-- LANDING:BEGIN  generated (mid case) from tools/fixtures/prospect_seeds.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<script>\nwindow.HSLandingCase = ${JSON.stringify({ id: landingCase.id, name: landingCase.name, inputs: landingCase.inputs })};\n</script>\n` +
+  `<!-- LANDING:END -->`;
 
 const portfolioBlock =
   `<!-- PORTFOLIO:BEGIN  generated from src/portfolio_fit.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
@@ -160,6 +204,17 @@ const chargingLocationsBlock =
   `<!-- CHARGING_LOCATIONS:BEGIN  generated from tools/fixtures/charging_locations.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<script>\nwindow.HSChargingLocations = ${JSON.stringify(chargingLocations)};\n</script>\n` +
   `<!-- CHARGING_LOCATIONS:END -->`;
+
+const sgBasemapBlock =
+  `<!-- SG_BASEMAP:BEGIN  generated from tools/fixtures/sg_basemap.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<script>\nwindow.HSBasemap = ${JSON.stringify(basemap)};\n</script>\n` +
+  `<!-- SG_BASEMAP:END -->`;
+
+const sgMapBlock =
+  `<!-- SGMAP:BEGIN  generated from src/sg_map.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<!-- src/sg_map.js SHA-256: ${sgMapHash} -->\n` +
+  `<script>\n${inlineSgMap}</script>\n` +
+  `<!-- SGMAP:END -->`;
 
 let html = readFileSync(indexPath, 'utf8');
 
@@ -196,6 +251,13 @@ html = replaceBlock(
 );
 html = replaceBlock(
   html,
+  /<!-- LANDING:BEGIN[\s\S]*?-->/,
+  /<!-- LANDING:END -->/,
+  'LANDING',
+  landingBlock,
+);
+html = replaceBlock(
+  html,
   /<!-- PORTFOLIO:BEGIN[\s\S]*?-->/,
   /<!-- PORTFOLIO:END -->/,
   'PORTFOLIO',
@@ -229,6 +291,20 @@ html = replaceBlock(
   'FINANCE',
   financeBlock,
 );
+html = replaceBlock(
+  html,
+  /<!-- SG_BASEMAP:BEGIN[\s\S]*?-->/,
+  /<!-- SG_BASEMAP:END -->/,
+  'SG_BASEMAP',
+  sgBasemapBlock,
+);
+html = replaceBlock(
+  html,
+  /<!-- SGMAP:BEGIN[\s\S]*?-->/,
+  /<!-- SGMAP:END -->/,
+  'SGMAP',
+  sgMapBlock,
+);
 
 writeFileSync(indexPath, html);
 console.log(`index.html regenerated.`);
@@ -236,7 +312,10 @@ console.log(`  engine  : src/engine.js (${engineSrc.length} bytes, sha256 ${engi
 console.log(`  portfolio: src/portfolio_fit.js (${portfolioSrc.length} bytes, sha256 ${portfolioHash.slice(0, 16)}...)`);
 console.log(`  demo    : tools/fixtures/demo_case.json inputs embedded`);
 console.log(`  prospects: tools/fixtures/prospect_seeds.json (${seeds.cases.length} seed cases) embedded`);
+console.log(`  landing : default landing case = '${landingCase.id}' (${landingCase.name}) embedded as window.HSLandingCase`);
 console.log(`  charging: tools/fixtures/charging_context.json (${(Buffer.byteLength(chargingRaw) / 1024).toFixed(2)} KB compact aggregates) embedded`);
 console.log(`  routing : src/routing_sim.js (${routingSrc.length} bytes, sha256 ${routingHash.slice(0, 16)}...)`);
 console.log(`  finance : src/finance.js (${financeSrc.length} bytes, sha256 ${financeHash.slice(0, 16)}...)`);
 console.log(`  locations: tools/fixtures/charging_locations.json (${(Buffer.byteLength(chargingLocationsRaw) / 1024).toFixed(2)} KB location subset) embedded`);
+console.log(`  basemap : tools/fixtures/sg_basemap.json (${(Buffer.byteLength(basemapRaw) / 1024).toFixed(2)} KB, ${basemap.polygons.length} polygons) embedded as window.HSBasemap`);
+console.log(`  sg_map  : src/sg_map.js (${sgMapSrc.length} bytes, sha256 ${sgMapHash.slice(0, 16)}...)`);

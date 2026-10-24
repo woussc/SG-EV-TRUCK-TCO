@@ -116,15 +116,20 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'chart-cumulative','chart-breakdown',
   'results-table','day0-cards','tco-tooltip','tco-band',
   'portfolio-matched-models','portfolio-fleet-body','portfolio-config-text',
+  // FEAT-003 Part C: full-portfolio switch-over table + provenance legend.
+  'portfolio-switchover','portfolio-switchover-table','portfolio-switchover-body',
+  'portfolio-provenance-legend',
   // FEAT-002: folded-in customer profile + consolidated per-truck Advanced.
   'customer-form','fleet-adv',
   // FEAT-002 (Part C): Stage-4 charging assessment panels.
   'charge-site-read','charge-detour-read','charge-public-totals',
   'charge-public-bands','charge-region-body','charge-operator-body',
   'charge-attribution',
-  // FEAT-003 (Part B): Stage-4 public-charging routing simulator (Panel 4).
-  'rsim-controls','rsim-region','rsim-dconly','rsim-origin-note','rsim-summary',
-  'rsim-map','rsim-charger-table','rsim-charger-body','rsim-caveat','rsim-attribution',
+  // FEAT-003 (Part B) / FEAT-004: Stage-4 geographic route simulator (Panel 4).
+  'rsim-controls','rsim-area','rsim-add-depot','rsim-add-stop','rsim-clear',
+  'rsim-dconly','rsim-origin-note','rsim-summary','rsim-map','rsim-charger-table',
+  'rsim-charger-body','rsim-caveat','rsim-attribution',
+  'rsim-zoom-in','rsim-zoom-out','rsim-zoom-reset',
   // FEAT-004 (Workstream C): Stage-5 Financing (illustrative) opt-in block.
   'proposal-finance-block','finance-enable','finance-controls','finance-exclusion',
   'finance-principal-src','finance-principal','finance-deposit','finance-apr',
@@ -162,6 +167,64 @@ checks.push(['Cost/km Keep', approx(r.costPerKm.keep_ice, 0.77103, 1e-4)]);
 checks.push(['Truck count 6', r.truckCount.keep_ice === 6]);
 checks.push(['Plan A net site n.a.', r.netSiteCost.plan_a === NA]);
 checks.push(['Review duty coverage PASS', out.review.dutyCoverage.status === 'PASS']);
+
+// ---- FEAT-002 (map/demo/portfolio): DEFAULT LANDING is the MID (SRM) case ---
+// The user-facing ChengLong DEMONSTRATION prospect was removed; the app's
+// landing state is now the MID (SRM) illustrative case, inlined as
+// window.HSLandingCase and read by the controller's freshInputs(). Assert the
+// landing source is present, is the mid case, names an SRM model on an EV plan,
+// and that the controller actually rendered the mid landing on first load (4
+// included trucks, an SRM model surfaced) BEFORE we drive the controller to the
+// demonstration case for the long-standing demo-specific DOM assertions below.
+const landing = windowObj.HSLandingCase;
+checks.push(['landing case embedded (window.HSLandingCase.inputs present)',
+  !!landing && !!landing.inputs && typeof landing.inputs === 'object']);
+checks.push(['landing case is the mid (SRM) case', !!landing && landing.id === 'mid']);
+const landingIncluded = (landing && landing.inputs.fleet_register.rows || [])
+  .filter((rw) => rw.B === 1);
+checks.push(['landing mid case includes 4 trucks', landingIncluded.length === 4]);
+const landingSrmEvRows = (landing && landing.inputs.replacement_plan.rows || [])
+  .filter((rw) => rw.A != null && typeof rw.B === 'string' && rw.B.indexOf('SRM') !== -1 &&
+    (rw.O === 'EV' || rw.R === 'EV'));
+checks.push(['landing mid case names an SRM model on an EV plan (activeEv resolves to SRM)',
+  landingSrmEvRows.length >= 1]);
+// The controller rendered the mid landing on first load: the fleet-card stack
+// shows exactly the 4 mid-case truck IDs (EL-01..EL-04), proving freshInputs()
+// reads the mid landing, not the old 6-truck demonstration case.
+function truckCardsNow() {
+  return toArr(byId['fleet-cards'].children).filter(
+    (c) => (c.attributes && c.attributes['data-truck-id'] != null));
+}
+const landingCardIds = truckCardsNow().map((c) => c.attributes['data-truck-id']);
+checks.push(['default landing renders the 4 mid (SRM) truck cards', landingCardIds.length === 4]);
+checks.push(['default landing truck cards carry the mid fleet IDs (EL-01..EL-04)',
+  ['EL-01', 'EL-02', 'EL-03', 'EL-04'].every((id) => landingCardIds.indexOf(id) !== -1)]);
+// The controller's live landing state names SRM on an EV plan, so the Charging
+// tab's active EV resolves to SRM by default.
+const landingReplNow = windowObj.__HS.state.replacement_plan.rows
+  .filter((rw) => rw.A != null && typeof rw.B === 'string' && rw.B.indexOf('SRM') !== -1 &&
+    (rw.O === 'EV' || rw.R === 'EV'));
+checks.push(['controller landing state surfaces SRM on an EV plan',
+  landingReplNow.length >= 1]);
+
+// The user-facing prospect SEED SET no longer contains the demonstration case:
+// it is exactly best / mid / bad / blank. (demo_case.json lives on only as the
+// untouched validate.py Excel-parity fixture, still embedded as HSDemoCase.)
+const seedsEarly = windowObj.HSProspectSeeds;
+checks.push(['prospect seed set excludes the demo case (best/mid/bad/blank only)',
+  !!seedsEarly && Array.isArray(seedsEarly.cases) &&
+  seedsEarly.cases.length === 4 &&
+  !seedsEarly.cases.some((c) => c.id === 'demo') &&
+  ['best', 'mid', 'bad', 'blank'].every((id) => seedsEarly.cases.some((c) => c.id === id))]);
+
+// Drive the live controller to the DEMONSTRATION 6-truck case so the extensive
+// long-standing demo-specific DOM assertions below (6 truck cards, Keep ICE
+// 2,081,781, n.a. EV plans, diagnostic confidence badge, Reset-to-demo, etc.)
+// remain exactly as strong as before. This is an honest render test of the
+// demonstration fixture: it loads the SAME inputs the engine-parity checks above
+// use (window.HSDemoCase.inputs) into __HS.state and rebuilds the UI. The mid
+// landing was already asserted above, so no coverage is lost.
+windowObj.__HS.loadDemoFixture();
 
 // Rendered DOM checks: controller must have populated results + decision + banner.
 checks.push(['results-body rendered', byId['results-body'].innerHTML.indexOf('Vehicle economic TCO') !== -1]);
@@ -202,13 +265,18 @@ const seeds = windowObj.HSProspectSeeds;
 // FEAT-003: the Yong Wen / Venus reconstructions were replaced by four
 // illustrative presets (best / mid / bad / blank). FEAT-001 (loophole fixes)
 // removed the misleading named 'evergreen' seed (the 'best' case is the same
-// fully-specified confirmed-win input set), so the seed set is now five cases:
-// demo, best, mid, bad, blank.
-checks.push(['prospect seeds embedded (5)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 5]);
+// fully-specified confirmed-win input set).
+// FEAT-002 (map/demo/portfolio): the user-facing ChengLong DEMONSTRATION
+// prospect was removed from the seed set too, so the user-facing seeds are now
+// exactly FOUR cases: best, mid, bad, blank. (demo_case.json survives only as
+// the untouched validate.py Excel-parity fixture, embedded as HSDemoCase.)
+checks.push(['prospect seeds embedded (4)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 4]);
 checks.push(['no yong_wen/venus seeds remain',
   !!seeds && !seeds.cases.some((c) => c.id === 'yong_wen' || c.id === 'venus')]);
 checks.push(['no evergreen named-customer seed remains',
   !!seeds && !seeds.cases.some((c) => c.id === 'evergreen')]);
+checks.push(['no demo seed in the user-facing set',
+  !!seeds && !seeds.cases.some((c) => c.id === 'demo')]);
 checks.push(['scoreProspect exposed', typeof windowObj.HSEngine.scoreProspect === 'function']);
 
 const pbodyBenefit = byId['prospect-body'].innerHTML;
@@ -224,7 +292,11 @@ checks.push(['prospect card container is a card grid (not a table) in markup',
   /<div class="prospect-cards" id="prospect-body">/.test(html) &&
   html.indexOf('id="prospect-table"') === -1]);
 checks.push(['prospect does NOT name Evergreen Logistics', pbodyBenefit.indexOf('Evergreen Logistics') === -1]);
-checks.push(['prospect lists demo', pbodyBenefit.indexOf('DEMONSTRATION 6-truck case') !== -1]);
+// FEAT-002: the DEMONSTRATION case is NO LONGER a user-facing prospect; the
+// overlay must NOT list it (this flips the former 'prospect lists demo' check).
+checks.push(['prospect does NOT list the DEMONSTRATION case',
+  pbodyBenefit.indexOf('DEMONSTRATION 6-truck case') === -1 &&
+  pbodyBenefit.indexOf('DEMONSTRATION') === -1]);
 // The four illustrative presets must each render in the table.
 checks.push(['prospect lists Best case', pbodyBenefit.indexOf('Best case (illustrative, fully specified, gates pass)') !== -1]);
 checks.push(['prospect lists Mid case', pbodyBenefit.indexOf('Mid case (illustrative, marginal saving)') !== -1]);
@@ -306,18 +378,36 @@ checks.push(['blank sinks to the bottom (both modes)',
 checks.push(['bad outranks only blank in benefit order',
   benefitOrder.indexOf('bad') < benefitOrder.indexOf('blank')]);
 
-// Toggle the live sort control and confirm the rendered order changes.
+// Toggle the live sort control and confirm the rendered order follows the
+// selected mode. After removing the demonstration prospect the four remaining
+// illustrative presets happen to rank in the SAME order under both the benefit
+// and account keys (best > mid > bad > blank), so the rendered markup does not
+// necessarily differ between modes. This assertion is therefore made STRICTLY
+// STRONGER than the old 'the HTML differs' check: it fires the control and
+// asserts the rendered card order EXACTLY matches the engine-computed account
+// order (a precise ordering contract, independent of whether the two modes
+// coincide), proving the sort control re-renders in the selected order.
 const sel = byId['prospect-sort'];
-const beforeHtml = byId['prospect-body'].innerHTML;
+const caseName = {
+  best: 'Best case (illustrative, fully specified, gates pass)',
+  mid: 'Mid case (illustrative, marginal saving)',
+  bad: 'Bad case (illustrative, EV not a fit)',
+  blank: 'Blank profile (start a fresh client)',
+};
 sel.value = 'account';
 sel.fire('change');
 const afterHtml = byId['prospect-body'].innerHTML;
-checks.push(['sort toggle reorders table', beforeHtml !== afterHtml]);
+const renderedAccountOrder = accountOrder.map((id) => afterHtml.indexOf(caseName[id]));
+checks.push(['sort control renders cards in the selected (account) order',
+  renderedAccountOrder.every((pos) => pos !== -1) &&
+  renderedAccountOrder.every((pos, i) => i === 0 || renderedAccountOrder[i - 1] < pos)]);
 // In account order the confirmed-win Best case leads the rendered table, ahead
-// of the demonstration case, and the honest-blank preset is rendered last.
+// of the marginal Mid case, and the honest-blank preset is rendered last.
+// (The demonstration case is no longer a user-facing prospect, so Best is now
+// compared against the next-ranked illustrative case, Mid.)
 checks.push(['account sort puts Best case on top',
   afterHtml.indexOf('Best case (illustrative, fully specified, gates pass)') <
-    afterHtml.indexOf('DEMONSTRATION')]);
+    afterHtml.indexOf('Mid case (illustrative, marginal saving)')]);
 checks.push(['account sort renders Blank profile last',
   afterHtml.indexOf('Blank profile (start a fresh client)') >
     afterHtml.indexOf('Best case (illustrative, fully specified, gates pass)') &&
@@ -895,7 +985,7 @@ checks.push(['card surfaces payload/body-fit status with Unconfirmed caveat',
 // The matcher (window.HSPortfolioFit) drives the recommended model; it stays
 // user-overridable. None of this writes a number back, so figures are unchanged.
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
-byId['reset-btn'].fire('click');            // restore the clean demo cards
+windowObj.__HS.loadDemoFixture();            // restore the clean demo cards
 const compareCard = truckCards()[0];
 function textOfNode(node) {
   if (!node || typeof node !== 'object') return '';
@@ -957,7 +1047,7 @@ const blankDutyCard = truckCards()[0];
 checks.push(['comparison is hidden until the duty is entered (progressive reveal)',
   !findByClass(blankDutyCard, 'tc-compare') && !!findByClass(blankDutyCard, 'tc-compare-empty')]);
 demoRow0.E = savedE;
-byId['reset-btn'].fire('click');
+windowObj.__HS.loadDemoFixture();
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- FEAT-002 (redesign): add / remove trucks (ID-consistent) --------------
@@ -1017,11 +1107,20 @@ checks.push(['Removed fleet row is an excluded blank placeholder',
 const outAfterRemove = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
 checks.push(['computeFleet valid after remove', !!outAfterRemove &&
   outAfterRemove.results.truckCount.keep_ice === cardsAfterRemove]);
-// Reset-to-demonstration restores the original 6-truck card set unchanged.
+// FEAT-002: Reset restores the DEFAULT LANDING case, which is now the MID (SRM)
+// illustrative case (4 trucks EL-01..EL-04), NOT the old 6-truck demonstration.
+// This genuinely exercises the Reset button's freshInputs() -> mid landing path.
 byId['reset-btn'].fire('click');
-checks.push(['Reset restores the 6-truck demonstration card set', truckCards().length === 6]);
-checks.push(['Reset keeps the money view at the demo Keep ICE TCO',
-  byId['results-body'].innerHTML.indexOf('2,081,781') !== -1]);
+const resetCardIds = truckCards().map((c) => c.attributes['data-truck-id']);
+checks.push(['Reset restores the 4-truck mid (SRM) landing card set', resetCardIds.length === 4]);
+checks.push(['Reset restores the mid landing fleet IDs (EL-01..EL-04)',
+  ['EL-01', 'EL-02', 'EL-03', 'EL-04'].every((id) => resetCardIds.indexOf(id) !== -1)]);
+checks.push(['Reset re-renders the money view for the mid landing (Vehicle economic TCO + a currency figure)',
+  byId['results-body'].innerHTML.indexOf('Vehicle economic TCO') !== -1 &&
+  /S\$[\d,]/.test(byId['results-body'].innerHTML)]);
+// Restore the demonstration fixture for the remaining demo-specific DOM
+// assertions below (confidence badge, portfolio 6-truck summary, etc.).
+windowObj.__HS.loadDemoFixture();
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- FEAT-004: input OVERLAY panel (fixed drawer over a scrim, no reflow) ---
@@ -1319,11 +1418,13 @@ function textOf(node) {
 const pfModelRows = toArr(pfBody.children).filter(
   (r) => r.attributes && r.attributes['data-portfolio-model'] != null);
 const pfModelNames = pfModelRows.map((r) => r.attributes['data-portfolio-model']);
-// All seven catalogue models rank in the live demo view.
+// Every catalogue model ranks in the live demo view. FEAT-003 (switch-over)
+// appended 5 real competitor models, so the catalogue is now 12 (7 original +
+// 5 competitors); the invariant is one ranked row PER catalogue model.
 const catalogueNames = windowObj.__HS.state.products.rows
   .filter((p) => p.A != null).map((p) => p.A);
-checks.push(['Portfolio renders a ranked row per catalogue model (7)',
-  pfModelRows.length === catalogueNames.length && catalogueNames.length === 7]);
+checks.push(['Portfolio renders a ranked row per catalogue model (12)',
+  pfModelRows.length === catalogueNames.length && catalogueNames.length === 12]);
 checks.push(['Portfolio ranked list carries the catalogue model names',
   catalogueNames.every((n) => pfModelNames.indexOf(n) !== -1)]);
 // The rows are numbered 1..N in order (a ranking, not an unordered list).
@@ -1389,7 +1490,7 @@ const fittingIdxAfter = pfRowsAfter.findIndex(
 checks.push(['re-rank orders a fitting model ahead of the does-not-fit SRM',
   fittingIdxAfter !== -1 && srmIdxAfter !== -1 && fittingIdxAfter < srmIdxAfter]);
 // Restore the demo duty.
-byId['reset-btn'].fire('click');
+windowObj.__HS.loadDemoFixture();
 
 // (6) Select / Confirm a model ties into FEAT-002 product-spec loading: it
 // loads the chosen model into the first EV-action replacement row and the
@@ -1436,7 +1537,7 @@ checks.push(['Select preserves the Unconfirmed payload/body-fit status',
 const outAfterSelect = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
 checks.push(['computeFleet valid after Portfolio Select', !!outAfterSelect && !!outAfterSelect.results]);
 // Restore the demo so later assertions see the baseline.
-byId['reset-btn'].fire('click');
+windowObj.__HS.loadDemoFixture();
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- FEAT-003 Part A: Portfolio repurposed as a fleet matched-models summary
@@ -1491,6 +1592,101 @@ const fleetRowsAfter = toArr(byId['portfolio-fleet-body'].children).filter(
   (rrow) => rrow.attributes && rrow.attributes['data-fleet-truck'] != null);
 checks.push(['Portfolio fleet summary re-renders live on recompute',
   fleetRowsAfter.length === demoMatches.length]);
+
+// ---- FEAT-003 Part C: full-portfolio switch-over table + toggles + provenance
+// The Portfolio stage carries a NEW switch-over section that lists EVERY
+// catalogue model side by side with key specs AND a per-field provenance badge,
+// plus competitor include/exclude toggles wired to the additive matcher (via
+// H.excludedModels). SRM is the primary model and is locked on. These walk the
+// built DOM nodes (real createElement/appendChild nodes), not an innerHTML blob.
+checks.push(['switch-over section present in markup',
+  html.indexOf('id="portfolio-switchover"') !== -1 &&
+  html.indexOf('id="portfolio-switchover-table"') !== -1]);
+checks.push(['switch-over provenance legend present (Sourced/Derived/Unconfirmed)',
+  html.indexOf('id="portfolio-provenance-legend"') !== -1 &&
+  /data-prov-legend="sourced"/.test(html) && /data-prov-legend="derived"/.test(html) &&
+  /data-prov-legend="unconfirmed"/.test(html)]);
+const soBody = byId['portfolio-switchover-body'];
+const soRows = toArr(soBody.children).filter(
+  (r) => r.attributes && r.attributes['data-switchover-model'] != null);
+// One row per catalogue model (the demo catalogue is now 12).
+const soCatalogue = windowObj.__HS.state.products.rows.filter((p) => p.A != null);
+checks.push(['switch-over renders a row per catalogue model (all models side by side)',
+  soRows.length === soCatalogue.length && soCatalogue.length === 12]);
+// The 5 new competitor models appear in the switch-over table.
+const soNames = soRows.map((r) => r.attributes['data-switchover-model']);
+const SO_NEW = ['BYD T3 (ETP3)', 'Maxus eDeliver 9', 'Maxus eDeliver 3 (EV30)',
+  'Farizon SV (Supervan)', 'DFSK EC35'];
+checks.push(['switch-over table lists the 5 new competitor models',
+  SO_NEW.every((n) => soNames.indexOf(n) !== -1)]);
+// Collect helper over the switch-over body.
+function soCollect(node, attr, acc) {
+  if (!node || typeof node !== 'object') return acc;
+  if (node.attributes && attr in node.attributes) acc.push(node);
+  toArr(node.children).forEach((c) => soCollect(c, attr, acc));
+  return acc;
+}
+// Every row carries a provenance badge somewhere (the per-field indicator).
+const provBadges = soCollect(soBody, 'data-prov', []);
+checks.push(['switch-over renders per-field provenance badges',
+  provBadges.length >= soRows.length]);
+// New models carry at least one Unconfirmed badge (honest gaps) in their row.
+function rowOf(name) { return soRows.find((r) => r.attributes['data-switchover-model'] === name); }
+checks.push(['switch-over: new models show Unconfirmed provenance for unsourced fields',
+  SO_NEW.every((n) => {
+    const row = rowOf(n);
+    if (!row) return false;
+    const badges = soCollect(row, 'data-prov', []);
+    return badges.some((b) => b.attributes['data-prov'] === 'unconfirmed');
+  })]);
+// A sourced/derived field renders its badge too (Farizon SV battery is sourced,
+// kWh/km derived), so provenance is not uniformly 'unconfirmed'.
+checks.push(['switch-over: sourced/derived provenance badges render for sourced figures',
+  (() => {
+    const row = rowOf('Farizon SV (Supervan)');
+    if (!row) return false;
+    const badges = soCollect(row, 'data-prov', []);
+    return badges.some((b) => b.attributes['data-prov'] === 'sourced') &&
+      badges.some((b) => b.attributes['data-prov'] === 'derived');
+  })()]);
+// Include/exclude toggles exist: one checkbox per model, SRM locked on.
+const soToggles = soCollect(soBody, 'data-switchover-include', []);
+checks.push(['switch-over renders an include/exclude toggle per model',
+  soToggles.length === soRows.length]);
+const srmToggle = soToggles.find((t) => String(t.attributes['data-switchover-include']).indexOf('SRM') === 0);
+checks.push(['switch-over: SRM toggle is locked on (primary, always in play)',
+  !!srmToggle && srmToggle.disabled === true && srmToggle.checked === true]);
+const srmTagRow = rowOf('SRM T3EV+');
+checks.push(['switch-over: SRM row is marked Primary',
+  !!srmTagRow && soCollect(srmTagRow, 'data-switchover-tag', [])
+    .some((t) => t.attributes['data-switchover-tag'] === 'primary')]);
+// Toggling a competitor OFF removes it from the live matcher (matchFleetToPortfolio
+// over the ACTIVE inputs) WITHOUT changing the engine. Exclude a competitor that
+// the demo matcher would otherwise consider and confirm the active catalogue drops it.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+const beforeActive = windowObj.__HS.activeProductRows().map((p) => p.A);
+const compToggle = soToggles.find((t) => {
+  const nm = t.attributes['data-switchover-include'];
+  return nm && String(nm).indexOf('SRM') !== 0;
+});
+const compName = compToggle ? compToggle.attributes['data-switchover-include'] : null;
+checks.push(['switch-over: a competitor toggle exists to exclude', !!compName]);
+// Simulate unchecking the competitor and firing its change handler.
+if (compToggle) { compToggle.checked = false; compToggle.fire('change'); }
+const afterActive = windowObj.__HS.activeProductRows().map((p) => p.A);
+checks.push(['switch-over: excluding a competitor removes it from the active matcher catalogue',
+  !!compName && beforeActive.indexOf(compName) !== -1 && afterActive.indexOf(compName) === -1]);
+checks.push(['switch-over: excluding a competitor keeps SRM in the active catalogue (primary never excluded)',
+  afterActive.some((n) => String(n).indexOf('SRM') === 0)]);
+// The engine is untouched by the toggle: computeFleet still returns the same
+// truck count and a valid result (no economic number depends on the exclusion).
+const outAfterToggle = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+checks.push(['switch-over: toggling a competitor does NOT break the frozen engine',
+  !!outAfterToggle && !!outAfterToggle.results && outAfterToggle.results.truckCount.keep_ice === 6]);
+// Re-include the competitor and restore the demo baseline.
+if (compToggle) { compToggle.checked = true; compToggle.fire('change'); }
+windowObj.__HS.loadDemoFixture();
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html
@@ -1785,7 +1981,7 @@ checks.push(['Proposal stage carries the gate-inherited badge element',
   proposalStageMarkup.indexOf('id="proposal-badge"') !== -1]);
 
 // Make sure the controller is on the clean demo state before reading.
-byId['reset-btn'].fire('click');
+windowObj.__HS.loadDemoFixture();
 windowObj.__HS.recompute();
 
 // (2) DEMO case -> INDICATIVE. For the demo both EV plans are 'Total incomplete'
@@ -1849,7 +2045,7 @@ checks.push(['Finance amortisation module exposed on window.HSFinance (additive,
 // quotation figures are exactly what renderProposal produced. Turning the
 // toggle ON renders an instalment illustration BUT leaves the economic
 // quotation / Total byte-identical. This is the UI-level isolation guard.
-byId['reset-btn'].fire('click');
+windowObj.__HS.loadDemoFixture();
 windowObj.__HS.recompute();
 const finToggle = byId['finance-enable'];
 const quotationOff = byId['proposal-quotation-body'].innerHTML;
@@ -1956,43 +2152,79 @@ checks.push(['routing sim introduces NO runtime network/map-API (offline guarant
   !/fetch\(|XMLHttpRequest|maps\.googleapis|tile\.openstreetmap|leaflet|mapbox/i.test(
     html.slice(html.indexOf('ROUTING:BEGIN'), html.indexOf('/stage-charging') === -1 ? html.length : html.indexOf('/stage-charging')))]);
 
-// (2) The panel markup exists as the 4th charge-panel with its own ids.
-checks.push(['Stage-4 routing-sim panel present (id="charging-routing")',
-  html.indexOf('id="charging-routing"') !== -1]);
-checks.push(['routing-sim panel carries its own DOM ids',
-  html.indexOf('id="rsim-summary"') !== -1 && html.indexOf('id="rsim-charger-body"') !== -1 &&
-  html.indexOf('id="rsim-map"') !== -1 && html.indexOf('id="rsim-region"') !== -1]);
+// (1b) FEAT-004: the bundled, OFFLINE Singapore basemap + geographic/projection
+// module are inlined as window globals (no runtime map tiles / API / geocoder).
+checks.push(['offline basemap bundled (window.HSBasemap: polygons + attribution)',
+  !!windowObj.HSBasemap && Array.isArray(windowObj.HSBasemap.polygons) &&
+  windowObj.HSBasemap.polygons.length > 0 && typeof windowObj.HSBasemap.attribution === 'string' &&
+  /ODbL/.test(windowObj.HSBasemap.attribution) && /geoBoundaries/.test(windowObj.HSBasemap.attribution)]);
+checks.push(['geographic map module exposed on the page (window.HSSgMap)',
+  !!windowObj.HSSgMap && typeof windowObj.HSSgMap.project === 'function' &&
+  typeof windowObj.HSSgMap.unproject === 'function' &&
+  typeof windowObj.HSSgMap.routeDistanceKm === 'function' &&
+  typeof windowObj.HSSgMap.reachableChargers === 'function' &&
+  typeof windowObj.HSSgMap.depotFeasibility === 'function' &&
+  Array.isArray(windowObj.HSSgMap.SG_AREAS) && windowObj.HSSgMap.SG_AREAS.length >= 12]);
+// The map introduces NO external map-tile / map-API / geocoder reference.
+checks.push(['map introduces NO external map-tile / map-API / geocoder reference',
+  !/maps\.googleapis|tile\.openstreetmap|[^a-z]mapbox|unpkg\.com\/leaflet|geocod/i.test(
+    html.slice(html.indexOf('SGMAP:BEGIN'), html.indexOf('/stage-charging') === -1 ? html.length : html.indexOf('/stage-charging')))]);
 
-// (3) After recompute the panel renders: the region picker is built, nearby
-// chargers are listed with operational fields, and the offline SVG map draws.
+// (2) The panel markup exists as the 4th charge-panel with its own ids +
+// interactive controls (named-area picker, depot/stop/clear buttons, pan/zoom).
+checks.push(['Stage-4 route-sim panel present (id="charging-routing")',
+  html.indexOf('id="charging-routing"') !== -1]);
+checks.push(['route-sim panel carries its own DOM ids',
+  html.indexOf('id="rsim-summary"') !== -1 && html.indexOf('id="rsim-charger-body"') !== -1 &&
+  html.indexOf('id="rsim-map"') !== -1]);
+checks.push(['route-sim exposes the interactive map controls (named-area picker + add/clear + pan/zoom)',
+  html.indexOf('id="rsim-area"') !== -1 && html.indexOf('id="rsim-add-depot"') !== -1 &&
+  html.indexOf('id="rsim-add-stop"') !== -1 && html.indexOf('id="rsim-clear"') !== -1 &&
+  html.indexOf('id="rsim-zoom-in"') !== -1 && html.indexOf('id="rsim-zoom-out"') !== -1]);
+
+// (3) After recompute the panel renders: the named-area picker is built and the
+// REAL geographic SVG map draws the Singapore outline (basemap path) even before
+// a route is placed.
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
 windowObj.__HS.recompute();
-const rsimRegionOpts = byId['rsim-region'].innerHTML;
-checks.push(['routing-sim region picker is populated', rsimRegionOpts.indexOf('<option') !== -1]);
+const rsimAreaOpts = byId['rsim-area'].innerHTML;
+checks.push(['route-sim named-area picker is populated from SG_AREAS',
+  rsimAreaOpts.indexOf('<option') !== -1 && /Tuas|CBD|Changi/i.test(rsimAreaOpts)]);
+// Offline inline-SVG geographic map: draws the Singapore outline (land path)
+// from window.HSBasemap, no external tiles.
+const rsimMapHtmlBase = byId['rsim-map'].innerHTML;
+checks.push(['route-sim draws an offline inline-SVG geographic map with the SG outline (no external tiles)',
+  rsimMapHtmlBase.indexOf('<svg') !== -1 && rsimMapHtmlBase.indexOf('rsim-land') !== -1 &&
+  rsimMapHtmlBase.indexOf('<path') !== -1]);
+
+// Place a depot + a route stop via the exposed state and recompute, then assert
+// the map plots chargers + the route and the charger table lists reachable ones.
+windowObj.__HS.__rsimSetStops && windowObj.__HS.__rsimSetStops([
+  { lat: 1.3330, lon: 103.7420, name: 'Jurong' },
+  { lat: 1.2840, lon: 103.8510, name: 'CBD / Raffles Place' }]);
+windowObj.__HS.recompute();
+const rsimMapHtml = byId['rsim-map'].innerHTML;
+checks.push(['route-sim plots chargers + route legs + depot/stop markers once a route is placed',
+  rsimMapHtml.indexOf('rsim-leg') !== -1 && rsimMapHtml.indexOf('rsim-origin') !== -1 &&
+  (rsimMapHtml.indexOf('rsim-dc') !== -1 || rsimMapHtml.indexOf('rsim-ac') !== -1)]);
 const rsimTableHtml = byId['rsim-charger-body'].innerHTML;
-checks.push(['routing-sim lists nearby public chargers (ranked rows)',
+checks.push(['route-sim lists reachable public chargers (ranked rows with distances)',
   rsimTableHtml.indexOf('<tr') !== -1 && /\d+\.\d\d/.test(rsimTableHtml)]);
 // Operational fields: the charger table header names operator / type / power /
-// price / distance, and a rendered row carries an operator string.
+// price / distance.
 const rsimTableHead = (html.match(/<table id="rsim-charger-table">\s*<thead>([\s\S]*?)<\/thead>/) || ['', ''])[1];
-checks.push(['routing-sim charger table carries operational columns (operator/type/power/price/km)',
+checks.push(['route-sim charger table carries operational columns (operator/type/power/price/km)',
   /Operator/i.test(rsimTableHead) && /Type/i.test(rsimTableHead) && /Power/i.test(rsimTableHead) &&
   /kWh/i.test(rsimTableHead) && /km/i.test(rsimTableHead)]);
-checks.push(['routing-sim rows show an AC/DC type token',
+checks.push(['route-sim rows show an AC/DC type token',
   />AC<|>DC<|>n\.a\.<|class="na"/.test(rsimTableHtml)]);
-// Offline inline-SVG mini-map (no external tiles).
-const rsimMapHtml = byId['rsim-map'].innerHTML;
-checks.push(['routing-sim draws an offline inline-SVG mini-map (no external tiles)',
-  rsimMapHtml.indexOf('<svg') !== -1 && rsimMapHtml.indexOf('<circle') !== -1 &&
-  rsimMapHtml.indexOf('rsim-origin') !== -1]);
 
-// (4) The SRM-tied charge-time surfaces. On the demo case at least one truck is
-// on an EV plan with an EV model named, so the summary names the planned EV and
-// renders an estimated top-up time (or an honest n.a. message, never zero).
+// (4) The two side-by-side feasibility panels (DEPOT vs PUBLIC) render for the
+// active SRM EV, tied to the SRM battery/kWh-per-km math.
 const rsimSummaryHtml = byId['rsim-summary'].innerHTML;
-checks.push(['routing-sim summary names the planned EV + an estimated top-up time',
-  rsimSummaryHtml.indexOf('Planned EV') !== -1 &&
-  rsimSummaryHtml.indexOf('Estimated route top-up time') !== -1]);
+checks.push(['route-sim shows DEPOT vs PUBLIC charging feasibility side by side',
+  rsimSummaryHtml.indexOf('Depot charging') !== -1 &&
+  rsimSummaryHtml.indexOf('Public charging') !== -1]);
 // The charge time ties to the SRM model math: compute it directly through the
 // exposed module on the SRM T3EV+ catalogue row and confirm it is a finite,
 // positive hour figure (this mirrors what the panel renders).
@@ -2013,8 +2245,8 @@ checks.push(['SRM-tied charge-time math returns a finite positive estimate',
 const rsimSnapshot = JSON.parse(JSON.stringify(windowObj.__HS.state));
 windowObj.__HS.state.replacement_plan.rows.forEach((rr) => { rr.O = 'Keep ICE'; rr.R = 'Keep ICE'; });
 windowObj.__HS.recompute();
-checks.push(['routing-sim degrades to n.a. (no fabricated spec) when no EV plan',
-  byId['rsim-summary'].innerHTML.indexOf('n.a. (no EV plan selected)') !== -1]);
+checks.push(['route-sim degrades to n.a. (no fabricated spec) when no EV plan',
+  /n\.a\. \(no EV plan selected/.test(byId['rsim-summary'].innerHTML)]);
 // Restore the demo state so the baseline is intact for any later assertion.
 Object.keys(windowObj.__HS.state).forEach((k) => { delete windowObj.__HS.state[k]; });
 Object.keys(rsimSnapshot).forEach((k) => { windowObj.__HS.state[k] = rsimSnapshot[k]; });

@@ -5,20 +5,25 @@ Each case is a full input set (fleet_register / replacement_plan /
 operating_costs / energy_and_charging / products / service_costs) in the same
 shape consumed by src/engine.js -> computeFleet(inputs).
 
+The workbook DEMONSTRATION 6-truck case is intentionally NOT emitted here. It
+survives only as the untouched validate.py Excel-parity fixture
+(tools/fixtures/demo_case.json). The user-facing seed set is best/mid/bad/blank,
+and the MID (SRM) case is the app's default landing scenario.
+
 Cases:
-  1. demo          - the frozen DEMONSTRATION 6-truck case (from the workbook).
-  2. best          - ILLUSTRATIVE best case: a fully-specified, gate-passing
+  1. best          - ILLUSTRATIVE best case: a fully-specified, gate-passing
                      input set (strong positive saving). It is a GENERIC
                      illustrative confirmed-win demonstrator, NOT a named
                      customer. Engine-verified best EV plan PLAN_B.
-  3. mid           - ILLUSTRATIVE mid case: the same input set with the
+  2. mid           - ILLUSTRATIVE mid case: the same input set with the
                      high-impact drivers tuned (higher EV quote, lower diesel
                      price, lighter utilisation) so the best-EV-plan saving is
-                     marginal but still > 0, all gates still passing.
-  4. bad           - ILLUSTRATIVE bad case: tuned further (EV quote high,
+                     marginal but still > 0, all gates still passing. This is
+                     also the DEFAULT LANDING case the app opens on.
+  3. bad           - ILLUSTRATIVE bad case: tuned further (EV quote high,
                      diesel low) so the EV does NOT beat Keep ICE: a negative
                      saving. Still scores via the gate (honest "not a fit").
-  5. blank         - ILLUSTRATIVE blank profile: a starting template with a
+  4. blank         - ILLUSTRATIVE blank profile: a starting template with a
                      shared truck-ID set and Include toggles present. Common
                      Singapore-market SHARED assumptions (energy prices, ICE
                      fuel L/km, recurring operating costs, AC/DC-respecting
@@ -493,20 +498,15 @@ def main():
 
     illustrative = build_illustrative(demo_inputs)
 
-    # Case 1: the demonstration 6-truck case straight from the workbook.
-    cases.append({
-        "id": "demo",
-        "name": "DEMONSTRATION 6-truck case",
-        "evidence": "assumption",
-        "note": (
-            "Workbook demonstration defaults. Not a customer savings claim. "
-            "Plan A/B have no itemised charging-site quote, so site cost and "
-            "Total economic TCO stay n.a. (diagnostic only)."
-        ),
-        "inputs": demo_inputs,
-    })
+    # NOTE: the workbook DEMONSTRATION 6-truck case is NOT emitted as a
+    # user-facing prospect any more. It lives on only as the untouched
+    # validate.py Excel-parity fixture (tools/fixtures/demo_case.json); the
+    # user-facing seed set is now exactly best/mid/bad/blank, with the SRM mid
+    # case serving as the default landing scenario. Every seed still carries the
+    # full product catalogue under inputs.products.rows, so the catalogue still
+    # reaches the app.
 
-    # Case 2: BEST - the fully-specified illustrative confirmed-win set.
+    # Case 1: BEST - the fully-specified illustrative confirmed-win set.
     cases.append({
         "id": "best",
         "name": "Best case (illustrative, fully specified, gates pass)",
@@ -529,7 +529,8 @@ def main():
         "inputs": copy.deepcopy(illustrative),
     })
 
-    # Case 3: MID - high-impact drivers tuned so the saving is marginal but > 0.
+    # Case 2: MID - high-impact drivers tuned so the saving is marginal but > 0.
+    #   This is also the DEFAULT LANDING scenario (window.HSLandingCase).
     cases.append({
         "id": "mid",
         "name": "Mid case (illustrative, marginal saving)",
@@ -547,7 +548,7 @@ def main():
         "inputs": tune_illustrative(illustrative, MID_TUNE),
     })
 
-    # Case 4: BAD - tuned further so EV does NOT beat Keep ICE (negative saving).
+    # Case 3: BAD - tuned further so EV does NOT beat Keep ICE (negative saving).
     cases.append({
         "id": "bad",
         "name": "Bad case (illustrative, EV not a fit)",
@@ -564,7 +565,7 @@ def main():
         "inputs": tune_illustrative(illustrative, BAD_TUNE),
     })
 
-    # Case 5: BLANK - a clean-slate starting template (honest blanks, not zeros).
+    # Case 4: BLANK - a clean-slate starting template (honest blanks, not zeros).
     cases.append({
         "id": "blank",
         "name": "Blank profile (start a fresh client)",
