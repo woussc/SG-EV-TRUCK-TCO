@@ -142,7 +142,13 @@ const document = {
   createElement: (t) => makeEl(t),
 };
 const windowObj = {};
-const sandbox = { window: windowObj, document, console, JSON, Math, Number, String, Object, isFinite, Array };
+const sandbox = { window: windowObj, document, console, JSON, Math, Number, String, Object, isFinite, Array,
+  // FEAT-004: the inlined on-road router (window.HSRoadRouter) decodes the
+  // bundled road graph with typed arrays + a WeakMap cache and runs an A* heap
+  // search, so the sandbox must expose those globals (otherwise decodeGraph
+  // throws and the map silently falls back to the straight-line legs it is
+  // meant to replace).
+  Float64Array, Int32Array, Uint8Array, WeakMap };
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
@@ -1613,12 +1619,18 @@ const soRows = toArr(soBody.children).filter(
 const soCatalogue = windowObj.__HS.state.products.rows.filter((p) => p.A != null);
 checks.push(['switch-over renders a row per catalogue model (all models side by side)',
   soRows.length === soCatalogue.length && soCatalogue.length === 12]);
-// The 5 new competitor models appear in the switch-over table.
+// The 5 new EV light-TRUCK competitor models appear in the switch-over table
+// (FEAT-005 swapped out the 5 panel vans for these 5 trucks).
 const soNames = soRows.map((r) => r.attributes['data-switchover-model']);
-const SO_NEW = ['BYD T3 (ETP3)', 'Maxus eDeliver 9', 'Maxus eDeliver 3 (EV30)',
-  'Farizon SV (Supervan)', 'DFSK EC35'];
-checks.push(['switch-over table lists the 5 new competitor models',
+const SO_NEW = ['BYD T35 Electric Light-Duty', 'Foton eMiler', 'Forland S1 EV',
+  'JAC N40EV', 'Qingling EQ2'];
+checks.push(['switch-over table lists the 5 new EV light-truck competitor models',
   SO_NEW.every((n) => soNames.indexOf(n) !== -1)]);
+// The 5 removed panel vans must NO LONGER appear in the switch-over table.
+const SO_OLD_VANS = ['BYD T3 (ETP3)', 'Maxus eDeliver 9', 'Maxus eDeliver 3 (EV30)',
+  'Farizon SV (Supervan)', 'DFSK EC35'];
+checks.push(['switch-over table no longer lists the removed panel vans',
+  SO_OLD_VANS.every((n) => soNames.indexOf(n) === -1)]);
 // Collect helper over the switch-over body.
 function soCollect(node, attr, acc) {
   if (!node || typeof node !== 'object') return acc;
@@ -1639,11 +1651,11 @@ checks.push(['switch-over: new models show Unconfirmed provenance for unsourced 
     const badges = soCollect(row, 'data-prov', []);
     return badges.some((b) => b.attributes['data-prov'] === 'unconfirmed');
   })]);
-// A sourced/derived field renders its badge too (Farizon SV battery is sourced,
+// A sourced/derived field renders its badge too (BYD T35 battery is sourced,
 // kWh/km derived), so provenance is not uniformly 'unconfirmed'.
 checks.push(['switch-over: sourced/derived provenance badges render for sourced figures',
   (() => {
-    const row = rowOf('Farizon SV (Supervan)');
+    const row = rowOf('BYD T35 Electric Light-Duty');
     if (!row) return false;
     const badges = soCollect(row, 'data-prov', []);
     return badges.some((b) => b.attributes['data-prov'] === 'sourced') &&
@@ -2170,6 +2182,49 @@ checks.push(['map introduces NO external map-tile / map-API / geocoder reference
   !/maps\.googleapis|tile\.openstreetmap|[^a-z]mapbox|unpkg\.com\/leaflet|geocod/i.test(
     html.slice(html.indexOf('SGMAP:BEGIN'), html.indexOf('/stage-charging') === -1 ? html.length : html.indexOf('/stage-charging')))]);
 
+// (1c) FEAT-004: the bundled, OFFLINE Singapore MAJOR-road graph + the on-road
+// router module are inlined via NEW SG_ROADS + ROADROUTER marker blocks (no
+// runtime network / Overpass / routing-API call). The blocks are present and
+// non-empty, window.HSRoads carries the OpenStreetMap / ODbL attribution, and
+// the router exposes its graph-first API. The ROADROUTER block is ordered AFTER
+// the ROUTING block so its aliased haversineKm (window.HSRoutingSim) exists.
+checks.push(['SG_ROADS block present and non-empty (window.HSRoads inlined)',
+  html.indexOf('<!-- SG_ROADS:BEGIN') !== -1 && html.indexOf('<!-- SG_ROADS:END') !== -1 &&
+  (() => {
+    const s = html.indexOf('<!-- SG_ROADS:BEGIN'); const e = html.indexOf('<!-- SG_ROADS:END');
+    const blk = html.slice(s, e);
+    return blk.indexOf('window.HSRoads = {') !== -1 && blk.length > 10000;
+  })()]);
+checks.push(['ROADROUTER block present and non-empty (window.HSRoadRouter inlined)',
+  html.indexOf('<!-- ROADROUTER:BEGIN') !== -1 && html.indexOf('<!-- ROADROUTER:END') !== -1 &&
+  (() => {
+    const s = html.indexOf('<!-- ROADROUTER:BEGIN'); const e = html.indexOf('<!-- ROADROUTER:END');
+    const blk = html.slice(s, e);
+    return blk.indexOf('window.HSRoadRouter = {') !== -1 && blk.indexOf('function decodeGraph') !== -1;
+  })()]);
+checks.push(['ROADROUTER block is ordered AFTER the ROUTING block (haversineKm alias available)',
+  html.indexOf('<!-- ROUTING:BEGIN') !== -1 &&
+  html.indexOf('<!-- ROADROUTER:BEGIN') > html.indexOf('<!-- ROUTING:END')]);
+checks.push(['window.HSRoads carries the OpenStreetMap / ODbL road attribution',
+  !!windowObj.HSRoads && typeof windowObj.HSRoads.attribution === 'string' &&
+  /OpenStreetMap/.test(windowObj.HSRoads.attribution) && /ODbL/.test(windowObj.HSRoads.attribution)]);
+checks.push(['on-road router module exposed on the page (window.HSRoadRouter graph-first API)',
+  !!windowObj.HSRoadRouter && typeof windowObj.HSRoadRouter.decodeGraph === 'function' &&
+  typeof windowObj.HSRoadRouter.nearestNode === 'function' &&
+  typeof windowObj.HSRoadRouter.routeOnRoad === 'function' &&
+  typeof windowObj.HSRoadRouter.routeOnRoadSequence === 'function' &&
+  typeof windowObj.HSRoadRouter.MAX_SNAP_KM === 'number']);
+// The router does NOT import / reference the frozen engine, and the ROADROUTER
+// block introduces NO runtime network / Overpass / routing-API reference.
+checks.push(['on-road router introduces NO runtime network / Overpass / routing-API reference',
+  (() => {
+    const s = html.indexOf('<!-- ROADROUTER:BEGIN'); const e = html.indexOf('<!-- ROADROUTER:END');
+    const blk = html.slice(s, e);
+    return !/fetch\(|XMLHttpRequest|overpass|maps\.googleapis|tile\.openstreetmap|[^a-z]mapbox|routing-api|computeFleet/i.test(blk);
+  })()]);
+// The road attribution reaches the rendered attribution element too (asserted
+// again below alongside the charger + basemap attributions once the panel runs).
+
 // (2) The panel markup exists as the 4th charge-panel with its own ids +
 // interactive controls (named-area picker, depot/stop/clear buttons, pan/zoom).
 checks.push(['Stage-4 route-sim panel present (id="charging-routing")',
@@ -2204,9 +2259,78 @@ windowObj.__HS.__rsimSetStops && windowObj.__HS.__rsimSetStops([
   { lat: 1.2840, lon: 103.8510, name: 'CBD / Raffles Place' }]);
 windowObj.__HS.recompute();
 const rsimMapHtml = byId['rsim-map'].innerHTML;
-checks.push(['route-sim plots chargers + route legs + depot/stop markers once a route is placed',
-  rsimMapHtml.indexOf('rsim-leg') !== -1 && rsimMapHtml.indexOf('rsim-origin') !== -1 &&
+// FEAT-004: the straight-line great-circle legs are REPLACED by a drawn ON-ROAD
+// route path (window.HSRoadRouter.routeOnRoadSequence(stops).polyline, projected
+// through P()). For this routable Jurong -> CBD route the router finds a road
+// path, so the map must render the cased on-road <path class="rsim-route"> (with
+// its casing) and NOT a straight <line class="rsim-leg"> (the dashed straight
+// line is now an honest FALLBACK reserved for legs with no road path). The
+// chargers + depot/stop markers still plot.
+checks.push(['route-sim draws the ON-ROAD route path (replaces the straight-line leg) + markers + chargers',
+  rsimMapHtml.indexOf('rsim-route') !== -1 && rsimMapHtml.indexOf('rsim-route-casing') !== -1 &&
+  rsimMapHtml.indexOf('rsim-leg') === -1 && rsimMapHtml.indexOf('rsim-origin') !== -1 &&
   (rsimMapHtml.indexOf('rsim-dc') !== -1 || rsimMapHtml.indexOf('rsim-ac') !== -1)]);
+// The faint bundled major-road network is drawn UNDER the route as map context
+// (so it reads like a map, not a blank shape).
+checks.push(['route-sim draws the faint bundled road-network context layer (reads like a map)',
+  rsimMapHtml.indexOf('rsim-road-ctx') !== -1]);
+// The on-road route is a real road path: its polyline has many more vertices
+// than the 3-point straight depot->stop->stop path (so it visibly follows road
+// corridors rather than cutting a straight diagonal).
+checks.push(['route-sim on-road path follows road corridors (many polyline vertices, not a straight diagonal)',
+  (() => {
+    const g = windowObj.HSRoadRouter.decodeGraph(windowObj.HSRoads);
+    const seq = windowObj.HSRoadRouter.routeOnRoadSequence(g, [
+      { lat: 1.3330, lon: 103.7420 }, { lat: 1.2840, lon: 103.8510 }]);
+    return !!seq && seq.anyFailed === false && Array.isArray(seq.polyline) && seq.polyline.length > 10 &&
+      typeof seq.distanceKm === 'number' && seq.distanceKm > 0;
+  })()]);
+// FEAT-004 review follow-up (Mixed-leg route distance understatement): when a
+// multi-stop sequence routes some legs and FAILS others (anyFailed=true),
+// routeOnRoadSequence.distanceKm sums ONLY the routed legs. The feasibility /
+// charge-time panels must NOT silently under-count: rsimComputeRoute folds each
+// failed leg's great-circle (straight-line) distance into routeKm, so the quoted
+// total covers every leg. Drive a mixed sequence (two on-island stops that route
+// + one far-offshore stop that cannot snap) and assert the honest total is
+// STRICTLY GREATER than the routed-legs-only sum (i.e. the failed leg is included,
+// not dropped) and is labelled as a straight-line MIX. This assertion FAILS
+// against the pre-fix behaviour (which quoted the routed-legs sum alone).
+checks.push(['route-sim mixed routed+failed sequence includes the failed leg (no optimistic under-count)',
+  (() => {
+    const mixedStops = [
+      { lat: 1.3330, lon: 103.7420, name: 'Jurong' },     // on-island, routes
+      { lat: 1.2840, lon: 103.8510, name: 'CBD' },         // on-island, routes
+      { lat: 2.50000, lon: 105.50000, name: 'offshore' }]; // far South China Sea, no road path
+    // Routed-legs-only on-road distance (what the pre-fix code quoted).
+    const g = windowObj.HSRoadRouter.decodeGraph(windowObj.HSRoads);
+    const seqMix = windowObj.HSRoadRouter.routeOnRoadSequence(g, mixedStops);
+    if (!seqMix || seqMix.anyFailed !== true || !(seqMix.distanceKm > 0)) return false;
+    const rc = windowObj.__HS.__rsimComputeRoute(mixedStops);
+    if (!rc || rc.routeIsOnRoad !== true) return false;
+    // Honest total strictly exceeds the routed-legs-only sum by the failed leg's
+    // straight-line distance; the straight-line portion is a positive quantity
+    // and exactly one leg failed.
+    const honestExceedsRouted = rc.routeKm > seqMix.distanceKm + 1e-9;
+    const mixReported = rc.failedLegCount === 1 && rc.straightLineKm > 0 &&
+      Math.abs(rc.routeKm - (seqMix.distanceKm + rc.straightLineKm)) < 1e-6;
+    return honestExceedsRouted && mixReported;
+  })()]);
+// And the rendered panels LABEL the mix honestly (so a reader is not told the
+// distance is fully on-road when part of it is a straight-line fill).
+windowObj.__HS.__rsimSetStops([
+  { lat: 1.3330, lon: 103.7420, name: 'Jurong' },
+  { lat: 1.2840, lon: 103.8510, name: 'CBD' },
+  { lat: 2.50000, lon: 105.50000, name: 'offshore' }]);
+windowObj.__HS.recompute();
+const rsimMixSummary = byId['rsim-summary'].innerHTML +
+  (byId['rsim-origin-note'] ? byId['rsim-origin-note'].innerHTML : '');
+checks.push(['route-sim labels a mixed route honestly (straight-line fill disclosed in the panels)',
+  /straight-line/i.test(rsimMixSummary) && /no road path/i.test(rsimMixSummary)]);
+// Restore the baseline routable two-stop route for any later assertion.
+windowObj.__HS.__rsimSetStops([
+  { lat: 1.3330, lon: 103.7420, name: 'Jurong' },
+  { lat: 1.2840, lon: 103.8510, name: 'CBD / Raffles Place' }]);
+windowObj.__HS.recompute();
 const rsimTableHtml = byId['rsim-charger-body'].innerHTML;
 checks.push(['route-sim lists reachable public chargers (ranked rows with distances)',
   rsimTableHtml.indexOf('<tr') !== -1 && /\d+\.\d\d/.test(rsimTableHtml)]);
@@ -2257,15 +2381,33 @@ windowObj.__HS.recompute();
 // snapshot (with lastUpdatedTime) / approx great-circle / not a router, plus
 // the LTA / BoCharge attribution visible on the panel.
 const rsimCaveat = byId['rsim-caveat'].innerHTML;
-checks.push(['routing-sim carries coarse / not-live / dated-snapshot / approx-distance caveat',
+// FEAT-004: the caveat now frames the route as an APPROXIMATE ON-ROAD route over
+// a simplified bundled road network (OpenStreetMap, ODbL) - more realistic than
+// straight-line but NOT live traffic and NOT full turn-by-turn, major roads only
+// - while KEEPING the coarse / not-live / dated-snapshot caveats and naming the
+// straight-line (great-circle) FALLBACK used when no road path is found.
+checks.push(['routing-sim carries coarse / not-live / dated-snapshot caveat (preserved)',
   /coarse/i.test(rsimCaveat) && /not live availability/i.test(rsimCaveat) &&
-  /snapshot/i.test(rsimCaveat) && /great-circle/i.test(rsimCaveat) &&
-  /not a turn-by-turn router/i.test(rsimCaveat)]);
+  /snapshot/i.test(rsimCaveat)]);
+checks.push(['routing-sim caveat names the approximate on-road route over a simplified bundled road network (OpenStreetMap, ODbL)',
+  /on-road route/i.test(rsimCaveat) && /simplified bundled road network/i.test(rsimCaveat) &&
+  /OpenStreetMap/i.test(rsimCaveat) && /ODbL/i.test(rsimCaveat) &&
+  /not live traffic/i.test(rsimCaveat) && /not full turn-by-turn/i.test(rsimCaveat) &&
+  /major roads only/i.test(rsimCaveat)]);
+checks.push(['routing-sim caveat names the straight-line (great-circle) honest fallback',
+  /great-circle/i.test(rsimCaveat) && /straight-line/i.test(rsimCaveat)]);
 checks.push(['routing-sim caveat shows the dated-snapshot provenance (lastUpdatedTime)',
   rsimCaveat.indexOf(windowObj.HSChargingLocations.provenance.lastUpdatedTime) !== -1]);
 checks.push(['routing-sim keeps the LTA DataMall + BoCharge attribution visible',
   byId['rsim-attribution'].textContent.indexOf('LTA DataMall') !== -1 &&
   byId['rsim-attribution'].textContent.indexOf('BoCharge') !== -1]);
+// FEAT-004: the OSM/ODbL road attribution is appended alongside the charger
+// snapshot + basemap (boundary) attributions on the SAME attribution element.
+checks.push(['routing-sim appends the OpenStreetMap / ODbL road attribution alongside charger + boundary attributions',
+  byId['rsim-attribution'].textContent.indexOf('OpenStreetMap') !== -1 &&
+  byId['rsim-attribution'].textContent.indexOf('ODbL') !== -1 &&
+  byId['rsim-attribution'].textContent.indexOf('LTA DataMall') !== -1 &&
+  byId['rsim-attribution'].textContent.indexOf('geoBoundaries') !== -1]);
 // The panel markup itself carries the honest 'coarse planning aid, not live
 // availability' framing (static, so it prints too).
 checks.push(['routing-sim panel markup frames it as a coarse aid, not live availability',

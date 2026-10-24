@@ -34,7 +34,9 @@ const portfolioPath = resolve(repoRoot, 'src/portfolio_fit.js');
 const routingPath = resolve(repoRoot, 'src/routing_sim.js');
 const financePath = resolve(repoRoot, 'src/finance.js');
 const sgMapPath = resolve(repoRoot, 'src/sg_map.js');
+const roadRouterPath = resolve(repoRoot, 'src/road_router.js');
 const basemapPath = resolve(repoRoot, 'tools/fixtures/sg_basemap.json');
+const roadsPath = resolve(repoRoot, 'tools/fixtures/sg_roads.json');
 const fixturePath = resolve(repoRoot, 'tools/fixtures/demo_case.json');
 const seedsPath = resolve(repoRoot, 'tools/fixtures/prospect_seeds.json');
 const chargingPath = resolve(repoRoot, 'tools/fixtures/charging_context.json');
@@ -51,6 +53,8 @@ const financeSrc = readFileSync(financePath, 'utf8');
 const financeHash = createHash('sha256').update(financeSrc).digest('hex');
 const sgMapSrc = readFileSync(sgMapPath, 'utf8');
 const sgMapHash = createHash('sha256').update(sgMapSrc).digest('hex');
+const roadRouterSrc = readFileSync(roadRouterPath, 'utf8');
+const roadRouterHash = createHash('sha256').update(roadRouterSrc).digest('hex');
 const fixture = JSON.parse(readFileSync(fixturePath, 'utf8'));
 const seeds = JSON.parse(readFileSync(seedsPath, 'utf8'));
 // Compact charging aggregates derived at build time by tools/build_charging_data.mjs
@@ -74,6 +78,16 @@ const chargingLocations = JSON.parse(chargingLocationsRaw);
 // Re-generate with `node tools/build_basemap.mjs` if the source changes.
 const basemapRaw = readFileSync(basemapPath, 'utf8');
 const basemap = JSON.parse(basemapRaw);
+
+// Simplified, fully-offline Singapore MAJOR-road graph (tools/fixtures/
+// sg_roads.json), produced at build time by tools/build_roads.mjs from
+// OpenStreetMap (ODbL 1.0) via the Overpass API. A compact bundled asset
+// (~520KB inline), inlined so the on-road router makes NO runtime network /
+// tile / Overpass / routing-API call. It is a delta-coded node table + edge
+// polylines consumed by src/road_router.js (window.HSRoadRouter). Re-generate
+// with `node tools/build_roads.mjs` if the source changes.
+const roadsRaw = readFileSync(roadsPath, 'utf8');
+const roads = JSON.parse(roadsRaw);
 
 // Strip ES-module syntax so the engine runs inside a classic <script>.
 // 1) `export const NA` / `export function foo` -> drop the leading `export `.
@@ -145,6 +159,24 @@ inlineSgMap += '\nwindow.HSSgMap = { ' +
   'routeDistanceKm: routeDistanceKm, distanceToRouteKm: distanceToRouteKm, ' +
   'reachableChargers: reachableChargers, depotFeasibility: depotFeasibility };\n';
 
+// Strip ES-module syntax from the ADDITIVE on-road router module the same way
+// and expose its API on a window namespace. Like sg_map.js, this is NEW
+// computation layered on top of the frozen engine: it does NOT import or call
+// computeFleet, makes NO network / map-tile / routing-API call, and reads only
+// the bundled road graph (window.HSRoads). Its ONLY ES import is
+// { haversineKm } from './routing_sim.js'; inline, that primitive is already on
+// window.HSRoutingSim, so we drop the import line and alias it - exactly as the
+// sg_map.js inlining does. This block MUST be emitted AFTER the ROUTING block
+// (window.HSRoutingSim) so the alias target exists when it runs.
+let inlineRoadRouter = roadRouterSrc
+  .replace(/^import\s+\{[^}]*\}\s+from\s+'\.\/routing_sim\.js';\s*$/m, 'var haversineKm = window.HSRoutingSim.haversineKm;')
+  .replace(/^export\s+default\s+\{[\s\S]*?\};\s*$/m, '')
+  .replace(/^export\s+/gm, '');
+inlineRoadRouter += '\nwindow.HSRoadRouter = { ' +
+  'MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoadsDoc, ' +
+  'decodeGraph: decodeGraph, nearestNode: nearestNode, ' +
+  'routeOnRoad: routeOnRoad, routeOnRoadSequence: routeOnRoadSequence };\n';
+
 const engineBlock =
   `<!-- ENGINE:BEGIN  generated from src/engine.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<!-- src/engine.js SHA-256: ${engineHash} -->\n` +
@@ -215,6 +247,17 @@ const sgMapBlock =
   `<!-- src/sg_map.js SHA-256: ${sgMapHash} -->\n` +
   `<script>\n${inlineSgMap}</script>\n` +
   `<!-- SGMAP:END -->`;
+
+const sgRoadsBlock =
+  `<!-- SG_ROADS:BEGIN  generated from tools/fixtures/sg_roads.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<script>\nwindow.HSRoads = ${JSON.stringify(roads)};\n</script>\n` +
+  `<!-- SG_ROADS:END -->`;
+
+const roadRouterBlock =
+  `<!-- ROADROUTER:BEGIN  generated from src/road_router.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<!-- src/road_router.js SHA-256: ${roadRouterHash} -->\n` +
+  `<script>\n${inlineRoadRouter}</script>\n` +
+  `<!-- ROADROUTER:END -->`;
 
 let html = readFileSync(indexPath, 'utf8');
 
@@ -305,6 +348,23 @@ html = replaceBlock(
   'SGMAP',
   sgMapBlock,
 );
+html = replaceBlock(
+  html,
+  /<!-- SG_ROADS:BEGIN[\s\S]*?-->/,
+  /<!-- SG_ROADS:END -->/,
+  'SG_ROADS',
+  sgRoadsBlock,
+);
+// ROADROUTER is placed AFTER ROUTING (window.HSRoutingSim) in the document so
+// its aliased haversineKm target is defined when it runs (same ordering
+// discipline as SGMAP relative to ROUTING).
+html = replaceBlock(
+  html,
+  /<!-- ROADROUTER:BEGIN[\s\S]*?-->/,
+  /<!-- ROADROUTER:END -->/,
+  'ROADROUTER',
+  roadRouterBlock,
+);
 
 writeFileSync(indexPath, html);
 console.log(`index.html regenerated.`);
@@ -319,3 +379,5 @@ console.log(`  finance : src/finance.js (${financeSrc.length} bytes, sha256 ${fi
 console.log(`  locations: tools/fixtures/charging_locations.json (${(Buffer.byteLength(chargingLocationsRaw) / 1024).toFixed(2)} KB location subset) embedded`);
 console.log(`  basemap : tools/fixtures/sg_basemap.json (${(Buffer.byteLength(basemapRaw) / 1024).toFixed(2)} KB, ${basemap.polygons.length} polygons) embedded as window.HSBasemap`);
 console.log(`  sg_map  : src/sg_map.js (${sgMapSrc.length} bytes, sha256 ${sgMapHash.slice(0, 16)}...)`);
+console.log(`  roads   : tools/fixtures/sg_roads.json (${(Buffer.byteLength(roadsRaw) / 1024).toFixed(2)} KB, ${roads.dlon.length} nodes / ${roads.edges.length} edges) embedded as window.HSRoads`);
+console.log(`  road_router: src/road_router.js (${roadRouterSrc.length} bytes, sha256 ${roadRouterHash.slice(0, 16)}...)`);

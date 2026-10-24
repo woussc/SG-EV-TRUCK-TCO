@@ -2964,31 +2964,31 @@
             },
             {
               "_row": 14,
-              "A": "BYD T3 (ETP3)",
-              "B": null,
+              "A": "BYD T35 Electric Light-Duty",
+              "B": 1900,
               "C": null,
-              "D": 44.9,
-              "E": 0.14966666666666667,
+              "D": 62.36,
+              "E": 0.1699182561307902,
               "F": "Battery",
-              "G": null,
-              "H": null,
+              "G": 6.6,
+              "H": 71,
               "I": null,
-              "J": 300,
-              "K": "https://en.wikipedia.org/wiki/BYD_T3 (BYD M3/T3/ETP3), accessed 2026-10-24: 44.9 kWh LiFePO4 (also a 50.3 kWh NCM option), ~300 km EV range, 70 kW motor.",
+              "J": 367,
+              "K": "https://evhubs.sg/electric-vehicles/byd-t35-electric-light-duty.html (BYD T35 Electric Light-Duty), accessed 2026-10-24: 10 ft drop-side deck light truck, 62.36 kWh Blade battery, 367 km range, payload 1900 kg / GVW 3700 kg, DC 71 kW + AC 6.6 kW (CCS2).",
               "L": "Unconfirmed",
               "M": null,
-              "N": "BYD T3",
+              "N": "BYD T35",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW) and SGD list price are NOT sourced (Unconfirmed). kWh/km (0.1497) is DERIVED from the sourced 44.9 kWh battery / 300 km range, not a measured figure. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK (replaces the removed BYD T3 VAN). Confirmed 10 ft aluminium drop-side cargo deck on a cab-and-chassis light truck (10-14 ft LGV class). Payload 1900 kg, battery 62.36 kWh, AC 6.6 kW / DC 71 kW and 367 km range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.1699) is DERIVED from 62.36 kWh / 367 km. SGD list price NOT sourced (EVhubs lists no price). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3, accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 Electric Light-Duty, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (payload 1900 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -2996,27 +2996,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3 (44.9 kWh LiFePO4), accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 (62.36 kWh Blade battery), accessed 2026-10-24"
                 },
                 "E": {
                   "status": "derived",
-                  "source": "Derived 44.9 kWh / 300 km = 0.1497 kWh/km (Wikipedia figures)"
+                  "source": "Derived 62.36 kWh / 367 km = 0.1699 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
-                  "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (AC 6.6 kW), accessed 2026-10-24"
                 },
                 "H": {
-                  "status": "unconfirmed",
-                  "note": "DC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (DC 71 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3 (~300 km EV range), accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 (367 km range), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -3026,31 +3026,31 @@
             },
             {
               "_row": 15,
-              "A": "Maxus eDeliver 9",
-              "B": null,
+              "A": "Foton eMiler",
+              "B": 2620,
               "C": null,
-              "D": 88.5,
-              "E": null,
+              "D": 77,
+              "E": 0.20533333333333334,
               "F": "Battery",
-              "G": 11,
-              "H": 80,
+              "G": 22,
+              "H": 77,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/Maxus_V90 (Maxus eDeliver 9), accessed 2026-10-24: 51.5 / 72 / 88.5 kWh LFP options, 11 kW AC + 80 kW DC charging, length 5546 mm (standard).",
+              "J": 375,
+              "K": "https://evhubs.sg/electric-vehicles/foton-emiler.html (Foton eMiler), accessed 2026-10-24: 4.5 t light truck with a 3320 mm steel open deck (~10.9 ft), 77 kWh LFP, 375 km WLTP, payload 2620 kg, AC 22 kW / DC 77 kW.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Maxus eDeliver 9",
+              "N": "Foton eMiler",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 88.5 kWh top option (51.5/72/88.5 kWh available). Payload and SGD list price NOT sourced (Unconfirmed). No single authoritative range figure sourced, so range and kWh/km are left n.a. rather than fabricated. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3320 mm steel open cargo deck (~10.9 ft) on a 4.5 t cab-and-chassis light truck (10-14 ft LGV class). Payload 2620 kg, battery 77 kWh LFP, AC 22 kW / DC 77 kW and 375 km WLTP range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2053) is DERIVED from 77 kWh / 375 km. SGD list price NOT sourced. No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus V90/eDeliver 9, accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Foton eMiler (payload 2620 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -3058,27 +3058,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (88.5 kWh LFP option; also 51.5/72 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (77 kWh LFP), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; no single authoritative range figure to derive from"
+                  "status": "derived",
+                  "source": "Derived 77 kWh / 375 km WLTP = 0.2053 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (11 kW AC), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (AC 22 kW), accessed 2026-10-24"
                 },
                 "H": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (80 kW DC), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (DC 77 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced (varies by battery option)"
+                  "status": "sourced",
+                  "source": "EVhubs SG Foton eMiler (375 km WLTP), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -3088,31 +3088,31 @@
             },
             {
               "_row": 16,
-              "A": "Maxus eDeliver 3 (EV30)",
-              "B": 1020,
+              "A": "Forland S1 EV",
+              "B": null,
               "C": null,
-              "D": 52.5,
-              "E": null,
+              "D": 63.75,
+              "E": 0.19318181818181818,
               "F": "Battery",
               "G": null,
               "H": null,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/Maxus_eDeliver_3 (Maxus EV30/eDeliver 3), accessed 2026-10-24: 35 / 52.5 kWh Li-ion options, UK LWB payload 1020 kg, quoted ranges NEDC (not WLTP).",
+              "J": 330,
+              "K": "https://evhubs.sg/electric-vehicles/forland-s1-ev.html (Forland S1 EV), accessed 2026-10-24: 4.5 t light-duty truck with a 3200 mm internal deck (~10.5 ft), 63.75 kWh liquid-cooled CATL battery, range up to 330 km, fits a 2.0 m car park.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Maxus eDeliver 3",
+              "N": "Forland S1",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 52.5 kWh option; payload 1020 kg is the sourced UK LWB figure. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). Published ranges are NEDC and vary by battery, so kWh/km and a single range are left n.a. rather than derived from a mixed-cycle figure. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3200 mm internal cargo deck (~10.5 ft) on a 4.5 t cab-and-chassis light-duty truck (10-14 ft LGV class). Battery 63.75 kWh CATL and range up to 330 km are SOURCED from the EVhubs SG spec sheet; kWh/km (0.1932) is DERIVED from 63.75 kWh / 330 km. Payload (GVW 4500 kg only, no nett payload published), AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus EV30/eDeliver 3, accessed 2026-10-24"
+                  "source": "EVhubs SG Forland S1 EV, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 3 UK LWB payload 1020 kg, accessed 2026-10-24"
+                  "status": "unconfirmed",
+                  "note": "Nett payload not published (EVhubs lists GVW 4500 kg only)"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -3120,11 +3120,11 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 3 (52.5 kWh option; also 35 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG Forland S1 EV (63.75 kWh CATL), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; published range is NEDC, not derived to avoid a misleading figure"
+                  "status": "derived",
+                  "source": "Derived 63.75 kWh / 330 km = 0.1932 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
                   "status": "unconfirmed",
@@ -3136,11 +3136,11 @@
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced on a consistent cycle"
+                  "status": "sourced",
+                  "source": "EVhubs SG Forland S1 EV (range up to 330 km), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -3150,31 +3150,31 @@
             },
             {
               "_row": 17,
-              "A": "Farizon SV (Supervan)",
-              "B": 1350,
+              "A": "JAC N40EV",
+              "B": null,
               "C": null,
-              "D": 67,
-              "E": 0.16876574307304787,
+              "D": 63.75,
+              "E": 0.27717391304347827,
               "F": "Battery",
               "G": null,
               "H": null,
               "I": null,
-              "J": 397,
-              "K": "https://en.wikipedia.org/wiki/Farizon_SV (Farizon SV / Supervan), accessed 2026-10-24: 67 / 83 / 106 kWh LFP/NMC options, up to ~397 km WLTP, payload up to ~1350 kg, 170 kW motor.",
+              "J": 230,
+              "K": "https://evhubs.sg/electric-vehicles/jac-n40ev.html (JAC N40EV, model HFC1040EV3), accessed 2026-10-24: 3.7 t light truck with an 11 ft body (3347 mm), 63.75 kWh LFP, rated 230 km, quoted 29.7 kWh/100 km, CCS2 DC 20-80% 35 min / AC 20-80% 5 h 30 min.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Farizon SV",
+              "N": "JAC N40",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 67 kWh entry option (67/83/106 kWh available); payload 1350 kg is the sourced maximum. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). kWh/km (0.1688) is DERIVED from the sourced 67 kWh / 397 km WLTP figures, not a measured value. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3347 mm (11 ft) cargo body on a 3.7 t cab-and-chassis light truck (10-14 ft LGV class). Battery 63.75 kWh LFP and rated range 230 km are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2772) is DERIVED from 63.75 kWh / 230 km (close to the manufacturer's quoted 29.7 kWh/100 km = 0.297). Nett payload (GVW 3700 kg only), charge kW (only DC/AC times published, not kW) and SGD list price NOT sourced (Unconfirmed). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV, accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (HFC1040EV3), accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "sourced",
-                  "source": "Wikipedia Farizon SV (payload up to ~1350 kg), accessed 2026-10-24"
+                  "status": "unconfirmed",
+                  "note": "Nett payload not published (EVhubs lists GVW 3700 kg only)"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -3182,27 +3182,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV (67 kWh LFP option; also 83/106 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (63.75 kWh LFP), accessed 2026-10-24"
                 },
                 "E": {
                   "status": "derived",
-                  "source": "Derived 67 kWh / 397 km WLTP = 0.1688 kWh/km (Wikipedia figures)"
+                  "source": "Derived 63.75 kWh / 230 km = 0.2772 kWh/km (EVhubs SG sourced battery and rated range; cf. quoted 29.7 kWh/100 km)"
                 },
                 "G": {
                   "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "note": "On-board AC charge kW not sourced (only AC 20-80% 5 h 30 min time published)"
                 },
                 "H": {
                   "status": "unconfirmed",
-                  "note": "DC charge kW not sourced (20-80% in ~36-40 min quoted, exact kW not sourced)"
+                  "note": "DC charge kW not sourced (only DC 20-80% 35 min time published)"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced (UK launch ~GBP 45k-56k, not an SGD figure)"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV (up to ~397 km WLTP), accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (rated 230 km), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -3212,31 +3212,31 @@
             },
             {
               "_row": 18,
-              "A": "DFSK EC35",
-              "B": null,
+              "A": "Qingling EQ2",
+              "B": 2530,
               "C": null,
-              "D": 42,
-              "E": null,
+              "D": 100.46,
+              "E": 0.2870285714285714,
               "F": "Battery",
-              "G": null,
-              "H": null,
+              "G": 20,
+              "H": 120,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/DFSK_EC35 (DFSK C-Series / EC35), accessed 2026-10-24: 42 kWh lithium-ion battery, 60 kW (80 hp) rear motor, body length 4500 mm.",
+              "J": 350,
+              "K": "https://evhubs.sg/electric-vehicles/qingling-eq2.html (Qingling EQ2), accessed 2026-10-24: 14 ft electric LGV, 100.46 kWh CATL LFP, 350 km combined (515 km city), payload 2530 kg, AC 20 kW / DC 120 kW, quoted 5.1 km/kWh.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "DFSK EC35",
+              "N": "Qingling EQ2",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW), range and SGD list price are NOT sourced (Unconfirmed); kWh/km is left n.a. rather than derived without a sourced range. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 14 ft cargo body on a cab-and-chassis electric light goods vehicle (10-14 ft LGV class). Payload 2530 kg, battery 100.46 kWh CATL, AC 20 kW / DC 120 kW and 350 km combined range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2870) is DERIVED from 100.46 kWh / 350 km combined (cf. the manufacturer's quoted 5.1 km/kWh = 0.196 at best-case city). SGD list price NOT sourced. No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia DFSK C-Series/EC35, accessed 2026-10-24"
+                  "source": "EVhubs SG Qingling EQ2, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (payload 2530 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -3244,27 +3244,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia DFSK EC35 (42 kWh lithium-ion), accessed 2026-10-24"
+                  "source": "EVhubs SG Qingling EQ2 (100.46 kWh CATL LFP), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; no sourced range to derive from"
+                  "status": "derived",
+                  "source": "Derived 100.46 kWh / 350 km combined = 0.2870 kWh/km (EVhubs SG sourced battery and combined range)"
                 },
                 "G": {
-                  "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (AC 20 kW), accessed 2026-10-24"
                 },
                 "H": {
-                  "status": "unconfirmed",
-                  "note": "DC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (DC 120 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (350 km combined), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -6473,31 +6473,31 @@
             },
             {
               "_row": 14,
-              "A": "BYD T3 (ETP3)",
-              "B": null,
+              "A": "BYD T35 Electric Light-Duty",
+              "B": 1900,
               "C": null,
-              "D": 44.9,
-              "E": 0.14966666666666667,
+              "D": 62.36,
+              "E": 0.1699182561307902,
               "F": "Battery",
-              "G": null,
-              "H": null,
+              "G": 6.6,
+              "H": 71,
               "I": null,
-              "J": 300,
-              "K": "https://en.wikipedia.org/wiki/BYD_T3 (BYD M3/T3/ETP3), accessed 2026-10-24: 44.9 kWh LiFePO4 (also a 50.3 kWh NCM option), ~300 km EV range, 70 kW motor.",
+              "J": 367,
+              "K": "https://evhubs.sg/electric-vehicles/byd-t35-electric-light-duty.html (BYD T35 Electric Light-Duty), accessed 2026-10-24: 10 ft drop-side deck light truck, 62.36 kWh Blade battery, 367 km range, payload 1900 kg / GVW 3700 kg, DC 71 kW + AC 6.6 kW (CCS2).",
               "L": "Unconfirmed",
               "M": null,
-              "N": "BYD T3",
+              "N": "BYD T35",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW) and SGD list price are NOT sourced (Unconfirmed). kWh/km (0.1497) is DERIVED from the sourced 44.9 kWh battery / 300 km range, not a measured figure. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK (replaces the removed BYD T3 VAN). Confirmed 10 ft aluminium drop-side cargo deck on a cab-and-chassis light truck (10-14 ft LGV class). Payload 1900 kg, battery 62.36 kWh, AC 6.6 kW / DC 71 kW and 367 km range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.1699) is DERIVED from 62.36 kWh / 367 km. SGD list price NOT sourced (EVhubs lists no price). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3, accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 Electric Light-Duty, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (payload 1900 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -6505,27 +6505,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3 (44.9 kWh LiFePO4), accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 (62.36 kWh Blade battery), accessed 2026-10-24"
                 },
                 "E": {
                   "status": "derived",
-                  "source": "Derived 44.9 kWh / 300 km = 0.1497 kWh/km (Wikipedia figures)"
+                  "source": "Derived 62.36 kWh / 367 km = 0.1699 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
-                  "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (AC 6.6 kW), accessed 2026-10-24"
                 },
                 "H": {
-                  "status": "unconfirmed",
-                  "note": "DC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (DC 71 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3 (~300 km EV range), accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 (367 km range), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -6535,31 +6535,31 @@
             },
             {
               "_row": 15,
-              "A": "Maxus eDeliver 9",
-              "B": null,
+              "A": "Foton eMiler",
+              "B": 2620,
               "C": null,
-              "D": 88.5,
-              "E": null,
+              "D": 77,
+              "E": 0.20533333333333334,
               "F": "Battery",
-              "G": 11,
-              "H": 80,
+              "G": 22,
+              "H": 77,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/Maxus_V90 (Maxus eDeliver 9), accessed 2026-10-24: 51.5 / 72 / 88.5 kWh LFP options, 11 kW AC + 80 kW DC charging, length 5546 mm (standard).",
+              "J": 375,
+              "K": "https://evhubs.sg/electric-vehicles/foton-emiler.html (Foton eMiler), accessed 2026-10-24: 4.5 t light truck with a 3320 mm steel open deck (~10.9 ft), 77 kWh LFP, 375 km WLTP, payload 2620 kg, AC 22 kW / DC 77 kW.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Maxus eDeliver 9",
+              "N": "Foton eMiler",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 88.5 kWh top option (51.5/72/88.5 kWh available). Payload and SGD list price NOT sourced (Unconfirmed). No single authoritative range figure sourced, so range and kWh/km are left n.a. rather than fabricated. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3320 mm steel open cargo deck (~10.9 ft) on a 4.5 t cab-and-chassis light truck (10-14 ft LGV class). Payload 2620 kg, battery 77 kWh LFP, AC 22 kW / DC 77 kW and 375 km WLTP range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2053) is DERIVED from 77 kWh / 375 km. SGD list price NOT sourced. No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus V90/eDeliver 9, accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Foton eMiler (payload 2620 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -6567,27 +6567,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (88.5 kWh LFP option; also 51.5/72 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (77 kWh LFP), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; no single authoritative range figure to derive from"
+                  "status": "derived",
+                  "source": "Derived 77 kWh / 375 km WLTP = 0.2053 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (11 kW AC), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (AC 22 kW), accessed 2026-10-24"
                 },
                 "H": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (80 kW DC), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (DC 77 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced (varies by battery option)"
+                  "status": "sourced",
+                  "source": "EVhubs SG Foton eMiler (375 km WLTP), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -6597,31 +6597,31 @@
             },
             {
               "_row": 16,
-              "A": "Maxus eDeliver 3 (EV30)",
-              "B": 1020,
+              "A": "Forland S1 EV",
+              "B": null,
               "C": null,
-              "D": 52.5,
-              "E": null,
+              "D": 63.75,
+              "E": 0.19318181818181818,
               "F": "Battery",
               "G": null,
               "H": null,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/Maxus_eDeliver_3 (Maxus EV30/eDeliver 3), accessed 2026-10-24: 35 / 52.5 kWh Li-ion options, UK LWB payload 1020 kg, quoted ranges NEDC (not WLTP).",
+              "J": 330,
+              "K": "https://evhubs.sg/electric-vehicles/forland-s1-ev.html (Forland S1 EV), accessed 2026-10-24: 4.5 t light-duty truck with a 3200 mm internal deck (~10.5 ft), 63.75 kWh liquid-cooled CATL battery, range up to 330 km, fits a 2.0 m car park.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Maxus eDeliver 3",
+              "N": "Forland S1",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 52.5 kWh option; payload 1020 kg is the sourced UK LWB figure. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). Published ranges are NEDC and vary by battery, so kWh/km and a single range are left n.a. rather than derived from a mixed-cycle figure. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3200 mm internal cargo deck (~10.5 ft) on a 4.5 t cab-and-chassis light-duty truck (10-14 ft LGV class). Battery 63.75 kWh CATL and range up to 330 km are SOURCED from the EVhubs SG spec sheet; kWh/km (0.1932) is DERIVED from 63.75 kWh / 330 km. Payload (GVW 4500 kg only, no nett payload published), AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus EV30/eDeliver 3, accessed 2026-10-24"
+                  "source": "EVhubs SG Forland S1 EV, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 3 UK LWB payload 1020 kg, accessed 2026-10-24"
+                  "status": "unconfirmed",
+                  "note": "Nett payload not published (EVhubs lists GVW 4500 kg only)"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -6629,11 +6629,11 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 3 (52.5 kWh option; also 35 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG Forland S1 EV (63.75 kWh CATL), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; published range is NEDC, not derived to avoid a misleading figure"
+                  "status": "derived",
+                  "source": "Derived 63.75 kWh / 330 km = 0.1932 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
                   "status": "unconfirmed",
@@ -6645,11 +6645,11 @@
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced on a consistent cycle"
+                  "status": "sourced",
+                  "source": "EVhubs SG Forland S1 EV (range up to 330 km), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -6659,31 +6659,31 @@
             },
             {
               "_row": 17,
-              "A": "Farizon SV (Supervan)",
-              "B": 1350,
+              "A": "JAC N40EV",
+              "B": null,
               "C": null,
-              "D": 67,
-              "E": 0.16876574307304787,
+              "D": 63.75,
+              "E": 0.27717391304347827,
               "F": "Battery",
               "G": null,
               "H": null,
               "I": null,
-              "J": 397,
-              "K": "https://en.wikipedia.org/wiki/Farizon_SV (Farizon SV / Supervan), accessed 2026-10-24: 67 / 83 / 106 kWh LFP/NMC options, up to ~397 km WLTP, payload up to ~1350 kg, 170 kW motor.",
+              "J": 230,
+              "K": "https://evhubs.sg/electric-vehicles/jac-n40ev.html (JAC N40EV, model HFC1040EV3), accessed 2026-10-24: 3.7 t light truck with an 11 ft body (3347 mm), 63.75 kWh LFP, rated 230 km, quoted 29.7 kWh/100 km, CCS2 DC 20-80% 35 min / AC 20-80% 5 h 30 min.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Farizon SV",
+              "N": "JAC N40",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 67 kWh entry option (67/83/106 kWh available); payload 1350 kg is the sourced maximum. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). kWh/km (0.1688) is DERIVED from the sourced 67 kWh / 397 km WLTP figures, not a measured value. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3347 mm (11 ft) cargo body on a 3.7 t cab-and-chassis light truck (10-14 ft LGV class). Battery 63.75 kWh LFP and rated range 230 km are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2772) is DERIVED from 63.75 kWh / 230 km (close to the manufacturer's quoted 29.7 kWh/100 km = 0.297). Nett payload (GVW 3700 kg only), charge kW (only DC/AC times published, not kW) and SGD list price NOT sourced (Unconfirmed). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV, accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (HFC1040EV3), accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "sourced",
-                  "source": "Wikipedia Farizon SV (payload up to ~1350 kg), accessed 2026-10-24"
+                  "status": "unconfirmed",
+                  "note": "Nett payload not published (EVhubs lists GVW 3700 kg only)"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -6691,27 +6691,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV (67 kWh LFP option; also 83/106 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (63.75 kWh LFP), accessed 2026-10-24"
                 },
                 "E": {
                   "status": "derived",
-                  "source": "Derived 67 kWh / 397 km WLTP = 0.1688 kWh/km (Wikipedia figures)"
+                  "source": "Derived 63.75 kWh / 230 km = 0.2772 kWh/km (EVhubs SG sourced battery and rated range; cf. quoted 29.7 kWh/100 km)"
                 },
                 "G": {
                   "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "note": "On-board AC charge kW not sourced (only AC 20-80% 5 h 30 min time published)"
                 },
                 "H": {
                   "status": "unconfirmed",
-                  "note": "DC charge kW not sourced (20-80% in ~36-40 min quoted, exact kW not sourced)"
+                  "note": "DC charge kW not sourced (only DC 20-80% 35 min time published)"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced (UK launch ~GBP 45k-56k, not an SGD figure)"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV (up to ~397 km WLTP), accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (rated 230 km), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -6721,31 +6721,31 @@
             },
             {
               "_row": 18,
-              "A": "DFSK EC35",
-              "B": null,
+              "A": "Qingling EQ2",
+              "B": 2530,
               "C": null,
-              "D": 42,
-              "E": null,
+              "D": 100.46,
+              "E": 0.2870285714285714,
               "F": "Battery",
-              "G": null,
-              "H": null,
+              "G": 20,
+              "H": 120,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/DFSK_EC35 (DFSK C-Series / EC35), accessed 2026-10-24: 42 kWh lithium-ion battery, 60 kW (80 hp) rear motor, body length 4500 mm.",
+              "J": 350,
+              "K": "https://evhubs.sg/electric-vehicles/qingling-eq2.html (Qingling EQ2), accessed 2026-10-24: 14 ft electric LGV, 100.46 kWh CATL LFP, 350 km combined (515 km city), payload 2530 kg, AC 20 kW / DC 120 kW, quoted 5.1 km/kWh.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "DFSK EC35",
+              "N": "Qingling EQ2",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW), range and SGD list price are NOT sourced (Unconfirmed); kWh/km is left n.a. rather than derived without a sourced range. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 14 ft cargo body on a cab-and-chassis electric light goods vehicle (10-14 ft LGV class). Payload 2530 kg, battery 100.46 kWh CATL, AC 20 kW / DC 120 kW and 350 km combined range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2870) is DERIVED from 100.46 kWh / 350 km combined (cf. the manufacturer's quoted 5.1 km/kWh = 0.196 at best-case city). SGD list price NOT sourced. No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia DFSK C-Series/EC35, accessed 2026-10-24"
+                  "source": "EVhubs SG Qingling EQ2, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (payload 2530 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -6753,27 +6753,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia DFSK EC35 (42 kWh lithium-ion), accessed 2026-10-24"
+                  "source": "EVhubs SG Qingling EQ2 (100.46 kWh CATL LFP), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; no sourced range to derive from"
+                  "status": "derived",
+                  "source": "Derived 100.46 kWh / 350 km combined = 0.2870 kWh/km (EVhubs SG sourced battery and combined range)"
                 },
                 "G": {
-                  "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (AC 20 kW), accessed 2026-10-24"
                 },
                 "H": {
-                  "status": "unconfirmed",
-                  "note": "DC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (DC 120 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (350 km combined), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -9982,31 +9982,31 @@
             },
             {
               "_row": 14,
-              "A": "BYD T3 (ETP3)",
-              "B": null,
+              "A": "BYD T35 Electric Light-Duty",
+              "B": 1900,
               "C": null,
-              "D": 44.9,
-              "E": 0.14966666666666667,
+              "D": 62.36,
+              "E": 0.1699182561307902,
               "F": "Battery",
-              "G": null,
-              "H": null,
+              "G": 6.6,
+              "H": 71,
               "I": null,
-              "J": 300,
-              "K": "https://en.wikipedia.org/wiki/BYD_T3 (BYD M3/T3/ETP3), accessed 2026-10-24: 44.9 kWh LiFePO4 (also a 50.3 kWh NCM option), ~300 km EV range, 70 kW motor.",
+              "J": 367,
+              "K": "https://evhubs.sg/electric-vehicles/byd-t35-electric-light-duty.html (BYD T35 Electric Light-Duty), accessed 2026-10-24: 10 ft drop-side deck light truck, 62.36 kWh Blade battery, 367 km range, payload 1900 kg / GVW 3700 kg, DC 71 kW + AC 6.6 kW (CCS2).",
               "L": "Unconfirmed",
               "M": null,
-              "N": "BYD T3",
+              "N": "BYD T35",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW) and SGD list price are NOT sourced (Unconfirmed). kWh/km (0.1497) is DERIVED from the sourced 44.9 kWh battery / 300 km range, not a measured figure. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK (replaces the removed BYD T3 VAN). Confirmed 10 ft aluminium drop-side cargo deck on a cab-and-chassis light truck (10-14 ft LGV class). Payload 1900 kg, battery 62.36 kWh, AC 6.6 kW / DC 71 kW and 367 km range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.1699) is DERIVED from 62.36 kWh / 367 km. SGD list price NOT sourced (EVhubs lists no price). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3, accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 Electric Light-Duty, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (payload 1900 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -10014,27 +10014,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3 (44.9 kWh LiFePO4), accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 (62.36 kWh Blade battery), accessed 2026-10-24"
                 },
                 "E": {
                   "status": "derived",
-                  "source": "Derived 44.9 kWh / 300 km = 0.1497 kWh/km (Wikipedia figures)"
+                  "source": "Derived 62.36 kWh / 367 km = 0.1699 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
-                  "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (AC 6.6 kW), accessed 2026-10-24"
                 },
                 "H": {
-                  "status": "unconfirmed",
-                  "note": "DC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (DC 71 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3 (~300 km EV range), accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 (367 km range), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -10044,31 +10044,31 @@
             },
             {
               "_row": 15,
-              "A": "Maxus eDeliver 9",
-              "B": null,
+              "A": "Foton eMiler",
+              "B": 2620,
               "C": null,
-              "D": 88.5,
-              "E": null,
+              "D": 77,
+              "E": 0.20533333333333334,
               "F": "Battery",
-              "G": 11,
-              "H": 80,
+              "G": 22,
+              "H": 77,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/Maxus_V90 (Maxus eDeliver 9), accessed 2026-10-24: 51.5 / 72 / 88.5 kWh LFP options, 11 kW AC + 80 kW DC charging, length 5546 mm (standard).",
+              "J": 375,
+              "K": "https://evhubs.sg/electric-vehicles/foton-emiler.html (Foton eMiler), accessed 2026-10-24: 4.5 t light truck with a 3320 mm steel open deck (~10.9 ft), 77 kWh LFP, 375 km WLTP, payload 2620 kg, AC 22 kW / DC 77 kW.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Maxus eDeliver 9",
+              "N": "Foton eMiler",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 88.5 kWh top option (51.5/72/88.5 kWh available). Payload and SGD list price NOT sourced (Unconfirmed). No single authoritative range figure sourced, so range and kWh/km are left n.a. rather than fabricated. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3320 mm steel open cargo deck (~10.9 ft) on a 4.5 t cab-and-chassis light truck (10-14 ft LGV class). Payload 2620 kg, battery 77 kWh LFP, AC 22 kW / DC 77 kW and 375 km WLTP range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2053) is DERIVED from 77 kWh / 375 km. SGD list price NOT sourced. No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus V90/eDeliver 9, accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Foton eMiler (payload 2620 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -10076,27 +10076,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (88.5 kWh LFP option; also 51.5/72 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (77 kWh LFP), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; no single authoritative range figure to derive from"
+                  "status": "derived",
+                  "source": "Derived 77 kWh / 375 km WLTP = 0.2053 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (11 kW AC), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (AC 22 kW), accessed 2026-10-24"
                 },
                 "H": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (80 kW DC), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (DC 77 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced (varies by battery option)"
+                  "status": "sourced",
+                  "source": "EVhubs SG Foton eMiler (375 km WLTP), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -10106,31 +10106,31 @@
             },
             {
               "_row": 16,
-              "A": "Maxus eDeliver 3 (EV30)",
-              "B": 1020,
+              "A": "Forland S1 EV",
+              "B": null,
               "C": null,
-              "D": 52.5,
-              "E": null,
+              "D": 63.75,
+              "E": 0.19318181818181818,
               "F": "Battery",
               "G": null,
               "H": null,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/Maxus_eDeliver_3 (Maxus EV30/eDeliver 3), accessed 2026-10-24: 35 / 52.5 kWh Li-ion options, UK LWB payload 1020 kg, quoted ranges NEDC (not WLTP).",
+              "J": 330,
+              "K": "https://evhubs.sg/electric-vehicles/forland-s1-ev.html (Forland S1 EV), accessed 2026-10-24: 4.5 t light-duty truck with a 3200 mm internal deck (~10.5 ft), 63.75 kWh liquid-cooled CATL battery, range up to 330 km, fits a 2.0 m car park.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Maxus eDeliver 3",
+              "N": "Forland S1",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 52.5 kWh option; payload 1020 kg is the sourced UK LWB figure. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). Published ranges are NEDC and vary by battery, so kWh/km and a single range are left n.a. rather than derived from a mixed-cycle figure. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3200 mm internal cargo deck (~10.5 ft) on a 4.5 t cab-and-chassis light-duty truck (10-14 ft LGV class). Battery 63.75 kWh CATL and range up to 330 km are SOURCED from the EVhubs SG spec sheet; kWh/km (0.1932) is DERIVED from 63.75 kWh / 330 km. Payload (GVW 4500 kg only, no nett payload published), AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus EV30/eDeliver 3, accessed 2026-10-24"
+                  "source": "EVhubs SG Forland S1 EV, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 3 UK LWB payload 1020 kg, accessed 2026-10-24"
+                  "status": "unconfirmed",
+                  "note": "Nett payload not published (EVhubs lists GVW 4500 kg only)"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -10138,11 +10138,11 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 3 (52.5 kWh option; also 35 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG Forland S1 EV (63.75 kWh CATL), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; published range is NEDC, not derived to avoid a misleading figure"
+                  "status": "derived",
+                  "source": "Derived 63.75 kWh / 330 km = 0.1932 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
                   "status": "unconfirmed",
@@ -10154,11 +10154,11 @@
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced on a consistent cycle"
+                  "status": "sourced",
+                  "source": "EVhubs SG Forland S1 EV (range up to 330 km), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -10168,31 +10168,31 @@
             },
             {
               "_row": 17,
-              "A": "Farizon SV (Supervan)",
-              "B": 1350,
+              "A": "JAC N40EV",
+              "B": null,
               "C": null,
-              "D": 67,
-              "E": 0.16876574307304787,
+              "D": 63.75,
+              "E": 0.27717391304347827,
               "F": "Battery",
               "G": null,
               "H": null,
               "I": null,
-              "J": 397,
-              "K": "https://en.wikipedia.org/wiki/Farizon_SV (Farizon SV / Supervan), accessed 2026-10-24: 67 / 83 / 106 kWh LFP/NMC options, up to ~397 km WLTP, payload up to ~1350 kg, 170 kW motor.",
+              "J": 230,
+              "K": "https://evhubs.sg/electric-vehicles/jac-n40ev.html (JAC N40EV, model HFC1040EV3), accessed 2026-10-24: 3.7 t light truck with an 11 ft body (3347 mm), 63.75 kWh LFP, rated 230 km, quoted 29.7 kWh/100 km, CCS2 DC 20-80% 35 min / AC 20-80% 5 h 30 min.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Farizon SV",
+              "N": "JAC N40",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 67 kWh entry option (67/83/106 kWh available); payload 1350 kg is the sourced maximum. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). kWh/km (0.1688) is DERIVED from the sourced 67 kWh / 397 km WLTP figures, not a measured value. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3347 mm (11 ft) cargo body on a 3.7 t cab-and-chassis light truck (10-14 ft LGV class). Battery 63.75 kWh LFP and rated range 230 km are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2772) is DERIVED from 63.75 kWh / 230 km (close to the manufacturer's quoted 29.7 kWh/100 km = 0.297). Nett payload (GVW 3700 kg only), charge kW (only DC/AC times published, not kW) and SGD list price NOT sourced (Unconfirmed). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV, accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (HFC1040EV3), accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "sourced",
-                  "source": "Wikipedia Farizon SV (payload up to ~1350 kg), accessed 2026-10-24"
+                  "status": "unconfirmed",
+                  "note": "Nett payload not published (EVhubs lists GVW 3700 kg only)"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -10200,27 +10200,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV (67 kWh LFP option; also 83/106 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (63.75 kWh LFP), accessed 2026-10-24"
                 },
                 "E": {
                   "status": "derived",
-                  "source": "Derived 67 kWh / 397 km WLTP = 0.1688 kWh/km (Wikipedia figures)"
+                  "source": "Derived 63.75 kWh / 230 km = 0.2772 kWh/km (EVhubs SG sourced battery and rated range; cf. quoted 29.7 kWh/100 km)"
                 },
                 "G": {
                   "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "note": "On-board AC charge kW not sourced (only AC 20-80% 5 h 30 min time published)"
                 },
                 "H": {
                   "status": "unconfirmed",
-                  "note": "DC charge kW not sourced (20-80% in ~36-40 min quoted, exact kW not sourced)"
+                  "note": "DC charge kW not sourced (only DC 20-80% 35 min time published)"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced (UK launch ~GBP 45k-56k, not an SGD figure)"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV (up to ~397 km WLTP), accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (rated 230 km), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -10230,31 +10230,31 @@
             },
             {
               "_row": 18,
-              "A": "DFSK EC35",
-              "B": null,
+              "A": "Qingling EQ2",
+              "B": 2530,
               "C": null,
-              "D": 42,
-              "E": null,
+              "D": 100.46,
+              "E": 0.2870285714285714,
               "F": "Battery",
-              "G": null,
-              "H": null,
+              "G": 20,
+              "H": 120,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/DFSK_EC35 (DFSK C-Series / EC35), accessed 2026-10-24: 42 kWh lithium-ion battery, 60 kW (80 hp) rear motor, body length 4500 mm.",
+              "J": 350,
+              "K": "https://evhubs.sg/electric-vehicles/qingling-eq2.html (Qingling EQ2), accessed 2026-10-24: 14 ft electric LGV, 100.46 kWh CATL LFP, 350 km combined (515 km city), payload 2530 kg, AC 20 kW / DC 120 kW, quoted 5.1 km/kWh.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "DFSK EC35",
+              "N": "Qingling EQ2",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW), range and SGD list price are NOT sourced (Unconfirmed); kWh/km is left n.a. rather than derived without a sourced range. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 14 ft cargo body on a cab-and-chassis electric light goods vehicle (10-14 ft LGV class). Payload 2530 kg, battery 100.46 kWh CATL, AC 20 kW / DC 120 kW and 350 km combined range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2870) is DERIVED from 100.46 kWh / 350 km combined (cf. the manufacturer's quoted 5.1 km/kWh = 0.196 at best-case city). SGD list price NOT sourced. No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia DFSK C-Series/EC35, accessed 2026-10-24"
+                  "source": "EVhubs SG Qingling EQ2, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (payload 2530 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -10262,27 +10262,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia DFSK EC35 (42 kWh lithium-ion), accessed 2026-10-24"
+                  "source": "EVhubs SG Qingling EQ2 (100.46 kWh CATL LFP), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; no sourced range to derive from"
+                  "status": "derived",
+                  "source": "Derived 100.46 kWh / 350 km combined = 0.2870 kWh/km (EVhubs SG sourced battery and combined range)"
                 },
                 "G": {
-                  "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (AC 20 kW), accessed 2026-10-24"
                 },
                 "H": {
-                  "status": "unconfirmed",
-                  "note": "DC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (DC 120 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (350 km combined), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -13491,31 +13491,31 @@
             },
             {
               "_row": 14,
-              "A": "BYD T3 (ETP3)",
-              "B": null,
+              "A": "BYD T35 Electric Light-Duty",
+              "B": 1900,
               "C": null,
-              "D": 44.9,
-              "E": 0.14966666666666667,
+              "D": 62.36,
+              "E": 0.1699182561307902,
               "F": "Battery",
-              "G": null,
-              "H": null,
+              "G": 6.6,
+              "H": 71,
               "I": null,
-              "J": 300,
-              "K": "https://en.wikipedia.org/wiki/BYD_T3 (BYD M3/T3/ETP3), accessed 2026-10-24: 44.9 kWh LiFePO4 (also a 50.3 kWh NCM option), ~300 km EV range, 70 kW motor.",
+              "J": 367,
+              "K": "https://evhubs.sg/electric-vehicles/byd-t35-electric-light-duty.html (BYD T35 Electric Light-Duty), accessed 2026-10-24: 10 ft drop-side deck light truck, 62.36 kWh Blade battery, 367 km range, payload 1900 kg / GVW 3700 kg, DC 71 kW + AC 6.6 kW (CCS2).",
               "L": "Unconfirmed",
               "M": null,
-              "N": "BYD T3",
+              "N": "BYD T35",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW) and SGD list price are NOT sourced (Unconfirmed). kWh/km (0.1497) is DERIVED from the sourced 44.9 kWh battery / 300 km range, not a measured figure. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK (replaces the removed BYD T3 VAN). Confirmed 10 ft aluminium drop-side cargo deck on a cab-and-chassis light truck (10-14 ft LGV class). Payload 1900 kg, battery 62.36 kWh, AC 6.6 kW / DC 71 kW and 367 km range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.1699) is DERIVED from 62.36 kWh / 367 km. SGD list price NOT sourced (EVhubs lists no price). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3, accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 Electric Light-Duty, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (payload 1900 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -13523,27 +13523,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3 (44.9 kWh LiFePO4), accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 (62.36 kWh Blade battery), accessed 2026-10-24"
                 },
                 "E": {
                   "status": "derived",
-                  "source": "Derived 44.9 kWh / 300 km = 0.1497 kWh/km (Wikipedia figures)"
+                  "source": "Derived 62.36 kWh / 367 km = 0.1699 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
-                  "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (AC 6.6 kW), accessed 2026-10-24"
                 },
                 "H": {
-                  "status": "unconfirmed",
-                  "note": "DC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG BYD T35 (DC 71 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
                   "status": "sourced",
-                  "source": "Wikipedia BYD M3/T3/ETP3 (~300 km EV range), accessed 2026-10-24"
+                  "source": "EVhubs SG BYD T35 (367 km range), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -13553,31 +13553,31 @@
             },
             {
               "_row": 15,
-              "A": "Maxus eDeliver 9",
-              "B": null,
+              "A": "Foton eMiler",
+              "B": 2620,
               "C": null,
-              "D": 88.5,
-              "E": null,
+              "D": 77,
+              "E": 0.20533333333333334,
               "F": "Battery",
-              "G": 11,
-              "H": 80,
+              "G": 22,
+              "H": 77,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/Maxus_V90 (Maxus eDeliver 9), accessed 2026-10-24: 51.5 / 72 / 88.5 kWh LFP options, 11 kW AC + 80 kW DC charging, length 5546 mm (standard).",
+              "J": 375,
+              "K": "https://evhubs.sg/electric-vehicles/foton-emiler.html (Foton eMiler), accessed 2026-10-24: 4.5 t light truck with a 3320 mm steel open deck (~10.9 ft), 77 kWh LFP, 375 km WLTP, payload 2620 kg, AC 22 kW / DC 77 kW.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Maxus eDeliver 9",
+              "N": "Foton eMiler",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 88.5 kWh top option (51.5/72/88.5 kWh available). Payload and SGD list price NOT sourced (Unconfirmed). No single authoritative range figure sourced, so range and kWh/km are left n.a. rather than fabricated. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3320 mm steel open cargo deck (~10.9 ft) on a 4.5 t cab-and-chassis light truck (10-14 ft LGV class). Payload 2620 kg, battery 77 kWh LFP, AC 22 kW / DC 77 kW and 375 km WLTP range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2053) is DERIVED from 77 kWh / 375 km. SGD list price NOT sourced. No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus V90/eDeliver 9, accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Foton eMiler (payload 2620 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -13585,27 +13585,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (88.5 kWh LFP option; also 51.5/72 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (77 kWh LFP), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; no single authoritative range figure to derive from"
+                  "status": "derived",
+                  "source": "Derived 77 kWh / 375 km WLTP = 0.2053 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (11 kW AC), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (AC 22 kW), accessed 2026-10-24"
                 },
                 "H": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 9 (80 kW DC), accessed 2026-10-24"
+                  "source": "EVhubs SG Foton eMiler (DC 77 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced (varies by battery option)"
+                  "status": "sourced",
+                  "source": "EVhubs SG Foton eMiler (375 km WLTP), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -13615,31 +13615,31 @@
             },
             {
               "_row": 16,
-              "A": "Maxus eDeliver 3 (EV30)",
-              "B": 1020,
+              "A": "Forland S1 EV",
+              "B": null,
               "C": null,
-              "D": 52.5,
-              "E": null,
+              "D": 63.75,
+              "E": 0.19318181818181818,
               "F": "Battery",
               "G": null,
               "H": null,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/Maxus_eDeliver_3 (Maxus EV30/eDeliver 3), accessed 2026-10-24: 35 / 52.5 kWh Li-ion options, UK LWB payload 1020 kg, quoted ranges NEDC (not WLTP).",
+              "J": 330,
+              "K": "https://evhubs.sg/electric-vehicles/forland-s1-ev.html (Forland S1 EV), accessed 2026-10-24: 4.5 t light-duty truck with a 3200 mm internal deck (~10.5 ft), 63.75 kWh liquid-cooled CATL battery, range up to 330 km, fits a 2.0 m car park.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Maxus eDeliver 3",
+              "N": "Forland S1",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 52.5 kWh option; payload 1020 kg is the sourced UK LWB figure. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). Published ranges are NEDC and vary by battery, so kWh/km and a single range are left n.a. rather than derived from a mixed-cycle figure. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3200 mm internal cargo deck (~10.5 ft) on a 4.5 t cab-and-chassis light-duty truck (10-14 ft LGV class). Battery 63.75 kWh CATL and range up to 330 km are SOURCED from the EVhubs SG spec sheet; kWh/km (0.1932) is DERIVED from 63.75 kWh / 330 km. Payload (GVW 4500 kg only, no nett payload published), AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus EV30/eDeliver 3, accessed 2026-10-24"
+                  "source": "EVhubs SG Forland S1 EV, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 3 UK LWB payload 1020 kg, accessed 2026-10-24"
+                  "status": "unconfirmed",
+                  "note": "Nett payload not published (EVhubs lists GVW 4500 kg only)"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -13647,11 +13647,11 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Maxus eDeliver 3 (52.5 kWh option; also 35 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG Forland S1 EV (63.75 kWh CATL), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; published range is NEDC, not derived to avoid a misleading figure"
+                  "status": "derived",
+                  "source": "Derived 63.75 kWh / 330 km = 0.1932 kWh/km (EVhubs SG sourced battery and range)"
                 },
                 "G": {
                   "status": "unconfirmed",
@@ -13663,11 +13663,11 @@
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced on a consistent cycle"
+                  "status": "sourced",
+                  "source": "EVhubs SG Forland S1 EV (range up to 330 km), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -13677,31 +13677,31 @@
             },
             {
               "_row": 17,
-              "A": "Farizon SV (Supervan)",
-              "B": 1350,
+              "A": "JAC N40EV",
+              "B": null,
               "C": null,
-              "D": 67,
-              "E": 0.16876574307304787,
+              "D": 63.75,
+              "E": 0.27717391304347827,
               "F": "Battery",
               "G": null,
               "H": null,
               "I": null,
-              "J": 397,
-              "K": "https://en.wikipedia.org/wiki/Farizon_SV (Farizon SV / Supervan), accessed 2026-10-24: 67 / 83 / 106 kWh LFP/NMC options, up to ~397 km WLTP, payload up to ~1350 kg, 170 kW motor.",
+              "J": 230,
+              "K": "https://evhubs.sg/electric-vehicles/jac-n40ev.html (JAC N40EV, model HFC1040EV3), accessed 2026-10-24: 3.7 t light truck with an 11 ft body (3347 mm), 63.75 kWh LFP, rated 230 km, quoted 29.7 kWh/100 km, CCS2 DC 20-80% 35 min / AC 20-80% 5 h 30 min.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "Farizon SV",
+              "N": "JAC N40",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 67 kWh entry option (67/83/106 kWh available); payload 1350 kg is the sourced maximum. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). kWh/km (0.1688) is DERIVED from the sourced 67 kWh / 397 km WLTP figures, not a measured value. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 3347 mm (11 ft) cargo body on a 3.7 t cab-and-chassis light truck (10-14 ft LGV class). Battery 63.75 kWh LFP and rated range 230 km are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2772) is DERIVED from 63.75 kWh / 230 km (close to the manufacturer's quoted 29.7 kWh/100 km = 0.297). Nett payload (GVW 3700 kg only), charge kW (only DC/AC times published, not kW) and SGD list price NOT sourced (Unconfirmed). No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV, accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (HFC1040EV3), accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "sourced",
-                  "source": "Wikipedia Farizon SV (payload up to ~1350 kg), accessed 2026-10-24"
+                  "status": "unconfirmed",
+                  "note": "Nett payload not published (EVhubs lists GVW 3700 kg only)"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -13709,27 +13709,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV (67 kWh LFP option; also 83/106 kWh), accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (63.75 kWh LFP), accessed 2026-10-24"
                 },
                 "E": {
                   "status": "derived",
-                  "source": "Derived 67 kWh / 397 km WLTP = 0.1688 kWh/km (Wikipedia figures)"
+                  "source": "Derived 63.75 kWh / 230 km = 0.2772 kWh/km (EVhubs SG sourced battery and rated range; cf. quoted 29.7 kWh/100 km)"
                 },
                 "G": {
                   "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "note": "On-board AC charge kW not sourced (only AC 20-80% 5 h 30 min time published)"
                 },
                 "H": {
                   "status": "unconfirmed",
-                  "note": "DC charge kW not sourced (20-80% in ~36-40 min quoted, exact kW not sourced)"
+                  "note": "DC charge kW not sourced (only DC 20-80% 35 min time published)"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced (UK launch ~GBP 45k-56k, not an SGD figure)"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
                   "status": "sourced",
-                  "source": "Wikipedia Farizon SV (up to ~397 km WLTP), accessed 2026-10-24"
+                  "source": "EVhubs SG JAC N40EV (rated 230 km), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
@@ -13739,31 +13739,31 @@
             },
             {
               "_row": 18,
-              "A": "DFSK EC35",
-              "B": null,
+              "A": "Qingling EQ2",
+              "B": 2530,
               "C": null,
-              "D": 42,
-              "E": null,
+              "D": 100.46,
+              "E": 0.2870285714285714,
               "F": "Battery",
-              "G": null,
-              "H": null,
+              "G": 20,
+              "H": 120,
               "I": null,
-              "J": null,
-              "K": "https://en.wikipedia.org/wiki/DFSK_EC35 (DFSK C-Series / EC35), accessed 2026-10-24: 42 kWh lithium-ion battery, 60 kW (80 hp) rear motor, body length 4500 mm.",
+              "J": 350,
+              "K": "https://evhubs.sg/electric-vehicles/qingling-eq2.html (Qingling EQ2), accessed 2026-10-24: 14 ft electric LGV, 100.46 kWh CATL LFP, 350 km combined (515 km city), payload 2530 kg, AC 20 kW / DC 120 kW, quoted 5.1 km/kWh.",
               "L": "Unconfirmed",
               "M": null,
-              "N": "DFSK EC35",
+              "N": "Qingling EQ2",
               "O": null,
               "P": null,
-              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW), range and SGD list price are NOT sourced (Unconfirmed); kWh/km is left n.a. rather than derived without a sourced range. No service S$/km data; shown as n.a.",
+              "Q": "EV LIGHT TRUCK. Confirmed 14 ft cargo body on a cab-and-chassis electric light goods vehicle (10-14 ft LGV class). Payload 2530 kg, battery 100.46 kWh CATL, AC 20 kW / DC 120 kW and 350 km combined range are SOURCED from the EVhubs SG spec sheet; kWh/km (0.2870) is DERIVED from 100.46 kWh / 350 km combined (cf. the manufacturer's quoted 5.1 km/kWh = 0.196 at best-case city). SGD list price NOT sourced. No service S$/km data; shown as n.a. Col L kept 'Unconfirmed' per catalogue convention.",
               "_prov": {
                 "A": {
                   "status": "sourced",
-                  "source": "Wikipedia DFSK C-Series/EC35, accessed 2026-10-24"
+                  "source": "EVhubs SG Qingling EQ2, accessed 2026-10-24"
                 },
                 "B": {
-                  "status": "unconfirmed",
-                  "note": "Payload not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (payload 2530 kg), accessed 2026-10-24"
                 },
                 "C": {
                   "status": "unconfirmed",
@@ -13771,27 +13771,27 @@
                 },
                 "D": {
                   "status": "sourced",
-                  "source": "Wikipedia DFSK EC35 (42 kWh lithium-ion), accessed 2026-10-24"
+                  "source": "EVhubs SG Qingling EQ2 (100.46 kWh CATL LFP), accessed 2026-10-24"
                 },
                 "E": {
-                  "status": "unconfirmed",
-                  "note": "kWh/km not sourced; no sourced range to derive from"
+                  "status": "derived",
+                  "source": "Derived 100.46 kWh / 350 km combined = 0.2870 kWh/km (EVhubs SG sourced battery and combined range)"
                 },
                 "G": {
-                  "status": "unconfirmed",
-                  "note": "On-board AC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (AC 20 kW), accessed 2026-10-24"
                 },
                 "H": {
-                  "status": "unconfirmed",
-                  "note": "DC charge kW not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (DC 120 kW), accessed 2026-10-24"
                 },
                 "I": {
                   "status": "unconfirmed",
-                  "note": "SGD list price not sourced"
+                  "note": "SGD list price not sourced (EVhubs publishes no price)"
                 },
                 "J": {
-                  "status": "unconfirmed",
-                  "note": "Range not sourced"
+                  "status": "sourced",
+                  "source": "EVhubs SG Qingling EQ2 (350 km combined), accessed 2026-10-24"
                 },
                 "P": {
                   "status": "unconfirmed",
