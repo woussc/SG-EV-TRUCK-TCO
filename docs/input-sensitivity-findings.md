@@ -9,7 +9,7 @@ A one-at-a-time (tornado) sweep against the fully-specified illustrative scenari
 1. **Total economic TCO** of the best EV plan (the account-size / headline number).
 2. **Saving % vs Keep ICE** of the best EV plan (the adoption-case number).
 
-**Baseline:** best EV plan **PLAN_B**, Total economic TCO **S$1,147,129**, Saving % **22.81%**, Keep ICE total **S$1,486,117**.
+**Baseline:** best EV plan **PLAN_B**, Total economic TCO **S$1,047,412**, Saving % **29.52%**, Keep ICE total **S$1,486,117**.
 
 ## Impact ranking (highest mover first)
 
@@ -17,23 +17,23 @@ Ranked by a blended business-impact score = the larger of (a) Total-TCO swing as
 
 | Rank | Driver | Group | Perturbation | Total TCO swing (S$) | Saving % swing (pp) | Impact % |
 |---:|---|---|---|---:|---:|---:|
-| 1 | EV purchase quote (per EV truck) | Vehicle | +/-10% | 164,000 | 11.035 | 14.30 |
-| 2 | New ICE purchase quote | Vehicle | +/-10% | 0 | 6.243 | 6.24 |
-| 3 | ICE fuel consumption (L/km) | Energy | +/-10% | 0 | 5.591 | 5.59 |
-| 4 | Commercial diesel price (SGD/L) | Energy | +/-10% | 0 | 5.279 | 5.28 |
-| 5 | Diesel-price growth (+/-0.03/yr) | Finance | +/-0.03 | 0 | 3.676 | 3.68 |
-| 6 | Work km/day (per truck) | Duty | +/-10% | 30,686 | 3.486 | 3.49 |
-| 7 | Days/year worked | Duty | +/-10% | 34,686 | 3.217 | 3.22 |
-| 8 | EV insurance (SGD/yr) | OpCost | +/-10% | 28,000 | 1.884 | 2.44 |
-| 9 | Depot electricity (SGD/kWh) | Energy | +/-10% | 25,955 | 1.747 | 2.26 |
-| 10 | EV energy use (battery kWh/km) | Energy | +/-10% | 25,955 | 1.747 | 2.26 |
-| 11 | Current market value (per truck) | Vehicle | +/-10% | 0 | 1.538 | 1.54 |
-| 12 | ICE insurance (SGD/yr) | OpCost | +/-10% | 0 | 1.454 | 1.45 |
-| 13 | Charger equipment price (per charger) | Site | +/-10% | 6,400 | 0.431 | 0.56 |
-| 14 | Old ICE maintenance (SGD/yr) | OpCost | +/-10% | 0 | 0.399 | 0.40 |
-| 15 | Maintenance per charger (SGD/yr) | Site | +/-10% | 3,200 | 0.215 | 0.28 |
-| 16 | ICE tyres (SGD/yr) | OpCost | +/-10% | 0 | 0.249 | 0.25 |
-| 17 | ICE road tax (SGD/yr) | OpCost | +/-10% | 0 | 0.218 | 0.22 |
+| 1 | EV purchase quote (per EV truck) | Vehicle | +/-10% | 154,400 | 10.389 | 14.74 |
+| 2 | New ICE purchase quote | Vehicle | +/-10% | 0 | 5.700 | 5.70 |
+| 3 | ICE fuel consumption (L/km) | Energy | +/-10% | 0 | 5.105 | 5.11 |
+| 4 | Commercial diesel price (SGD/L) | Energy | +/-10% | 0 | 4.820 | 4.82 |
+| 5 | Work km/day (per truck) | Duty | +/-10% | 20,342 | 3.701 | 3.70 |
+| 6 | Days/year worked | Duty | +/-10% | 24,342 | 3.431 | 3.43 |
+| 7 | Diesel-price growth (+/-0.03/yr) | Finance | +/-0.03 | 0 | 3.356 | 3.36 |
+| 8 | EV insurance (SGD/yr) | OpCost | +/-10% | 28,000 | 1.884 | 2.67 |
+| 9 | Depot electricity (SGD/kWh) | Energy | +/-10% | 17,146 | 1.154 | 1.64 |
+| 10 | EV energy use (battery kWh/km) | Energy | +/-10% | 17,146 | 1.154 | 1.64 |
+| 11 | Current market value (per truck) | Vehicle | +/-10% | 0 | 1.404 | 1.40 |
+| 12 | ICE insurance (SGD/yr) | OpCost | +/-10% | 0 | 1.328 | 1.33 |
+| 13 | Charger equipment price (per charger) | Site | +/-10% | 6,400 | 0.431 | 0.61 |
+| 14 | Old ICE maintenance (SGD/yr) | OpCost | +/-10% | 0 | 0.364 | 0.36 |
+| 15 | Maintenance per charger (SGD/yr) | Site | +/-10% | 3,200 | 0.215 | 0.31 |
+| 16 | ICE tyres (SGD/yr) | OpCost | +/-10% | 0 | 0.228 | 0.23 |
+| 17 | ICE road tax (SGD/yr) | OpCost | +/-10% | 0 | 0.199 | 0.20 |
 | 18 | Vehicle grant (+/-S$15,000 per EV) | Incentive | +/-15000 | 0 | 0.000 | 0.00 |
 | 19 | COE months left (replacement timing) | Duty | +/-10% | 0 | n.a. | 0.00 |
 | 20 | Installed chargers (site scale) | Site | +/-10% | n.a. | n.a. | 0.00 |

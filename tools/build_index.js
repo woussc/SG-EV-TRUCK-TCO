@@ -31,15 +31,22 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '..');
 const enginePath = resolve(repoRoot, 'src/engine.js');
 const portfolioPath = resolve(repoRoot, 'src/portfolio_fit.js');
+const routingPath = resolve(repoRoot, 'src/routing_sim.js');
+const financePath = resolve(repoRoot, 'src/finance.js');
 const fixturePath = resolve(repoRoot, 'tools/fixtures/demo_case.json');
 const seedsPath = resolve(repoRoot, 'tools/fixtures/prospect_seeds.json');
 const chargingPath = resolve(repoRoot, 'tools/fixtures/charging_context.json');
+const chargingLocationsPath = resolve(repoRoot, 'tools/fixtures/charging_locations.json');
 const indexPath = resolve(repoRoot, 'index.html');
 
 const engineSrc = readFileSync(enginePath, 'utf8');
 const engineHash = createHash('sha256').update(engineSrc).digest('hex');
 const portfolioSrc = readFileSync(portfolioPath, 'utf8');
 const portfolioHash = createHash('sha256').update(portfolioSrc).digest('hex');
+const routingSrc = readFileSync(routingPath, 'utf8');
+const routingHash = createHash('sha256').update(routingSrc).digest('hex');
+const financeSrc = readFileSync(financePath, 'utf8');
+const financeHash = createHash('sha256').update(financeSrc).digest('hex');
 const fixture = JSON.parse(readFileSync(fixturePath, 'utf8'));
 const seeds = JSON.parse(readFileSync(seedsPath, 'utf8'));
 // Compact charging aggregates derived at build time by tools/build_charging_data.mjs
@@ -48,6 +55,13 @@ const seeds = JSON.parse(readFileSync(seedsPath, 'utf8'));
 // `node tools/build_charging_data.mjs` before this build if the snapshot changed.
 const chargingRaw = readFileSync(chargingPath, 'utf8');
 const charging = JSON.parse(chargingRaw);
+// Compact LOCATION-LEVEL charger subset (rounded coords + plug/operator/price
+// summary) derived at build time by tools/build_charging_data.mjs. Consumed by
+// the client-side routing simulator (src/routing_sim.js). Still NOT the raw
+// 6.3MB snapshot - a small bundled subset, inlined so the page makes NO runtime
+// network / map-API call. Re-generate with `node tools/build_charging_data.mjs`.
+const chargingLocationsRaw = readFileSync(chargingLocationsPath, 'utf8');
+const chargingLocations = JSON.parse(chargingLocationsRaw);
 
 // Strip ES-module syntax so the engine runs inside a classic <script>.
 // 1) `export const NA` / `export function foo` -> drop the leading `export `.
@@ -77,6 +91,32 @@ inlinePortfolio += '\nwindow.HSPortfolioFit = { ' +
   'indicativeCost: indicativeCost, rankModelsByCost: rankModelsByCost, ' +
   'matchBestModel: matchBestModel, matchFleetToPortfolio: matchFleetToPortfolio };\n';
 
+// Strip ES-module syntax from the ADDITIVE routing-sim module the same way and
+// expose its API on a window namespace. Like the portfolio module, this is NEW
+// computation layered on top of the frozen engine: it does NOT import or call
+// the fleet-compute engine, makes NO network call, and reads only the bundled
+// window.HSChargingLocations subset.
+let inlineRouting = routingSrc
+  .replace(/^export\s+default\s+\{[\s\S]*?\};\s*$/m, '')
+  .replace(/^export\s+/gm, '');
+inlineRouting += '\nwindow.HSRoutingSim = { ' +
+  'haversineKm: haversineKm, nearestChargers: nearestChargers, ' +
+  'chargeTimeHours: chargeTimeHours, headlinePlug: headlinePlug, ' +
+  'validateLocationsDoc: validateLocationsDoc, ' +
+  'EARTH_RADIUS_KM: EARTH_RADIUS_KM, SIM_DEFAULTS: SIM_DEFAULTS };\n';
+
+// Strip ES-module syntax from the ADDITIVE, OPT-IN finance / amortisation
+// module the same way and expose its API on a window namespace. This is an
+// ILLUSTRATIVE financing layer: it does NOT import, call, or reference
+// computeFleet / scoreProspect, it makes NO network call, and it changes NO
+// economic number -- the economic TCO excludes loans/interest by design.
+let inlineFinance = financeSrc
+  .replace(/^export\s+default\s+\{[\s\S]*?\};\s*$/m, '')
+  .replace(/^export\s+/gm, '');
+inlineFinance += '\nwindow.HSFinance = { ' +
+  'amortise: amortise, financedAmount: financedAmount, ' +
+  'summarise: summarise, naResult: naResult };\n';
+
 const engineBlock =
   `<!-- ENGINE:BEGIN  generated from src/engine.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<!-- src/engine.js SHA-256: ${engineHash} -->\n` +
@@ -99,10 +139,27 @@ const portfolioBlock =
   `<script>\n${inlinePortfolio}</script>\n` +
   `<!-- PORTFOLIO:END -->`;
 
+const routingBlock =
+  `<!-- ROUTING:BEGIN  generated from src/routing_sim.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<!-- src/routing_sim.js SHA-256: ${routingHash} -->\n` +
+  `<script>\n${inlineRouting}</script>\n` +
+  `<!-- ROUTING:END -->`;
+
+const financeBlock =
+  `<!-- FINANCE:BEGIN  generated from src/finance.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<!-- src/finance.js SHA-256: ${financeHash} -->\n` +
+  `<script>\n${inlineFinance}</script>\n` +
+  `<!-- FINANCE:END -->`;
+
 const chargingBlock =
   `<!-- CHARGING:BEGIN  generated from tools/fixtures/charging_context.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<script>\nwindow.HSChargingContext = ${JSON.stringify(charging)};\n</script>\n` +
   `<!-- CHARGING:END -->`;
+
+const chargingLocationsBlock =
+  `<!-- CHARGING_LOCATIONS:BEGIN  generated from tools/fixtures/charging_locations.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<script>\nwindow.HSChargingLocations = ${JSON.stringify(chargingLocations)};\n</script>\n` +
+  `<!-- CHARGING_LOCATIONS:END -->`;
 
 let html = readFileSync(indexPath, 'utf8');
 
@@ -151,6 +208,27 @@ html = replaceBlock(
   'CHARGING',
   chargingBlock,
 );
+html = replaceBlock(
+  html,
+  /<!-- ROUTING:BEGIN[\s\S]*?-->/,
+  /<!-- ROUTING:END -->/,
+  'ROUTING',
+  routingBlock,
+);
+html = replaceBlock(
+  html,
+  /<!-- CHARGING_LOCATIONS:BEGIN[\s\S]*?-->/,
+  /<!-- CHARGING_LOCATIONS:END -->/,
+  'CHARGING_LOCATIONS',
+  chargingLocationsBlock,
+);
+html = replaceBlock(
+  html,
+  /<!-- FINANCE:BEGIN[\s\S]*?-->/,
+  /<!-- FINANCE:END -->/,
+  'FINANCE',
+  financeBlock,
+);
 
 writeFileSync(indexPath, html);
 console.log(`index.html regenerated.`);
@@ -159,3 +237,6 @@ console.log(`  portfolio: src/portfolio_fit.js (${portfolioSrc.length} bytes, sh
 console.log(`  demo    : tools/fixtures/demo_case.json inputs embedded`);
 console.log(`  prospects: tools/fixtures/prospect_seeds.json (${seeds.cases.length} seed cases) embedded`);
 console.log(`  charging: tools/fixtures/charging_context.json (${(Buffer.byteLength(chargingRaw) / 1024).toFixed(2)} KB compact aggregates) embedded`);
+console.log(`  routing : src/routing_sim.js (${routingSrc.length} bytes, sha256 ${routingHash.slice(0, 16)}...)`);
+console.log(`  finance : src/finance.js (${financeSrc.length} bytes, sha256 ${financeHash.slice(0, 16)}...)`);
+console.log(`  locations: tools/fixtures/charging_locations.json (${(Buffer.byteLength(chargingLocationsRaw) / 1024).toFixed(2)} KB location subset) embedded`);

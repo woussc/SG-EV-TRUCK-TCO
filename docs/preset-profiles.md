@@ -15,9 +15,16 @@ note) that show the full range of outcomes a client visit can produce, from a
 confirmed win to "EV is not a fit right now" to a fresh blank slate.
 
 `best`, `mid` and `bad` are all derived from the same fully-specified
-**Evergreen** baseline (the sensitivity-sweep anchor: best EV plan PLAN_B,
-Total economic TCO **S$1,147,129**, Saving **22.81%** vs Keep ICE
-**S$1,486,117**). `mid` and `bad` tune only the high-impact drivers identified in
+**Evergreen** baseline. The illustrative EV model is the **SRM T3EV+** (products
+row 11: 1,660 kg payload, 53.58 kWh battery, 0.1786 kWh/km, 11 kW AC / 55 kW DC
+charge power, catalogue base S$66,800, 300 km range) - the nimble SRM variant
+whose 11 kW AC / 55 kW DC charge power fits the majority of the Singapore
+public-charging network. The best case anchors at best EV plan PLAN_B, Total
+economic TCO **S$1,047,412**, Saving **29.52%** vs Keep ICE **S$1,486,117**. The
+EV all-in quote overrides are re-based to the SRM catalogue: best uses
+**S$193,000** (catalogue base col I 66,800 + the fallback EV COE component
+oc row 57 = 93,000 + ~S$33,200 body/registration). `mid` and `bad` tune only the
+high-impact drivers identified in
 [`docs/input-sensitivity-findings.md`](input-sensitivity-findings.md):
 
 | Rank | Driver | Where | Used by |
@@ -31,13 +38,13 @@ Total economic TCO **S$1,147,129**, Saving **22.81%** vs Keep ICE
 
 | Preset | Best EV plan | Total economic TCO | Saving vs Keep ICE | Saving % | Gate | Tuning vs best |
 |---|---|---:|---:|---:|---|---|
-| **best** | Plan B | S$1,147,129 | +S$338,988 | +22.81% | passes | none (deep copy of Evergreen) |
-| **mid** | Plan B | S$1,263,882 | +S$75,221 | +5.62% | passes | EV quote S$240,000; diesel S$2.10/L; km/day -10%; days/yr -5% |
-| **bad** | Plan B | S$1,407,129 | -S$63,136 | -4.70% | passes | EV quote S$270,000; diesel S$1.80/L |
+| **best** | Plan B | S$1,047,412 | +S$438,705 | +29.52% | passes | none (deep copy of Evergreen, SRM T3EV+ @ S$193,000) |
+| **mid** | Plan B | S$1,195,664 | +S$143,440 | +10.71% | passes | EV quote S$234,000; diesel S$2.10/L; km/day -10%; days/yr -5% |
+| **bad** | Plan B | S$1,411,412 | -S$67,418 | -5.02% | passes | EV quote S$284,000; diesel S$1.80/L |
 | **blank** | n.a. | n.a. | n.a. | n.a. | no EV plan (honest empty) | all gate-critical values left blank/n.a. (NOT zero) |
 
-Ordering holds as intended: **best.saving (+338,988) > mid.saving (+75,221) >
-bad.saving (-63,136)**. `mid` is marginal but strictly positive; `bad` is a
+Ordering holds as intended: **best.saving (+438,705) > mid.saving (+143,440) >
+bad.saving (-67,418)**. `mid` is marginal but strictly positive; `bad` is a
 negative saving scored honestly (the gates still pass, so it is an honest "EV is
 not a fit right now", not a crash); `blank` yields n.a. with no error.
 

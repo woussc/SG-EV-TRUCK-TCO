@@ -166,7 +166,7 @@ Replace the current two-panel "edit on the left, everything on the right" page (
 **Stage 3 - TCO calculator (the money screen)**
 ```
 +--- Decision (CEO one-liner) --------------------------------------------+
-| Best plan: Plan B   Saving 22.8% (~S$338,988) vs Keep ICE               |
+| Best plan: Plan B   Saving 29.5% (~S$438,705) vs Keep ICE               |
 | Day-0 funding: S$...   Cost/productive km: S$0.77   ● confirmed         |
 +-------------------------------------------------------------------------+
 | Four-path table (Keep ICE / All-new ICE / Plan A / Plan B)  + charts    |

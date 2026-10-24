@@ -28,14 +28,20 @@ Cases:
                      n.a. honestly until the minimum critical inputs are added.
 
 NONE of these are real named customers. Every figure is a realistic
-Singapore-market illustration. The best/mid/bad numbers are derived from the
-previously tabulated model behaviour (the illustrative fully-specified baseline
-and the sensitivity sweep in docs/input-sensitivity-findings.md): best EV plan
-PLAN_B, Total economic TCO S$1,147,129, Saving 22.81%, Keep ICE total
-S$1,486,117. The high-
-impact drivers tuned for mid/bad are, in rank order, the EV purchase quote
-(rank 1, ~14% lever), the commercial diesel price (rank 4) and the duty
-intensity (work km/day + days/year, ranks 6-7).
+Singapore-market illustration. The illustrative EV model is the SRM T3EV+
+(products row 11: payload 1660 kg, battery 53.58 kWh, 0.1786 kWh/km, 11 kW AC /
+55 kW DC, catalogue base quote S$66,800, range 300 km) - the nimble SRM variant
+whose 11 kW AC / 55 kW DC charge power matches the majority of the Singapore
+public-charging network. The best/mid/bad numbers are engine-verified by
+tools/check_presets.mjs on the SRM-based inputs: best EV plan PLAN_B, Total
+economic TCO S$1,047,412, Saving 29.52%, Keep ICE total S$1,486,117. The EV
+all-in quote overrides are re-based to the SRM catalogue the usual way: the
+best case uses S$193,000 (catalogue base col I 66,800 + the fallback EV COE
+acquisition component oc row 57 = 93,000 + ~S$33,200 body/registration), and
+mid/bad raise that quote RELATIVE to the SRM base. The high-impact drivers tuned
+for mid/bad are, in rank order, the EV purchase quote (rank 1, ~14% lever), the
+commercial diesel price (rank 4) and the duty intensity (work km/day +
+days/year, ranks 6-7).
 
 tools/html_scenarios.py is still used by tools/validate.py to reconstruct the
 Yong Wen / Venus reference-HTML parity figures INDEPENDENTLY of this file; it is
@@ -90,7 +96,20 @@ def load_demo():
 # siteCompleteness + siteAccessCheck (itemised quote + power/window gate +
 # evidence toggles), savingClaimStatus (Customer data mode + confirmed prices).
 
-ILLUS_MODEL = "ChengLong L2EV"  # Products row 9: AC 22 kW, DC 120 kW, 86.55 kWh.
+ILLUS_MODEL = "SRM T3EV+"  # Products row 11: AC 11 kW, DC 55 kW, 53.58 kWh.
+# SRM variant fit (why SRM T3EV+ over SRM T3EV):
+#   * Payload: col C = 1660 kg >= the preset peak cargo of 1200 kg, giving
+#     100 kg more headroom than the SRM T3EV (1560 kg). The nimble SRM class
+#     fits the majority of Singapore light-commercial duty cycles.
+#   * Range: col J = 300 km >= the preset peak route of 150 km with ample
+#     margin (shared with SRM T3EV).
+#   * Charge power: col G = 11 kW AC / col H = 55 kW DC, which matches the
+#     dominant Singapore public network (slow 11 kW AC + mid-power ~50-60 kW
+#     DC), so the depot charger screen (AC 11 kW) and the public-charging
+#     routing story stay honest for the same hardware.
+#   * Energy: col E = 0.1786 kWh/km, col D = 53.58 kWh battery flow straight
+#     from the catalogue (replacement cols E/F left blank -> product default),
+#     so the engine computes from SRM-consistent inputs (no hardcoded energy).
 
 # Per-truck register (id, coe_months_left, market_value_now, scrap,
 #   straight_line_per_month, keep_year10_value, ev_year10_value).
@@ -135,7 +154,7 @@ ILLUS_EC = {
     11: 0.75,     # public charging SGD/kWh
     12: 0,        # public electricity share -> depot-only
     13: "Existing depot",
-    15: "AC22",   # charger type label (informational)
+    15: "AC11",   # charger type label (informational) - 11kW AC to match SRM
     16: 4,        # installed chargers (units)
     17: 4,        # usable truck plugs
     18: 8000,     # charger equipment price SGD/charger
@@ -173,7 +192,7 @@ ILLUS_EC = {
     53: "Yes",    # shared schedule confirmed
     54: "Verified",  # site cost evidence
     55: "Yes",    # public truck access (not used; depot-only)
-    56: 22,       # charger rated input power kW/charger (AC22)
+    56: 11,       # charger rated input power kW/charger (AC11, matches SRM G=11kW)
 }
 
 
@@ -224,12 +243,13 @@ def _illus_repl_rows():
             rows.append({
                 "_row": rr, "A": tid, "B": ILLUS_MODEL,
                 "C": 150000,           # new ICE all-in quote
-                "D": 205000,           # EV all-in override (gross)
+                "D": 193000,           # EV all-in override (gross), SRM-based
                 "E": "", "F": "",      # use product battery / intensity defaults
                 "G": "Battery",
                 "H": 2000,             # approved payload (>= peak load 1200)
                 "I": "Yes",            # body fits (confirmed)
-                "J": 22, "K": "AC", "L": 22,  # depot avg kW, AC mode, plug kW
+                "J": 11, "K": "AC", "L": 11,  # depot avg kW, AC mode, plug kW
+                #   (11 kW AC to match the SRM T3EV+ onboard charger G=11kW)
                 "M": "",               # keep retire override (default COE expiry)
                 "N": keep_y10,         # keep terminal at year 10
                 "O": "EV", "P": "", "Q": keep_y10,   # Plan A = EV at COE expiry
@@ -268,20 +288,20 @@ def build_illustrative(demo_inputs):
 # ---------------------------------------------------------------------------
 # Illustrative best / mid / bad / blank presets
 # ---------------------------------------------------------------------------
-# best = a deep copy of the fully-specified illustrative input set. Its best EV
-#   plan is PLAN_B with a strong positive saving (Total ~S$1,147,129, Saving
-#   ~22.81% vs Keep ICE ~S$1,486,117, matching the sensitivity baseline).
+# best = a deep copy of the fully-specified illustrative input set (EV model =
+#   SRM T3EV+). Its best EV plan is PLAN_B with a strong positive saving (Total
+#   ~S$1,047,412, Saving ~29.52% vs Keep ICE ~S$1,486,117).
 #
 # mid / bad are the SAME input set with the high-impact drivers tuned (ranked by
 # docs/input-sensitivity-findings.md): EV purchase quote (rank 1), commercial
 # diesel price (rank 4) and duty intensity (work km/day + days/year, ranks 6-7).
 # The magnitudes below are engine-verified by tools/check_presets.mjs:
-#   mid -> best EV plan PLAN_B, Total ~S$1,263,882, Saving ~+5.62% (marginal).
-#   bad -> best EV plan PLAN_B, Total ~S$1,407,129, Saving ~-4.70% (not a fit).
+#   mid -> best EV plan PLAN_B, Total ~S$1,195,664, Saving ~+10.71% (marginal).
+#   bad -> best EV plan PLAN_B, Total ~S$1,411,412, Saving ~-5.02% (not a fit).
 
 # (ev_quote, diesel_price_sgd_l, km_factor, days_factor)
-MID_TUNE = {"ev_quote": 240000, "diesel": 2.10, "km_factor": 0.9, "days_factor": 0.95}
-BAD_TUNE = {"ev_quote": 270000, "diesel": 1.80, "km_factor": 1.0, "days_factor": 1.0}
+MID_TUNE = {"ev_quote": 234000, "diesel": 2.10, "km_factor": 0.9, "days_factor": 0.95}
+BAD_TUNE = {"ev_quote": 284000, "diesel": 1.80, "km_factor": 1.0, "days_factor": 1.0}
 
 BLANK_TRUCKS = ["NEW-1", "NEW-2", "NEW-3", "NEW-4"]
 
@@ -497,9 +517,11 @@ def main():
             "Singapore-market figures: vehicle service/evidence 'Within entered "
             "limits', charging-site 'Complete' with an itemised depot quote, "
             "'Within entered site limits', a numeric Total economic TCO and a "
-            "positive Saving vs Keep ICE. Its best EV plan is PLAN_B with a "
-            "strong positive saving: Total economic TCO ~S$1,147,129, Saving "
-            "~22.81% vs Keep ICE ~S$1,486,117 (the sensitivity-sweep baseline). "
+            "positive Saving vs Keep ICE. The illustrative EV model is the SRM "
+            "T3EV+ (nimble SRM variant, 11 kW AC / 55 kW DC, 53.58 kWh battery, "
+            "0.1786 kWh/km, catalogue base S$66,800). Its best EV plan is PLAN_B "
+            "with a strong positive saving: Total economic TCO ~S$1,047,412, "
+            "Saving ~29.52% vs Keep ICE ~S$1,486,117. "
             "This is what a confirmed win looks like once the charging-site "
             "quote and verification evidence are supplied, in contrast to the "
             "illustrative mid/bad/blank presets."
@@ -513,14 +535,14 @@ def main():
         "name": "Mid case (illustrative, marginal saving)",
         "evidence": "illustrative",
         "note": (
-            "ILLUSTRATIVE preset, NOT a real customer. The best-case input set "
-            "with the high-impact drivers tuned per docs/input-sensitivity-"
-            "findings.md: EV purchase quote raised to S$240,000 (rank 1), "
-            "commercial diesel price lowered to S$2.10/L (rank 4) and duty "
-            "intensity trimmed (work km/day -10%, days/year -5%, ranks 6-7). All "
-            "gates still pass; the best EV plan (PLAN_B) keeps a numeric Total "
-            "economic TCO ~S$1,263,882 but the Saving narrows to ~+5.62% - still "
-            "worth it, but marginal."
+            "ILLUSTRATIVE preset, NOT a real customer. The best-case SRM T3EV+ "
+            "input set with the high-impact drivers tuned per docs/input-"
+            "sensitivity-findings.md: EV purchase quote raised to S$234,000 "
+            "(rank 1), commercial diesel price lowered to S$2.10/L (rank 4) and "
+            "duty intensity trimmed (work km/day -10%, days/year -5%, ranks "
+            "6-7). All gates still pass; the best EV plan (PLAN_B) keeps a "
+            "numeric Total economic TCO ~S$1,195,664 but the Saving narrows to "
+            "~+10.71% - still worth it, but marginal."
         ),
         "inputs": tune_illustrative(illustrative, MID_TUNE),
     })
@@ -531,13 +553,13 @@ def main():
         "name": "Bad case (illustrative, EV not a fit)",
         "evidence": "illustrative",
         "note": (
-            "ILLUSTRATIVE preset, NOT a real customer. The same input set tuned "
-            "further against the EV: EV purchase quote pushed to S$270,000 and "
-            "commercial diesel price dropped to S$1.80/L. The gates still pass "
-            "(the figures are honest and complete) but the best EV plan (PLAN_B) "
-            "now costs MORE than Keep ICE: Total economic TCO ~S$1,407,129, a "
-            "Saving of ~-4.70% - an honest 'EV is not a fit right now' outcome, "
-            "not a crash and not a hidden failure."
+            "ILLUSTRATIVE preset, NOT a real customer. The same SRM T3EV+ input "
+            "set tuned further against the EV: EV purchase quote pushed to "
+            "S$284,000 and commercial diesel price dropped to S$1.80/L. The "
+            "gates still pass (the figures are honest and complete) but the best "
+            "EV plan (PLAN_B) now costs MORE than Keep ICE: Total economic TCO "
+            "~S$1,411,412, a Saving of ~-5.02% - an honest 'EV is not a fit "
+            "right now' outcome, not a crash and not a hidden failure."
         ),
         "inputs": tune_illustrative(illustrative, BAD_TUNE),
     })

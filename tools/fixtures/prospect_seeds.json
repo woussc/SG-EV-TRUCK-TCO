@@ -7539,7 +7539,7 @@
       "id": "best",
       "name": "Best case (illustrative, fully specified, gates pass)",
       "evidence": "illustrative",
-      "note": "ILLUSTRATIVE confirmed-win demonstrator, NOT a real customer. A fully-specified, gate-passing scenario built from realistic Singapore-market figures: vehicle service/evidence 'Within entered limits', charging-site 'Complete' with an itemised depot quote, 'Within entered site limits', a numeric Total economic TCO and a positive Saving vs Keep ICE. Its best EV plan is PLAN_B with a strong positive saving: Total economic TCO ~S$1,147,129, Saving ~22.81% vs Keep ICE ~S$1,486,117 (the sensitivity-sweep baseline). This is what a confirmed win looks like once the charging-site quote and verification evidence are supplied, in contrast to the illustrative mid/bad/blank presets.",
+      "note": "ILLUSTRATIVE confirmed-win demonstrator, NOT a real customer. A fully-specified, gate-passing scenario built from realistic Singapore-market figures: vehicle service/evidence 'Within entered limits', charging-site 'Complete' with an itemised depot quote, 'Within entered site limits', a numeric Total economic TCO and a positive Saving vs Keep ICE. The illustrative EV model is the SRM T3EV+ (nimble SRM variant, 11 kW AC / 55 kW DC, 53.58 kWh battery, 0.1786 kWh/km, catalogue base S$66,800). Its best EV plan is PLAN_B with a strong positive saving: Total economic TCO ~S$1,047,412, Saving ~29.52% vs Keep ICE ~S$1,486,117. This is what a confirmed win looks like once the charging-site quote and verification evidence are supplied, in contrast to the illustrative mid/bad/blank presets.",
       "inputs": {
         "fleet_register": {
           "range": "A7:S106",
@@ -8120,17 +8120,17 @@
             {
               "_row": 7,
               "A": "EL-01",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 205000,
+              "D": 193000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 22000,
               "O": "EV",
@@ -8155,17 +8155,17 @@
             {
               "_row": 8,
               "A": "EL-02",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 205000,
+              "D": 193000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 30000,
               "O": "EV",
@@ -8190,17 +8190,17 @@
             {
               "_row": 9,
               "A": "EL-03",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 205000,
+              "D": 193000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 38000,
               "O": "EV",
@@ -8225,17 +8225,17 @@
             {
               "_row": 10,
               "A": "EL-04",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 205000,
+              "D": 193000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 46000,
               "O": "EV",
@@ -8260,7 +8260,7 @@
             {
               "_row": 11,
               "A": "X005",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8270,7 +8270,7 @@
             {
               "_row": 12,
               "A": "X006",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8280,7 +8280,7 @@
             {
               "_row": 13,
               "A": "X007",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8290,7 +8290,7 @@
             {
               "_row": 14,
               "A": "X008",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8300,7 +8300,7 @@
             {
               "_row": 15,
               "A": "X009",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8310,7 +8310,7 @@
             {
               "_row": 16,
               "A": "X010",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8320,7 +8320,7 @@
             {
               "_row": 17,
               "A": "X011",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8330,7 +8330,7 @@
             {
               "_row": 18,
               "A": "X012",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8340,7 +8340,7 @@
             {
               "_row": 19,
               "A": "X013",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8350,7 +8350,7 @@
             {
               "_row": 20,
               "A": "X014",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8360,7 +8360,7 @@
             {
               "_row": 21,
               "A": "X015",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8370,7 +8370,7 @@
             {
               "_row": 22,
               "A": "X016",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8380,7 +8380,7 @@
             {
               "_row": 23,
               "A": "X017",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8390,7 +8390,7 @@
             {
               "_row": 24,
               "A": "X018",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8400,7 +8400,7 @@
             {
               "_row": 25,
               "A": "X019",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8410,7 +8410,7 @@
             {
               "_row": 26,
               "A": "X020",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8420,7 +8420,7 @@
             {
               "_row": 27,
               "A": "X021",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8430,7 +8430,7 @@
             {
               "_row": 28,
               "A": "X022",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8440,7 +8440,7 @@
             {
               "_row": 29,
               "A": "X023",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8450,7 +8450,7 @@
             {
               "_row": 30,
               "A": "X024",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8460,7 +8460,7 @@
             {
               "_row": 31,
               "A": "X025",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8470,7 +8470,7 @@
             {
               "_row": 32,
               "A": "X026",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8480,7 +8480,7 @@
             {
               "_row": 33,
               "A": "X027",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8490,7 +8490,7 @@
             {
               "_row": 34,
               "A": "X028",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8500,7 +8500,7 @@
             {
               "_row": 35,
               "A": "X029",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8510,7 +8510,7 @@
             {
               "_row": 36,
               "A": "X030",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8520,7 +8520,7 @@
             {
               "_row": 37,
               "A": "X031",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8530,7 +8530,7 @@
             {
               "_row": 38,
               "A": "X032",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8540,7 +8540,7 @@
             {
               "_row": 39,
               "A": "X033",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8550,7 +8550,7 @@
             {
               "_row": 40,
               "A": "X034",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8560,7 +8560,7 @@
             {
               "_row": 41,
               "A": "X035",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8570,7 +8570,7 @@
             {
               "_row": 42,
               "A": "X036",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8580,7 +8580,7 @@
             {
               "_row": 43,
               "A": "X037",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8590,7 +8590,7 @@
             {
               "_row": 44,
               "A": "X038",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8600,7 +8600,7 @@
             {
               "_row": 45,
               "A": "X039",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8610,7 +8610,7 @@
             {
               "_row": 46,
               "A": "X040",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8620,7 +8620,7 @@
             {
               "_row": 47,
               "A": "X041",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8630,7 +8630,7 @@
             {
               "_row": 48,
               "A": "X042",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8640,7 +8640,7 @@
             {
               "_row": 49,
               "A": "X043",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8650,7 +8650,7 @@
             {
               "_row": 50,
               "A": "X044",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8660,7 +8660,7 @@
             {
               "_row": 51,
               "A": "X045",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8670,7 +8670,7 @@
             {
               "_row": 52,
               "A": "X046",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8680,7 +8680,7 @@
             {
               "_row": 53,
               "A": "X047",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8690,7 +8690,7 @@
             {
               "_row": 54,
               "A": "X048",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8700,7 +8700,7 @@
             {
               "_row": 55,
               "A": "X049",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8710,7 +8710,7 @@
             {
               "_row": 56,
               "A": "X050",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8720,7 +8720,7 @@
             {
               "_row": 57,
               "A": "X051",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8730,7 +8730,7 @@
             {
               "_row": 58,
               "A": "X052",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8740,7 +8740,7 @@
             {
               "_row": 59,
               "A": "X053",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8750,7 +8750,7 @@
             {
               "_row": 60,
               "A": "X054",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8760,7 +8760,7 @@
             {
               "_row": 61,
               "A": "X055",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8770,7 +8770,7 @@
             {
               "_row": 62,
               "A": "X056",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8780,7 +8780,7 @@
             {
               "_row": 63,
               "A": "X057",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8790,7 +8790,7 @@
             {
               "_row": 64,
               "A": "X058",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8800,7 +8800,7 @@
             {
               "_row": 65,
               "A": "X059",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8810,7 +8810,7 @@
             {
               "_row": 66,
               "A": "X060",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8820,7 +8820,7 @@
             {
               "_row": 67,
               "A": "X061",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8830,7 +8830,7 @@
             {
               "_row": 68,
               "A": "X062",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8840,7 +8840,7 @@
             {
               "_row": 69,
               "A": "X063",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8850,7 +8850,7 @@
             {
               "_row": 70,
               "A": "X064",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8860,7 +8860,7 @@
             {
               "_row": 71,
               "A": "X065",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8870,7 +8870,7 @@
             {
               "_row": 72,
               "A": "X066",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8880,7 +8880,7 @@
             {
               "_row": 73,
               "A": "X067",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8890,7 +8890,7 @@
             {
               "_row": 74,
               "A": "X068",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8900,7 +8900,7 @@
             {
               "_row": 75,
               "A": "X069",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8910,7 +8910,7 @@
             {
               "_row": 76,
               "A": "X070",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8920,7 +8920,7 @@
             {
               "_row": 77,
               "A": "X071",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8930,7 +8930,7 @@
             {
               "_row": 78,
               "A": "X072",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8940,7 +8940,7 @@
             {
               "_row": 79,
               "A": "X073",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8950,7 +8950,7 @@
             {
               "_row": 80,
               "A": "X074",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8960,7 +8960,7 @@
             {
               "_row": 81,
               "A": "X075",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8970,7 +8970,7 @@
             {
               "_row": 82,
               "A": "X076",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8980,7 +8980,7 @@
             {
               "_row": 83,
               "A": "X077",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -8990,7 +8990,7 @@
             {
               "_row": 84,
               "A": "X078",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9000,7 +9000,7 @@
             {
               "_row": 85,
               "A": "X079",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9010,7 +9010,7 @@
             {
               "_row": 86,
               "A": "X080",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9020,7 +9020,7 @@
             {
               "_row": 87,
               "A": "X081",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9030,7 +9030,7 @@
             {
               "_row": 88,
               "A": "X082",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9040,7 +9040,7 @@
             {
               "_row": 89,
               "A": "X083",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9050,7 +9050,7 @@
             {
               "_row": 90,
               "A": "X084",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9060,7 +9060,7 @@
             {
               "_row": 91,
               "A": "X085",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9070,7 +9070,7 @@
             {
               "_row": 92,
               "A": "X086",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9080,7 +9080,7 @@
             {
               "_row": 93,
               "A": "X087",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9090,7 +9090,7 @@
             {
               "_row": 94,
               "A": "X088",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9100,7 +9100,7 @@
             {
               "_row": 95,
               "A": "X089",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9110,7 +9110,7 @@
             {
               "_row": 96,
               "A": "X090",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9120,7 +9120,7 @@
             {
               "_row": 97,
               "A": "X091",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9130,7 +9130,7 @@
             {
               "_row": 98,
               "A": "X092",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9140,7 +9140,7 @@
             {
               "_row": 99,
               "A": "X093",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9150,7 +9150,7 @@
             {
               "_row": 100,
               "A": "X094",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9160,7 +9160,7 @@
             {
               "_row": 101,
               "A": "X095",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9170,7 +9170,7 @@
             {
               "_row": 102,
               "A": "X096",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9180,7 +9180,7 @@
             {
               "_row": 103,
               "A": "X097",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9190,7 +9190,7 @@
             {
               "_row": 104,
               "A": "X098",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9200,7 +9200,7 @@
             {
               "_row": 105,
               "A": "X099",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9210,7 +9210,7 @@
             {
               "_row": 106,
               "A": "X100",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -9869,8 +9869,8 @@
               "_row": 15,
               "label": "Charger type",
               "values": {
-                "B": "AC22",
-                "C": "AC22",
+                "B": "AC11",
+                "C": "AC11",
                 "D": "type",
                 "E": "DC60 / DC120 / AC22 / Other"
               }
@@ -10279,8 +10279,8 @@
               "_row": 56,
               "label": "Charger rated input power",
               "values": {
-                "B": 22,
-                "C": 22,
+                "B": 11,
+                "C": 11,
                 "D": "kW/charger",
                 "E": "Update price, power, maintenance and fee when changing charger type."
               }
@@ -10738,7 +10738,7 @@
       "id": "mid",
       "name": "Mid case (illustrative, marginal saving)",
       "evidence": "illustrative",
-      "note": "ILLUSTRATIVE preset, NOT a real customer. The best-case input set with the high-impact drivers tuned per docs/input-sensitivity-findings.md: EV purchase quote raised to S$240,000 (rank 1), commercial diesel price lowered to S$2.10/L (rank 4) and duty intensity trimmed (work km/day -10%, days/year -5%, ranks 6-7). All gates still pass; the best EV plan (PLAN_B) keeps a numeric Total economic TCO ~S$1,263,882 but the Saving narrows to ~+5.62% - still worth it, but marginal.",
+      "note": "ILLUSTRATIVE preset, NOT a real customer. The best-case SRM T3EV+ input set with the high-impact drivers tuned per docs/input-sensitivity-findings.md: EV purchase quote raised to S$234,000 (rank 1), commercial diesel price lowered to S$2.10/L (rank 4) and duty intensity trimmed (work km/day -10%, days/year -5%, ranks 6-7). All gates still pass; the best EV plan (PLAN_B) keeps a numeric Total economic TCO ~S$1,195,664 but the Saving narrows to ~+10.71% - still worth it, but marginal.",
       "inputs": {
         "fleet_register": {
           "range": "A7:S106",
@@ -11319,17 +11319,17 @@
             {
               "_row": 7,
               "A": "EL-01",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 240000,
+              "D": 234000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 22000,
               "O": "EV",
@@ -11354,17 +11354,17 @@
             {
               "_row": 8,
               "A": "EL-02",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 240000,
+              "D": 234000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 30000,
               "O": "EV",
@@ -11389,17 +11389,17 @@
             {
               "_row": 9,
               "A": "EL-03",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 240000,
+              "D": 234000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 38000,
               "O": "EV",
@@ -11424,17 +11424,17 @@
             {
               "_row": 10,
               "A": "EL-04",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 240000,
+              "D": 234000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 46000,
               "O": "EV",
@@ -11459,7 +11459,7 @@
             {
               "_row": 11,
               "A": "X005",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11469,7 +11469,7 @@
             {
               "_row": 12,
               "A": "X006",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11479,7 +11479,7 @@
             {
               "_row": 13,
               "A": "X007",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11489,7 +11489,7 @@
             {
               "_row": 14,
               "A": "X008",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11499,7 +11499,7 @@
             {
               "_row": 15,
               "A": "X009",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11509,7 +11509,7 @@
             {
               "_row": 16,
               "A": "X010",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11519,7 +11519,7 @@
             {
               "_row": 17,
               "A": "X011",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11529,7 +11529,7 @@
             {
               "_row": 18,
               "A": "X012",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11539,7 +11539,7 @@
             {
               "_row": 19,
               "A": "X013",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11549,7 +11549,7 @@
             {
               "_row": 20,
               "A": "X014",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11559,7 +11559,7 @@
             {
               "_row": 21,
               "A": "X015",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11569,7 +11569,7 @@
             {
               "_row": 22,
               "A": "X016",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11579,7 +11579,7 @@
             {
               "_row": 23,
               "A": "X017",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11589,7 +11589,7 @@
             {
               "_row": 24,
               "A": "X018",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11599,7 +11599,7 @@
             {
               "_row": 25,
               "A": "X019",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11609,7 +11609,7 @@
             {
               "_row": 26,
               "A": "X020",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11619,7 +11619,7 @@
             {
               "_row": 27,
               "A": "X021",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11629,7 +11629,7 @@
             {
               "_row": 28,
               "A": "X022",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11639,7 +11639,7 @@
             {
               "_row": 29,
               "A": "X023",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11649,7 +11649,7 @@
             {
               "_row": 30,
               "A": "X024",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11659,7 +11659,7 @@
             {
               "_row": 31,
               "A": "X025",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11669,7 +11669,7 @@
             {
               "_row": 32,
               "A": "X026",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11679,7 +11679,7 @@
             {
               "_row": 33,
               "A": "X027",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11689,7 +11689,7 @@
             {
               "_row": 34,
               "A": "X028",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11699,7 +11699,7 @@
             {
               "_row": 35,
               "A": "X029",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11709,7 +11709,7 @@
             {
               "_row": 36,
               "A": "X030",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11719,7 +11719,7 @@
             {
               "_row": 37,
               "A": "X031",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11729,7 +11729,7 @@
             {
               "_row": 38,
               "A": "X032",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11739,7 +11739,7 @@
             {
               "_row": 39,
               "A": "X033",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11749,7 +11749,7 @@
             {
               "_row": 40,
               "A": "X034",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11759,7 +11759,7 @@
             {
               "_row": 41,
               "A": "X035",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11769,7 +11769,7 @@
             {
               "_row": 42,
               "A": "X036",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11779,7 +11779,7 @@
             {
               "_row": 43,
               "A": "X037",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11789,7 +11789,7 @@
             {
               "_row": 44,
               "A": "X038",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11799,7 +11799,7 @@
             {
               "_row": 45,
               "A": "X039",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11809,7 +11809,7 @@
             {
               "_row": 46,
               "A": "X040",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11819,7 +11819,7 @@
             {
               "_row": 47,
               "A": "X041",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11829,7 +11829,7 @@
             {
               "_row": 48,
               "A": "X042",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11839,7 +11839,7 @@
             {
               "_row": 49,
               "A": "X043",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11849,7 +11849,7 @@
             {
               "_row": 50,
               "A": "X044",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11859,7 +11859,7 @@
             {
               "_row": 51,
               "A": "X045",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11869,7 +11869,7 @@
             {
               "_row": 52,
               "A": "X046",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11879,7 +11879,7 @@
             {
               "_row": 53,
               "A": "X047",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11889,7 +11889,7 @@
             {
               "_row": 54,
               "A": "X048",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11899,7 +11899,7 @@
             {
               "_row": 55,
               "A": "X049",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11909,7 +11909,7 @@
             {
               "_row": 56,
               "A": "X050",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11919,7 +11919,7 @@
             {
               "_row": 57,
               "A": "X051",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11929,7 +11929,7 @@
             {
               "_row": 58,
               "A": "X052",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11939,7 +11939,7 @@
             {
               "_row": 59,
               "A": "X053",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11949,7 +11949,7 @@
             {
               "_row": 60,
               "A": "X054",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11959,7 +11959,7 @@
             {
               "_row": 61,
               "A": "X055",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11969,7 +11969,7 @@
             {
               "_row": 62,
               "A": "X056",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11979,7 +11979,7 @@
             {
               "_row": 63,
               "A": "X057",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11989,7 +11989,7 @@
             {
               "_row": 64,
               "A": "X058",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -11999,7 +11999,7 @@
             {
               "_row": 65,
               "A": "X059",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12009,7 +12009,7 @@
             {
               "_row": 66,
               "A": "X060",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12019,7 +12019,7 @@
             {
               "_row": 67,
               "A": "X061",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12029,7 +12029,7 @@
             {
               "_row": 68,
               "A": "X062",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12039,7 +12039,7 @@
             {
               "_row": 69,
               "A": "X063",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12049,7 +12049,7 @@
             {
               "_row": 70,
               "A": "X064",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12059,7 +12059,7 @@
             {
               "_row": 71,
               "A": "X065",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12069,7 +12069,7 @@
             {
               "_row": 72,
               "A": "X066",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12079,7 +12079,7 @@
             {
               "_row": 73,
               "A": "X067",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12089,7 +12089,7 @@
             {
               "_row": 74,
               "A": "X068",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12099,7 +12099,7 @@
             {
               "_row": 75,
               "A": "X069",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12109,7 +12109,7 @@
             {
               "_row": 76,
               "A": "X070",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12119,7 +12119,7 @@
             {
               "_row": 77,
               "A": "X071",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12129,7 +12129,7 @@
             {
               "_row": 78,
               "A": "X072",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12139,7 +12139,7 @@
             {
               "_row": 79,
               "A": "X073",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12149,7 +12149,7 @@
             {
               "_row": 80,
               "A": "X074",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12159,7 +12159,7 @@
             {
               "_row": 81,
               "A": "X075",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12169,7 +12169,7 @@
             {
               "_row": 82,
               "A": "X076",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12179,7 +12179,7 @@
             {
               "_row": 83,
               "A": "X077",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12189,7 +12189,7 @@
             {
               "_row": 84,
               "A": "X078",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12199,7 +12199,7 @@
             {
               "_row": 85,
               "A": "X079",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12209,7 +12209,7 @@
             {
               "_row": 86,
               "A": "X080",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12219,7 +12219,7 @@
             {
               "_row": 87,
               "A": "X081",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12229,7 +12229,7 @@
             {
               "_row": 88,
               "A": "X082",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12239,7 +12239,7 @@
             {
               "_row": 89,
               "A": "X083",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12249,7 +12249,7 @@
             {
               "_row": 90,
               "A": "X084",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12259,7 +12259,7 @@
             {
               "_row": 91,
               "A": "X085",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12269,7 +12269,7 @@
             {
               "_row": 92,
               "A": "X086",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12279,7 +12279,7 @@
             {
               "_row": 93,
               "A": "X087",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12289,7 +12289,7 @@
             {
               "_row": 94,
               "A": "X088",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12299,7 +12299,7 @@
             {
               "_row": 95,
               "A": "X089",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12309,7 +12309,7 @@
             {
               "_row": 96,
               "A": "X090",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12319,7 +12319,7 @@
             {
               "_row": 97,
               "A": "X091",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12329,7 +12329,7 @@
             {
               "_row": 98,
               "A": "X092",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12339,7 +12339,7 @@
             {
               "_row": 99,
               "A": "X093",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12349,7 +12349,7 @@
             {
               "_row": 100,
               "A": "X094",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12359,7 +12359,7 @@
             {
               "_row": 101,
               "A": "X095",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12369,7 +12369,7 @@
             {
               "_row": 102,
               "A": "X096",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12379,7 +12379,7 @@
             {
               "_row": 103,
               "A": "X097",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12389,7 +12389,7 @@
             {
               "_row": 104,
               "A": "X098",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12399,7 +12399,7 @@
             {
               "_row": 105,
               "A": "X099",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -12409,7 +12409,7 @@
             {
               "_row": 106,
               "A": "X100",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -13068,8 +13068,8 @@
               "_row": 15,
               "label": "Charger type",
               "values": {
-                "B": "AC22",
-                "C": "AC22",
+                "B": "AC11",
+                "C": "AC11",
                 "D": "type",
                 "E": "DC60 / DC120 / AC22 / Other"
               }
@@ -13478,8 +13478,8 @@
               "_row": 56,
               "label": "Charger rated input power",
               "values": {
-                "B": 22,
-                "C": 22,
+                "B": 11,
+                "C": 11,
                 "D": "kW/charger",
                 "E": "Update price, power, maintenance and fee when changing charger type."
               }
@@ -13937,7 +13937,7 @@
       "id": "bad",
       "name": "Bad case (illustrative, EV not a fit)",
       "evidence": "illustrative",
-      "note": "ILLUSTRATIVE preset, NOT a real customer. The same input set tuned further against the EV: EV purchase quote pushed to S$270,000 and commercial diesel price dropped to S$1.80/L. The gates still pass (the figures are honest and complete) but the best EV plan (PLAN_B) now costs MORE than Keep ICE: Total economic TCO ~S$1,407,129, a Saving of ~-4.70% - an honest 'EV is not a fit right now' outcome, not a crash and not a hidden failure.",
+      "note": "ILLUSTRATIVE preset, NOT a real customer. The same SRM T3EV+ input set tuned further against the EV: EV purchase quote pushed to S$284,000 and commercial diesel price dropped to S$1.80/L. The gates still pass (the figures are honest and complete) but the best EV plan (PLAN_B) now costs MORE than Keep ICE: Total economic TCO ~S$1,411,412, a Saving of ~-5.02% - an honest 'EV is not a fit right now' outcome, not a crash and not a hidden failure.",
       "inputs": {
         "fleet_register": {
           "range": "A7:S106",
@@ -14518,17 +14518,17 @@
             {
               "_row": 7,
               "A": "EL-01",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 270000,
+              "D": 284000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 22000,
               "O": "EV",
@@ -14553,17 +14553,17 @@
             {
               "_row": 8,
               "A": "EL-02",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 270000,
+              "D": 284000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 30000,
               "O": "EV",
@@ -14588,17 +14588,17 @@
             {
               "_row": 9,
               "A": "EL-03",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 270000,
+              "D": 284000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 38000,
               "O": "EV",
@@ -14623,17 +14623,17 @@
             {
               "_row": 10,
               "A": "EL-04",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "C": 150000,
-              "D": 270000,
+              "D": 284000,
               "E": "",
               "F": "",
               "G": "Battery",
               "H": 2000,
               "I": "Yes",
-              "J": 22,
+              "J": 11,
               "K": "AC",
-              "L": 22,
+              "L": 11,
               "M": "",
               "N": 46000,
               "O": "EV",
@@ -14658,7 +14658,7 @@
             {
               "_row": 11,
               "A": "X005",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14668,7 +14668,7 @@
             {
               "_row": 12,
               "A": "X006",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14678,7 +14678,7 @@
             {
               "_row": 13,
               "A": "X007",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14688,7 +14688,7 @@
             {
               "_row": 14,
               "A": "X008",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14698,7 +14698,7 @@
             {
               "_row": 15,
               "A": "X009",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14708,7 +14708,7 @@
             {
               "_row": 16,
               "A": "X010",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14718,7 +14718,7 @@
             {
               "_row": 17,
               "A": "X011",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14728,7 +14728,7 @@
             {
               "_row": 18,
               "A": "X012",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14738,7 +14738,7 @@
             {
               "_row": 19,
               "A": "X013",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14748,7 +14748,7 @@
             {
               "_row": 20,
               "A": "X014",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14758,7 +14758,7 @@
             {
               "_row": 21,
               "A": "X015",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14768,7 +14768,7 @@
             {
               "_row": 22,
               "A": "X016",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14778,7 +14778,7 @@
             {
               "_row": 23,
               "A": "X017",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14788,7 +14788,7 @@
             {
               "_row": 24,
               "A": "X018",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14798,7 +14798,7 @@
             {
               "_row": 25,
               "A": "X019",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14808,7 +14808,7 @@
             {
               "_row": 26,
               "A": "X020",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14818,7 +14818,7 @@
             {
               "_row": 27,
               "A": "X021",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14828,7 +14828,7 @@
             {
               "_row": 28,
               "A": "X022",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14838,7 +14838,7 @@
             {
               "_row": 29,
               "A": "X023",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14848,7 +14848,7 @@
             {
               "_row": 30,
               "A": "X024",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14858,7 +14858,7 @@
             {
               "_row": 31,
               "A": "X025",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14868,7 +14868,7 @@
             {
               "_row": 32,
               "A": "X026",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14878,7 +14878,7 @@
             {
               "_row": 33,
               "A": "X027",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14888,7 +14888,7 @@
             {
               "_row": 34,
               "A": "X028",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14898,7 +14898,7 @@
             {
               "_row": 35,
               "A": "X029",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14908,7 +14908,7 @@
             {
               "_row": 36,
               "A": "X030",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14918,7 +14918,7 @@
             {
               "_row": 37,
               "A": "X031",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14928,7 +14928,7 @@
             {
               "_row": 38,
               "A": "X032",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14938,7 +14938,7 @@
             {
               "_row": 39,
               "A": "X033",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14948,7 +14948,7 @@
             {
               "_row": 40,
               "A": "X034",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14958,7 +14958,7 @@
             {
               "_row": 41,
               "A": "X035",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14968,7 +14968,7 @@
             {
               "_row": 42,
               "A": "X036",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14978,7 +14978,7 @@
             {
               "_row": 43,
               "A": "X037",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14988,7 +14988,7 @@
             {
               "_row": 44,
               "A": "X038",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -14998,7 +14998,7 @@
             {
               "_row": 45,
               "A": "X039",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15008,7 +15008,7 @@
             {
               "_row": 46,
               "A": "X040",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15018,7 +15018,7 @@
             {
               "_row": 47,
               "A": "X041",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15028,7 +15028,7 @@
             {
               "_row": 48,
               "A": "X042",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15038,7 +15038,7 @@
             {
               "_row": 49,
               "A": "X043",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15048,7 +15048,7 @@
             {
               "_row": 50,
               "A": "X044",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15058,7 +15058,7 @@
             {
               "_row": 51,
               "A": "X045",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15068,7 +15068,7 @@
             {
               "_row": 52,
               "A": "X046",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15078,7 +15078,7 @@
             {
               "_row": 53,
               "A": "X047",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15088,7 +15088,7 @@
             {
               "_row": 54,
               "A": "X048",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15098,7 +15098,7 @@
             {
               "_row": 55,
               "A": "X049",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15108,7 +15108,7 @@
             {
               "_row": 56,
               "A": "X050",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15118,7 +15118,7 @@
             {
               "_row": 57,
               "A": "X051",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15128,7 +15128,7 @@
             {
               "_row": 58,
               "A": "X052",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15138,7 +15138,7 @@
             {
               "_row": 59,
               "A": "X053",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15148,7 +15148,7 @@
             {
               "_row": 60,
               "A": "X054",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15158,7 +15158,7 @@
             {
               "_row": 61,
               "A": "X055",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15168,7 +15168,7 @@
             {
               "_row": 62,
               "A": "X056",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15178,7 +15178,7 @@
             {
               "_row": 63,
               "A": "X057",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15188,7 +15188,7 @@
             {
               "_row": 64,
               "A": "X058",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15198,7 +15198,7 @@
             {
               "_row": 65,
               "A": "X059",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15208,7 +15208,7 @@
             {
               "_row": 66,
               "A": "X060",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15218,7 +15218,7 @@
             {
               "_row": 67,
               "A": "X061",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15228,7 +15228,7 @@
             {
               "_row": 68,
               "A": "X062",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15238,7 +15238,7 @@
             {
               "_row": 69,
               "A": "X063",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15248,7 +15248,7 @@
             {
               "_row": 70,
               "A": "X064",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15258,7 +15258,7 @@
             {
               "_row": 71,
               "A": "X065",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15268,7 +15268,7 @@
             {
               "_row": 72,
               "A": "X066",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15278,7 +15278,7 @@
             {
               "_row": 73,
               "A": "X067",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15288,7 +15288,7 @@
             {
               "_row": 74,
               "A": "X068",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15298,7 +15298,7 @@
             {
               "_row": 75,
               "A": "X069",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15308,7 +15308,7 @@
             {
               "_row": 76,
               "A": "X070",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15318,7 +15318,7 @@
             {
               "_row": 77,
               "A": "X071",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15328,7 +15328,7 @@
             {
               "_row": 78,
               "A": "X072",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15338,7 +15338,7 @@
             {
               "_row": 79,
               "A": "X073",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15348,7 +15348,7 @@
             {
               "_row": 80,
               "A": "X074",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15358,7 +15358,7 @@
             {
               "_row": 81,
               "A": "X075",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15368,7 +15368,7 @@
             {
               "_row": 82,
               "A": "X076",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15378,7 +15378,7 @@
             {
               "_row": 83,
               "A": "X077",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15388,7 +15388,7 @@
             {
               "_row": 84,
               "A": "X078",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15398,7 +15398,7 @@
             {
               "_row": 85,
               "A": "X079",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15408,7 +15408,7 @@
             {
               "_row": 86,
               "A": "X080",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15418,7 +15418,7 @@
             {
               "_row": 87,
               "A": "X081",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15428,7 +15428,7 @@
             {
               "_row": 88,
               "A": "X082",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15438,7 +15438,7 @@
             {
               "_row": 89,
               "A": "X083",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15448,7 +15448,7 @@
             {
               "_row": 90,
               "A": "X084",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15458,7 +15458,7 @@
             {
               "_row": 91,
               "A": "X085",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15468,7 +15468,7 @@
             {
               "_row": 92,
               "A": "X086",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15478,7 +15478,7 @@
             {
               "_row": 93,
               "A": "X087",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15488,7 +15488,7 @@
             {
               "_row": 94,
               "A": "X088",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15498,7 +15498,7 @@
             {
               "_row": 95,
               "A": "X089",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15508,7 +15508,7 @@
             {
               "_row": 96,
               "A": "X090",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15518,7 +15518,7 @@
             {
               "_row": 97,
               "A": "X091",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15528,7 +15528,7 @@
             {
               "_row": 98,
               "A": "X092",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15538,7 +15538,7 @@
             {
               "_row": 99,
               "A": "X093",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15548,7 +15548,7 @@
             {
               "_row": 100,
               "A": "X094",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15558,7 +15558,7 @@
             {
               "_row": 101,
               "A": "X095",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15568,7 +15568,7 @@
             {
               "_row": 102,
               "A": "X096",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15578,7 +15578,7 @@
             {
               "_row": 103,
               "A": "X097",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15588,7 +15588,7 @@
             {
               "_row": 104,
               "A": "X098",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15598,7 +15598,7 @@
             {
               "_row": 105,
               "A": "X099",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -15608,7 +15608,7 @@
             {
               "_row": 106,
               "A": "X100",
-              "B": "ChengLong L2EV",
+              "B": "SRM T3EV+",
               "O": "Keep ICE",
               "R": "Keep ICE",
               "AB": "No",
@@ -16267,8 +16267,8 @@
               "_row": 15,
               "label": "Charger type",
               "values": {
-                "B": "AC22",
-                "C": "AC22",
+                "B": "AC11",
+                "C": "AC11",
                 "D": "type",
                 "E": "DC60 / DC120 / AC22 / Other"
               }
@@ -16677,8 +16677,8 @@
               "_row": 56,
               "label": "Charger rated input power",
               "values": {
-                "B": 22,
-                "C": 22,
+                "B": 11,
+                "C": 11,
                 "D": "kW/charger",
                 "E": "Update price, power, maintenance and fee when changing charger type."
               }

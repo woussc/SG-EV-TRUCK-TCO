@@ -121,7 +121,15 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   // FEAT-002 (Part C): Stage-4 charging assessment panels.
   'charge-site-read','charge-detour-read','charge-public-totals',
   'charge-public-bands','charge-region-body','charge-operator-body',
-  'charge-attribution'];
+  'charge-attribution',
+  // FEAT-003 (Part B): Stage-4 public-charging routing simulator (Panel 4).
+  'rsim-controls','rsim-region','rsim-dconly','rsim-origin-note','rsim-summary',
+  'rsim-map','rsim-charger-table','rsim-charger-body','rsim-caveat','rsim-attribution',
+  // FEAT-004 (Workstream C): Stage-5 Financing (illustrative) opt-in block.
+  'proposal-finance-block','finance-enable','finance-controls','finance-exclusion',
+  'finance-principal-src','finance-principal','finance-deposit','finance-apr',
+  'finance-term','finance-term-unit','finance-off-note','finance-output',
+  'finance-status-line','finance-summary-body','finance-caveat'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
 
 const document = {
@@ -1755,8 +1763,10 @@ checks.push(['raw charger snapshot is NOT inlined (compact aggregates only)',
 // committed figures. The header badge + quotation INHERIT the gate / claim
 // status: a diagnostic / illustrative / not-all-gates-clear case renders (and
 // prints) as 'INDICATIVE / pending evidence', never a firm quotation; only a
-// fully-cleared case reads as a confirmed quotation. Finance is DEFERRED to a
-// clearly-labelled separate opt-in module (no half-wired control here).
+// fully-cleared case reads as a confirmed quotation. Finance (FEAT-004) is a
+// SEPARATE, OPT-IN 'Financing (illustrative)' block that is off by default and
+// explicitly EXCLUDED from the economic TCO; toggling it changes NO economic
+// figure.
 
 // (1) The old placeholder is gone; the real proposal chrome is present.
 const proposalStageMarkup = (() => {
@@ -1811,22 +1821,78 @@ checks.push(['Proposal stage carries the proposal-pending state class for the de
 checks.push(['Proposal status line names the chosen plan and the indicative framing',
   byId['proposal-status-line'].innerHTML.toLowerCase().indexOf('indicative') !== -1]);
 
-// (3) Finance is DEFERRED: there is NO half-wired finance control (no rate/term/
-// deposit input), and the honest 'separate opt-in module, next phase' note is
-// present inside the proposal stage.
-checks.push(['Proposal defers finance with the honest separate opt-in note',
-  proposalStageMarkup.indexOf('separate opt-in module, next phase') !== -1]);
-checks.push(['Proposal has NO half-wired finance control (no rate/term/deposit input)',
-  !/id="(finance|loan|instalment)-(rate|term|deposit)"/i.test(proposalStageMarkup) &&
-  !/data-finance-(rate|term|deposit)/i.test(proposalStageMarkup)]);
+// (3) FEAT-004: the deferred placeholder is gone, REPLACED by a real,
+// clearly-labelled 'Financing (illustrative)' block that is OPT-IN (off by
+// default) and explicitly NOT part of the economic TCO. This is STRICTLY
+// stronger than the old 'next phase' note assertion: it requires a working,
+// labelled, toggle-gated block AND proves it changes no economic figure.
+checks.push(['Proposal replaces the deferred placeholder with a Financing (illustrative) block',
+  proposalStageMarkup.indexOf('Financing (illustrative)') !== -1 &&
+  proposalStageMarkup.indexOf('separate opt-in module, next phase') === -1 &&
+  proposalStageMarkup.indexOf('id="proposal-finance-block"') !== -1]);
+checks.push(['Financing block is clearly labelled NOT part of the economic TCO (loans/interest excluded by design)',
+  /NOT part of the economic TCO/i.test(proposalStageMarkup) &&
+  /excludes? loans and interest/i.test(proposalStageMarkup)]);
+checks.push(['Financing block is OPT-IN behind a toggle that is OFF by default',
+  proposalStageMarkup.indexOf('id="finance-enable"') !== -1 &&
+  // the checkbox markup carries NO `checked` attribute -> off by default
+  !/id="finance-enable"[^>]*\bchecked\b/.test(proposalStageMarkup)]);
+checks.push(['Financing block exposes its OWN finance inputs (APR / term / deposit / principal)',
+  /id="finance-apr"/.test(proposalStageMarkup) && /id="finance-term"/.test(proposalStageMarkup) &&
+  /id="finance-deposit"/.test(proposalStageMarkup) && /id="finance-principal"/.test(proposalStageMarkup)]);
+checks.push(['Finance amortisation module exposed on window.HSFinance (additive, separate)',
+  !!windowObj.HSFinance && typeof windowObj.HSFinance.amortise === 'function' &&
+  typeof windowObj.HSFinance.financedAmount === 'function']);
+
+// (3b) OPT-IN behaviour + ISOLATION from the economic quotation. With the
+// toggle OFF (the default) the finance output stays hidden and the economic
+// quotation figures are exactly what renderProposal produced. Turning the
+// toggle ON renders an instalment illustration BUT leaves the economic
+// quotation / Total byte-identical. This is the UI-level isolation guard.
+byId['reset-btn'].fire('click');
+windowObj.__HS.recompute();
+const finToggle = byId['finance-enable'];
+const quotationOff = byId['proposal-quotation-body'].innerHTML;
+const financeOutputOff = byId['finance-output'];
+checks.push(['Financing output is hidden while the toggle is OFF (default)',
+  finToggle.checked !== true && financeOutputOff.hidden === true &&
+  byId['finance-summary-body'].innerHTML.indexOf('Monthly instalment') === -1]);
+
+// Flip the toggle ON and re-render the finance block (no recompute -> cannot
+// touch the engine). Default principal source is the chosen plan's Day-0
+// funding (read-only), APR 4.5%, term 60 months.
+finToggle.checked = true;
+finToggle.fire('change'); finToggle.fire('input');
+const quotationOnAfter = byId['proposal-quotation-body'].innerHTML;
+checks.push(['Economic quotation figures are BYTE-IDENTICAL with the finance toggle on vs off (isolation)',
+  quotationOff === quotationOnAfter]);
+checks.push(['Financing illustration renders a monthly instalment when enabled',
+  byId['finance-output'].hidden === false &&
+  byId['finance-summary-body'].innerHTML.indexOf('Monthly instalment') !== -1]);
+checks.push(['Financing illustration inherits the INDICATIVE wording for the diagnostic demo',
+  byId['finance-status-line'].innerHTML.toLowerCase().indexOf('indicative') !== -1 &&
+  byId['finance-status-line'].innerHTML.toLowerCase().indexOf('not') !== -1]);
+// Toggling the finance block ON must not have changed ANY economic engine
+// number: recompute the demo and compare the authoritative figures.
+const econAfterFinance = windowObj.HSEngine.computeFleet(windowObj.__HS.state).results;
+checks.push(['computeFleet economic figures unchanged after the finance toggle (no feedback)',
+  approx(econAfterFinance.vehicleEconomicTco.keep_ice, 2081781.0, 0.5) &&
+  approx(econAfterFinance.day0Funding.all_new_ice, 852000, 0.5)]);
+// Reset the toggle so later blocks see the clean default again.
+finToggle.checked = false;
+finToggle.fire('change'); finToggle.fire('input');
 
 // (4) Print styles exist so the proposal prints as a leave-behind: the badge is
-// preserved in print (with its colour forced) and the finance note is .noprint.
+// preserved in print (with its colour forced). The Financing (illustrative)
+// block prints WITH the proposal only when enabled: its controls stay .noprint
+// and the whole block is hidden in print when the toggle is OFF.
 checks.push(['Proposal badge is preserved + colour-forced in @media print',
   /@media\s*print[\s\S]*\.proposal-badge\s*\{[^}]*print-color-adjust/i.test(html)]);
-checks.push(['Proposal finance note is .noprint (hidden in the leave-behind)',
-  /id="proposal-finance-note"[^>]*class="[^"]*noprint/.test(html) ||
-  /class="[^"]*noprint[^"]*"[^>]*id="proposal-finance-note"/.test(html)]);
+checks.push(['Finance controls are .noprint and the block hides in print when the toggle is off',
+  /<div[^>]*id="finance-controls"[^>]*class="[^"]*noprint/.test(html) ||
+  /<div[^>]*class="[^"]*noprint[^"]*"[^>]*id="finance-controls"/.test(html)]);
+checks.push(['Financing block is hidden in print when the toggle is OFF (prints only when enabled)',
+  /#proposal-finance-block:not\(\.finance-on\)\s*\{[^}]*display\s*:\s*none/i.test(html)]);
 
 // (5) CONFIRMED case -> flips the badge. Loading the gate-passing 'best' seed
 // (numeric Total, gates pass, saving claim met) must flip the badge to
@@ -1858,6 +1924,124 @@ Object.keys(windowObj.__HS.state).forEach((k) => { delete windowObj.__HS.state[k
 Object.keys(propSnapshot).forEach((k) => { windowObj.__HS.state[k] = propSnapshot[k]; });
 if (windowObj.__HS.rebuildInputs) windowObj.__HS.rebuildInputs();
 windowObj.__HS.recompute();
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
+
+// ---- FEAT-003 (B): Stage-4 public-charging routing simulator (Panel 4) ------
+// The new 4th charge-panel renders a CLIENT-SIDE, deterministic routing screen
+// from window.HSRoutingSim (src/routing_sim.js) + the bundled charger subset
+// window.HSChargingLocations. These assertions are ADDITIVE; they do not touch
+// or weaken any assertion above. They prove: the module + subset are bundled
+// and offline; the panel renders nearby chargers with operational fields; the
+// SRM-tied charge-time surfaces (or an honest n.a.); and the coarse / dated-
+// snapshot / approx-distance caveats + LTA/BoCharge attribution are present.
+
+// (1) The additive module + bundled location subset are inlined (no runtime net).
+checks.push(['routing-sim module exposed on the page (window.HSRoutingSim)',
+  !!windowObj.HSRoutingSim && typeof windowObj.HSRoutingSim.nearestChargers === 'function' &&
+  typeof windowObj.HSRoutingSim.chargeTimeHours === 'function' &&
+  typeof windowObj.HSRoutingSim.haversineKm === 'function']);
+checks.push(['charger location subset bundled (window.HSChargingLocations)',
+  !!windowObj.HSChargingLocations && Array.isArray(windowObj.HSChargingLocations.locations) &&
+  windowObj.HSChargingLocations.locations.length > 0]);
+// The bundled subset is NOT the raw 6.3MB snapshot (no raw per-location keys).
+checks.push(['bundled routing subset is compact (no raw address / charging-point detail)',
+  html.indexOf('window.HSChargingLocations = ') !== -1 &&
+  (() => {
+    const slice = html.slice(html.indexOf('CHARGING_LOCATIONS:BEGIN'), html.indexOf('CHARGING_LOCATIONS:END'));
+    return slice.indexOf('"address"') === -1 && slice.indexOf('chargingPoints') === -1 &&
+      slice.indexOf('evLocationsData') === -1;
+  })()]);
+// The page makes NO runtime network / map-tile call for the simulator.
+checks.push(['routing sim introduces NO runtime network/map-API (offline guarantee)',
+  !/fetch\(|XMLHttpRequest|maps\.googleapis|tile\.openstreetmap|leaflet|mapbox/i.test(
+    html.slice(html.indexOf('ROUTING:BEGIN'), html.indexOf('/stage-charging') === -1 ? html.length : html.indexOf('/stage-charging')))]);
+
+// (2) The panel markup exists as the 4th charge-panel with its own ids.
+checks.push(['Stage-4 routing-sim panel present (id="charging-routing")',
+  html.indexOf('id="charging-routing"') !== -1]);
+checks.push(['routing-sim panel carries its own DOM ids',
+  html.indexOf('id="rsim-summary"') !== -1 && html.indexOf('id="rsim-charger-body"') !== -1 &&
+  html.indexOf('id="rsim-map"') !== -1 && html.indexOf('id="rsim-region"') !== -1]);
+
+// (3) After recompute the panel renders: the region picker is built, nearby
+// chargers are listed with operational fields, and the offline SVG map draws.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+windowObj.__HS.recompute();
+const rsimRegionOpts = byId['rsim-region'].innerHTML;
+checks.push(['routing-sim region picker is populated', rsimRegionOpts.indexOf('<option') !== -1]);
+const rsimTableHtml = byId['rsim-charger-body'].innerHTML;
+checks.push(['routing-sim lists nearby public chargers (ranked rows)',
+  rsimTableHtml.indexOf('<tr') !== -1 && /\d+\.\d\d/.test(rsimTableHtml)]);
+// Operational fields: the charger table header names operator / type / power /
+// price / distance, and a rendered row carries an operator string.
+const rsimTableHead = (html.match(/<table id="rsim-charger-table">\s*<thead>([\s\S]*?)<\/thead>/) || ['', ''])[1];
+checks.push(['routing-sim charger table carries operational columns (operator/type/power/price/km)',
+  /Operator/i.test(rsimTableHead) && /Type/i.test(rsimTableHead) && /Power/i.test(rsimTableHead) &&
+  /kWh/i.test(rsimTableHead) && /km/i.test(rsimTableHead)]);
+checks.push(['routing-sim rows show an AC/DC type token',
+  />AC<|>DC<|>n\.a\.<|class="na"/.test(rsimTableHtml)]);
+// Offline inline-SVG mini-map (no external tiles).
+const rsimMapHtml = byId['rsim-map'].innerHTML;
+checks.push(['routing-sim draws an offline inline-SVG mini-map (no external tiles)',
+  rsimMapHtml.indexOf('<svg') !== -1 && rsimMapHtml.indexOf('<circle') !== -1 &&
+  rsimMapHtml.indexOf('rsim-origin') !== -1]);
+
+// (4) The SRM-tied charge-time surfaces. On the demo case at least one truck is
+// on an EV plan with an EV model named, so the summary names the planned EV and
+// renders an estimated top-up time (or an honest n.a. message, never zero).
+const rsimSummaryHtml = byId['rsim-summary'].innerHTML;
+checks.push(['routing-sim summary names the planned EV + an estimated top-up time',
+  rsimSummaryHtml.indexOf('Planned EV') !== -1 &&
+  rsimSummaryHtml.indexOf('Estimated route top-up time') !== -1]);
+// The charge time ties to the SRM model math: compute it directly through the
+// exposed module on the SRM T3EV+ catalogue row and confirm it is a finite,
+// positive hour figure (this mirrors what the panel renders).
+const srmRow = windowObj.__HS.state.products.rows.find((p) => p && /SRM/i.test(String(p.A)));
+const rsimDoc = windowObj.HSChargingLocations;
+const nearestForSrm = windowObj.HSRoutingSim.nearestChargers(
+  { lat: 1.2900, lon: 103.8500 }, rsimDoc.locations, { limit: 1 });
+const chargerKwForSrm = nearestForSrm.length
+  ? (nearestForSrm[0].maxPowerKw || nearestForSrm[0].powerKw) : null;
+const srmCt = (srmRow && chargerKwForSrm)
+  ? windowObj.HSRoutingSim.chargeTimeHours({
+    batteryKwh: srmRow.D, kwhPerKm: srmRow.E, distanceKm: 120, chargerKw: chargerKwForSrm })
+  : null;
+checks.push(['SRM-tied charge-time math returns a finite positive estimate',
+  !!srmCt && typeof srmCt.hours === 'number' && isFinite(srmCt.hours) && srmCt.hours > 0]);
+// Honest degrade: with NO EV plan the panel shows an n.a. message, not a zero.
+// Drive the state to all-Keep-ICE on the replacement rows and recompute.
+const rsimSnapshot = JSON.parse(JSON.stringify(windowObj.__HS.state));
+windowObj.__HS.state.replacement_plan.rows.forEach((rr) => { rr.O = 'Keep ICE'; rr.R = 'Keep ICE'; });
+windowObj.__HS.recompute();
+checks.push(['routing-sim degrades to n.a. (no fabricated spec) when no EV plan',
+  byId['rsim-summary'].innerHTML.indexOf('n.a. (no EV plan selected)') !== -1]);
+// Restore the demo state so the baseline is intact for any later assertion.
+Object.keys(windowObj.__HS.state).forEach((k) => { delete windowObj.__HS.state[k]; });
+Object.keys(rsimSnapshot).forEach((k) => { windowObj.__HS.state[k] = rsimSnapshot[k]; });
+if (windowObj.__HS.rebuildInputs) windowObj.__HS.rebuildInputs();
+windowObj.__HS.recompute();
+
+// (5) Preserved honesty labelling: coarse / NOT live availability / dated
+// snapshot (with lastUpdatedTime) / approx great-circle / not a router, plus
+// the LTA / BoCharge attribution visible on the panel.
+const rsimCaveat = byId['rsim-caveat'].innerHTML;
+checks.push(['routing-sim carries coarse / not-live / dated-snapshot / approx-distance caveat',
+  /coarse/i.test(rsimCaveat) && /not live availability/i.test(rsimCaveat) &&
+  /snapshot/i.test(rsimCaveat) && /great-circle/i.test(rsimCaveat) &&
+  /not a turn-by-turn router/i.test(rsimCaveat)]);
+checks.push(['routing-sim caveat shows the dated-snapshot provenance (lastUpdatedTime)',
+  rsimCaveat.indexOf(windowObj.HSChargingLocations.provenance.lastUpdatedTime) !== -1]);
+checks.push(['routing-sim keeps the LTA DataMall + BoCharge attribution visible',
+  byId['rsim-attribution'].textContent.indexOf('LTA DataMall') !== -1 &&
+  byId['rsim-attribution'].textContent.indexOf('BoCharge') !== -1]);
+// The panel markup itself carries the honest 'coarse planning aid, not live
+// availability' framing (static, so it prints too).
+checks.push(['routing-sim panel markup frames it as a coarse aid, not live availability',
+  (() => {
+    const slice = html.slice(html.indexOf('id="charging-routing"'), html.indexOf('/stage-charging'));
+    return /coarse planning aid/i.test(slice) && /not live availability/i.test(slice) &&
+      /live connection/i.test(slice) && /approximate great-circle/i.test(slice);
+  })()]);
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 let ok = true;
