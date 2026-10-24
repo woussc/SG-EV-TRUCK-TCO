@@ -28,6 +28,7 @@ const snapshotPath = resolve(
   'vendor/sg-electric-chargers/public/data/sample-chargers.json',
 );
 const fixturePath = resolve(repoRoot, 'tools/fixtures/charging_context.json');
+const locationsPath = resolve(repoRoot, 'tools/fixtures/charging_locations.json');
 
 const checks = [];
 function check(name, pass) { checks.push([name, !!pass]); }
@@ -200,11 +201,113 @@ check('operator aggregates match re-derived point counts',
 check('operator list is sorted by point count (descending)',
   ctx.byOperator.every((x, i) => i === 0 || ctx.byOperator[i - 1].points >= x.points));
 
+// ---------------------------------------------------------------------------
+// LOCATION-LEVEL subset (tools/fixtures/charging_locations.json) validation.
+// This is the compact dataset the client-side routing simulator reads. It is
+// still NOT the raw snapshot: a trimmed, rounded, capped subset. Assert it is
+// well-formed, in Singapore bounds, under the size cap, and carries attribution.
+// ---------------------------------------------------------------------------
+const locRaw = readFileSync(locationsPath, 'utf8');
+const locDoc = JSON.parse(locRaw);
+const locBytes = statSync(locationsPath).size;
+
+// Under the size cap (target well under ~300KB; definitely not the raw 6.3MB).
+check('location subset under the 300KB cap', locBytes < 300 * 1024);
+check('location subset far smaller than the raw snapshot', locBytes < rawBytes / 10);
+
+// Shape: schema, provenance, attribution, bounds, totals, locations array.
+check('location subset has provenance/attribution/bounds/totals/locations',
+  !!locDoc.provenance && typeof locDoc.attribution === 'string' && !!locDoc.bounds &&
+  !!locDoc.totals && Array.isArray(locDoc.locations));
+
+// Attribution present (same LTA / Open Data Licence + BoCharge credit).
+check('location subset attribution credits LTA DataMall / Open Data Licence + BoCharge',
+  /LTA DataMall/.test(locDoc.attribution) && /Singapore Open Data Licence/.test(locDoc.attribution) &&
+  /BoCharge/.test(locDoc.attribution));
+
+// Carries the honest coarse/snapshot/approx-distance caveat with the data.
+check('location subset carries the coarse/dated-snapshot/approx-distance caveat',
+  typeof locDoc.caveat === 'string' &&
+  /NOT live availability/i.test(locDoc.caveat) && /snapshot/i.test(locDoc.caveat) &&
+  /great-circle/i.test(locDoc.caveat));
+
+// Provenance passthrough matches the raw snapshot.
+check('location subset provenance matches raw snapshot',
+  locDoc.provenance.source === (raw.source ?? null) &&
+  locDoc.provenance.lastUpdatedTime === (raw.lastUpdatedTime ?? null));
+
+// It is a SUBSET, not the raw snapshot (no raw per-location keys / addresses).
+check('location subset carries NO raw address / full charging-point detail',
+  locRaw.indexOf('evLocationsData') === -1 && locRaw.indexOf('"address"') === -1 &&
+  locRaw.indexOf('chargingPoints') === -1 && locRaw.indexOf('longtitude') === -1);
+check('location subset is strictly smaller than the source location count',
+  Array.isArray(locDoc.locations) && locDoc.locations.length <= locDoc.totals.sourceLocations);
+
+// Bounds are finite Singapore-ish bounds.
+const lb = locDoc.bounds;
+check('bounds are finite and within Singapore-ish limits',
+  Number.isFinite(lb.latMin) && Number.isFinite(lb.latMax) &&
+  Number.isFinite(lb.lonMin) && Number.isFinite(lb.lonMax) &&
+  lb.latMin > 1.0 && lb.latMax < 1.6 && lb.lonMin > 103.4 && lb.lonMax < 104.2 &&
+  lb.latMin < lb.latMax && lb.lonMin < lb.lonMax);
+
+// Every location: finite rounded coords inside bounds, a valid plug summary
+// (AC and/or DC), positive power where present, and finite per-kWh price where
+// present. A single malformed record fails the whole check.
+function round4ok(x) {
+  // 4-decimal rounded: x*10000 must be an integer (within float slack).
+  return Number.isFinite(x) && Math.abs(x * 10000 - Math.round(x * 10000)) < 1e-6;
+}
+function plugSummaryOk(p) {
+  if (!p || typeof p !== 'object') return false;
+  const legs = [p.ac, p.dc].filter(Boolean);
+  if (!legs.length) return false; // must have at least one AC/DC summary
+  return legs.every((leg) => {
+    // power may be null (not published) but must be positive when present.
+    const powerOk = (leg.powerKw == null || (typeof leg.powerKw === 'number' && leg.powerKw > 0));
+    const maxOk = (leg.maxPowerKw == null || (typeof leg.maxPowerKw === 'number' && leg.maxPowerKw > 0));
+    const priceOk = (leg.pricePerKwh == null || (typeof leg.pricePerKwh === 'number' && leg.pricePerKwh > 0));
+    return powerOk && maxOk && priceOk;
+  });
+}
+const locsAllWellFormed = locDoc.locations.every((l) =>
+  l && round4ok(l.lat) && round4ok(l.lon) &&
+  l.lat >= lb.latMin && l.lat <= lb.latMax && l.lon >= lb.lonMin && l.lon <= lb.lonMax &&
+  typeof l.region === 'string' && typeof l.operator === 'string' && l.operator.length > 0 &&
+  typeof l.hasDc === 'boolean' && plugSummaryOk(l.plug));
+check('every location has finite rounded coords in SG bounds + a valid plug summary',
+  locDoc.locations.length > 0 && locsAllWellFormed);
+
+// AC/DC validity: a hasDc location must carry a DC plug summary, and vice versa.
+check('hasDc flag matches the presence of a DC plug summary',
+  locDoc.locations.every((l) => !!l.hasDc === !!(l.plug && l.plug.dc)));
+check('at least some DC (fast) locations are kept (fleet-relevant)',
+  locDoc.locations.some((l) => l.hasDc));
+check('at least some AC locations are kept (coverage)',
+  locDoc.locations.some((l) => !l.hasDc));
+
+// Totals reconcile with the array.
+check('totals.keptLocations matches the array length',
+  locDoc.totals.keptLocations === locDoc.locations.length);
+check('totals.keptDcLocations matches the counted DC-bearing locations',
+  locDoc.totals.keptDcLocations === locDoc.locations.filter((l) => l.hasDc).length);
+
+// Determinism: the stable sort order (lat, lon, operator) holds in the file.
+check('location subset is in the stable deterministic sort order (lat, lon, operator)',
+  locDoc.locations.every((l, i) => {
+    if (i === 0) return true;
+    const p = locDoc.locations[i - 1];
+    if (p.lat !== l.lat) return p.lat < l.lat;
+    if (p.lon !== l.lon) return p.lon < l.lon;
+    return p.operator <= l.operator;
+  }));
+
 let ok = true;
 for (const [name, pass] of checks) {
   console.log((pass ? 'PASS  ' : 'FAIL  ') + name);
   if (!pass) ok = false;
 }
 console.log(`\ncompact fixture: ${(fixtureBytes / 1024).toFixed(2)} KB from a ${(rawBytes / 1048576).toFixed(2)} MB snapshot`);
+console.log(`location subset: ${(locBytes / 1024).toFixed(2)} KB (${locDoc.locations.length} locations)`);
 console.log(ok ? 'ALL CHARGING-DATA CHECKS PASSED' : 'CHARGING-DATA CHECKS FAILED');
 process.exit(ok ? 0 : 1);

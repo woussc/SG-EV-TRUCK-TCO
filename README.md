@@ -57,11 +57,14 @@ snapshot) lists the seeded customer cases ranked by the current sort mode:
   vehicle service/evidence "Within entered limits", charging-site "Complete"
   with an itemised depot quote, "Within entered site limits", a **numeric Total
   economic TCO** and a **positive Saving vs Keep ICE**. It therefore shows what
-  a **confirmed win** looks like and leads both sort modes. Best plan Plan B:
-  Saving ~22.8% (~S$338,988) vs Keep ICE, Total economic TCO ~S$1,147,129 over
-  the 4-truck fleet. Every figure is a realistic Singapore-market illustration
-  picked so the gates pass; depot-only charging keeps the capacity screen
-  transparent.
+  a **confirmed win** looks like and leads both sort modes. The illustrative EV
+  model is the **SRM T3EV+** (the nimble SRM variant: 1,660 kg payload,
+  53.58 kWh battery, 0.1786 kWh/km, 11 kW AC / 55 kW DC charge power, catalogue
+  base ~S$66,800, 300 km range), whose charge power matches the majority of the
+  Singapore public-charging network. Best plan Plan B: Saving ~29.5%
+  (~S$438,705) vs Keep ICE, Total economic TCO ~S$1,047,412 over the 4-truck
+  fleet. Every figure is a realistic Singapore-market illustration picked so the
+  gates pass; depot-only charging keeps the capacity screen transparent.
 - **DEMONSTRATION 6-truck case** - the workbook's saved demonstration data.
 - **Yong Wen (5-truck ambient cohort)** - a documented reconstruction of the
   reference-HTML simulation, labelled **Assumption**.
