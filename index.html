@@ -104,8 +104,26 @@ p{margin:8px 0 12px}
 .proposal-badge.pb-confirmed{border-color:#9ccbb0;background:#eef6f1;color:#1f6b3b}
 .proposal-badge.pb-indicative{border-color:var(--amberline);background:var(--amber);color:var(--warn)}
 .proposal-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gutter);align-items:start}
+/* FEAT-003 per-plan proposal: Plan A (SRM) and Plan B (competitor) side by side,
+   each column stacking its quotation / servicing / conditions blocks. Each
+   column carries its OWN gate-inherited badge. */
+.proposal-plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gutter);align-items:start}
+.proposal-plan-col{display:flex;flex-direction:column;gap:var(--gutter)}
+.proposal-plan-col>.proposal-block{margin:0}
+.proposal-plan-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0}
+.proposal-plan-head .block-title{font-size:16px}
+@media (max-width:860px){.proposal-plan-grid{grid-template-columns:1fr}}
+/* FEAT-003 per-plan financing: Plan A and Plan B financing columns side by side;
+   each column's controls + financial-component breakdown are independent. */
+.finance-plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gutter);align-items:start;margin-top:14px}
+.finance-plan-col{border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:var(--paper)}
+@media (max-width:860px){.finance-plan-grid{grid-template-columns:1fr}}
 .proposal-block{border:1px solid var(--line);border-radius:8px;padding:18px 20px;background:var(--paper)}
 .proposal-block-wide{grid-column:1 / -1}
+/* FEAT-003 visibility: proposal + finance body text and small print never drop
+   below ~12px so the leave-behind stays legible on screen and in print. */
+.proposal-block .small,.proposal-plan-col .small,.finance-plan-col .small{font-size:12.5px}
+.proposal-block table,.finance-plan-col table{font-size:13px}
 /* The block titles are the proposal's section spine: give them a hairline
    underline so the Quotation / Servicing / Conditions / Financing hierarchy is
    legible at a glance across the leave-behind. */
@@ -568,6 +586,12 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  .proposal-badge.pb-confirmed{border-color:#1f6b3b!important;color:#1f6b3b!important}
  .proposal-badge.pb-indicative{border-color:#8a6d00!important;color:#8a6d00!important}
  .proposal-grid{display:block}
+ /* Per-plan proposal + finance columns stay side by side in print so a reader
+    can compare Plan A against Plan B on the page; the finance controls stay
+    .noprint and only the per-plan breakdown tables print. */
+ .proposal-plan-grid,.finance-plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+ .proposal-plan-col{display:block}
+ .finance-plan-col{border:1px solid #bbb;break-inside:avoid}
  .proposal-block{border:1px solid #bbb;margin-bottom:10px;break-inside:avoid}
  #stage-proposal{break-before:page}
 }
@@ -937,29 +961,73 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
     <p class="block-title" style="margin:0">4 &middot; Standard proposal</p>
     <span class="proposal-badge" id="proposal-badge" role="status" aria-live="polite" title="Driven by the live gate / saving-claim status for the chosen plan; not an adoption probability.">&mdash;</span>
   </div>
-  <p class="lead" id="proposal-lead">The chosen path, funding and grants assembled into a shareable, printable leave-behind. Every figure is a committed output of the same engine that drives the Results and Charging stages &mdash; nothing here is re-derived. Print this stage (the controls hide automatically) to hand it over.</p>
+  <p class="lead" id="proposal-lead">Plan A (buy SRM) and Plan B (buy a competitor EV) assembled side by side into a shareable, printable leave-behind. Every figure is a committed output of the same engine that drives the Results and Charging stages &mdash; nothing here is re-derived. Each plan carries its OWN INDICATIVE / Confirmed honesty label, driven by that plan&apos;s live gate / saving-claim status. Print this stage (the controls hide automatically) to hand it over.</p>
   <p class="small" id="proposal-status-line">&mdash;</p>
 </div>
 
-<div class="proposal-grid">
-  <section class="proposal-block" id="proposal-quotation-block">
-    <p class="block-title">Quotation</p>
-    <p class="small" id="proposal-quotation-note">Vehicle quote(s), COE split, charging-site cost, Day-0 funding and the Total economic TCO for the chosen plan. All figures to 2 decimal places; an unavailable figure is shown as <span class="na">n.a.</span>, never a zero.</p>
-    <div class="table-wrap"><table id="proposal-quotation-table"><thead><tr><th>Line</th><th class="num">Amount</th></tr></thead><tbody id="proposal-quotation-body"></tbody></table></div>
-    <p class="caveat-line" id="proposal-quotation-caveat"></p>
+<!-- PER-PLAN PROPOSAL (FEAT-003 / Workstream E). Plan A (SRM) and Plan B
+     (competitor) render SIDE BY SIDE. Each plan column owns a quotation,
+     a servicing-coverage and an unresolved-conditions block, built ENTIRELY
+     from that plan's committed two-state engine output (Plan A <- plan_a /
+     code 2 / state_A; Plan B <- plan_b / code 3 / state_B). Each column's
+     badge inherits that plan's own gate / saving-claim status (INDICATIVE vs
+     Confirmed); nothing is re-derived and n.a. is shown as n.a., never a zero.
+     renderProposal(out) populates every table live on each recompute. -->
+<div class="proposal-plan-grid" id="proposal-plan-grid">
+  <section class="proposal-plan-col" id="proposal-col-plan_a" data-proposal-plan="plan_a">
+    <div class="proposal-plan-head">
+      <p class="block-title" id="proposal-plan-title-plan_a" style="margin:0">Plan A</p>
+      <span class="proposal-badge" id="proposal-badge-plan_a" role="status" aria-live="polite" title="Driven by this plan's live gate / saving-claim status; not an adoption probability.">&mdash;</span>
+    </div>
+    <p class="small" id="proposal-status-plan_a">&mdash;</p>
+
+    <section class="proposal-block" id="proposal-quotation-block-plan_a">
+      <p class="block-title">Quotation</p>
+      <p class="small">Vehicle quote, COE split, charging-site cost, Day-0 funding and the Total economic TCO for this plan. All figures to 2 decimal places; an unavailable figure is shown as <span class="na">n.a.</span>, never a zero.</p>
+      <div class="table-wrap"><table id="proposal-quotation-table-plan_a"><thead><tr><th>Line</th><th class="num">Amount</th></tr></thead><tbody id="proposal-quotation-body-plan_a"></tbody></table></div>
+      <p class="caveat-line" id="proposal-quotation-caveat-plan_a"></p>
+    </section>
+
+    <section class="proposal-block" id="proposal-servicing-block-plan_a">
+      <p class="block-title">Servicing coverage</p>
+      <p class="small">EV service basis is the supplied 200,000&nbsp;km schedule; per-km rate = schedule total / 200,000 (<span class="tag assumption">Assumption</span> average smooths timing). Committed engine outputs for this plan.</p>
+      <div class="table-wrap"><table id="proposal-servicing-table-plan_a"><thead><tr><th>Item</th><th class="num">Value</th></tr></thead><tbody id="proposal-servicing-body-plan_a"></tbody></table></div>
+      <p class="small">Use beyond 200,000&nbsp;km is a projection, not a quoted schedule. The service / evidence status is the model&apos;s own screen, not a signed service contract.</p>
+    </section>
+
+    <section class="proposal-block" id="proposal-conditions-block-plan_a">
+      <p class="block-title">Unresolved conditions</p>
+      <p class="small">What must be confirmed before this plan reads as a firm quotation: the model&apos;s own gates at the current inputs, plus every <span class="na">n.a.</span> / Unconfirmed / diagnostic flag on this plan.</p>
+      <div class="table-wrap"><table id="proposal-conditions-table-plan_a"><thead><tr><th>Condition</th><th>Status</th><th>What must be confirmed</th></tr></thead><tbody id="proposal-conditions-body-plan_a"></tbody></table></div>
+    </section>
   </section>
 
-  <section class="proposal-block" id="proposal-servicing-block">
-    <p class="block-title">Servicing coverage</p>
-    <p class="small">The EV service basis is the supplied 200,000&nbsp;km service schedule; the per-km service rate = schedule total / 200,000 (<span class="tag assumption">Assumption</span> average smooths timing). Figures below are committed engine outputs for the chosen plan.</p>
-    <div class="table-wrap"><table id="proposal-servicing-table"><thead><tr><th>Item</th><th class="num">Value</th></tr></thead><tbody id="proposal-servicing-body"></tbody></table></div>
-    <p class="small" id="proposal-servicing-caveat">Use beyond 200,000&nbsp;km is a projection, not a quoted schedule. The service / evidence status below is the model&apos;s own per-plan screen, not a signed service contract.</p>
-  </section>
+  <section class="proposal-plan-col" id="proposal-col-plan_b" data-proposal-plan="plan_b">
+    <div class="proposal-plan-head">
+      <p class="block-title" id="proposal-plan-title-plan_b" style="margin:0">Plan B</p>
+      <span class="proposal-badge" id="proposal-badge-plan_b" role="status" aria-live="polite" title="Driven by this plan's live gate / saving-claim status; not an adoption probability.">&mdash;</span>
+    </div>
+    <p class="small" id="proposal-status-plan_b">&mdash;</p>
 
-  <section class="proposal-block proposal-block-wide" id="proposal-conditions-block">
-    <p class="block-title">Unresolved conditions</p>
-    <p class="small">What must be confirmed before this reads as a firm quotation. These are the model&apos;s own gates at the current inputs, plus every <span class="na">n.a.</span> / Unconfirmed / diagnostic flag on the chosen plan. An empty list is only possible for a fully-cleared case.</p>
-    <div class="table-wrap"><table id="proposal-conditions-table"><thead><tr><th>Condition</th><th>Status</th><th>What must be confirmed</th></tr></thead><tbody id="proposal-conditions-body"></tbody></table></div>
+    <section class="proposal-block" id="proposal-quotation-block-plan_b">
+      <p class="block-title">Quotation</p>
+      <p class="small">Vehicle quote, COE split, charging-site cost, Day-0 funding and the Total economic TCO for this plan. All figures to 2 decimal places; an unavailable figure is shown as <span class="na">n.a.</span>, never a zero.</p>
+      <div class="table-wrap"><table id="proposal-quotation-table-plan_b"><thead><tr><th>Line</th><th class="num">Amount</th></tr></thead><tbody id="proposal-quotation-body-plan_b"></tbody></table></div>
+      <p class="caveat-line" id="proposal-quotation-caveat-plan_b"></p>
+    </section>
+
+    <section class="proposal-block" id="proposal-servicing-block-plan_b">
+      <p class="block-title">Servicing coverage</p>
+      <p class="small">EV service basis is the supplied 200,000&nbsp;km schedule; per-km rate = schedule total / 200,000 (<span class="tag assumption">Assumption</span> average smooths timing). Committed engine outputs for this plan.</p>
+      <div class="table-wrap"><table id="proposal-servicing-table-plan_b"><thead><tr><th>Item</th><th class="num">Value</th></tr></thead><tbody id="proposal-servicing-body-plan_b"></tbody></table></div>
+      <p class="small">Use beyond 200,000&nbsp;km is a projection, not a quoted schedule. The service / evidence status is the model&apos;s own screen, not a signed service contract.</p>
+    </section>
+
+    <section class="proposal-block" id="proposal-conditions-block-plan_b">
+      <p class="block-title">Unresolved conditions</p>
+      <p class="small">What must be confirmed before this plan reads as a firm quotation: the model&apos;s own gates at the current inputs, plus every <span class="na">n.a.</span> / Unconfirmed / diagnostic flag on this plan.</p>
+      <div class="table-wrap"><table id="proposal-conditions-table-plan_b"><thead><tr><th>Condition</th><th>Status</th><th>What must be confirmed</th></tr></thead><tbody id="proposal-conditions-body-plan_b"></tbody></table></div>
+    </section>
   </section>
 </div>
 
@@ -977,45 +1045,97 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      proposal's INDICATIVE / Confirmed wording and keeps n.a. as n.a. The block
      is printable (NOT .noprint) when the toggle is ON so it accompanies the
      proposal; its controls are .noprint. -->
+<!-- STAGE 5 FINANCE (illustrative) block (FEAT-003 per-plan rework). A SEPARATE,
+     OPT-IN financing illustration applied to Plan A (SRM) and Plan B (competitor)
+     SEPARATELY. It is deliberately NOT part of the economic TCO: the economic TCO
+     excludes loans and interest by design (README). The block is OFF BY DEFAULT
+     behind a single toggle; when off, nothing finance-related touches either
+     plan's quotation / servicing / conditions blocks or either economic Total.
+     When on, renderFinance() reads the per-plan controls and calls the additive
+     src/finance.js amortise() ONCE PER PLAN with that plan's own principal
+     (defaulting read-only to that plan's already-computed Day-0 funding). Each
+     plan renders its own financial-component breakdown (upfront / principal
+     financed / total interest / total repaid / monthly instalment). It writes NO
+     economic number and never mutates the state used by computeFleet, and
+     src/finance.js never imports or references the frozen engine. The block is
+     printable (NOT .noprint) when the toggle is ON; its controls are .noprint. -->
 <section class="proposal-block proposal-block-wide proposal-finance" id="proposal-finance-block">
   <div class="proposal-finance-head">
-    <p class="block-title" style="margin:0">Financing (illustrative)</p>
+    <p class="block-title" style="margin:0">Financing (illustrative) &mdash; per plan</p>
     <label class="finance-toggle noprint" for="finance-enable">
       <input type="checkbox" id="finance-enable"> Show a financing illustration
     </label>
   </div>
-  <p class="small finance-exclusion" id="finance-exclusion"><strong>NOT part of the economic TCO.</strong> The economic TCO above excludes loans and interest by design &mdash; it is an all-cash ownership cost. This is a <strong>separate, illustrative</strong> instalment view for discussion only; changing anything here does <strong>not</strong> change any figure in the quotation, servicing or conditions blocks, or the Total economic TCO.</p>
-  <div class="finance-controls noprint" id="finance-controls" hidden>
-    <label class="finance-ctl" for="finance-principal-src">Amount to finance
-      <select id="finance-principal-src" aria-label="Which amount to finance">
-        <option value="day0">Chosen plan Day-0 funding (from the quotation)</option>
-        <option value="custom">Enter a custom principal</option>
-      </select>
-    </label>
-    <label class="finance-ctl" for="finance-principal">Principal S$
-      <input type="number" id="finance-principal" min="0" step="1000" inputmode="decimal" aria-label="Principal to finance (S$)">
-    </label>
-    <label class="finance-ctl" for="finance-deposit">Deposit / down-payment S$
-      <input type="number" id="finance-deposit" min="0" step="1000" value="0" inputmode="decimal" aria-label="Deposit / down-payment (S$)">
-    </label>
-    <label class="finance-ctl" for="finance-apr">Interest rate APR %
-      <input type="number" id="finance-apr" min="0" step="0.1" value="4.5" inputmode="decimal" aria-label="Annual interest rate (APR %)">
-    </label>
-    <label class="finance-ctl" for="finance-term">Term
-      <input type="number" id="finance-term" min="1" step="1" value="60" inputmode="numeric" aria-label="Loan term">
-    </label>
-    <label class="finance-ctl" for="finance-term-unit">Term unit
-      <select id="finance-term-unit" aria-label="Term unit">
-        <option value="months">months</option>
-        <option value="years">years</option>
-      </select>
-    </label>
-  </div>
-  <p class="small finance-off-note" id="finance-off-note">Financing illustration is <strong>off</strong>. Tick &ldquo;Show a financing illustration&rdquo; to model an instalment plan for the chosen quotation. It stays separate from the economic TCO.</p>
-  <div id="finance-output" hidden>
-    <p class="small" id="finance-status-line">&mdash;</p>
-    <div class="table-wrap"><table id="finance-summary-table"><thead><tr><th>Line</th><th class="num">Amount</th></tr></thead><tbody id="finance-summary-body"></tbody></table></div>
-    <p class="caveat-line" id="finance-caveat"></p>
+  <p class="small finance-exclusion" id="finance-exclusion"><strong>NOT part of the economic TCO &mdash; for BOTH Plan A and Plan B.</strong> The economic TCO above excludes loans and interest by design &mdash; it is an all-cash ownership cost. This is a <strong>separate, illustrative</strong> instalment view for discussion only; changing any financing input here does <strong>not</strong> change any figure in either plan&apos;s quotation, servicing or conditions blocks, or either Total economic TCO.</p>
+  <p class="small finance-off-note" id="finance-off-note">Financing illustration is <strong>off</strong>. Tick &ldquo;Show a financing illustration&rdquo; to model a per-plan instalment plan for Plan A and Plan B. It stays separate from the economic TCO.</p>
+  <div class="finance-plan-grid" id="finance-output" hidden>
+    <!-- PLAN A financing column. Controls + breakdown are independent of Plan B. -->
+    <section class="finance-plan-col" id="finance-col-plan_a" data-finance-plan="plan_a">
+      <p class="block-title" id="finance-plan-title-plan_a" style="margin:0 0 6px">Plan A financing</p>
+      <p class="small" id="finance-status-line" aria-live="polite">&mdash;</p>
+      <div class="finance-controls noprint" id="finance-controls">
+        <label class="finance-ctl" for="finance-principal-src">Amount to finance
+          <select id="finance-principal-src" aria-label="Plan A: which amount to finance">
+            <option value="day0">Plan A Day-0 funding (from its quotation)</option>
+            <option value="custom">Enter a custom principal</option>
+          </select>
+        </label>
+        <label class="finance-ctl" for="finance-principal">Principal S$
+          <input type="number" id="finance-principal" min="0" step="1000" inputmode="decimal" aria-label="Plan A principal to finance (S$)">
+        </label>
+        <label class="finance-ctl" for="finance-deposit">Deposit / down-payment S$
+          <input type="number" id="finance-deposit" min="0" step="1000" value="0" inputmode="decimal" aria-label="Plan A deposit / down-payment (S$)">
+        </label>
+        <label class="finance-ctl" for="finance-apr">Interest rate APR %
+          <input type="number" id="finance-apr" min="0" step="0.1" value="4.5" inputmode="decimal" aria-label="Plan A annual interest rate (APR %)">
+        </label>
+        <label class="finance-ctl" for="finance-term">Term
+          <input type="number" id="finance-term" min="1" step="1" value="60" inputmode="numeric" aria-label="Plan A loan term">
+        </label>
+        <label class="finance-ctl" for="finance-term-unit">Term unit
+          <select id="finance-term-unit" aria-label="Plan A term unit">
+            <option value="months">months</option>
+            <option value="years">years</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-wrap"><table id="finance-summary-table"><thead><tr><th>Financial component</th><th class="num">Amount</th></tr></thead><tbody id="finance-summary-body"></tbody></table></div>
+      <p class="caveat-line" id="finance-caveat"></p>
+    </section>
+
+    <!-- PLAN B financing column. Controls + breakdown are independent of Plan A. -->
+    <section class="finance-plan-col" id="finance-col-plan_b" data-finance-plan="plan_b">
+      <p class="block-title" id="finance-plan-title-plan_b" style="margin:0 0 6px">Plan B financing</p>
+      <p class="small" id="finance-status-line-b" aria-live="polite">&mdash;</p>
+      <div class="finance-controls noprint" id="finance-controls-b">
+        <label class="finance-ctl" for="finance-principal-src-b">Amount to finance
+          <select id="finance-principal-src-b" aria-label="Plan B: which amount to finance">
+            <option value="day0">Plan B Day-0 funding (from its quotation)</option>
+            <option value="custom">Enter a custom principal</option>
+          </select>
+        </label>
+        <label class="finance-ctl" for="finance-principal-b">Principal S$
+          <input type="number" id="finance-principal-b" min="0" step="1000" inputmode="decimal" aria-label="Plan B principal to finance (S$)">
+        </label>
+        <label class="finance-ctl" for="finance-deposit-b">Deposit / down-payment S$
+          <input type="number" id="finance-deposit-b" min="0" step="1000" value="0" inputmode="decimal" aria-label="Plan B deposit / down-payment (S$)">
+        </label>
+        <label class="finance-ctl" for="finance-apr-b">Interest rate APR %
+          <input type="number" id="finance-apr-b" min="0" step="0.1" value="4.5" inputmode="decimal" aria-label="Plan B annual interest rate (APR %)">
+        </label>
+        <label class="finance-ctl" for="finance-term-b">Term
+          <input type="number" id="finance-term-b" min="1" step="1" value="60" inputmode="numeric" aria-label="Plan B loan term">
+        </label>
+        <label class="finance-ctl" for="finance-term-unit-b">Term unit
+          <select id="finance-term-unit-b" aria-label="Plan B term unit">
+            <option value="months">months</option>
+            <option value="years">years</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-wrap"><table id="finance-summary-table-b"><thead><tr><th>Financial component</th><th class="num">Amount</th></tr></thead><tbody id="finance-summary-body-b"></tbody></table></div>
+      <p class="caveat-line" id="finance-caveat-b"></p>
+    </section>
   </div>
 </section>
 </section>
@@ -5322,72 +5442,84 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   }
 
   // ---- Stage 5 standard proposal (presentation-only leave-behind) ---------
-  // Built ENTIRELY from existing engine outputs. The best EV plan is chosen the
-  // same way the Prospects view does (window.HSEngine.scoreProspect); the three
-  // blocks read that result's committed figures. The whole header + quotation
-  // INHERIT the chosen plan's gate / claim status: only a fully-cleared case
-  // (gatePass true, numeric Total, 'Meets entered X% target') reads as a
-  // confirmed quotation; everything else (diagnostic, illustrative, below
-  // target, failing gates, n.a. Total) reads as 'INDICATIVE / pending evidence',
-  // and the same wording prints. No new economic math is done here.
-  function renderProposal(out){
-    var stage = el('stage-proposal');
-    var badge = el('proposal-badge');
-    if (!badge) return;
-    var r = out.results;
-    var score = scoreProspect ? scoreProspect(out) : null;
-
-    // The chosen plan. Fall back to the saving-% best EV plan (same helper the
-    // confidence badge uses) if scoreProspect is unavailable.
-    var key = (score && score.bestPlanKey) ? score.bestPlanKey : bestEvPlanKey(out);
-    var label = score && score.bestPlanLabel && score.bestPlanLabel !== 'n.a.'
-      ? score.bestPlanLabel : (PLAN_LABELS[key] || 'n.a.');
+  // FEAT-003 / Workstream E: the proposal now mirrors the TCO Plan A (SRM) vs
+  // Plan B (competitor) framing. Plan A and Plan B render SIDE BY SIDE, each
+  // column built ENTIRELY from that plan's committed two-state engine output
+  // (Plan A <- plan_a / code 2 / state_A; Plan B <- plan_b / code 3 / state_B).
+  // Each column INHERITS ITS OWN gate / saving-claim honesty: a plan that
+  // clears all gates, has a numeric Total and meets the saving target reads as
+  // a confirmed quotation; otherwise it reads INDICATIVE / pending evidence.
+  // Nothing is re-derived; n.a. stays n.a., never a zero. No new economic math.
+  //
+  // planGate(r,key) replicates (does NOT re-derive) the same gate logic
+  // scoreProspect uses, but PER PLAN KEY, so each column's badge is driven by
+  // that plan's own committed vehicle/site/claim/Total status.
+  function planGate(r, key){
+    var vehicleStatus = r.vehicleStatus[key];
+    var siteStatus = r.siteStatus[key];
     var claim = r.savingClaimStatus[key];
-
-    // A confirmed quotation requires ALL of: scoreProspect gatePass true, a
-    // numeric Total economic TCO, and the committed saving-claim met.
-    var gatePass = !!(score && score.gatePass);
+    var failsVehicle = vehicleStatus === 'Fails entered limits';
+    var siteFails = siteStatus === 'Site timing/power fails' ||
+      siteStatus === 'Missing site quote' || siteStatus === 'Missing public fixed cost' ||
+      siteStatus === 'Review site inputs';
+    var diagnostic = claim === 'Diagnostic only' || claim === 'Total incomplete';
+    var gatePass = !failsVehicle && !diagnostic && !siteFails;
+    var gateStatus;
+    if (failsVehicle) gateStatus = 'Fails entered limits';
+    else if (diagnostic) gateStatus = 'Diagnostic only';
+    else if (siteFails) gateStatus = 'Site inputs incomplete';
+    else if (vehicleStatus === 'Vehicle evidence open') gateStatus = 'Vehicle evidence open';
+    else gateStatus = 'Within entered limits';
     var totalNumeric = isNum(r.totalEconomicTco[key]);
     var claimMet = typeof claim === 'string' && claim.indexOf('Meets entered') === 0;
-    var confirmed = gatePass && totalNumeric && claimMet;
+    return {
+      gatePass: gatePass, gateStatus: gateStatus, claim: claim,
+      totalNumeric: totalNumeric, claimMet: claimMet,
+      confirmed: gatePass && totalNumeric && claimMet
+    };
+  }
 
-    // Badge + header wording inherit the status.
-    var bcls = confirmed ? 'pb-confirmed' : 'pb-indicative';
-    badge.className = 'proposal-badge ' + bcls;
+  // Render ONE plan column (quotation + servicing + unresolved conditions +
+  // its own INDICATIVE/Confirmed badge) for the given plan key ('plan_a' |
+  // 'plan_b'). Every figure is a committed engine output read from `out`.
+  function renderProposalPlan(out, key){
+    var r = out.results;
+    var badge = el('proposal-badge-' + key);
+    if (!badge) return null;
+    var label = PLAN_LABELS[key] || 'n.a.';
+    var g = planGate(r, key);
+    var confirmed = g.confirmed;
+
+    // Per-plan badge inherits that plan's own status.
+    badge.className = 'proposal-badge ' + (confirmed ? 'pb-confirmed' : 'pb-indicative');
     badge.innerHTML = confirmed
       ? 'Confirmed quotation &middot; ' + esc(label)
       : 'INDICATIVE &middot; pending evidence';
-    if (stage){
-      var base = (stage.className || 'stage')
-        .replace(/\s*proposal-confirmed/g,'').replace(/\s*proposal-pending/g,'');
-      stage.className = base.trim() + (confirmed ? ' proposal-confirmed' : ' proposal-pending');
-    }
 
-    var gateStatus = score ? score.gateStatus : null;
-    var statusLine = el('proposal-status-line');
+    var title = el('proposal-plan-title-' + key);
+    if (title) title.textContent = label;
+
+    var statusLine = el('proposal-status-' + key);
     if (statusLine){
+      statusLine.className = 'small' + (confirmed ? '' : ' finance-indicative');
       if (confirmed){
-        statusLine.innerHTML = 'Chosen plan: <strong>' + esc(label) + '</strong>. ' +
-          'All gates clear and the committed saving target is met, so this reads as a ' +
-          'confirmed quotation &mdash; still <strong>conditional on the supplied figures</strong>, not an adoption probability.';
+        statusLine.innerHTML = '<strong>' + esc(label) + '</strong>: all gates clear and the committed ' +
+          'saving target is met, so this reads as a confirmed quotation &mdash; still ' +
+          '<strong>conditional on the supplied figures</strong>, not an adoption probability.';
       } else {
-        statusLine.innerHTML = 'Chosen plan: <strong>' + esc(label) + '</strong>. ' +
-          'This is an <strong>indicative</strong> leave-behind, not a firm quotation: ' +
-          (gateStatus ? 'gate status <strong>' + esc(gateStatus) + '</strong>; ' : '') +
-          'saving-claim status <strong>' + fmtText(claim) + '</strong>. ' +
+        statusLine.innerHTML = '<strong>' + esc(label) + '</strong>: this is an <strong>indicative</strong> ' +
+          'leave-behind, not a firm quotation &mdash; gate status <strong>' + esc(g.gateStatus) + '</strong>; ' +
+          'saving-claim status <strong>' + fmtText(g.claim) + '</strong>. ' +
           'The unresolved conditions below list what must be confirmed first.';
       }
     }
 
-    // ---- QUOTATION block (committed figures for the chosen plan) ----------
-    // Vehicle economic TCO split into vehicle + COE where the per-plan Day-0
-    // charging-site cost is read from the site intermediates (same source the
-    // Day-0 cards use). No figure is re-derived; n.a. stays n.a.
+    // ---- QUOTATION block (committed figures for this plan) ----------------
     var code = ({keep_ice:0,all_new_ice:1,plan_a:2,plan_b:3})[key];
     var sites = out.sites || {};
     var site = sites[code];
     var siteDay0 = (site && (code===2||code===3)) ? site.initialLessAward : NA;
-    var qb = el('proposal-quotation-body');
+    var qb = el('proposal-quotation-body-' + key);
     if (qb){
       function qrow(line, v, strong){
         var cls = strong ? ' class="resultline proposal-total"' : '';
@@ -5403,7 +5535,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       html += qrow('Total economic TCO (10-year)', r.totalEconomicTco[key], true);
       qb.innerHTML = html;
     }
-    var qcav = el('proposal-quotation-caveat');
+    var qcav = el('proposal-quotation-caveat-' + key);
     if (qcav){
       qcav.innerHTML = confirmed
         ? 'Confirmed on the supplied figures only. The COE line is the acquisition COE embedded in the vehicle economic TCO, not a separate charge. Saving % is whole-fleet, not per-truck.'
@@ -5411,7 +5543,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     }
 
     // ---- SERVICING COVERAGE block (committed outputs) ---------------------
-    var sb = el('proposal-servicing-body');
+    var sb = el('proposal-servicing-body-' + key);
     if (sb){
       function srow(item, html){ return '<tr><td>' + item + '</td><td class="num">' + html + '</td></tr>'; }
       var cpk = r.costPerKm[key];
@@ -5425,84 +5557,130 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     }
 
     // ---- UNRESOLVED CONDITIONS block (honesty backbone) -------------------
-    // The gates (same data as the gates-table) PLUS every n.a. / Unconfirmed /
-    // diagnostic flag on the chosen plan. For a confirmed case this may be an
-    // explicit 'all cleared' note.
-    var cb = el('proposal-conditions-body');
+    var cb = el('proposal-conditions-body-' + key);
     if (cb){
       function cond(name, status, cls, need){
         return '<tr><td>' + name + '</td><td class="' + (cls||'') + '">' + status + '</td><td>' + need + '</td></tr>';
       }
       function openFlag(s){
-        // A status that is NOT a clean pass is an open condition.
         if (s === 'Within entered limits' || s === 'Within entered site limits' ||
             s === 'Complete' || s === 'Public only' || s === 'Public access entered' ||
             s === 'Access OK') return false;
         return true;
       }
       var rows = [];
-      // Vehicle service gate.
       var vs = r.vehicleStatus[key];
       rows.push(cond('Service screen (vehicle evidence)', fmtText(vs),
         openFlag(vs) ? 'statuswarn' : 'statusok',
         'Completed-body payload, battery route allowance and entered limits.'));
-      // Capacity / site gate.
       var ss = r.siteStatus[key];
       rows.push(cond('Capacity gate (site access)', fmtText(ss),
         openFlag(ss) ? 'statuswarn' : 'statusok',
         'Spare power, plug-hours, an approved parking plug per EV and a surveyed site.'));
-      // Evidence verification flags (same oc rows as the gates table).
       [['Backup confirmed',58,'Costed substitute-service contract for the same workload.'],
        ['Loaded trial confirmed',59,'Loaded route and charging trial with measured grid kWh.'],
-       ['Energy prices confirmed',60,'Current company diesel and electricity contracts.']].forEach(function(g){
-        var val = ocVal(g[1]);
+       ['Energy prices confirmed',60,'Current company diesel and electricity contracts.']].forEach(function(gg){
+        var val = ocVal(gg[1]);
         var clean = (val === 'Yes' || val === 'Verified');
-        rows.push(cond(g[0], fmtText(val), clean ? 'statusok' : 'statuswarn', g[2]));
+        rows.push(cond(gg[0], fmtText(val), clean ? 'statusok' : 'statuswarn', gg[2]));
       });
-      // Total / saving-claim flag.
-      if (!totalNumeric){
+      if (!g.totalNumeric){
         rows.push(cond('Total economic TCO', naSpan(), 'statuswarn',
           'A plan Total stays n.a. until the gate that drives it clears (e.g. the charging-site quote). Shown as n.a., never a zero.'));
       }
-      if (!claimMet){
-        rows.push(cond('Saving-claim status', fmtText(claim), 'statuswarn',
+      if (!g.claimMet){
+        rows.push(cond('Saving-claim status', fmtText(g.claim), 'statuswarn',
           'The committed fleet saving target must be met on the supplied figures before this reads as a confirmed win.'));
       }
       cb.innerHTML = rows.join('');
     }
 
-    // Publish the read-only context the SEPARATE finance illustration needs:
-    // the chosen plan's already-computed Day-0 funding (never re-derived), the
-    // confirmed/indicative status wording to inherit, and the plan label. This
-    // is one-way: renderProposal -> finance. The finance block NEVER writes back
-    // into `state`, `r`, or any economic figure.
+    return { key: key, label: label, confirmed: confirmed,
+      day0Funding: r.day0Funding[key] };
+  }
+
+  function renderProposal(out){
+    var stage = el('stage-proposal');
+    if (!el('proposal-badge-plan_a')) return;
+    var r = out.results;
+
+    // Render BOTH plan columns from their own committed outputs.
+    var ctxA = renderProposalPlan(out, 'plan_a');
+    var ctxB = renderProposalPlan(out, 'plan_b');
+
+    // Stage-level state class: 'confirmed' only when BOTH plans are confirmed,
+    // otherwise 'pending' (each column still carries its own badge). The score
+    // helper still drives the top status line for the recommended plan.
+    var score = scoreProspect ? scoreProspect(out) : null;
+    var bothConfirmed = !!(ctxA && ctxA.confirmed && ctxB && ctxB.confirmed);
+    if (stage){
+      var base = (stage.className || 'stage')
+        .replace(/\s*proposal-confirmed/g,'').replace(/\s*proposal-pending/g,'');
+      stage.className = base.trim() + (bothConfirmed ? ' proposal-confirmed' : ' proposal-pending');
+    }
+    var statusLine = el('proposal-status-line');
+    if (statusLine){
+      var recKey = (score && score.bestPlanKey) ? score.bestPlanKey : bestEvPlanKey(out);
+      var recLabel = PLAN_LABELS[recKey] || 'n.a.';
+      var aLab = ctxA ? ctxA.label : (PLAN_LABELS.plan_a||'Plan A');
+      var bLab = ctxB ? ctxB.label : (PLAN_LABELS.plan_b||'Plan B');
+      statusLine.innerHTML = 'Comparing <strong>' + esc(aLab) + '</strong> and <strong>' + esc(bLab) +
+        '</strong> side by side. Each plan carries its own INDICATIVE / Confirmed label from its live ' +
+        'gate / saving-claim status. On the model&apos;s own screen the stronger EV plan is ' +
+        '<strong>' + esc(recLabel) + '</strong> &mdash; still <strong>conditional on the supplied figures</strong>, not an adoption probability.';
+    }
+
+    // Publish the read-only, PER-PLAN context the SEPARATE finance illustration
+    // needs: each plan's already-computed Day-0 funding (never re-derived), its
+    // confirmed/indicative status and label. One-way: renderProposal -> finance.
+    // The finance block NEVER writes back into `state`, `r`, or any economic
+    // figure (proved by check_finance.mjs).
     financeContext = {
-      day0Funding: r.day0Funding[key],
-      confirmed: confirmed,
-      label: label,
+      plan_a: {
+        day0Funding: ctxA ? ctxA.day0Funding : NA,
+        confirmed: ctxA ? ctxA.confirmed : false,
+        label: ctxA ? ctxA.label : (PLAN_LABELS.plan_a || 'Plan A')
+      },
+      plan_b: {
+        day0Funding: ctxB ? ctxB.day0Funding : NA,
+        confirmed: ctxB ? ctxB.confirmed : false,
+        label: ctxB ? ctxB.label : (PLAN_LABELS.plan_b || 'Plan B')
+      }
     };
     renderFinance();
   }
 
-  // ---- Stage 5 FINANCE (illustrative) block (FEAT-004) --------------------
-  // A SEPARATE, OPT-IN financing illustration. It is deliberately EXCLUDED from
-  // the economic TCO (the economic TCO excludes loans/interest by design), and
-  // it is PROVABLY isolated from the frozen engine: it reads only a read-only
-  // copy of the chosen plan's Day-0 funding (published by renderProposal above)
-  // and calls window.HSFinance.amortise() -- a module that does NOT import or
-  // reference computeFleet. renderFinance() writes NO economic number and never
-  // mutates `state`. When the toggle is OFF the output is hidden and nothing
-  // here touches the quotation / servicing / conditions / Total.
-  var financeContext = { day0Funding: NA, confirmed: false, label: 'n.a.' };
+  // ---- Stage 5 FINANCE (illustrative) block (FEAT-003 per-plan rework) ----
+  // A SEPARATE, OPT-IN financing illustration applied to Plan A (SRM) and Plan B
+  // (competitor) SEPARATELY. It is deliberately EXCLUDED from the economic TCO
+  // (the economic TCO excludes loans/interest by design) and is PROVABLY
+  // isolated from the frozen engine: it reads only a read-only copy of each
+  // plan's Day-0 funding (published PER PLAN by renderProposal above) and calls
+  // window.HSFinance.amortise() ONCE PER PLAN with that plan's own principal --
+  // a module that does NOT import or reference computeFleet / scoreProspect.
+  // renderFinance() writes NO economic number and never mutates `state`. Each
+  // plan's controls (APR / term / deposit / principal-source) drive ONLY that
+  // plan's breakdown, so a Plan A input never perturbs Plan B's figures and
+  // vice-versa. When the toggle is OFF the output is hidden and nothing here
+  // touches either plan's quotation / servicing / conditions / Total.
+  var financeContext = {
+    plan_a: { day0Funding: NA, confirmed: false, label: 'Plan A' },
+    plan_b: { day0Funding: NA, confirmed: false, label: 'Plan B' }
+  };
   var financeWired = false;
 
-  // Wire the finance controls ONCE. Every control just re-renders the finance
-  // illustration; NONE of them call recompute() or touch `state`, so the
-  // economic TCO is never affected by anything the user does here.
+  // Per-plan control id suffix: Plan A uses the base ids, Plan B uses '-b'.
+  var FINANCE_PLAN_SUFFIX = { plan_a: '', plan_b: '-b' };
+
+  // Wire BOTH plans' finance controls (+ the shared toggle) ONCE. Every control
+  // just re-renders the finance illustration; NONE of them call recompute() or
+  // touch `state`, so the economic TCO is never affected by anything the user
+  // does here.
   function wireFinanceControls(){
     if (financeWired) return;
-    var ids = ['finance-enable','finance-principal-src','finance-principal',
-      'finance-deposit','finance-apr','finance-term','finance-term-unit'];
+    var ids = ['finance-enable',
+      'finance-principal-src','finance-principal','finance-deposit','finance-apr','finance-term','finance-term-unit',
+      'finance-principal-src-b','finance-principal-b','finance-deposit-b','finance-apr-b','finance-term-b','finance-term-unit-b'];
     var any = false;
     ids.forEach(function(id){
       var node = el(id);
@@ -5520,79 +5698,73 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     return !!(t && t.checked);
   }
 
-  // Resolve the principal from the control: either the chosen plan's Day-0
-  // funding (read-only, from financeContext) or a user-entered custom value.
-  function financePrincipal(){
-    var srcSel = el('finance-principal-src');
+  // Resolve ONE plan's principal from that plan's own controls: either the
+  // plan's Day-0 funding (read-only, from financeContext[key]) or a per-plan
+  // user-entered custom value. Reads only this plan's inputs.
+  function financePrincipal(key){
+    var sfx = FINANCE_PLAN_SUFFIX[key] || '';
+    var srcSel = el('finance-principal-src' + sfx);
     var src = srcSel ? srcSel.value : 'day0';
-    var pin = el('finance-principal');
+    var pin = el('finance-principal' + sfx);
     if (src === 'custom'){
       var cv = pin ? parseFloat(pin.value) : NaN;
       return isNum(cv) ? cv : null;
     }
-    // Day-0 funding source: use the published figure (may be n.a.).
-    var d0 = financeContext.day0Funding;
+    var d0 = financeContext[key] ? financeContext[key].day0Funding : NA;
     var val = (d0 === NA || !isNum(d0)) ? null : d0;
-    // Keep the principal input in sync as a read-only reflection of the Day-0
-    // figure, so the user can see (and then override) the defaulted number.
+    // Reflect the Day-0 figure into this plan's principal box (read-only
+    // default the user can then override) without disturbing the other plan.
     if (pin && val != null) pin.value = String(Math.round(val * 100) / 100);
     return val;
   }
 
-  function renderFinance(){
-    var block = el('proposal-finance-block');
-    if (!block) return;
-    wireFinanceControls();
-    var controls = el('finance-controls');
-    var output = el('finance-output');
-    var offNote = el('finance-off-note');
-    var on = financeEnabled();
-
-    // Toggle the printable/visible state. The block prints only when ON.
-    var base = (block.className || '').replace(/\s*finance-on/g, '');
-    block.className = base.trim() + (on ? ' finance-on' : '');
-    if (controls) controls.hidden = !on;
-    if (output) output.hidden = !on;
-    if (offNote) offNote.hidden = on;
-    if (!on) return; // OFF: nothing finance-related is computed or shown.
-
+  // Render ONE plan's financial-component breakdown by calling amortise() with
+  // THIS plan's own principal / deposit / APR / term. Returns nothing; writes
+  // only into this plan's own summary body + caveat + status line.
+  function renderFinancePlan(key){
     var HSF = (typeof window !== 'undefined') ? window.HSFinance : null;
-    var statusLine = el('finance-status-line');
-    var body = el('finance-summary-body');
-    var caveat = el('finance-caveat');
+    var sfx = FINANCE_PLAN_SUFFIX[key] || '';
+    var ctx = financeContext[key] || { confirmed: false, label: key };
+    var statusLine = el('finance-status-line' + sfx);
+    var body = el('finance-summary-body' + sfx);
+    var caveat = el('finance-caveat' + sfx);
+    var title = el('finance-plan-title-' + key);
+    if (title) title.textContent = (ctx.label || key) + ' financing';
 
-    // Inherit the proposal's INDICATIVE / Confirmed wording.
-    var indicative = !financeContext.confirmed;
+    // Inherit THIS plan's INDICATIVE / Confirmed wording.
+    var indicative = !ctx.confirmed;
     if (statusLine){
       statusLine.className = 'small' + (indicative ? ' finance-indicative' : '');
-      statusLine.innerHTML = 'Illustrative financing for the chosen plan <strong>' +
-        esc(financeContext.label) + '</strong>, ' +
+      statusLine.innerHTML = 'Illustrative financing for <strong>' + esc(ctx.label || key) + '</strong>, ' +
         (indicative
-          ? 'inheriting the <strong>INDICATIVE</strong> status of the quotation above (pending evidence). '
-          : 'alongside the <strong>confirmed</strong> quotation above (still conditional on the supplied figures). ') +
+          ? 'inheriting the <strong>INDICATIVE</strong> status of this plan&apos;s quotation (pending evidence). '
+          : 'alongside this plan&apos;s <strong>confirmed</strong> quotation (still conditional on the supplied figures). ') +
         'It is <strong>not</strong> part of the economic TCO.';
     }
 
-    // Resolve inputs. Term may be entered in months or years.
-    var principal = financePrincipal();
-    var depEl = el('finance-deposit');
+    // Resolve THIS plan's inputs. Term may be entered in months or years.
+    var principal = financePrincipal(key);
+    var depEl = el('finance-deposit' + sfx);
     var deposit = depEl ? parseFloat(depEl.value) : 0;
     if (!isNum(deposit) || deposit < 0) deposit = 0;
-    var aprEl = el('finance-apr');
+    var aprEl = el('finance-apr' + sfx);
     var apr = aprEl ? parseFloat(aprEl.value) : NaN;
-    var termEl = el('finance-term');
+    var termEl = el('finance-term' + sfx);
     var term = termEl ? parseFloat(termEl.value) : NaN;
-    var unitEl = el('finance-term-unit');
+    var unitEl = el('finance-term-unit' + sfx);
     var unit = unitEl ? unitEl.value : 'months';
     var termMonths = (unit === 'years') ? term * 12 : term;
 
-    // Financed amount = principal - deposit (module guards the arithmetic).
+    // Financed amount = principal - deposit (the module guards the arithmetic).
     var financed = (HSF && principal != null)
       ? HSF.financedAmount(principal, deposit) : null;
 
+    // amortise() is called ONCE for THIS plan with THIS plan's own principal.
     var result = (HSF && financed != null)
       ? HSF.amortise({ principal: financed, annualRatePct: apr, termMonths: termMonths })
       : (HSF ? HSF.naResult('financed amount not available') : null);
+    // summarise() carries the compact headline figures of the same result.
+    var summ = (HSF && result) ? HSF.summarise(result) : null;
 
     if (body){
       function frow(line, html, strong){
@@ -5604,24 +5776,45 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       var monthsLabel = (unit === 'years')
         ? (isNum(term) ? (term + ' yr (' + (isNum(termMonths)?termMonths:naSpan()) + ' months)') : naSpan())
         : (isNum(termMonths) ? (termMonths + ' months') : naSpan());
+      // FINANCIAL-COMPONENT BREAKDOWN (per plan): upfront / down-payment, loan
+      // principal financed, total interest, total repaid, monthly instalment.
       var html = '';
-      html += frow('Principal (before deposit)', (principal!=null?fmtMoney(principal):naSpan()), false);
-      html += frow('Deposit / down-payment', fmtMoney(deposit), false);
-      html += frow('Financed amount (principal &minus; deposit)', (financed!=null?fmtMoney(financed):naSpan()), false);
+      html += frow('Upfront / down-payment', fmtMoney(deposit), false);
+      html += frow('Loan principal financed (principal &minus; deposit)', (financed!=null?fmtMoney(financed):naSpan()), false);
       html += frow('Interest rate (APR)', (isNum(apr)?(apr.toFixed(2)+'%'):naSpan()), false);
       html += frow('Term', monthsLabel, false);
-      html += frow('Monthly instalment', (okRes?fmtMoney(result.monthlyInstalment):naSpan()), true);
-      html += frow('Total interest (illustrative)', (okRes?fmtMoney(result.totalInterest):naSpan()), false);
-      html += frow('Total repaid over the term', (okRes?fmtMoney(result.totalRepaid):naSpan()), false);
+      html += frow('Monthly instalment', ((summ&&summ.ok)?fmtMoney(summ.monthlyInstalment):naSpan()), true);
+      html += frow('Total interest paid (illustrative)', ((summ&&summ.ok)?fmtMoney(summ.totalInterest):naSpan()), false);
+      html += frow('Total repaid over the term', ((summ&&summ.ok)?fmtMoney(summ.totalRepaid):naSpan()), false);
       body.innerHTML = html;
     }
 
     if (caveat){
       var why = (result && !result.ok && result.reason) ? (' (' + esc(result.reason) + ')') : '';
       caveat.innerHTML = (result && result.ok)
-        ? 'Equal-monthly-instalment (annuity) illustration on the supplied rate, term and deposit only. Interest and loan structuring are <strong>excluded from the economic TCO by design</strong>; this figure never feeds back into any economic number above. An <span class="na">n.a.</span> stays n.a.'
-        : 'Enter a positive financed amount, a non-negative APR and a whole-month term to see an instalment illustration. An unavailable figure is shown as <span class="na">n.a.</span>' + why + ', never a zero. This block is excluded from the economic TCO.';
+        ? 'Equal-monthly-instalment (annuity) illustration on this plan&apos;s supplied rate, term and deposit only. Interest and loan structuring are <strong>excluded from the economic TCO by design</strong>; this figure never feeds back into any economic number above, and it is independent of the other plan&apos;s financing. An <span class="na">n.a.</span> stays n.a.'
+        : 'Enter a positive financed amount, a non-negative APR and a whole-month term to see an instalment illustration for this plan. An unavailable figure is shown as <span class="na">n.a.</span>' + why + ', never a zero. This block is excluded from the economic TCO.';
     }
+  }
+
+  function renderFinance(){
+    var block = el('proposal-finance-block');
+    if (!block) return;
+    wireFinanceControls();
+    var output = el('finance-output');
+    var offNote = el('finance-off-note');
+    var on = financeEnabled();
+
+    // Toggle the printable/visible state. The block prints only when ON.
+    var base = (block.className || '').replace(/\s*finance-on/g, '');
+    block.className = base.trim() + (on ? ' finance-on' : '');
+    if (output) output.hidden = !on;
+    if (offNote) offNote.hidden = on;
+    if (!on) return; // OFF: nothing finance-related is computed or shown.
+
+    // Render EACH plan's breakdown independently (amortise() once per plan).
+    renderFinancePlan('plan_a');
+    renderFinancePlan('plan_b');
   }
 
   /* ================================================================== *

@@ -30,6 +30,7 @@ const repoRoot = resolve(here, '..');
 const checks = [];
 function check(name, pass) { checks.push([name, !!pass]); }
 function approx(a, b, tol) { return typeof a === 'number' && isFinite(a) && Math.abs(a - b) < tol; }
+function isNum(v) { return typeof v === 'number' && isFinite(v); }
 
 // ---- (1) standard annuity math on a KNOWN input ----------------------------
 // Principal 100,000, APR 6% (r = 0.5%/month), term 60 months. Hand-computed:
@@ -141,6 +142,96 @@ check('finance.js does NOT import the engine module',
 check('finance.js makes NO network call (no fetch/XMLHttpRequest/import())',
   financeSrc.indexOf('fetch(') === -1 && financeSrc.indexOf('XMLHttpRequest') === -1 &&
   !/\bimport\s*\(/.test(financeSrc));
+
+// ---- (5) FEAT-003 PER-PLAN financing split + financial-component breakdown --
+// The Proposal applies financing to Plan A (SRM) and Plan B (competitor)
+// SEPARATELY: the caller invokes amortise() ONCE PER PLAN with that plan's OWN
+// principal (its read-only Day-0 funding) and its own deposit / APR / term, and
+// renders a per-plan financial-component breakdown (upfront / principal financed
+// / total interest / total repaid / monthly instalment). This section PROVES,
+// at the module level the UI uses, that:
+//   (a) amortise is invoked per plan and yields independent per-plan breakdown
+//       fields (upfront, principal financed, interest, total repaid, instalment);
+//   (b) changing Plan A's finance inputs does not alter Plan B's breakdown and
+//       vice-versa (the two amortise() calls are fully independent);
+//   (c) the economic-TCO numbers are untouched by ANY finance input (isolation).
+//
+// planBreakdown() is the EXACT per-plan computation the proposal controller does
+// (financedAmount -> amortise -> summarise), expressed here against the same
+// pure module so the harness locks the contract the UI depends on.
+function planBreakdown(day0Funding, deposit, annualRatePct, termMonths) {
+  const financed = financedAmount(day0Funding, deposit);
+  const result = (financed != null)
+    ? amortise({ principal: financed, annualRatePct, termMonths })
+    : naResult('financed amount not available');
+  const s = summarise(result);
+  return {
+    upfront: deposit,                                         // down-payment
+    principalFinanced: financed,                              // principal - deposit
+    totalInterest: s.ok ? s.totalInterest : null,             // flagged n.a. on invalid
+    totalRepaid: s.ok ? s.totalRepaid : null,
+    monthlyInstalment: s.ok ? s.monthlyInstalment : null,
+    ok: !!(result && result.ok),
+  };
+}
+
+// Two DISTINCT plans with distinct principals + distinct finance inputs.
+const planA = planBreakdown(/*day0*/ 300000, /*deposit*/ 30000, /*apr*/ 4.5, /*term*/ 60);
+const planB = planBreakdown(/*day0*/ 220000, /*deposit*/ 10000, /*apr*/ 3.2, /*term*/ 72);
+
+// (a) amortise invoked per plan -> independent per-plan breakdown fields present.
+check('per-plan: Plan A breakdown has all five financial-component fields',
+  planA.ok === true && approx(planA.upfront, 30000, 1e-9) &&
+  approx(planA.principalFinanced, 270000, 1e-9) &&
+  isNum(planA.totalInterest) && isNum(planA.totalRepaid) && isNum(planA.monthlyInstalment));
+check('per-plan: Plan B breakdown has all five financial-component fields',
+  planB.ok === true && approx(planB.upfront, 10000, 1e-9) &&
+  approx(planB.principalFinanced, 210000, 1e-9) &&
+  isNum(planB.totalInterest) && isNum(planB.totalRepaid) && isNum(planB.monthlyInstalment));
+check('per-plan: each plan total repaid = principal financed + total interest',
+  approx(planA.totalRepaid, planA.principalFinanced + planA.totalInterest, 1e-6) &&
+  approx(planB.totalRepaid, planB.principalFinanced + planB.totalInterest, 1e-6));
+check('per-plan: the two plans produce DIFFERENT breakdowns (different principal / rate / term)',
+  planA.principalFinanced !== planB.principalFinanced &&
+  planA.monthlyInstalment !== planB.monthlyInstalment &&
+  planA.totalInterest !== planB.totalInterest);
+
+// (b) PER-PLAN INDEPENDENCE: recomputing Plan A with changed inputs does not
+// touch the already-computed Plan B breakdown object, and vice-versa. (The
+// amortise() calls share no state; each is a pure function of its own args.)
+const planASnapshot = JSON.stringify(planA);
+const planBSnapshot = JSON.stringify(planB);
+// Change Plan B's inputs entirely; Plan A's breakdown must be byte-identical.
+const planB2 = planBreakdown(150000, 0, 9.9, 24);
+check('per-plan independence: changing Plan B inputs leaves Plan A breakdown byte-identical',
+  JSON.stringify(planA) === planASnapshot);
+check('per-plan independence: Plan B actually recomputed to a DIFFERENT breakdown',
+  JSON.stringify(planB2) !== planBSnapshot &&
+  planB2.principalFinanced !== planB.principalFinanced);
+// Change Plan A's inputs entirely; Plan B's breakdown must be byte-identical.
+const planA2 = planBreakdown(500000, 50000, 1.1, 120);
+check('per-plan independence: changing Plan A inputs leaves Plan B breakdown byte-identical',
+  JSON.stringify(planB) === planBSnapshot);
+check('per-plan independence: Plan A actually recomputed to a DIFFERENT breakdown',
+  JSON.stringify(planA2) !== planASnapshot &&
+  planA2.principalFinanced !== planA.principalFinanced);
+
+// An n.a./invalid per-plan input shows a flagged n.a. result, never NaN / zero.
+const planNa = planBreakdown(200000, 250000, 4.5, 60); // deposit >= principal -> nothing to finance
+check('per-plan: an invalid plan (deposit >= principal) returns a flagged n.a. breakdown (not a fabricated zero)',
+  planNa.ok === false && planNa.principalFinanced === null &&
+  planNa.totalInterest === null && planNa.totalRepaid === null && planNa.monthlyInstalment === null);
+
+// (c) ISOLATION under the PER-PLAN split: running BOTH plans' amortisations
+// (several times, varied inputs) must leave computeFleet's economic Results
+// byte-identical -- financing never feeds back into the frozen engine.
+const econBeforePerPlan = JSON.stringify(computeFleet(demo.inputs).results);
+planBreakdown(before.results.day0Funding.plan_a, 25000, 4.5, 60);
+planBreakdown(before.results.day0Funding.plan_b, 15000, 3.2, 72);
+planBreakdown(before.results.day0Funding.plan_a, 0, 0, 36);
+const econAfterPerPlan = JSON.stringify(computeFleet(demo.inputs).results);
+check('per-plan financing does NOT change any economic-TCO number (isolation preserved)',
+  econBeforePerPlan === econAfterPerPlan && econBeforePerPlan === beforeJson);
 
 let ok = true;
 for (const [name, pass] of checks) {
