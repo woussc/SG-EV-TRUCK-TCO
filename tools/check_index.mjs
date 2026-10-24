@@ -116,6 +116,9 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'chart-cumulative','chart-breakdown',
   'results-table','day0-cards','tco-tooltip','tco-band',
   'portfolio-matched-models','portfolio-fleet-body','portfolio-config-text',
+  // FEAT-003 Part C: full-portfolio switch-over table + provenance legend.
+  'portfolio-switchover','portfolio-switchover-table','portfolio-switchover-body',
+  'portfolio-provenance-legend',
   // FEAT-002: folded-in customer profile + consolidated per-truck Advanced.
   'customer-form','fleet-adv',
   // FEAT-002 (Part C): Stage-4 charging assessment panels.
@@ -1413,11 +1416,13 @@ function textOf(node) {
 const pfModelRows = toArr(pfBody.children).filter(
   (r) => r.attributes && r.attributes['data-portfolio-model'] != null);
 const pfModelNames = pfModelRows.map((r) => r.attributes['data-portfolio-model']);
-// All seven catalogue models rank in the live demo view.
+// Every catalogue model ranks in the live demo view. FEAT-003 (switch-over)
+// appended 5 real competitor models, so the catalogue is now 12 (7 original +
+// 5 competitors); the invariant is one ranked row PER catalogue model.
 const catalogueNames = windowObj.__HS.state.products.rows
   .filter((p) => p.A != null).map((p) => p.A);
-checks.push(['Portfolio renders a ranked row per catalogue model (7)',
-  pfModelRows.length === catalogueNames.length && catalogueNames.length === 7]);
+checks.push(['Portfolio renders a ranked row per catalogue model (12)',
+  pfModelRows.length === catalogueNames.length && catalogueNames.length === 12]);
 checks.push(['Portfolio ranked list carries the catalogue model names',
   catalogueNames.every((n) => pfModelNames.indexOf(n) !== -1)]);
 // The rows are numbered 1..N in order (a ranking, not an unordered list).
@@ -1585,6 +1590,101 @@ const fleetRowsAfter = toArr(byId['portfolio-fleet-body'].children).filter(
   (rrow) => rrow.attributes && rrow.attributes['data-fleet-truck'] != null);
 checks.push(['Portfolio fleet summary re-renders live on recompute',
   fleetRowsAfter.length === demoMatches.length]);
+
+// ---- FEAT-003 Part C: full-portfolio switch-over table + toggles + provenance
+// The Portfolio stage carries a NEW switch-over section that lists EVERY
+// catalogue model side by side with key specs AND a per-field provenance badge,
+// plus competitor include/exclude toggles wired to the additive matcher (via
+// H.excludedModels). SRM is the primary model and is locked on. These walk the
+// built DOM nodes (real createElement/appendChild nodes), not an innerHTML blob.
+checks.push(['switch-over section present in markup',
+  html.indexOf('id="portfolio-switchover"') !== -1 &&
+  html.indexOf('id="portfolio-switchover-table"') !== -1]);
+checks.push(['switch-over provenance legend present (Sourced/Derived/Unconfirmed)',
+  html.indexOf('id="portfolio-provenance-legend"') !== -1 &&
+  /data-prov-legend="sourced"/.test(html) && /data-prov-legend="derived"/.test(html) &&
+  /data-prov-legend="unconfirmed"/.test(html)]);
+const soBody = byId['portfolio-switchover-body'];
+const soRows = toArr(soBody.children).filter(
+  (r) => r.attributes && r.attributes['data-switchover-model'] != null);
+// One row per catalogue model (the demo catalogue is now 12).
+const soCatalogue = windowObj.__HS.state.products.rows.filter((p) => p.A != null);
+checks.push(['switch-over renders a row per catalogue model (all models side by side)',
+  soRows.length === soCatalogue.length && soCatalogue.length === 12]);
+// The 5 new competitor models appear in the switch-over table.
+const soNames = soRows.map((r) => r.attributes['data-switchover-model']);
+const SO_NEW = ['BYD T3 (ETP3)', 'Maxus eDeliver 9', 'Maxus eDeliver 3 (EV30)',
+  'Farizon SV (Supervan)', 'DFSK EC35'];
+checks.push(['switch-over table lists the 5 new competitor models',
+  SO_NEW.every((n) => soNames.indexOf(n) !== -1)]);
+// Collect helper over the switch-over body.
+function soCollect(node, attr, acc) {
+  if (!node || typeof node !== 'object') return acc;
+  if (node.attributes && attr in node.attributes) acc.push(node);
+  toArr(node.children).forEach((c) => soCollect(c, attr, acc));
+  return acc;
+}
+// Every row carries a provenance badge somewhere (the per-field indicator).
+const provBadges = soCollect(soBody, 'data-prov', []);
+checks.push(['switch-over renders per-field provenance badges',
+  provBadges.length >= soRows.length]);
+// New models carry at least one Unconfirmed badge (honest gaps) in their row.
+function rowOf(name) { return soRows.find((r) => r.attributes['data-switchover-model'] === name); }
+checks.push(['switch-over: new models show Unconfirmed provenance for unsourced fields',
+  SO_NEW.every((n) => {
+    const row = rowOf(n);
+    if (!row) return false;
+    const badges = soCollect(row, 'data-prov', []);
+    return badges.some((b) => b.attributes['data-prov'] === 'unconfirmed');
+  })]);
+// A sourced/derived field renders its badge too (Farizon SV battery is sourced,
+// kWh/km derived), so provenance is not uniformly 'unconfirmed'.
+checks.push(['switch-over: sourced/derived provenance badges render for sourced figures',
+  (() => {
+    const row = rowOf('Farizon SV (Supervan)');
+    if (!row) return false;
+    const badges = soCollect(row, 'data-prov', []);
+    return badges.some((b) => b.attributes['data-prov'] === 'sourced') &&
+      badges.some((b) => b.attributes['data-prov'] === 'derived');
+  })()]);
+// Include/exclude toggles exist: one checkbox per model, SRM locked on.
+const soToggles = soCollect(soBody, 'data-switchover-include', []);
+checks.push(['switch-over renders an include/exclude toggle per model',
+  soToggles.length === soRows.length]);
+const srmToggle = soToggles.find((t) => String(t.attributes['data-switchover-include']).indexOf('SRM') === 0);
+checks.push(['switch-over: SRM toggle is locked on (primary, always in play)',
+  !!srmToggle && srmToggle.disabled === true && srmToggle.checked === true]);
+const srmTagRow = rowOf('SRM T3EV+');
+checks.push(['switch-over: SRM row is marked Primary',
+  !!srmTagRow && soCollect(srmTagRow, 'data-switchover-tag', [])
+    .some((t) => t.attributes['data-switchover-tag'] === 'primary')]);
+// Toggling a competitor OFF removes it from the live matcher (matchFleetToPortfolio
+// over the ACTIVE inputs) WITHOUT changing the engine. Exclude a competitor that
+// the demo matcher would otherwise consider and confirm the active catalogue drops it.
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+const beforeActive = windowObj.__HS.activeProductRows().map((p) => p.A);
+const compToggle = soToggles.find((t) => {
+  const nm = t.attributes['data-switchover-include'];
+  return nm && String(nm).indexOf('SRM') !== 0;
+});
+const compName = compToggle ? compToggle.attributes['data-switchover-include'] : null;
+checks.push(['switch-over: a competitor toggle exists to exclude', !!compName]);
+// Simulate unchecking the competitor and firing its change handler.
+if (compToggle) { compToggle.checked = false; compToggle.fire('change'); }
+const afterActive = windowObj.__HS.activeProductRows().map((p) => p.A);
+checks.push(['switch-over: excluding a competitor removes it from the active matcher catalogue',
+  !!compName && beforeActive.indexOf(compName) !== -1 && afterActive.indexOf(compName) === -1]);
+checks.push(['switch-over: excluding a competitor keeps SRM in the active catalogue (primary never excluded)',
+  afterActive.some((n) => String(n).indexOf('SRM') === 0)]);
+// The engine is untouched by the toggle: computeFleet still returns the same
+// truck count and a valid result (no economic number depends on the exclusion).
+const outAfterToggle = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
+checks.push(['switch-over: toggling a competitor does NOT break the frozen engine',
+  !!outAfterToggle && !!outAfterToggle.results && outAfterToggle.results.truckCount.keep_ice === 6]);
+// Re-include the competitor and restore the demo baseline.
+if (compToggle) { compToggle.checked = true; compToggle.fire('change'); }
+windowObj.__HS.loadDemoFixture();
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html

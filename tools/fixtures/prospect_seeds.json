@@ -2820,7 +2820,7 @@
           ]
         },
         "products": {
-          "range": "A7:Q13",
+          "range": "A7:Q18",
           "rows": [
             {
               "_row": 7,
@@ -2961,6 +2961,316 @@
               "O": 1400,
               "P": 0.007,
               "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+            },
+            {
+              "_row": 14,
+              "A": "BYD T3 (ETP3)",
+              "B": null,
+              "C": null,
+              "D": 44.9,
+              "E": 0.14966666666666667,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": 300,
+              "K": "https://en.wikipedia.org/wiki/BYD_T3 (BYD M3/T3/ETP3), accessed 2026-10-24: 44.9 kWh LiFePO4 (also a 50.3 kWh NCM option), ~300 km EV range, 70 kW motor.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "BYD T3",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW) and SGD list price are NOT sourced (Unconfirmed). kWh/km (0.1497) is DERIVED from the sourced 44.9 kWh battery / 300 km range, not a measured figure. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3 (44.9 kWh LiFePO4), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "derived",
+                  "source": "Derived 44.9 kWh / 300 km = 0.1497 kWh/km (Wikipedia figures)"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3 (~300 km EV range), accessed 2026-10-24"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 15,
+              "A": "Maxus eDeliver 9",
+              "B": null,
+              "C": null,
+              "D": 88.5,
+              "E": null,
+              "F": "Battery",
+              "G": 11,
+              "H": 80,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/Maxus_V90 (Maxus eDeliver 9), accessed 2026-10-24: 51.5 / 72 / 88.5 kWh LFP options, 11 kW AC + 80 kW DC charging, length 5546 mm (standard).",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Maxus eDeliver 9",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 88.5 kWh top option (51.5/72/88.5 kWh available). Payload and SGD list price NOT sourced (Unconfirmed). No single authoritative range figure sourced, so range and kWh/km are left n.a. rather than fabricated. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus V90/eDeliver 9, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (88.5 kWh LFP option; also 51.5/72 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; no single authoritative range figure to derive from"
+                },
+                "G": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (11 kW AC), accessed 2026-10-24"
+                },
+                "H": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (80 kW DC), accessed 2026-10-24"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced (varies by battery option)"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 16,
+              "A": "Maxus eDeliver 3 (EV30)",
+              "B": 1020,
+              "C": null,
+              "D": 52.5,
+              "E": null,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/Maxus_eDeliver_3 (Maxus EV30/eDeliver 3), accessed 2026-10-24: 35 / 52.5 kWh Li-ion options, UK LWB payload 1020 kg, quoted ranges NEDC (not WLTP).",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Maxus eDeliver 3",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 52.5 kWh option; payload 1020 kg is the sourced UK LWB figure. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). Published ranges are NEDC and vary by battery, so kWh/km and a single range are left n.a. rather than derived from a mixed-cycle figure. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus EV30/eDeliver 3, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 3 UK LWB payload 1020 kg, accessed 2026-10-24"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 3 (52.5 kWh option; also 35 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; published range is NEDC, not derived to avoid a misleading figure"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced on a consistent cycle"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 17,
+              "A": "Farizon SV (Supervan)",
+              "B": 1350,
+              "C": null,
+              "D": 67,
+              "E": 0.16876574307304787,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": 397,
+              "K": "https://en.wikipedia.org/wiki/Farizon_SV (Farizon SV / Supervan), accessed 2026-10-24: 67 / 83 / 106 kWh LFP/NMC options, up to ~397 km WLTP, payload up to ~1350 kg, 170 kW motor.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Farizon SV",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 67 kWh entry option (67/83/106 kWh available); payload 1350 kg is the sourced maximum. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). kWh/km (0.1688) is DERIVED from the sourced 67 kWh / 397 km WLTP figures, not a measured value. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (payload up to ~1350 kg), accessed 2026-10-24"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (67 kWh LFP option; also 83/106 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "derived",
+                  "source": "Derived 67 kWh / 397 km WLTP = 0.1688 kWh/km (Wikipedia figures)"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced (20-80% in ~36-40 min quoted, exact kW not sourced)"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced (UK launch ~GBP 45k-56k, not an SGD figure)"
+                },
+                "J": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (up to ~397 km WLTP), accessed 2026-10-24"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 18,
+              "A": "DFSK EC35",
+              "B": null,
+              "C": null,
+              "D": 42,
+              "E": null,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/DFSK_EC35 (DFSK C-Series / EC35), accessed 2026-10-24: 42 kWh lithium-ion battery, 60 kW (80 hp) rear motor, body length 4500 mm.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "DFSK EC35",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW), range and SGD list price are NOT sourced (Unconfirmed); kWh/km is left n.a. rather than derived without a sourced range. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia DFSK C-Series/EC35, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia DFSK EC35 (42 kWh lithium-ion), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; no sourced range to derive from"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
             }
           ]
         },
@@ -6019,7 +6329,7 @@
           ]
         },
         "products": {
-          "range": "A7:Q13",
+          "range": "A7:Q18",
           "rows": [
             {
               "_row": 7,
@@ -6160,6 +6470,316 @@
               "O": 1400,
               "P": 0.007,
               "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+            },
+            {
+              "_row": 14,
+              "A": "BYD T3 (ETP3)",
+              "B": null,
+              "C": null,
+              "D": 44.9,
+              "E": 0.14966666666666667,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": 300,
+              "K": "https://en.wikipedia.org/wiki/BYD_T3 (BYD M3/T3/ETP3), accessed 2026-10-24: 44.9 kWh LiFePO4 (also a 50.3 kWh NCM option), ~300 km EV range, 70 kW motor.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "BYD T3",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW) and SGD list price are NOT sourced (Unconfirmed). kWh/km (0.1497) is DERIVED from the sourced 44.9 kWh battery / 300 km range, not a measured figure. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3 (44.9 kWh LiFePO4), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "derived",
+                  "source": "Derived 44.9 kWh / 300 km = 0.1497 kWh/km (Wikipedia figures)"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3 (~300 km EV range), accessed 2026-10-24"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 15,
+              "A": "Maxus eDeliver 9",
+              "B": null,
+              "C": null,
+              "D": 88.5,
+              "E": null,
+              "F": "Battery",
+              "G": 11,
+              "H": 80,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/Maxus_V90 (Maxus eDeliver 9), accessed 2026-10-24: 51.5 / 72 / 88.5 kWh LFP options, 11 kW AC + 80 kW DC charging, length 5546 mm (standard).",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Maxus eDeliver 9",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 88.5 kWh top option (51.5/72/88.5 kWh available). Payload and SGD list price NOT sourced (Unconfirmed). No single authoritative range figure sourced, so range and kWh/km are left n.a. rather than fabricated. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus V90/eDeliver 9, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (88.5 kWh LFP option; also 51.5/72 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; no single authoritative range figure to derive from"
+                },
+                "G": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (11 kW AC), accessed 2026-10-24"
+                },
+                "H": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (80 kW DC), accessed 2026-10-24"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced (varies by battery option)"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 16,
+              "A": "Maxus eDeliver 3 (EV30)",
+              "B": 1020,
+              "C": null,
+              "D": 52.5,
+              "E": null,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/Maxus_eDeliver_3 (Maxus EV30/eDeliver 3), accessed 2026-10-24: 35 / 52.5 kWh Li-ion options, UK LWB payload 1020 kg, quoted ranges NEDC (not WLTP).",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Maxus eDeliver 3",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 52.5 kWh option; payload 1020 kg is the sourced UK LWB figure. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). Published ranges are NEDC and vary by battery, so kWh/km and a single range are left n.a. rather than derived from a mixed-cycle figure. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus EV30/eDeliver 3, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 3 UK LWB payload 1020 kg, accessed 2026-10-24"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 3 (52.5 kWh option; also 35 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; published range is NEDC, not derived to avoid a misleading figure"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced on a consistent cycle"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 17,
+              "A": "Farizon SV (Supervan)",
+              "B": 1350,
+              "C": null,
+              "D": 67,
+              "E": 0.16876574307304787,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": 397,
+              "K": "https://en.wikipedia.org/wiki/Farizon_SV (Farizon SV / Supervan), accessed 2026-10-24: 67 / 83 / 106 kWh LFP/NMC options, up to ~397 km WLTP, payload up to ~1350 kg, 170 kW motor.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Farizon SV",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 67 kWh entry option (67/83/106 kWh available); payload 1350 kg is the sourced maximum. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). kWh/km (0.1688) is DERIVED from the sourced 67 kWh / 397 km WLTP figures, not a measured value. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (payload up to ~1350 kg), accessed 2026-10-24"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (67 kWh LFP option; also 83/106 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "derived",
+                  "source": "Derived 67 kWh / 397 km WLTP = 0.1688 kWh/km (Wikipedia figures)"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced (20-80% in ~36-40 min quoted, exact kW not sourced)"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced (UK launch ~GBP 45k-56k, not an SGD figure)"
+                },
+                "J": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (up to ~397 km WLTP), accessed 2026-10-24"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 18,
+              "A": "DFSK EC35",
+              "B": null,
+              "C": null,
+              "D": 42,
+              "E": null,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/DFSK_EC35 (DFSK C-Series / EC35), accessed 2026-10-24: 42 kWh lithium-ion battery, 60 kW (80 hp) rear motor, body length 4500 mm.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "DFSK EC35",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW), range and SGD list price are NOT sourced (Unconfirmed); kWh/km is left n.a. rather than derived without a sourced range. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia DFSK C-Series/EC35, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia DFSK EC35 (42 kWh lithium-ion), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; no sourced range to derive from"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
             }
           ]
         },
@@ -9218,7 +9838,7 @@
           ]
         },
         "products": {
-          "range": "A7:Q13",
+          "range": "A7:Q18",
           "rows": [
             {
               "_row": 7,
@@ -9359,6 +9979,316 @@
               "O": 1400,
               "P": 0.007,
               "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+            },
+            {
+              "_row": 14,
+              "A": "BYD T3 (ETP3)",
+              "B": null,
+              "C": null,
+              "D": 44.9,
+              "E": 0.14966666666666667,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": 300,
+              "K": "https://en.wikipedia.org/wiki/BYD_T3 (BYD M3/T3/ETP3), accessed 2026-10-24: 44.9 kWh LiFePO4 (also a 50.3 kWh NCM option), ~300 km EV range, 70 kW motor.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "BYD T3",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW) and SGD list price are NOT sourced (Unconfirmed). kWh/km (0.1497) is DERIVED from the sourced 44.9 kWh battery / 300 km range, not a measured figure. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3 (44.9 kWh LiFePO4), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "derived",
+                  "source": "Derived 44.9 kWh / 300 km = 0.1497 kWh/km (Wikipedia figures)"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3 (~300 km EV range), accessed 2026-10-24"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 15,
+              "A": "Maxus eDeliver 9",
+              "B": null,
+              "C": null,
+              "D": 88.5,
+              "E": null,
+              "F": "Battery",
+              "G": 11,
+              "H": 80,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/Maxus_V90 (Maxus eDeliver 9), accessed 2026-10-24: 51.5 / 72 / 88.5 kWh LFP options, 11 kW AC + 80 kW DC charging, length 5546 mm (standard).",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Maxus eDeliver 9",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 88.5 kWh top option (51.5/72/88.5 kWh available). Payload and SGD list price NOT sourced (Unconfirmed). No single authoritative range figure sourced, so range and kWh/km are left n.a. rather than fabricated. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus V90/eDeliver 9, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (88.5 kWh LFP option; also 51.5/72 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; no single authoritative range figure to derive from"
+                },
+                "G": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (11 kW AC), accessed 2026-10-24"
+                },
+                "H": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (80 kW DC), accessed 2026-10-24"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced (varies by battery option)"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 16,
+              "A": "Maxus eDeliver 3 (EV30)",
+              "B": 1020,
+              "C": null,
+              "D": 52.5,
+              "E": null,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/Maxus_eDeliver_3 (Maxus EV30/eDeliver 3), accessed 2026-10-24: 35 / 52.5 kWh Li-ion options, UK LWB payload 1020 kg, quoted ranges NEDC (not WLTP).",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Maxus eDeliver 3",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 52.5 kWh option; payload 1020 kg is the sourced UK LWB figure. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). Published ranges are NEDC and vary by battery, so kWh/km and a single range are left n.a. rather than derived from a mixed-cycle figure. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus EV30/eDeliver 3, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 3 UK LWB payload 1020 kg, accessed 2026-10-24"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 3 (52.5 kWh option; also 35 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; published range is NEDC, not derived to avoid a misleading figure"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced on a consistent cycle"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 17,
+              "A": "Farizon SV (Supervan)",
+              "B": 1350,
+              "C": null,
+              "D": 67,
+              "E": 0.16876574307304787,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": 397,
+              "K": "https://en.wikipedia.org/wiki/Farizon_SV (Farizon SV / Supervan), accessed 2026-10-24: 67 / 83 / 106 kWh LFP/NMC options, up to ~397 km WLTP, payload up to ~1350 kg, 170 kW motor.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Farizon SV",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 67 kWh entry option (67/83/106 kWh available); payload 1350 kg is the sourced maximum. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). kWh/km (0.1688) is DERIVED from the sourced 67 kWh / 397 km WLTP figures, not a measured value. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (payload up to ~1350 kg), accessed 2026-10-24"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (67 kWh LFP option; also 83/106 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "derived",
+                  "source": "Derived 67 kWh / 397 km WLTP = 0.1688 kWh/km (Wikipedia figures)"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced (20-80% in ~36-40 min quoted, exact kW not sourced)"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced (UK launch ~GBP 45k-56k, not an SGD figure)"
+                },
+                "J": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (up to ~397 km WLTP), accessed 2026-10-24"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 18,
+              "A": "DFSK EC35",
+              "B": null,
+              "C": null,
+              "D": 42,
+              "E": null,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/DFSK_EC35 (DFSK C-Series / EC35), accessed 2026-10-24: 42 kWh lithium-ion battery, 60 kW (80 hp) rear motor, body length 4500 mm.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "DFSK EC35",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW), range and SGD list price are NOT sourced (Unconfirmed); kWh/km is left n.a. rather than derived without a sourced range. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia DFSK C-Series/EC35, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia DFSK EC35 (42 kWh lithium-ion), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; no sourced range to derive from"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
             }
           ]
         },
@@ -12417,7 +13347,7 @@
           ]
         },
         "products": {
-          "range": "A7:Q13",
+          "range": "A7:Q18",
           "rows": [
             {
               "_row": 7,
@@ -12558,6 +13488,316 @@
               "O": 1400,
               "P": 0.007,
               "Q": "Service schedule supplied 18-Oct-2026. S$/km average smooths timing; use beyond 200,000 km is a projection."
+            },
+            {
+              "_row": 14,
+              "A": "BYD T3 (ETP3)",
+              "B": null,
+              "C": null,
+              "D": 44.9,
+              "E": 0.14966666666666667,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": 300,
+              "K": "https://en.wikipedia.org/wiki/BYD_T3 (BYD M3/T3/ETP3), accessed 2026-10-24: 44.9 kWh LiFePO4 (also a 50.3 kWh NCM option), ~300 km EV range, 70 kW motor.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "BYD T3",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW) and SGD list price are NOT sourced (Unconfirmed). kWh/km (0.1497) is DERIVED from the sourced 44.9 kWh battery / 300 km range, not a measured figure. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3 (44.9 kWh LiFePO4), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "derived",
+                  "source": "Derived 44.9 kWh / 300 km = 0.1497 kWh/km (Wikipedia figures)"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "sourced",
+                  "source": "Wikipedia BYD M3/T3/ETP3 (~300 km EV range), accessed 2026-10-24"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 15,
+              "A": "Maxus eDeliver 9",
+              "B": null,
+              "C": null,
+              "D": 88.5,
+              "E": null,
+              "F": "Battery",
+              "G": 11,
+              "H": 80,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/Maxus_V90 (Maxus eDeliver 9), accessed 2026-10-24: 51.5 / 72 / 88.5 kWh LFP options, 11 kW AC + 80 kW DC charging, length 5546 mm (standard).",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Maxus eDeliver 9",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 88.5 kWh top option (51.5/72/88.5 kWh available). Payload and SGD list price NOT sourced (Unconfirmed). No single authoritative range figure sourced, so range and kWh/km are left n.a. rather than fabricated. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus V90/eDeliver 9, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (88.5 kWh LFP option; also 51.5/72 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; no single authoritative range figure to derive from"
+                },
+                "G": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (11 kW AC), accessed 2026-10-24"
+                },
+                "H": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 9 (80 kW DC), accessed 2026-10-24"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced (varies by battery option)"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 16,
+              "A": "Maxus eDeliver 3 (EV30)",
+              "B": 1020,
+              "C": null,
+              "D": 52.5,
+              "E": null,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/Maxus_eDeliver_3 (Maxus EV30/eDeliver 3), accessed 2026-10-24: 35 / 52.5 kWh Li-ion options, UK LWB payload 1020 kg, quoted ranges NEDC (not WLTP).",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Maxus eDeliver 3",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 52.5 kWh option; payload 1020 kg is the sourced UK LWB figure. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). Published ranges are NEDC and vary by battery, so kWh/km and a single range are left n.a. rather than derived from a mixed-cycle figure. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus EV30/eDeliver 3, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 3 UK LWB payload 1020 kg, accessed 2026-10-24"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Maxus eDeliver 3 (52.5 kWh option; also 35 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; published range is NEDC, not derived to avoid a misleading figure"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced on a consistent cycle"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 17,
+              "A": "Farizon SV (Supervan)",
+              "B": 1350,
+              "C": null,
+              "D": 67,
+              "E": 0.16876574307304787,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": 397,
+              "K": "https://en.wikipedia.org/wiki/Farizon_SV (Farizon SV / Supervan), accessed 2026-10-24: 67 / 83 / 106 kWh LFP/NMC options, up to ~397 km WLTP, payload up to ~1350 kg, 170 kW motor.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "Farizon SV",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Battery shown is the 67 kWh entry option (67/83/106 kWh available); payload 1350 kg is the sourced maximum. AC/DC charge kW and SGD list price NOT sourced (Unconfirmed). kWh/km (0.1688) is DERIVED from the sourced 67 kWh / 397 km WLTP figures, not a measured value. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (payload up to ~1350 kg), accessed 2026-10-24"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (67 kWh LFP option; also 83/106 kWh), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "derived",
+                  "source": "Derived 67 kWh / 397 km WLTP = 0.1688 kWh/km (Wikipedia figures)"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced (20-80% in ~36-40 min quoted, exact kW not sourced)"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced (UK launch ~GBP 45k-56k, not an SGD figure)"
+                },
+                "J": {
+                  "status": "sourced",
+                  "source": "Wikipedia Farizon SV (up to ~397 km WLTP), accessed 2026-10-24"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
+            },
+            {
+              "_row": 18,
+              "A": "DFSK EC35",
+              "B": null,
+              "C": null,
+              "D": 42,
+              "E": null,
+              "F": "Battery",
+              "G": null,
+              "H": null,
+              "I": null,
+              "J": null,
+              "K": "https://en.wikipedia.org/wiki/DFSK_EC35 (DFSK C-Series / EC35), accessed 2026-10-24: 42 kWh lithium-ion battery, 60 kW (80 hp) rear motor, body length 4500 mm.",
+              "L": "Unconfirmed",
+              "M": null,
+              "N": "DFSK EC35",
+              "O": null,
+              "P": null,
+              "Q": "Competitor model added for the switch-over comparison. Payload, charge power (AC/DC kW), range and SGD list price are NOT sourced (Unconfirmed); kWh/km is left n.a. rather than derived without a sourced range. No service S$/km data; shown as n.a.",
+              "_prov": {
+                "A": {
+                  "status": "sourced",
+                  "source": "Wikipedia DFSK C-Series/EC35, accessed 2026-10-24"
+                },
+                "B": {
+                  "status": "unconfirmed",
+                  "note": "Payload not sourced"
+                },
+                "C": {
+                  "status": "unconfirmed",
+                  "note": "Second weight not sourced"
+                },
+                "D": {
+                  "status": "sourced",
+                  "source": "Wikipedia DFSK EC35 (42 kWh lithium-ion), accessed 2026-10-24"
+                },
+                "E": {
+                  "status": "unconfirmed",
+                  "note": "kWh/km not sourced; no sourced range to derive from"
+                },
+                "G": {
+                  "status": "unconfirmed",
+                  "note": "On-board AC charge kW not sourced"
+                },
+                "H": {
+                  "status": "unconfirmed",
+                  "note": "DC charge kW not sourced"
+                },
+                "I": {
+                  "status": "unconfirmed",
+                  "note": "SGD list price not sourced"
+                },
+                "J": {
+                  "status": "unconfirmed",
+                  "note": "Range not sourced"
+                },
+                "P": {
+                  "status": "unconfirmed",
+                  "note": "Service S$/km not sourced"
+                }
+              }
             }
           ]
         },

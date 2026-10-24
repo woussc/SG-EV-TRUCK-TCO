@@ -26,7 +26,7 @@ const repoRoot = resolve(here, '..');
 const fit = (await import(resolve(repoRoot, 'src/portfolio_fit.js'))).default;
 const demo = JSON.parse(readFileSync(resolve(repoRoot, 'tools/fixtures/demo_case.json'), 'utf8'));
 
-// Real catalogue rows (7 EV models).
+// Real catalogue rows (12 EV models: 7 original + 5 FEAT-003 competitors).
 const products = demo.inputs.products.rows.filter((r) => r.A != null);
 function prod(name) { return products.find((p) => p.A === name); }
 
@@ -143,14 +143,91 @@ check('deriveDuty included count = 6', derived.includedCount === 6);
 check('deriveDuty uses site-limited available charge power (min of rated 60 and site 44)',
   derived.availableChargeKw === 44);
 
-// Full live ranking on the real demo: every model is an honest caveat (all
-// Unconfirmed), none fabricated as Best fit, and the list is non-empty.
+// Full live ranking on the real demo: every model is an honest verdict (all
+// catalogue payload/body-fit is Unconfirmed), none fabricated as Best fit, and
+// the list is non-empty. FEAT-003 appended 5 real competitor models, so the
+// catalogue is now 12 (7 original + 5 competitors).
 const live = fit.rankModelsForInputs(demo.inputs);
-check('live demo ranking is non-empty', live.verdicts.length === 7);
+check('live demo ranking is non-empty (12 catalogue models)', live.verdicts.length === 12);
 check('live demo ranking has NO Best fit (all Unconfirmed)',
   live.verdicts.every((v) => v.verdict !== 'Best fit'));
-check('live demo ranking all carry insufficient-data honesty flag',
-  live.verdicts.every((v) => v.insufficientData === true));
+// Honesty flag: every model that is NOT a hard 'Does not fit' carries the
+// insufficient-data flag (an Unconfirmed body-fit or a blank-driven gap can
+// never read as a clean confirmed pass). A hard 'Does not fit' is itself an
+// honest verdict (e.g. a sourced payload below the duty), not a fabricated one.
+check('live demo ranking: every non-does-not-fit model carries insufficient-data honesty flag',
+  live.verdicts.every((v) => v.verdict === 'Does not fit' || v.insufficientData === true));
+
+// ===========================================================================
+// FEAT-003: the 5 appended competitor models + their honest per-field
+// provenance. The integrity rule is NON-NEGOTIABLE: no confirmed numeric spec
+// may appear without a source; an unsourced figure must be blank/n.a. or tagged
+// Unconfirmed/Assumption/Derived. These assertions enforce that on the catalogue.
+// ===========================================================================
+const NEW_MODELS = [
+  'BYD T3 (ETP3)', 'Maxus eDeliver 9', 'Maxus eDeliver 3 (EV30)',
+  'Farizon SV (Supervan)', 'DFSK EC35',
+];
+// (a) all 5 new models are present in the catalogue.
+check('FEAT-003: all 5 new competitor models present in the catalogue',
+  NEW_MODELS.every((n) => !!prod(n)));
+// (b) the catalogue is exactly the 7 original + 5 new = 12 models.
+check('FEAT-003: catalogue is 12 models (7 original + 5 competitors)',
+  products.length === 12);
+// (c) SRM remains present and is the primary/recommended family (both SRM rows
+//     survive; the primary matcher key 'SRM' is still in the catalogue).
+const srmRows = products.filter((p) => String(p.A).indexOf('SRM') === 0);
+check('FEAT-003: SRM remains present as the primary model (>=1 SRM row)',
+  srmRows.length >= 1 && srmRows.some((p) => p.A === 'SRM T3EV+'));
+
+// (d) every new model carries a provenance tag: col K (evidence ref) AND col L
+//     (body-fit status) AND a per-field _prov map.
+const COL_LETTERS = ['A', 'B', 'C', 'D', 'E', 'G', 'H', 'I', 'J', 'P'];
+const PROV_OK = ['sourced', 'derived', 'unconfirmed', 'assumption'];
+for (const name of NEW_MODELS) {
+  const p = prod(name);
+  check(`FEAT-003 [${name}]: has a col-K evidence ref`,
+    p.K != null && String(p.K).trim() !== '');
+  check(`FEAT-003 [${name}]: has a col-L body-fit status`,
+    p.L != null && String(p.L).trim() !== '');
+  check(`FEAT-003 [${name}]: carries a per-field _prov map`,
+    p._prov && typeof p._prov === 'object');
+  // (e) the NO-FABRICATED-CONFIRMED-SPEC rule: for every key spec column, a
+  //     present numeric figure must be backed by a provenance tag of 'sourced'
+  //     or 'derived' (a derived figure cites the sourced inputs it came from);
+  //     and any column tagged 'unconfirmed'/'assumption' must NOT carry a
+  //     fabricated number (it is blank/null or explicitly a non-number).
+  for (const col of COL_LETTERS) {
+    const val = p[col];
+    const pv = (p._prov && p._prov[col]) ? String(p._prov[col].status || '').toLowerCase() : null;
+    const isNumeric = typeof val === 'number' && isFinite(val);
+    if (isNumeric) {
+      // A present number must be sourced or derived (never silently present).
+      check(`FEAT-003 [${name}] col ${col}: numeric figure is sourced/derived (not fabricated)`,
+        pv === 'sourced' || pv === 'derived');
+    }
+    if (pv === 'unconfirmed' || pv === 'assumption') {
+      // An unconfirmed/assumption field must NOT present a precise number.
+      check(`FEAT-003 [${name}] col ${col}: unconfirmed field carries no fabricated number`,
+        !isNumeric);
+    }
+    if (pv != null) {
+      check(`FEAT-003 [${name}] col ${col}: provenance status is a known tag`,
+        PROV_OK.indexOf(pv) !== -1);
+    }
+  }
+}
+
+// (f) the matcher excludes a 'Does not fit' competitor but is never crowned a
+//     clean pass; and a feasible competitor keeps its Unconfirmed caveat. Use a
+//     duty the Farizon SV (payload 1350, derived range ~397 km) can clear.
+const compDuty = {
+  peakCargoKg: 1200, routeKm: 150, workKmPerDay: 120,
+  availableChargeKw: 60, chargeWindowH: 10, includedCount: 1, blank: {},
+};
+const farizonSv = fit.scoreModelFit(compDuty, prod('Farizon SV (Supervan)'));
+check('FEAT-003: feasible competitor (Farizon SV) is a caveat, never a clean Best fit',
+  farizonSv.verdict !== 'Best fit' && farizonSv.insufficientData === true);
 
 let ok = true;
 for (const [name, pass] of checks) {
