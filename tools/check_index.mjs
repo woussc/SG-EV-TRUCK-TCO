@@ -125,9 +125,11 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'charge-site-read','charge-detour-read','charge-public-totals',
   'charge-public-bands','charge-region-body','charge-operator-body',
   'charge-attribution',
-  // FEAT-003 (Part B): Stage-4 public-charging routing simulator (Panel 4).
-  'rsim-controls','rsim-region','rsim-dconly','rsim-origin-note','rsim-summary',
-  'rsim-map','rsim-charger-table','rsim-charger-body','rsim-caveat','rsim-attribution',
+  // FEAT-003 (Part B) / FEAT-004: Stage-4 geographic route simulator (Panel 4).
+  'rsim-controls','rsim-area','rsim-add-depot','rsim-add-stop','rsim-clear',
+  'rsim-dconly','rsim-origin-note','rsim-summary','rsim-map','rsim-charger-table',
+  'rsim-charger-body','rsim-caveat','rsim-attribution',
+  'rsim-zoom-in','rsim-zoom-out','rsim-zoom-reset',
   // FEAT-004 (Workstream C): Stage-5 Financing (illustrative) opt-in block.
   'proposal-finance-block','finance-enable','finance-controls','finance-exclusion',
   'finance-principal-src','finance-principal','finance-deposit','finance-apr',
@@ -2150,43 +2152,79 @@ checks.push(['routing sim introduces NO runtime network/map-API (offline guarant
   !/fetch\(|XMLHttpRequest|maps\.googleapis|tile\.openstreetmap|leaflet|mapbox/i.test(
     html.slice(html.indexOf('ROUTING:BEGIN'), html.indexOf('/stage-charging') === -1 ? html.length : html.indexOf('/stage-charging')))]);
 
-// (2) The panel markup exists as the 4th charge-panel with its own ids.
-checks.push(['Stage-4 routing-sim panel present (id="charging-routing")',
-  html.indexOf('id="charging-routing"') !== -1]);
-checks.push(['routing-sim panel carries its own DOM ids',
-  html.indexOf('id="rsim-summary"') !== -1 && html.indexOf('id="rsim-charger-body"') !== -1 &&
-  html.indexOf('id="rsim-map"') !== -1 && html.indexOf('id="rsim-region"') !== -1]);
+// (1b) FEAT-004: the bundled, OFFLINE Singapore basemap + geographic/projection
+// module are inlined as window globals (no runtime map tiles / API / geocoder).
+checks.push(['offline basemap bundled (window.HSBasemap: polygons + attribution)',
+  !!windowObj.HSBasemap && Array.isArray(windowObj.HSBasemap.polygons) &&
+  windowObj.HSBasemap.polygons.length > 0 && typeof windowObj.HSBasemap.attribution === 'string' &&
+  /ODbL/.test(windowObj.HSBasemap.attribution) && /geoBoundaries/.test(windowObj.HSBasemap.attribution)]);
+checks.push(['geographic map module exposed on the page (window.HSSgMap)',
+  !!windowObj.HSSgMap && typeof windowObj.HSSgMap.project === 'function' &&
+  typeof windowObj.HSSgMap.unproject === 'function' &&
+  typeof windowObj.HSSgMap.routeDistanceKm === 'function' &&
+  typeof windowObj.HSSgMap.reachableChargers === 'function' &&
+  typeof windowObj.HSSgMap.depotFeasibility === 'function' &&
+  Array.isArray(windowObj.HSSgMap.SG_AREAS) && windowObj.HSSgMap.SG_AREAS.length >= 12]);
+// The map introduces NO external map-tile / map-API / geocoder reference.
+checks.push(['map introduces NO external map-tile / map-API / geocoder reference',
+  !/maps\.googleapis|tile\.openstreetmap|[^a-z]mapbox|unpkg\.com\/leaflet|geocod/i.test(
+    html.slice(html.indexOf('SGMAP:BEGIN'), html.indexOf('/stage-charging') === -1 ? html.length : html.indexOf('/stage-charging')))]);
 
-// (3) After recompute the panel renders: the region picker is built, nearby
-// chargers are listed with operational fields, and the offline SVG map draws.
+// (2) The panel markup exists as the 4th charge-panel with its own ids +
+// interactive controls (named-area picker, depot/stop/clear buttons, pan/zoom).
+checks.push(['Stage-4 route-sim panel present (id="charging-routing")',
+  html.indexOf('id="charging-routing"') !== -1]);
+checks.push(['route-sim panel carries its own DOM ids',
+  html.indexOf('id="rsim-summary"') !== -1 && html.indexOf('id="rsim-charger-body"') !== -1 &&
+  html.indexOf('id="rsim-map"') !== -1]);
+checks.push(['route-sim exposes the interactive map controls (named-area picker + add/clear + pan/zoom)',
+  html.indexOf('id="rsim-area"') !== -1 && html.indexOf('id="rsim-add-depot"') !== -1 &&
+  html.indexOf('id="rsim-add-stop"') !== -1 && html.indexOf('id="rsim-clear"') !== -1 &&
+  html.indexOf('id="rsim-zoom-in"') !== -1 && html.indexOf('id="rsim-zoom-out"') !== -1]);
+
+// (3) After recompute the panel renders: the named-area picker is built and the
+// REAL geographic SVG map draws the Singapore outline (basemap path) even before
+// a route is placed.
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
 windowObj.__HS.recompute();
-const rsimRegionOpts = byId['rsim-region'].innerHTML;
-checks.push(['routing-sim region picker is populated', rsimRegionOpts.indexOf('<option') !== -1]);
+const rsimAreaOpts = byId['rsim-area'].innerHTML;
+checks.push(['route-sim named-area picker is populated from SG_AREAS',
+  rsimAreaOpts.indexOf('<option') !== -1 && /Tuas|CBD|Changi/i.test(rsimAreaOpts)]);
+// Offline inline-SVG geographic map: draws the Singapore outline (land path)
+// from window.HSBasemap, no external tiles.
+const rsimMapHtmlBase = byId['rsim-map'].innerHTML;
+checks.push(['route-sim draws an offline inline-SVG geographic map with the SG outline (no external tiles)',
+  rsimMapHtmlBase.indexOf('<svg') !== -1 && rsimMapHtmlBase.indexOf('rsim-land') !== -1 &&
+  rsimMapHtmlBase.indexOf('<path') !== -1]);
+
+// Place a depot + a route stop via the exposed state and recompute, then assert
+// the map plots chargers + the route and the charger table lists reachable ones.
+windowObj.__HS.__rsimSetStops && windowObj.__HS.__rsimSetStops([
+  { lat: 1.3330, lon: 103.7420, name: 'Jurong' },
+  { lat: 1.2840, lon: 103.8510, name: 'CBD / Raffles Place' }]);
+windowObj.__HS.recompute();
+const rsimMapHtml = byId['rsim-map'].innerHTML;
+checks.push(['route-sim plots chargers + route legs + depot/stop markers once a route is placed',
+  rsimMapHtml.indexOf('rsim-leg') !== -1 && rsimMapHtml.indexOf('rsim-origin') !== -1 &&
+  (rsimMapHtml.indexOf('rsim-dc') !== -1 || rsimMapHtml.indexOf('rsim-ac') !== -1)]);
 const rsimTableHtml = byId['rsim-charger-body'].innerHTML;
-checks.push(['routing-sim lists nearby public chargers (ranked rows)',
+checks.push(['route-sim lists reachable public chargers (ranked rows with distances)',
   rsimTableHtml.indexOf('<tr') !== -1 && /\d+\.\d\d/.test(rsimTableHtml)]);
 // Operational fields: the charger table header names operator / type / power /
-// price / distance, and a rendered row carries an operator string.
+// price / distance.
 const rsimTableHead = (html.match(/<table id="rsim-charger-table">\s*<thead>([\s\S]*?)<\/thead>/) || ['', ''])[1];
-checks.push(['routing-sim charger table carries operational columns (operator/type/power/price/km)',
+checks.push(['route-sim charger table carries operational columns (operator/type/power/price/km)',
   /Operator/i.test(rsimTableHead) && /Type/i.test(rsimTableHead) && /Power/i.test(rsimTableHead) &&
   /kWh/i.test(rsimTableHead) && /km/i.test(rsimTableHead)]);
-checks.push(['routing-sim rows show an AC/DC type token',
+checks.push(['route-sim rows show an AC/DC type token',
   />AC<|>DC<|>n\.a\.<|class="na"/.test(rsimTableHtml)]);
-// Offline inline-SVG mini-map (no external tiles).
-const rsimMapHtml = byId['rsim-map'].innerHTML;
-checks.push(['routing-sim draws an offline inline-SVG mini-map (no external tiles)',
-  rsimMapHtml.indexOf('<svg') !== -1 && rsimMapHtml.indexOf('<circle') !== -1 &&
-  rsimMapHtml.indexOf('rsim-origin') !== -1]);
 
-// (4) The SRM-tied charge-time surfaces. On the demo case at least one truck is
-// on an EV plan with an EV model named, so the summary names the planned EV and
-// renders an estimated top-up time (or an honest n.a. message, never zero).
+// (4) The two side-by-side feasibility panels (DEPOT vs PUBLIC) render for the
+// active SRM EV, tied to the SRM battery/kWh-per-km math.
 const rsimSummaryHtml = byId['rsim-summary'].innerHTML;
-checks.push(['routing-sim summary names the planned EV + an estimated top-up time',
-  rsimSummaryHtml.indexOf('Planned EV') !== -1 &&
-  rsimSummaryHtml.indexOf('Estimated route top-up time') !== -1]);
+checks.push(['route-sim shows DEPOT vs PUBLIC charging feasibility side by side',
+  rsimSummaryHtml.indexOf('Depot charging') !== -1 &&
+  rsimSummaryHtml.indexOf('Public charging') !== -1]);
 // The charge time ties to the SRM model math: compute it directly through the
 // exposed module on the SRM T3EV+ catalogue row and confirm it is a finite,
 // positive hour figure (this mirrors what the panel renders).
@@ -2207,8 +2245,8 @@ checks.push(['SRM-tied charge-time math returns a finite positive estimate',
 const rsimSnapshot = JSON.parse(JSON.stringify(windowObj.__HS.state));
 windowObj.__HS.state.replacement_plan.rows.forEach((rr) => { rr.O = 'Keep ICE'; rr.R = 'Keep ICE'; });
 windowObj.__HS.recompute();
-checks.push(['routing-sim degrades to n.a. (no fabricated spec) when no EV plan',
-  byId['rsim-summary'].innerHTML.indexOf('n.a. (no EV plan selected)') !== -1]);
+checks.push(['route-sim degrades to n.a. (no fabricated spec) when no EV plan',
+  /n\.a\. \(no EV plan selected/.test(byId['rsim-summary'].innerHTML)]);
 // Restore the demo state so the baseline is intact for any later assertion.
 Object.keys(windowObj.__HS.state).forEach((k) => { delete windowObj.__HS.state[k]; });
 Object.keys(rsimSnapshot).forEach((k) => { windowObj.__HS.state[k] = rsimSnapshot[k]; });

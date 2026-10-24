@@ -466,34 +466,49 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .charge-band .cb-fill{height:100%;background:var(--accent);border-radius:4px}
 .charge-band .cb-val{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .charge-attrib{font-size:11.5px;color:var(--muted);border-left:3px solid var(--line2);padding:8px 12px;background:var(--soft);margin:12px 0 0;border-radius:0 6px 6px 0}
-/* Routing simulator (Panel 4): controls row + offline inline-SVG mini-map. No
-   external map tiles / CDN; the map is a pure SVG scatter of the rounded coords
-   relative to the chosen origin, consistent with the other inline-SVG charts. */
-.rsim-controls{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:12px 0 0}
+/* Routing simulator (Panel 4): controls row + REAL geographic offline inline-
+   SVG Singapore map. The outline is drawn from the bundled, build-time
+   simplified basemap (window.HSBasemap); chargers plot by lat/lon; depot/start
+   + route stops are set via the named-area dropdown AND by clicking the map.
+   NO external map tiles / CDN / geocoder - everything is inlined and offline. */
+.rsim-controls{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;margin:12px 0 0}
 .rsim-ctl{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
 .rsim-ctl select{font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
 .rsim-ctl-check{flex-direction:row;align-items:center;gap:7px}
 .rsim-ctl-check input{width:auto}
+.rsim-btn{font-size:12.5px;font-weight:600;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);cursor:pointer;transition:border-color .15s ease,background .15s ease}
+@media(hover:hover){.rsim-btn:hover{border-color:var(--accent)}}
+.rsim-btn-ghost{color:var(--muted)}
+.rsim-btn-sm{padding:3px 9px;min-width:30px;font-size:13px}
+.rsim-maptools{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 18px;margin:8px 0 0}
+.rsim-zoom{display:inline-flex;gap:6px}
 /* Mini-map: a subtle canvas wash sets it apart from the white cards; a height
    cap stops the 2.33:1 viewBox from stretching into a huge letterbox band at
    1440px (panel ~1272px wide would otherwise force ~545px tall). The SVG keeps
    width:100% but is contained to <=360px tall and centred, reading as a compact
    deliberate scatter. */
-#rsim-map{margin:12px 0 0;border:1px solid var(--line);border-radius:10px;background:var(--canvas);overflow:hidden;max-height:360px}
-#rsim-map svg{display:block;width:100%;height:auto;max-height:360px;margin:0 auto}
-#rsim-map .rsim-origin{fill:var(--warn)}
-#rsim-map .rsim-dc{fill:var(--accent)}
-#rsim-map .rsim-ac{fill:var(--line2)}
-#rsim-map .rsim-ring{fill:none;stroke:var(--line2);stroke-dasharray:3 4}
-#rsim-map .rsim-lab{font-size:10px;fill:var(--muted)}
-/* Colour-on-data legend for the AC vs DC / origin markers, so the scatter is
-   self-explanatory without a tooltip. Display-only, no new data. */
-.rsim-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0 0;font-size:11.5px;color:var(--muted)}
+#rsim-map{margin:12px 0 0;border:1px solid var(--line);border-radius:10px;background:#eef3f7;overflow:hidden}
+#rsim-map svg{display:block;width:100%;height:auto;margin:0 auto;cursor:crosshair}
+#rsim-map .rsim-land{fill:#dfe9df;stroke:#9bb39b;stroke-width:0.6;stroke-linejoin:round}
+#rsim-map .rsim-dc{fill:var(--accent);opacity:0.9}
+#rsim-map .rsim-ac{fill:var(--line2);opacity:0.9}
+#rsim-map .rsim-far{fill:#c9ced6;opacity:0.45}
+#rsim-map .rsim-origin{fill:var(--warn);stroke:#fff;stroke-width:1.2}
+#rsim-map .rsim-stop{fill:#2a6df5;stroke:#fff;stroke-width:1.2}
+#rsim-map .rsim-leg{stroke:var(--warn);stroke-width:2;stroke-dasharray:5 4;fill:none;opacity:0.85}
+#rsim-map .rsim-lab{font-size:9px;fill:#243;font-weight:600;paint-order:stroke;stroke:#fff;stroke-width:2.4}
+/* Colour-on-data legend for the markers, so the map is self-explanatory
+   without a tooltip. Display-only, no new data. */
+.rsim-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11.5px;color:var(--muted)}
 .rsim-legend .rl-item{display:inline-flex;align-items:center;gap:6px}
 .rsim-legend .rl-dot{display:inline-block;width:10px;height:10px;border-radius:999px;flex:0 0 10px}
 .rsim-legend .rl-origin{background:var(--warn)}
+.rsim-legend .rl-stop{background:#2a6df5}
 .rsim-legend .rl-dc{background:var(--accent)}
 .rsim-legend .rl-ac{background:var(--line2)}
+.rsim-legend .rl-far{background:#c9ced6}
+/* Side-by-side depot vs public feasibility verdict detail list. */
+.charge-read .cr-sub{font-size:11.5px;color:var(--muted);margin:2px 0 0}
 @media(max-width:700px){.charge-band{grid-template-columns:110px 1fr 56px}}
 @media(max-width:1023px){.workspace{grid-template-columns:1fr}}
 @media(max-width:860px){.grid,.formgrid{grid-template-columns:1fr}.grid4{grid-template-columns:1fr}}
@@ -846,19 +861,26 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <section class="charge-panel" id="charging-routing"><p class="block-title">Public-charging routing simulator &mdash; where to top up without a depot charger</p>
 <p class="small"><span class="coarse-label">Coarse planning aid &middot; not live availability</span> For a fleet manager who chooses <strong>not</strong> to install a depot charger, this screens where the nearest public chargers are around a representative stop, roughly how long a route top-up would take on the planned EV, and each charger&rsquo;s operational info (operator, AC/DC, power, per-kWh price). It is computed entirely in your browser from a <strong>dated, build-time snapshot</strong> of Singapore&rsquo;s public chargers &mdash; <strong>not</strong> a live connection, <strong>not</strong> real-time availability, and distances are <strong>approximate great-circle</strong> (straight-line), not driving distance. It does not queue, schedule, or route turn-by-turn.</p>
 <div class="rsim-controls" id="rsim-controls">
-  <label class="rsim-ctl" for="rsim-region">Representative stop
-    <select id="rsim-region" aria-label="Representative stop region"></select>
+  <label class="rsim-ctl" for="rsim-area">Add a stop (named SG area)
+    <select id="rsim-area" aria-label="Named Singapore area to add as a route stop"></select>
   </label>
+  <button type="button" class="rsim-btn" id="rsim-add-depot">Set as depot / start</button>
+  <button type="button" class="rsim-btn" id="rsim-add-stop">Add as route stop</button>
+  <button type="button" class="rsim-btn rsim-btn-ghost" id="rsim-clear">Clear route</button>
   <label class="rsim-ctl rsim-ctl-check" for="rsim-dconly">
     <input type="checkbox" id="rsim-dconly"> DC (fast) chargers only
   </label>
-  <span class="small" id="rsim-origin-note"></span>
+  <span class="small" id="rsim-origin-note">Click the map to drop the depot/start, then click again to add route stops. Or pick a named area above.</span>
 </div>
+<div id="rsim-map" role="group" aria-label="Interactive offline Singapore route-simulation map"></div>
+<div class="rsim-maptools noprint" aria-hidden="true">
+  <span class="rsim-legend"><span class="rl-item"><span class="rl-dot rl-origin"></span>Depot / start</span><span class="rl-item"><span class="rl-dot rl-stop"></span>Route stop</span><span class="rl-item"><span class="rl-dot rl-dc"></span>DC reachable</span><span class="rl-item"><span class="rl-dot rl-ac"></span>AC reachable</span><span class="rl-item"><span class="rl-dot rl-far"></span>Out of range</span></span>
+  <span class="rsim-zoom"><button type="button" class="rsim-btn rsim-btn-sm" id="rsim-zoom-in" aria-label="Zoom in">+</button><button type="button" class="rsim-btn rsim-btn-sm" id="rsim-zoom-out" aria-label="Zoom out">&minus;</button><button type="button" class="rsim-btn rsim-btn-sm" id="rsim-zoom-reset" aria-label="Reset view">Reset</button></span>
+</div>
+<p class="sub-title" style="margin-top:14px"><strong>Depot charging vs public charging</strong> for the active SRM EV on this route</p>
 <div class="charge-readgrid" id="rsim-summary"></div>
-<p class="sub-title" style="margin-top:14px"><strong>Nearest public chargers</strong> (ranked by approximate great-circle distance)</p>
-<div id="rsim-map"></div>
-<p class="rsim-legend noprint" aria-hidden="true"><span class="rl-item"><span class="rl-dot rl-origin"></span>Representative stop</span><span class="rl-item"><span class="rl-dot rl-dc"></span>DC (fast) charger</span><span class="rl-item"><span class="rl-dot rl-ac"></span>AC charger</span><span class="rl-item">Dashed ring: coarse planning radius</span></p>
-<div class="table-wrap"><table id="rsim-charger-table"><thead><tr><th>#</th><th>Operator</th><th>Region</th><th>Type</th><th class="num">Power kW</th><th class="num">S$/kWh</th><th class="num">~km</th></tr></thead><tbody id="rsim-charger-body"></tbody></table></div>
+<p class="sub-title" style="margin-top:14px"><strong>Reachable public chargers</strong> (within reach of the route; ranked by approximate great-circle distance to the route)</p>
+<div class="table-wrap"><table id="rsim-charger-table"><thead><tr><th>#</th><th>Operator</th><th>Region</th><th>Type</th><th class="num">Power kW</th><th class="num">S$/kWh</th><th class="num">~km to route</th></tr></thead><tbody id="rsim-charger-body"></tbody></table></div>
 <p class="caveat-line" id="rsim-caveat"></p>
 <p class="charge-attrib" id="rsim-attribution"></p>
 </section>
@@ -3604,6 +3626,296 @@ window.HSChargingLocations = {"schemaVersion":1,"provenance":{"source":"lta-data
 </script>
 <!-- CHARGING_LOCATIONS:END -->
 
+<!-- SG_BASEMAP:BEGIN  generated from tools/fixtures/sg_basemap.json by tools/build_index.js  DO NOT EDIT BY HAND -->
+<script>
+window.HSBasemap = {"schemaVersion":1,"attribution":"Singapore boundary © geoBoundaries (gbOpen SGP ADM0), ODbL 1.0; boundary source Urban Redevelopment Authority, derived from data.gov.sg Master Plan 2014 Subzone Boundary (No Sea). Simplified for offline display; coarse outline, not a survey boundary.","license":"ODbL 1.0","source":{"dataset":"geoBoundaries gbOpen SGP ADM0","boundarySource":"Urban Redevelopment Authority, derived from ADM 3","licenseSource":"data.gov.sg master-plan-2014-subzone-boundary-no-sea","sourceFile":"assets/sg-adm0-source.geojson"},"bounds":{"latMin":1.1894,"latMax":1.4709,"lonMin":103.6053,"lonMax":104.0883},"generatedAt":"2026-10-24","polygons":[[[103.7219,1.2135],[103.7137,1.2112],[103.7072,1.2045],[103.7178,1.2025],[103.7337,1.2035],[103.7281,1.2078],[103.7294,1.2096],[103.7306,1.2079],[103.7292,1.2112],[103.7251,1.2102],[103.7234,1.2122],[103.725,1.2126],[103.7219,1.2135]],[[103.762,1.2112],[103.7585,1.2174],[103.7577,1.2058],[103.7598,1.1959],[103.7641,1.1914],[103.7603,1.1965],[103.7662,1.2024],[103.775,1.1969],[103.7744,1.1932],[103.7712,1.1905],[103.765,1.1906],[103.7702,1.1894],[103.7747,1.1927],[103.7758,1.1972],[103.7809,1.2003],[103.7812,1.2094],[103.7767,1.211],[103.769,1.2082],[103.762,1.2112]],[[103.8487,1.2309],[103.8456,1.232],[103.8494,1.2295],[103.8468,1.2266],[103.85,1.2291],[103.8522,1.2279],[103.8503,1.2258],[103.8521,1.2245],[103.8512,1.221],[103.8456,1.2234],[103.8432,1.2222],[103.8518,1.2134],[103.8505,1.2198],[103.8524,1.2226],[103.857,1.2176],[103.8584,1.2182],[103.8583,1.2216],[103.8533,1.2276],[103.8576,1.2296],[103.8583,1.232],[103.8511,1.2297],[103.8551,1.2319],[103.8495,1.2297],[103.8487,1.2309]],[[103.7477,1.2374],[103.7399,1.2349],[103.7423,1.2314],[103.752,1.2298],[103.7648,1.2247],[103.7689,1.2249],[103.7708,1.2274],[103.7673,1.23],[103.76,1.231],[103.7574,1.2367],[103.7544,1.2344],[103.7477,1.2374]],[[103.7642,1.2405],[103.7599,1.2395],[103.7607,1.2324],[103.7707,1.2294],[103.7733,1.2249],[103.7791,1.2241],[103.7771,1.2288],[103.7642,1.2405]],[[103.8092,1.26],[103.8065,1.2595],[103.8096,1.2558],[103.8199,1.2488],[103.8214,1.2495],[103.8271,1.2419],[103.8286,1.2426],[103.8329,1.2378],[103.8398,1.2405],[103.8407,1.2476],[103.842,1.2473],[103.8416,1.2423],[103.8482,1.2512],[103.8459,1.2532],[103.841,1.25],[103.8416,1.2537],[103.8272,1.2546],[103.8182,1.26],[103.8092,1.26]],[[103.8424,1.2577],[103.8361,1.2639],[103.8305,1.2636],[103.8242,1.2601],[103.83,1.2562],[103.8311,1.2574],[103.8364,1.2548],[103.8424,1.2577]],[[103.7123,1.2919],[103.7113,1.2966],[103.7113,1.2917],[103.7065,1.2925],[103.7035,1.2903],[103.7074,1.2852],[103.7075,1.2803],[103.711,1.2779],[103.7084,1.2754],[103.7002,1.2849],[103.695,1.2798],[103.6962,1.2778],[103.6922,1.277],[103.6885,1.2723],[103.6841,1.2764],[103.6957,1.2902],[103.6878,1.2906],[103.6758,1.2846],[103.6564,1.271],[103.6692,1.2453],[103.6651,1.2426],[103.6687,1.2349],[103.6731,1.2343],[103.6761,1.2279],[103.6719,1.2236],[103.6696,1.2284],[103.6725,1.2227],[103.6903,1.2401],[103.6859,1.2577],[103.6802,1.263],[103.685,1.2684],[103.6936,1.2605],[103.6962,1.251],[103.7139,1.2588],[103.7047,1.2654],[103.7066,1.2688],[103.709,1.2676],[103.71,1.2695],[103.7106,1.2669],[103.7221,1.2609],[103.7257,1.2649],[103.729,1.2651],[103.7288,1.2671],[103.7232,1.2688],[103.7263,1.2716],[103.7328,1.2692],[103.7402,1.273],[103.7357,1.2782],[103.7294,1.2809],[103.7247,1.2894],[103.7123,1.2919]],[[103.9348,1.4275],[103.9265,1.4239],[103.9284,1.4191],[103.9307,1.4173],[103.9342,1.4178],[103.9342,1.4158],[103.9486,1.4098],[103.9582,1.3994],[103.9707,1.402],[103.974,1.404],[103.9735,1.406],[103.9785,1.408],[103.9841,1.4069],[103.9924,1.4083],[103.9905,1.4097],[103.9919,1.4149],[103.9897,1.4181],[103.9857,1.4191],[103.9793,1.4171],[103.9697,1.4196],[103.959,1.4166],[103.9554,1.4191],[103.9484,1.42],[103.9489,1.4216],[103.9462,1.4235],[103.9348,1.4275]],[[104.0564,1.432],[104.0523,1.428],[104.0428,1.4314],[104.0375,1.425],[104.0288,1.4252],[104.0306,1.4126],[104.0272,1.413],[104.0251,1.4192],[104.0211,1.4213],[104.0163,1.4292],[104.0097,1.4242],[104.0092,1.4187],[104.014,1.4091],[104.0234,1.4087],[104.0275,1.4121],[104.0303,1.4115],[104.0284,1.4079],[104.0301,1.4044],[104.0288,1.4029],[104.0155,1.4016],[104.0185,1.393],[104.0236,1.3864],[104.0267,1.3845],[104.0198,1.3918],[104.0163,1.4007],[104.0196,1.3984],[104.0272,1.4004],[104.0315,1.4038],[104.0349,1.4033],[104.0355,1.4056],[104.0381,1.3957],[104.0403,1.3954],[104.0471,1.385],[104.0458,1.3844],[104.0513,1.3806],[104.0534,1.3759],[104.0789,1.3868],[104.0835,1.4064],[104.0871,1.4055],[104.0877,1.3972],[104.0798,1.3826],[104.0743,1.3633],[104.0752,1.3549],[104.0839,1.3396],[104.081,1.3381],[104.0721,1.3455],[104.0827,1.3376],[104.0842,1.3402],[104.0755,1.355],[104.0746,1.3615],[104.0788,1.3792],[104.0876,1.3959],[104.0883,1.4039],[104.0837,1.407],[104.0856,1.41],[104.0805,1.4192],[104.0695,1.4273],[104.0564,1.432]],[[104.0451,1.4377],[104.0426,1.4403],[104.0381,1.4409],[104.0238,1.4369],[104.0193,1.4333],[104.0238,1.4358],[104.0266,1.4347],[104.0377,1.4373],[104.0386,1.4352],[104.0449,1.4357],[104.0539,1.4324],[104.0473,1.4347],[104.0451,1.4377]],[[103.8183,1.4709],[103.8054,1.4697],[103.8076,1.4657],[103.805,1.4695],[103.8031,1.469],[103.7771,1.4512],[103.7709,1.4486],[103.7692,1.4519],[103.7677,1.4429],[103.7662,1.4413],[103.7671,1.4437],[103.765,1.4437],[103.7627,1.4378],[103.7546,1.4385],[103.7527,1.4358],[103.744,1.4403],[103.7385,1.4389],[103.7377,1.4405],[103.7366,1.4387],[103.7372,1.4427],[103.73,1.4476],[103.7303,1.4495],[103.7229,1.4481],[103.7226,1.4507],[103.7193,1.451],[103.7066,1.4459],[103.6956,1.4349],[103.678,1.429],[103.6744,1.425],[103.6717,1.4153],[103.673,1.414],[103.6624,1.4056],[103.6636,1.4023],[103.6615,1.3887],[103.6574,1.3843],[103.653,1.3732],[103.6511,1.3745],[103.6493,1.3723],[103.6438,1.3602],[103.6406,1.3578],[103.6383,1.3504],[103.6368,1.3516],[103.6342,1.3491],[103.6365,1.3456],[103.6356,1.3435],[103.6344,1.3446],[103.6356,1.3434],[103.6342,1.3419],[103.634,1.3445],[103.6332,1.3427],[103.6348,1.3407],[103.6181,1.2971],[103.6175,1.2936],[103.6209,1.2879],[103.62,1.2835],[103.6173,1.2793],[103.6121,1.2766],[103.606,1.2626],[103.61,1.2682],[103.6138,1.2677],[103.614,1.2557],[103.6082,1.2521],[103.6089,1.2463],[103.6125,1.2453],[103.6053,1.244],[103.6057,1.241],[103.6114,1.2412],[103.6121,1.2373],[103.6162,1.2372],[103.6184,1.2321],[103.6178,1.2272],[103.6089,1.2196],[103.6067,1.2212],[103.6065,1.2248],[103.6065,1.2203],[103.6426,1.2101],[103.6442,1.2115],[103.6411,1.2109],[103.6104,1.2195],[103.6116,1.2223],[103.6145,1.2227],[103.619,1.2274],[103.6175,1.2363],[103.6217,1.2383],[103.6155,1.2543],[103.6291,1.2609],[103.6217,1.2579],[103.6216,1.2618],[103.6387,1.2701],[103.639,1.2661],[103.6324,1.2631],[103.6394,1.2658],[103.6404,1.2791],[103.6472,1.2793],[103.65,1.2825],[103.6499,1.2854],[103.6352,1.3109],[103.6376,1.3164],[103.6396,1.3124],[103.6433,1.3113],[103.6497,1.3174],[103.6518,1.3157],[103.6462,1.309],[103.6498,1.3052],[103.649,1.3038],[103.654,1.3102],[103.657,1.3111],[103.6548,1.3057],[103.6498,1.3017],[103.6508,1.3005],[103.6534,1.3026],[103.6518,1.2993],[103.6538,1.301],[103.6549,1.2997],[103.6531,1.2978],[103.6552,1.2996],[103.6573,1.2979],[103.6549,1.2956],[103.6582,1.2972],[103.6648,1.2919],[103.6664,1.2888],[103.6645,1.2869],[103.6744,1.2953],[103.6695,1.3004],[103.6687,1.3063],[103.6727,1.3068],[103.6732,1.3022],[103.6784,1.2966],[103.6778,1.2997],[103.6801,1.2972],[103.6819,1.298],[103.6799,1.3075],[103.6814,1.31],[103.683,1.3088],[103.6839,1.2991],[103.6938,1.3006],[103.6951,1.3078],[103.6975,1.3079],[103.7023,1.304],[103.7024,1.3018],[103.7087,1.302],[103.7084,1.3076],[103.7108,1.3084],[103.7113,1.2972],[103.7119,1.2996],[103.7219,1.2995],[103.7146,1.3065],[103.7126,1.3066],[103.7127,1.3089],[103.7279,1.3001],[103.7298,1.3016],[103.7409,1.2988],[103.7432,1.3011],[103.7434,1.2998],[103.7448,1.3008],[103.7442,1.298],[103.7492,1.2963],[103.7557,1.2973],[103.7577,1.3001],[103.763,1.2946],[103.7607,1.2906],[103.7723,1.2837],[103.7691,1.2784],[103.7565,1.2858],[103.753,1.2853],[103.7502,1.2805],[103.7707,1.2682],[103.7782,1.2809],[103.7806,1.2795],[103.78,1.2783],[103.7871,1.2738],[103.7786,1.2592],[103.7855,1.255],[103.7953,1.2716],[103.8051,1.2623],[103.8067,1.2662],[103.8101,1.2646],[103.8125,1.2664],[103.8161,1.2638],[103.8176,1.2667],[103.8168,1.2637],[103.8195,1.2639],[103.8197,1.2623],[103.8176,1.262],[103.8199,1.2619],[103.8322,1.2674],[103.8397,1.2676],[103.8458,1.2617],[103.8468,1.2627],[103.8444,1.2656],[103.8457,1.2669],[103.8512,1.2607],[103.8516,1.2728],[103.8585,1.2694],[103.8608,1.2647],[103.86,1.2678],[103.8717,1.2769],[103.8715,1.2806],[103.8737,1.2822],[103.8777,1.2807],[103.8759,1.2808],[103.8797,1.2844],[103.8937,1.2935],[103.9631,1.3146],[103.9835,1.3168],[103.9852,1.3134],[103.9839,1.3121],[103.9907,1.314],[104.0006,1.3103],[104.0114,1.3153],[104.0224,1.3154],[104.0229,1.32],[104.0288,1.3201],[104.0289,1.3158],[104.0327,1.3161],[104.0323,1.3249],[104.0232,1.3249],[104.021,1.327],[104.0221,1.3346],[104.0246,1.3358],[104.0315,1.3535],[104.0325,1.3509],[104.0301,1.3491],[104.0327,1.3508],[104.0327,1.3584],[104.0378,1.357],[104.042,1.352],[104.0433,1.3541],[104.0137,1.3702],[104.0102,1.3687],[104.0063,1.37],[104.0065,1.3725],[104.0088,1.3736],[104.0057,1.3752],[103.999,1.389],[103.9871,1.3934],[103.9901,1.3901],[103.9817,1.393],[103.9738,1.3904],[103.9766,1.3863],[103.9716,1.3868],[103.9672,1.3833],[103.9668,1.3802],[103.9645,1.3821],[103.9598,1.3811],[103.949,1.3831],[103.9378,1.39],[103.9342,1.3967],[103.9302,1.3995],[103.9308,1.404],[103.9164,1.4172],[103.9141,1.4163],[103.9125,1.4212],[103.9032,1.4199],[103.898,1.4147],[103.8967,1.4153],[103.8969,1.4206],[103.8889,1.4256],[103.8866,1.4236],[103.8882,1.4258],[103.8771,1.432],[103.8697,1.4286],[103.8696,1.4246],[103.8634,1.4227],[103.8574,1.4254],[103.8626,1.435],[103.8548,1.4483],[103.8464,1.4482],[103.8476,1.446],[103.8457,1.4479],[103.8459,1.4541],[103.848,1.4491],[103.8521,1.4513],[103.8505,1.4555],[103.8364,1.4641],[103.8329,1.4599],[103.8343,1.4647],[103.8276,1.4686],[103.8246,1.4633],[103.8221,1.4666],[103.8185,1.4639],[103.8224,1.469],[103.8183,1.4709]]]};
+</script>
+<!-- SG_BASEMAP:END -->
+
+<!-- SGMAP:BEGIN  generated from src/sg_map.js by tools/build_index.js  DO NOT EDIT BY HAND -->
+<!-- src/sg_map.js SHA-256: edd2bcb017014e64c3007765f3487044b91a2a1d2d4224d661d3b242d8157b68 -->
+<script>
+/*
+ * Geographic projection + route-feasibility module (Stage 3 / Charging map)
+ * =========================================================================
+ * Pure, deterministic, dependency-free ES module. No DOM, no network, no
+ * third-party imports, no map tiles / map API / geocoder / LLM call. Runs
+ * identically in a browser and in Node:
+ *   import { project, unproject, SG_AREAS, routeDistanceKm,
+ *            reachableChargers, depotFeasibility } from './sg_map.js';
+ *
+ * WHAT THIS IS (and is NOT) - read before trusting a number
+ * ---------------------------------------------------------
+ * This is the GEOGRAPHIC / INTERACTION layer behind the Charging-tab route
+ * simulator. It lets the page draw a real (bundled, offline) Singapore outline,
+ * plot the bundled public chargers by lat/lon, let the user drop a depot/start
+ * and route stops, and answer two coarse feasibility questions for the ACTIVE
+ * EV (the SRM model on the default landing):
+ *   (A) DEPOT CHARGING - can the truck complete the planned route on one full
+ *       depot charge (usable range vs route distance)?
+ *   (B) PUBLIC CHARGING - which bundled public chargers are within reach of the
+ *       route (near a stop or a straight-line leg)?
+ *
+ * HONESTY CAVEATS (true of every number this module produces):
+ *   - Distances are GREAT-CIRCLE (straight-line, "as the crow flies") via
+ *     haversine, NOT turn-by-turn driving distance. Real roads are longer.
+ *   - The charger data is a DATED build-time SNAPSHOT, not live availability.
+ *   - The named areas below are COARSE PLANNING ANCHORS (approximate town
+ *     centroids), not exact depot addresses.
+ *   - The projection is a simple equirectangular (plate carree) fit to the
+ *     Singapore bbox - fine for a small-extent display map, not a survey CRS.
+ * It is a COARSE PLANNING AID. The authoritative economics remain in the frozen
+ * engine (src/engine.js); this module changes NO economic number.
+ *
+ * It REUSES src/routing_sim.js for the haversine primitive (imported, never
+ * duplicated) so there is one great-circle definition in the codebase.
+ *
+ * UNITS
+ *   distance   km            power   kW           energy   kWh
+ *   lat / lon  decimal degrees (WGS84-ish)        x / y    pixels (SVG)
+ */
+var haversineKm = window.HSRoutingSim.haversineKm;
+function isNum(v) { return typeof v === 'number' && isFinite(v); }
+
+// Singapore bounding box the projection is fit to. Matches the bundled basemap
+// (tools/fixtures/sg_basemap.json) and the charger dataset bounds. A projection
+// viewport may override these via opts, but these are the sane defaults.
+const SG_BBOX = { latMin: 1.15, latMax: 1.50, lonMin: 103.55, lonMax: 104.10 };
+
+/*
+ * NAMED SG AREAS - a small table of real Singapore towns / planning areas with
+ * APPROXIMATE centroid coordinates (decimal degrees). These are COARSE PLANNING
+ * ANCHORS for picking a depot/start or a route stop WITHOUT any online geocoder
+ * - they are not exact addresses. Ordered west-to-east-ish then by name so the
+ * dropdown is stable and deterministic.
+ */
+const SG_AREAS = [
+  { name: 'Tuas (West industrial)', lat: 1.3210, lon: 103.6360 },
+  { name: 'Jurong (West)', lat: 1.3330, lon: 103.7420 },
+  { name: 'Clementi', lat: 1.3150, lon: 103.7650 },
+  { name: 'Bukit Merah', lat: 1.2820, lon: 103.8230 },
+  { name: 'CBD / Raffles Place', lat: 1.2840, lon: 103.8510 },
+  { name: 'Toa Payoh', lat: 1.3340, lon: 103.8560 },
+  { name: 'Ang Mo Kio', lat: 1.3700, lon: 103.8490 },
+  { name: 'Serangoon', lat: 1.3500, lon: 103.8730 },
+  { name: 'Woodlands (North)', lat: 1.4360, lon: 103.7860 },
+  { name: 'Sembawang', lat: 1.4490, lon: 103.8200 },
+  { name: 'Yishun', lat: 1.4290, lon: 103.8350 },
+  { name: 'Punggol', lat: 1.4050, lon: 103.9020 },
+  { name: 'Pasir Ris', lat: 1.3720, lon: 103.9490 },
+  { name: 'Tampines', lat: 1.3540, lon: 103.9450 },
+  { name: 'Bedok', lat: 1.3240, lon: 103.9300 },
+  { name: 'Changi (Airport / East)', lat: 1.3570, lon: 103.9880 },
+];
+
+/*
+ * normaliseViewport(viewport) -> { width, height, bbox } with defaults.
+ * A viewport describes the SVG drawing surface and the geographic window it
+ * maps to. `pad` (pixels) insets the drawing so markers near the edge are not
+ * clipped. Missing fields fall back to a 640x420 surface over SG_BBOX.
+ */
+function normaliseViewport(viewport) {
+  viewport = viewport || {};
+  const width = isNum(viewport.width) ? viewport.width : 640;
+  const height = isNum(viewport.height) ? viewport.height : 420;
+  const pad = isNum(viewport.pad) ? viewport.pad : 0;
+  const bbox = viewport.bbox || SG_BBOX;
+  return { width, height, pad, bbox };
+}
+
+/*
+ * project(lat, lon, viewport) -> { x, y } in SVG pixel space.
+ * ----------------------------------------------------------
+ * Equirectangular (plate carree) projection fit to the viewport bbox. Longitude
+ * maps left->right, latitude maps bottom->top (north up, so screen y is
+ * inverted). Returns null for non-finite input. NOT clamped to the viewport:
+ * a coordinate outside the bbox projects to an x/y outside [pad, width-pad] so
+ * callers can decide to clip or draw it. Pairs exactly with unproject().
+ */
+function project(lat, lon, viewport) {
+  if (!isNum(lat) || !isNum(lon)) return null;
+  const { width, height, pad, bbox } = normaliseViewport(viewport);
+  const lonSpan = (bbox.lonMax - bbox.lonMin) || 1e-6;
+  const latSpan = (bbox.latMax - bbox.latMin) || 1e-6;
+  const innerW = width - 2 * pad;
+  const innerH = height - 2 * pad;
+  const x = pad + ((lon - bbox.lonMin) / lonSpan) * innerW;
+  const y = pad + ((bbox.latMax - lat) / latSpan) * innerH; // north up
+  return { x, y };
+}
+
+/*
+ * unproject(x, y, viewport) -> { lat, lon } in decimal degrees.
+ * ------------------------------------------------------------
+ * Inverse of project(). Used for click-to-drop-a-stop: the SVG click's pixel
+ * coords become a lat/lon. The result is CLAMPED to the viewport bbox so a
+ * click just outside the drawn surface still yields a sensible in-bounds point
+ * (never a coordinate off the island). Returns null for non-finite input.
+ */
+function unproject(x, y, viewport) {
+  if (!isNum(x) || !isNum(y)) return null;
+  const { width, height, pad, bbox } = normaliseViewport(viewport);
+  const lonSpan = (bbox.lonMax - bbox.lonMin) || 1e-6;
+  const latSpan = (bbox.latMax - bbox.latMin) || 1e-6;
+  const innerW = (width - 2 * pad) || 1e-6;
+  const innerH = (height - 2 * pad) || 1e-6;
+  let lon = bbox.lonMin + ((x - pad) / innerW) * lonSpan;
+  let lat = bbox.latMax - ((y - pad) / innerH) * latSpan;
+  if (lon < bbox.lonMin) lon = bbox.lonMin; if (lon > bbox.lonMax) lon = bbox.lonMax;
+  if (lat < bbox.latMin) lat = bbox.latMin; if (lat > bbox.latMax) lat = bbox.latMax;
+  return { lat, lon };
+}
+
+/*
+ * routeDistanceKm(stops) -> total great-circle route length in KILOMETRES.
+ * ------------------------------------------------------------------------
+ * Sums haversineKm over consecutive stop legs. `stops` is an ordered array of
+ * { lat, lon } (the depot/start first, then each route stop). Reuses the
+ * haversine primitive from src/routing_sim.js - it is NOT re-implemented here.
+ * Returns 0 for a single stop and null when fewer than one valid stop or any
+ * leg coordinate is non-finite. Straight-line, NOT driving distance.
+ */
+function routeDistanceKm(stops) {
+  if (!Array.isArray(stops) || stops.length === 0) return null;
+  for (const s of stops) if (!s || !isNum(s.lat) || !isNum(s.lon)) return null;
+  if (stops.length === 1) return 0;
+  let total = 0;
+  for (let i = 1; i < stops.length; i++) {
+    const d = haversineKm(stops[i - 1].lat, stops[i - 1].lon, stops[i].lat, stops[i].lon);
+    if (d == null) return null;
+    total += d;
+  }
+  return total;
+}
+
+/*
+ * distanceToRouteKm(point, stops) -> min great-circle distance (km) from a
+ * point to the route: the smaller of the distance to the nearest STOP and the
+ * nearest point along any straight-line LEG (great-circle corridor). Legs are
+ * sampled at a coarse interval (adequate for Singapore's small extent) rather
+ * than solved analytically, keeping the maths simple and deterministic.
+ */
+function distanceToRouteKm(point, stops) {
+  if (!point || !isNum(point.lat) || !isNum(point.lon)) return null;
+  if (!Array.isArray(stops) || stops.length === 0) return null;
+  let best = Infinity;
+  // Distance to each stop.
+  for (const s of stops) {
+    if (!s || !isNum(s.lat) || !isNum(s.lon)) continue;
+    const d = haversineKm(point.lat, point.lon, s.lat, s.lon);
+    if (d != null && d < best) best = d;
+  }
+  // Distance to sampled points along each leg (corridor).
+  for (let i = 1; i < stops.length; i++) {
+    const a = stops[i - 1], b = stops[i];
+    if (!a || !b || !isNum(a.lat) || !isNum(a.lon) || !isNum(b.lat) || !isNum(b.lon)) continue;
+    const legKm = haversineKm(a.lat, a.lon, b.lat, b.lon) || 0;
+    // ~0.5 km sampling, capped so very long legs stay cheap.
+    const steps = Math.min(200, Math.max(1, Math.ceil(legKm / 0.5)));
+    for (let k = 1; k < steps; k++) {
+      const t = k / steps;
+      const lat = a.lat + (b.lat - a.lat) * t;
+      const lon = a.lon + (b.lon - a.lon) * t;
+      const d = haversineKm(point.lat, point.lon, lat, lon);
+      if (d != null && d < best) best = d;
+    }
+  }
+  return isFinite(best) ? best : null;
+}
+
+/*
+ * reachableChargers(stops, locations, opts) -> { reachable, outOfRange }.
+ * ----------------------------------------------------------------------
+ * Classifies each bundled charger as REACHABLE (within opts.corridorKm of the
+ * route - a stop or a straight-line leg) vs OUT-OF-RANGE. Each returned record
+ * carries routeDistanceKm (how far the charger is from the route) and is sorted
+ * ascending by it, so the UI can highlight the closest reachable chargers.
+ *   stops      ordered [{lat,lon}, ...] (depot/start + route stops)
+ *   locations  array of compact charger records (window.HSChargingLocations
+ *              .locations shape: { lat, lon, operator, region, hasDc, plug })
+ *   opts.corridorKm  reach radius around the route (default 3 km)
+ *   opts.dcOnly      keep only DC (fast) chargers when true
+ *   opts.limit       cap on the reachable list length (default none)
+ * Deterministic: ties on distance break by operator then lat then lon.
+ */
+function reachableChargers(stops, locations, opts) {
+  opts = opts || {};
+  const corridorKm = isNum(opts.corridorKm) ? opts.corridorKm : 3;
+  const dcOnly = !!opts.dcOnly;
+  const reachable = [], outOfRange = [];
+  if (!Array.isArray(stops) || stops.length === 0) return { reachable, outOfRange };
+  if (!Array.isArray(locations)) return { reachable, outOfRange };
+  for (const loc of locations) {
+    if (!loc || !isNum(loc.lat) || !isNum(loc.lon)) continue;
+    if (dcOnly && !loc.hasDc) continue;
+    const d = distanceToRouteKm({ lat: loc.lat, lon: loc.lon }, stops);
+    if (d == null) continue;
+    const rec = {
+      lat: loc.lat, lon: loc.lon,
+      region: loc.region != null ? loc.region : null,
+      operator: loc.operator != null ? loc.operator : 'Unknown',
+      hasDc: !!loc.hasDc,
+      plug: loc.plug || null,
+      routeDistanceKm: Math.round(d * 100) / 100,
+    };
+    if (d <= corridorKm) reachable.push(rec); else outOfRange.push(rec);
+  }
+  function cmp(a, b) {
+    if (a.routeDistanceKm !== b.routeDistanceKm) return a.routeDistanceKm - b.routeDistanceKm;
+    if (a.operator !== b.operator) return a.operator < b.operator ? -1 : 1;
+    if (a.lat !== b.lat) return a.lat - b.lat;
+    return a.lon - b.lon;
+  }
+  reachable.sort(cmp);
+  outOfRange.sort(cmp);
+  const limited = (isNum(opts.limit) && opts.limit > 0) ? reachable.slice(0, opts.limit) : reachable;
+  return { reachable: limited, outOfRange, reachableCount: reachable.length };
+}
+
+/*
+ * depotFeasibility(spec, routeKm) -> can the EV complete the route on ONE full
+ * depot charge? Pure range-vs-distance check for DEPOT charging (no mid-route
+ * top-up). Honest degrade: returns feasible=null (n.a.) when a required input
+ * is missing / non-positive, never a fabricated zero.
+ *   spec.batteryKwh        usable pack energy (kWh)           [SRM prod.D]
+ *   spec.kwhPerKm          consumption (kWh/km)               [SRM prod.E]
+ *   spec.reserveFraction   battery reserve kept in hand (0..1, default 0.10)
+ *   routeKm                planned route distance (km)
+ * Returns { feasible, usableKwh, rangeKm, routeKm, marginKm, reserveFraction }.
+ *   rangeKm  = batteryKwh*(1-reserve) / kwhPerKm   (usable one-charge range)
+ *   feasible = rangeKm >= routeKm
+ */
+function depotFeasibility(spec, routeKm) {
+  spec = spec || {};
+  const batteryKwh = spec.batteryKwh;
+  const kwhPerKm = spec.kwhPerKm;
+  const reserveFraction = isNum(spec.reserveFraction) ? spec.reserveFraction : 0.10;
+  const na = {
+    feasible: null, usableKwh: null, rangeKm: null,
+    routeKm: isNum(routeKm) ? routeKm : null, marginKm: null,
+    reserveFraction,
+  };
+  if (!isNum(batteryKwh) || batteryKwh <= 0) return na;
+  if (!isNum(kwhPerKm) || kwhPerKm <= 0) return na;
+  if (!isNum(routeKm) || routeKm < 0) return na;
+  if (!(reserveFraction >= 0 && reserveFraction < 1)) return na;
+  const usableKwh = batteryKwh * (1 - reserveFraction);
+  const rangeKm = usableKwh / kwhPerKm;
+  return {
+    feasible: rangeKm >= routeKm,
+    usableKwh,
+    rangeKm,
+    routeKm,
+    marginKm: rangeKm - routeKm,
+    reserveFraction,
+  };
+}
+
+
+window.HSSgMap = { SG_BBOX: SG_BBOX, SG_AREAS: SG_AREAS, project: project, unproject: unproject, routeDistanceKm: routeDistanceKm, distanceToRouteKm: distanceToRouteKm, reachableChargers: reachableChargers, depotFeasibility: depotFeasibility };
+</script>
+<!-- SGMAP:END -->
+
 <script>
 /* ================================================================== *
  * Page controller. Reads window.HSLandingCase (the embedded MID/SRM
@@ -3968,29 +4280,41 @@ window.HSChargingLocations = {"schemaVersion":1,"provenance":{"source":"lta-data
       attribEl.textContent = (ctx.attribution || '') + provTxt;
     }
   }
-  /* ---- FEAT-003 Part B: Stage-4 routing simulator (Panel 4) ------- *
-   * Fully client-side + deterministic. Reads window.HSRoutingSim (the
-   * additive src/routing_sim.js module) and window.HSChargingLocations (the
-   * bundled build-time charger subset). It ties the ACTIVE EV catalogue row
-   * (SRM model: battery kWh + kWh/km) to the reachable charger power for a
-   * charge-time estimate, ranks the nearest public chargers around a
-   * representative stop, and draws an offline inline-SVG mini-map. NO runtime
-   * network / API / map tile. Degrades honestly to n.a. when there is no EV
-   * plan or the duty is incomplete - it never fabricates a result. */
+  /* ---- FEAT-004: Stage-4 geographic route simulator (Panel 4) ----- *
+   * Fully client-side, deterministic, and OFFLINE. Reads window.HSSgMap (the
+   * additive src/sg_map.js projection + feasibility module), window.HSBasemap
+   * (the bundled, build-time simplified Singapore outline), window.HSRoutingSim
+   * (src/routing_sim.js: haversine + charge-time) and window.HSChargingLocations
+   * (the bundled charger subset). It draws a REAL geographic inline-SVG map of
+   * Singapore, plots the chargers by lat/lon, lets the user set a depot/start +
+   * route stops (named-area dropdown OR click-to-drop on the map) with pan/zoom,
+   * draws straight-line (great-circle) legs, and shows DEPOT-CHARGING vs
+   * PUBLIC-CHARGING feasibility side by side for the ACTIVE EV (the SRM model
+   * on the mid landing). NO runtime network / map tile / map API / geocoder.
+   * Degrades honestly to n.a. when the EV spec or the route is missing - it
+   * never fabricates a result. */
 
-  // Region centroids (approx) used ONLY as the representative-stop origin when a
-  // fleet planner picks a planning region rather than an exact coordinate. These
-  // are coarse planning anchors, not precise locations; they match the coarse
-  // region labels in the bundled dataset. Decimal degrees.
-  var RSIM_REGION_CENTROIDS = {
-    'Central':    { lat: 1.2900, lon: 103.8500 },
-    'East':       { lat: 1.3450, lon: 103.9400 },
-    'North-East': { lat: 1.3850, lon: 103.8850 },
-    'North':      { lat: 1.4200, lon: 103.8300 },
-    'West':       { lat: 1.3400, lon: 103.7200 }
+  // Route-simulator state. `stops` is the ordered list of { lat, lon, name }
+  // the user has set (stops[0] is the depot/start, the rest are route stops),
+  // set via the named-area dropdown OR by clicking the map (click 1 = depot,
+  // subsequent clicks = stops). `view` holds the pan/zoom SVG viewBox. All
+  // client-side, deterministic, offline.
+  var RSIM_VIEW_W = 760, RSIM_VIEW_H = 480, RSIM_PAD = 14;
+  var rsimState = {
+    stops: [], dcOnly: false, built: false,
+    view: { x: 0, y: 0, w: RSIM_VIEW_W, h: RSIM_VIEW_H }
   };
-  var RSIM_REGION_ORDER = ['Central','East','North-East','North','West'];
-  var rsimState = { region: null, dcOnly: false, built: false };
+  // The geographic viewport the projection is fit to (matches window.HSBasemap
+  // bounds and the charger dataset). Falls back to the module's SG bbox.
+  function rsimViewport(){
+    var map = window.HSSgMap;
+    var bm = window.HSBasemap;
+    var bbox = (bm && bm.bounds) ? {
+      latMin: bm.bounds.latMin, latMax: bm.bounds.latMax,
+      lonMin: bm.bounds.lonMin, lonMax: bm.bounds.lonMax
+    } : (map ? map.SG_BBOX : { latMin:1.15, latMax:1.50, lonMin:103.55, lonMax:104.10 });
+    return { width: RSIM_VIEW_W, height: RSIM_VIEW_H, pad: RSIM_PAD, bbox: bbox };
+  }
 
   // The active EV catalogue row for the charge-time math. Honesty: prefer the
   // EV model actually named on the included replacement-plan rows for the chosen
@@ -4039,52 +4363,150 @@ window.HSChargingLocations = {"schemaVersion":1,"provenance":{"source":"lta-data
     return best;
   }
 
-  // Build the region picker once (deterministic order; only regions present in
-  // the dataset, with a sane default).
-  function buildRsimControls(doc){
-    var sel = el('rsim-region');
+  // Build the interactive controls once: the named-area dropdown (from the
+  // sg_map SG_AREAS table), the depot/stop/clear buttons, DC-only toggle, and
+  // pan/zoom buttons. All client-side, offline. Deterministic.
+  function buildRsimControls(){
+    var sel = el('rsim-area');
     if (!sel || rsimState.built) return;
-    var present = {};
-    (doc.locations || []).forEach(function(l){ if (l && l.region) present[l.region] = true; });
-    var opts = RSIM_REGION_ORDER.filter(function(r){ return present[r] && RSIM_REGION_CENTROIDS[r]; });
-    if (!opts.length) opts = RSIM_REGION_ORDER.filter(function(r){ return RSIM_REGION_CENTROIDS[r]; });
-    sel.innerHTML = opts.map(function(r){ return '<option value="' + esc(r) + '">' + esc(r) + ' Singapore</option>'; }).join('');
-    rsimState.region = opts[0] || 'Central';
-    sel.value = rsimState.region;
-    sel.addEventListener('change', function(){ rsimState.region = sel.value; recompute(); });
+    var map = window.HSSgMap;
+    var areas = (map && map.SG_AREAS) ? map.SG_AREAS : [];
+    sel.innerHTML = areas.map(function(a, i){ return '<option value="' + i + '">' + esc(a.name) + '</option>'; }).join('');
+
+    function addFrom(kind){
+      var idx = parseInt(sel.value, 10);
+      var a = areas[idx];
+      if (!a) return;
+      var pt = { lat: a.lat, lon: a.lon, name: a.name };
+      if (kind === 'depot') rsimState.stops = [pt]; else rsimState.stops.push(pt);
+      recompute();
+    }
+    var bD = el('rsim-add-depot'); if (bD) bD.addEventListener('click', function(){ addFrom('depot'); });
+    var bS = el('rsim-add-stop'); if (bS) bS.addEventListener('click', function(){ addFrom('stop'); });
+    var bC = el('rsim-clear'); if (bC) bC.addEventListener('click', function(){ rsimState.stops = []; recompute(); });
+
     var dc = el('rsim-dconly');
     if (dc){ dc.checked = false; dc.addEventListener('change', function(){ rsimState.dcOnly = !!dc.checked; recompute(); }); }
+
+    // Pan/zoom via SVG viewBox. Zoom keeps the view centre fixed.
+    function zoom(factor){
+      var v = rsimState.view;
+      var cx = v.x + v.w / 2, cy = v.y + v.h / 2;
+      var nw = v.w * factor, nh = v.h * factor;
+      // Clamp zoom-out to the full extent, zoom-in to ~6x.
+      if (nw > RSIM_VIEW_W){ nw = RSIM_VIEW_W; nh = RSIM_VIEW_H; }
+      if (nw < RSIM_VIEW_W / 6){ nw = RSIM_VIEW_W / 6; nh = RSIM_VIEW_H / 6; }
+      v.w = nw; v.h = nh;
+      v.x = cx - nw / 2; v.y = cy - nh / 2;
+      clampView();
+      renderRsimMap();
+    }
+    var zi = el('rsim-zoom-in'); if (zi) zi.addEventListener('click', function(){ zoom(1 / 1.4); });
+    var zo = el('rsim-zoom-out'); if (zo) zo.addEventListener('click', function(){ zoom(1.4); });
+    var zr = el('rsim-zoom-reset'); if (zr) zr.addEventListener('click', function(){ rsimState.view = { x:0, y:0, w:RSIM_VIEW_W, h:RSIM_VIEW_H }; renderRsimMap(); });
     rsimState.built = true;
   }
 
-  // Offline inline-SVG mini-map: a scatter of the nearby chargers relative to
-  // the chosen origin, drawn from the ROUNDED coords. No external tiles/CDN.
-  function rsimMiniMap(origin, chargers){
-    if (!chargers.length) return '';
-    var W = 560, H = 240, pad = 26;
-    // Longitude -> x, latitude -> y (north up). Fit all points + the origin.
-    var lats = [origin.lat], lons = [origin.lon];
-    chargers.forEach(function(c){ lats.push(c.lat); lons.push(c.lon); });
-    var minLa = Math.min.apply(null, lats), maxLa = Math.max.apply(null, lats);
-    var minLo = Math.min.apply(null, lons), maxLo = Math.max.apply(null, lons);
-    var spanLa = (maxLa - minLa) || 1e-4, spanLo = (maxLo - minLo) || 1e-4;
-    function px(lon){ return pad + ((lon - minLo) / spanLo) * (W - 2 * pad); }
-    function py(lat){ return H - pad - ((lat - minLa) / spanLa) * (H - 2 * pad); }
+  // Keep the pan/zoom viewBox within the full map extent.
+  function clampView(){
+    var v = rsimState.view;
+    if (v.x < 0) v.x = 0;
+    if (v.y < 0) v.y = 0;
+    if (v.x + v.w > RSIM_VIEW_W) v.x = RSIM_VIEW_W - v.w;
+    if (v.y + v.h > RSIM_VIEW_H) v.y = RSIM_VIEW_H - v.h;
+  }
+
+  // Cache of the last reachable/out-of-range classification so the map and the
+  // feasibility panels draw from the same deterministic computation.
+  var rsimLast = { reach: { reachable: [], outOfRange: [] }, prod: null };
+
+  // Render (or re-render) ONLY the inline-SVG geographic map from the current
+  // state. Separated from renderRoutingSim so pan/zoom buttons can redraw the
+  // map cheaply without recomputing the whole panel. Draws: the Singapore
+  // outline (window.HSBasemap), chargers plotted by lat/lon (DC vs AC vs
+  // out-of-range), straight-line route legs, and the depot/stop markers. NO
+  // external tiles / CDN / network.
+  function renderRsimMap(){
+    var mapBox = el('rsim-map');
+    var map = window.HSSgMap;
+    var bm = window.HSBasemap;
+    if (!mapBox || !map) return;
+    var vp = rsimViewport();
+    function P(lat, lon){ return map.project(lat, lon, vp); }
+    var v = rsimState.view;
     var parts = [];
-    parts.push('<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Offline scatter of nearby public chargers relative to the representative stop (approximate, not to scale)">');
-    // A faint reference ring around the origin (visual only).
-    parts.push('<circle class="rsim-ring" cx="' + px(origin.lon).toFixed(1) + '" cy="' + py(origin.lat).toFixed(1) + '" r="46"></circle>');
-    chargers.forEach(function(c, i){
-      var cls = (c.current === 'DC') ? 'rsim-dc' : 'rsim-ac';
-      parts.push('<circle class="' + cls + '" cx="' + px(c.lon).toFixed(1) + '" cy="' + py(c.lat).toFixed(1) +
-        '" r="5" data-rsim-point="' + i + '"><title>' + esc(c.operator) + ' &middot; ' + esc(c.current || 'n.a.') +
-        ' &middot; ~' + c.distanceKm.toFixed(2) + ' km</title></circle>');
+    parts.push('<svg id="rsim-svg" viewBox="' + v.x.toFixed(1) + ' ' + v.y.toFixed(1) + ' ' + v.w.toFixed(1) + ' ' + v.h.toFixed(1) +
+      '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Offline geographic map of Singapore with public chargers and the simulated delivery route (approximate, great-circle, not to scale)">');
+
+    // Singapore outline from the bundled basemap polygons.
+    if (bm && bm.polygons){
+      bm.polygons.forEach(function(ring){
+        if (!ring || !ring.length) return;
+        var d = '';
+        ring.forEach(function(c, i){
+          var pr = P(c[1], c[0]);
+          if (!pr) return;
+          d += (i === 0 ? 'M' : 'L') + pr.x.toFixed(1) + ' ' + pr.y.toFixed(1);
+        });
+        d += 'Z';
+        parts.push('<path class="rsim-land" d="' + d + '"></path>');
+      });
+    }
+
+    var stops = rsimState.stops;
+    var reach = rsimLast.reach;
+
+    // Out-of-range chargers first (faint, behind), then reachable DC/AC on top.
+    reach.outOfRange.forEach(function(c){
+      var pr = P(c.lat, c.lon); if (!pr) return;
+      parts.push('<circle class="rsim-far" cx="' + pr.x.toFixed(1) + '" cy="' + pr.y.toFixed(1) + '" r="1.6"></circle>');
     });
-    // Origin marker (drawn last so it sits on top).
-    parts.push('<circle class="rsim-origin" cx="' + px(origin.lon).toFixed(1) + '" cy="' + py(origin.lat).toFixed(1) + '" r="6"></circle>');
-    parts.push('<text class="rsim-lab" x="' + (px(origin.lon) + 9).toFixed(1) + '" y="' + (py(origin.lat) - 8).toFixed(1) + '">Representative stop</text>');
+    reach.reachable.forEach(function(c){
+      var pr = P(c.lat, c.lon); if (!pr) return;
+      var cls = c.hasDc ? 'rsim-dc' : 'rsim-ac';
+      parts.push('<circle class="' + cls + '" cx="' + pr.x.toFixed(1) + '" cy="' + pr.y.toFixed(1) + '" r="3"><title>' +
+        esc(c.operator) + ' &middot; ' + (c.hasDc ? 'DC' : 'AC') + ' &middot; ~' + c.routeDistanceKm.toFixed(2) + ' km to route</title></circle>');
+    });
+
+    // Straight-line (great-circle) route legs between consecutive stops.
+    for (var i = 1; i < stops.length; i++){
+      var a = P(stops[i - 1].lat, stops[i - 1].lon);
+      var b = P(stops[i].lat, stops[i].lon);
+      if (!a || !b) continue;
+      parts.push('<line class="rsim-leg" x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) + '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '"></line>');
+    }
+
+    // Depot/start + route-stop markers (depot drawn as the larger warn marker).
+    stops.forEach(function(s, idx){
+      var pr = P(s.lat, s.lon); if (!pr) return;
+      var isDepot = (idx === 0);
+      parts.push('<circle class="' + (isDepot ? 'rsim-origin' : 'rsim-stop') + '" cx="' + pr.x.toFixed(1) + '" cy="' + pr.y.toFixed(1) + '" r="' + (isDepot ? 6 : 5) + '"><title>' +
+        (isDepot ? 'Depot / start' : ('Stop ' + idx)) + (s.name ? (' - ' + esc(s.name)) : '') + '</title></circle>');
+      var lab = isDepot ? 'Depot' : String(idx);
+      parts.push('<text class="rsim-lab" x="' + (pr.x + 8).toFixed(1) + '" y="' + (pr.y - 7).toFixed(1) + '">' + esc(lab) + '</text>');
+    });
+
     parts.push('</svg>');
-    return parts.join('');
+    mapBox.innerHTML = parts.join('');
+
+    // Click-to-drop-a-stop: unproject the SVG click (accounting for the pan/zoom
+    // viewBox) into lat/lon. First click sets the depot/start; later clicks add
+    // route stops. Purely client-side, offline.
+    var svg = el('rsim-svg');
+    if (svg){
+      svg.addEventListener('click', function(ev){
+        var rect = svg.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        // Map screen coords -> viewBox coords -> base projection coords.
+        var vx = v.x + ((ev.clientX - rect.left) / rect.width) * v.w;
+        var vy = v.y + ((ev.clientY - rect.top) / rect.height) * v.h;
+        var ll = map.unproject(vx, vy, vp);
+        if (!ll) return;
+        var pt = { lat: Math.round(ll.lat * 10000) / 10000, lon: Math.round(ll.lon * 10000) / 10000, name: null };
+        if (!rsimState.stops.length) rsimState.stops = [pt]; else rsimState.stops.push(pt);
+        recompute();
+      });
+    }
   }
 
   function renderRoutingSim(out){
@@ -4097,13 +4519,14 @@ window.HSChargingLocations = {"schemaVersion":1,"provenance":{"source":"lta-data
     if (!summaryBox) return;
 
     var sim = window.HSRoutingSim;
+    var map = window.HSSgMap;
     var doc = window.HSChargingLocations;
     // Honest degrade: no module / no data bundle.
     var valid = (sim && doc && sim.validateLocationsDoc) ? sim.validateLocationsDoc(doc) : { ok:false, reasons:['routing data not available in this build'] };
-    if (!sim || !doc || !valid.ok){
-      summaryBox.innerHTML = '<div class="charge-read"><h4>Routing simulator</h4>' +
-        '<div class="cr-verdict na">n.a. (routing data not available in this build)</div>' +
-        '<p class="small" style="margin:4px 0 0">' + (valid && valid.reasons ? esc(valid.reasons.join('; ')) : 'No bundled charger subset.') + '</p></div>';
+    if (!sim || !map || !doc || !valid.ok){
+      summaryBox.innerHTML = '<div class="charge-read"><h4>Route simulator</h4>' +
+        '<div class="cr-verdict na">n.a. (map / routing data not available in this build)</div>' +
+        '<p class="small" style="margin:4px 0 0">' + (valid && valid.reasons ? esc(valid.reasons.join('; ')) : 'No bundled charger subset or map module.') + '</p></div>';
       if (tableBody) tableBody.innerHTML = '';
       if (mapBox) mapBox.innerHTML = '';
       if (caveatEl) caveatEl.textContent = '';
@@ -4111,99 +4534,140 @@ window.HSChargingLocations = {"schemaVersion":1,"provenance":{"source":"lta-data
       return;
     }
 
-    buildRsimControls(doc);
-    var region = rsimState.region || 'Central';
-    var origin = RSIM_REGION_CENTROIDS[region] || RSIM_REGION_CENTROIDS['Central'];
-    if (originNote) originNote.innerHTML = 'Origin: ~' + origin.lat.toFixed(4) + ', ' + origin.lon.toFixed(4) +
-      ' (coarse ' + esc(region) + ' planning anchor, not an exact address).';
+    buildRsimControls();
 
-    // Active EV spec (SRM model via the chosen plan) + representative route.
+    // Active EV spec (SRM model via the chosen plan).
     var prod = activeEvProduct(out);
-    var routeKm = rsimRouteKm();
-    var nearest = sim.nearestChargers(origin, doc.locations, { limit: 6, dcOnly: rsimState.dcOnly });
+    var stops = rsimState.stops;
+    var routeKm = (stops.length >= 1) ? map.routeDistanceKm(stops) : null;
 
-    // ---- Nearest-charger ranked list (always available when data loads) ----
-    if (tableBody){
-      if (!nearest.length){
-        tableBody.innerHTML = '<tr><td colspan="7" class="na">No public chargers within the planning radius for this selection.</td></tr>';
+    // Classify every bundled charger: reachable (within the route corridor) vs
+    // out of range. Needs at least a depot/start placed.
+    var reach = (stops.length >= 1)
+      ? map.reachableChargers(stops, doc.locations, { corridorKm: 3, dcOnly: rsimState.dcOnly })
+      : { reachable: [], outOfRange: [], reachableCount: 0 };
+    rsimLast.reach = reach;
+    rsimLast.prod = prod;
+
+    // Draw the geographic map from the current classification + route.
+    renderRsimMap();
+
+    // Origin note reflects the placed depot/start.
+    if (originNote){
+      if (!stops.length){
+        originNote.innerHTML = 'Click the map to drop the depot/start, then click again to add route stops. Or pick a named area above. Coordinates are coarse planning anchors, not exact addresses.';
       } else {
-        tableBody.innerHTML = nearest.map(function(c, i){
-          var price = isNum(c.pricePerKwh) ? c.pricePerKwh.toFixed(2) : '<span class="na">n.a.</span>';
-          var pwr = isNum(c.maxPowerKw) ? c.maxPowerKw : (isNum(c.powerKw) ? c.powerKw : NA);
+        var d0 = stops[0];
+        originNote.innerHTML = 'Depot / start: ~' + d0.lat.toFixed(4) + ', ' + d0.lon.toFixed(4) +
+          (d0.name ? (' (' + esc(d0.name) + ')') : ' (map-dropped point)') +
+          ' &middot; ' + (stops.length - 1) + ' route stop(s) &middot; route ~' +
+          (isNum(routeKm) ? routeKm.toFixed(1) : 'n.a.') + ' km (straight-line).';
+      }
+    }
+
+    // ---- Reachable-charger ranked list (by distance to the route) ----------
+    if (tableBody){
+      var listed = reach.reachable.slice(0, 8);
+      if (!stops.length){
+        tableBody.innerHTML = '<tr><td colspan="7" class="na">Place a depot/start (and optionally route stops) to find chargers within reach of the route.</td></tr>';
+      } else if (!listed.length){
+        tableBody.innerHTML = '<tr><td colspan="7" class="na">No public chargers within ~3 km of this route for the current filter.</td></tr>';
+      } else {
+        tableBody.innerHTML = listed.map(function(c, i){
+          var hp = sim.headlinePlug(c);
+          var price = isNum(hp.pricePerKwh) ? hp.pricePerKwh.toFixed(2) : '<span class="na">n.a.</span>';
+          var pwr = isNum(hp.maxPowerKw) ? hp.maxPowerKw : (isNum(hp.powerKw) ? hp.powerKw : null);
           return '<tr><td>' + (i + 1) + '</td>' +
             '<td>' + esc(c.operator) + '</td>' +
             '<td>' + esc(c.region || 'n.a.') + '</td>' +
-            '<td>' + fmtText(c.current) + '</td>' +
+            '<td>' + fmtText(hp.current) + '</td>' +
             '<td class="num">' + (isNum(pwr) ? pwr : naSpan()) + '</td>' +
             '<td class="num">' + price + '</td>' +
-            '<td class="num">' + c.distanceKm.toFixed(2) + '</td></tr>';
+            '<td class="num">' + c.routeDistanceKm.toFixed(2) + '</td></tr>';
         }).join('');
       }
     }
-    if (mapBox) mapBox.innerHTML = rsimMiniMap(origin, nearest);
 
-    // ---- Summary cards: active EV, route, and SRM-tied charge time ----------
+    // ---- Two side-by-side feasibility panels: DEPOT vs PUBLIC --------------
     var cards = '';
-    // Card 1: the planned EV spec (or honest n.a.).
-    if (prod){
-      cards += '<div class="charge-read"><h4>Planned EV (charge-time basis)</h4>' +
-        '<div class="cr-verdict ok">' + esc(String(prod.A)) + '</div>' +
-        crLine('Usable battery (kWh)', fmtText(isNum(prod.D) ? prod.D : NA)) +
-        crLine('Consumption (kWh/km)', fmtText(isNum(prod.E) ? (Math.round(prod.E * 10000) / 10000) : NA)) +
-        crLine('On-board AC / DC (kW)', (isNum(prod.G) ? prod.G : 'n.a.') + ' / ' + (isNum(prod.H) ? prod.H : 'n.a.')) +
-        '<p class="small" style="margin:4px 0 0">Charge time below uses this model&rsquo;s battery and kWh/km against the reachable charger&rsquo;s power.</p>' +
-        '</div>';
+
+    // Panel A: DEPOT CHARGING. Can the SRM complete the route on one depot
+    // charge (usable range vs route distance)?
+    var depot = (prod && isNum(prod.D) && isNum(prod.E) && isNum(routeKm))
+      ? map.depotFeasibility({ batteryKwh: prod.D, kwhPerKm: prod.E, reserveFraction: 0.10 }, routeKm)
+      : null;
+    if (depot && depot.feasible !== null){
+      cards += '<div class="charge-read"><h4>Depot charging</h4>' +
+        '<div class="cr-verdict ' + (depot.feasible ? 'ok' : 'warn') + '">' +
+        (depot.feasible ? 'Feasible on one depot charge' : 'Not feasible on one charge') + '</div>' +
+        crLine('Active EV', fmtText(prod ? String(prod.A) : NA)) +
+        crLine('Usable one-charge range (km)', fmtText(Math.round(depot.rangeKm))) +
+        crLine('Planned route (km)', fmtText(Math.round(depot.routeKm * 10) / 10)) +
+        crLine('Margin (km)', fmtText(Math.round(depot.marginKm * 10) / 10)) +
+        '<p class="cr-sub">Range = usable battery ' + Math.round(depot.usableKwh) + ' kWh (' + Math.round(prod.D) + ' kWh &times; ' +
+        (100 - depot.reserveFraction * 100) + '% usable) &divide; ' + (Math.round(prod.E * 10000) / 10000) + ' kWh/km. ' +
+        (depot.feasible ? 'A depot charger covers this route without a public top-up.' : 'This route exceeds one usable charge; a mid-route top-up (see public charging) or a depot top-up would be needed.') +
+        ' Straight-line route; real roads are longer.</p></div>';
     } else {
-      cards += '<div class="charge-read"><h4>Planned EV (charge-time basis)</h4>' +
-        '<div class="cr-verdict na">n.a. (no EV plan selected)</div>' +
-        '<p class="small" style="margin:4px 0 0">Choose an EV for at least one truck on Plan A or Plan B to estimate a route charge time. The nearest-charger list and map above do not depend on the EV choice.</p>' +
-        '</div>';
+      var whyD = !prod ? 'no EV plan selected (active SRM model unresolved)'
+        : (!isNum(routeKm) ? 'no route placed (set a depot/start and stops)'
+          : 'EV spec incomplete (battery / kWh-per-km missing)');
+      cards += '<div class="charge-read"><h4>Depot charging</h4>' +
+        '<div class="cr-verdict na">n.a. (' + esc(whyD) + ')</div>' +
+        '<p class="cr-sub">A depot-charge verdict needs the active EV&rsquo;s usable battery and kWh/km plus a placed route. Missing inputs stay n.a., never a fabricated zero.</p></div>';
     }
 
-    // Card 2: SRM-tied charge time against the nearest reachable charger.
-    var topCharger = nearest.length ? nearest[0] : null;
-    var chargerKw = topCharger ? (isNum(topCharger.maxPowerKw) ? topCharger.maxPowerKw : topCharger.powerKw) : null;
-    var ct = (prod && isNum(routeKm) && isNum(chargerKw))
-      ? sim.chargeTimeHours({ batteryKwh: prod.D, kwhPerKm: prod.E, distanceKm: routeKm, chargerKw: chargerKw })
+    // Panel B: PUBLIC CHARGING. Which nearby public chargers are within reach,
+    // and the SRM charge time at the best (fastest reachable) one?
+    // Best reachable = the reachable charger with the highest usable power.
+    var best = null, bestKw = null;
+    reach.reachable.forEach(function(c){
+      var hp = sim.headlinePlug(c);
+      var kw = isNum(hp.maxPowerKw) ? hp.maxPowerKw : (isNum(hp.powerKw) ? hp.powerKw : null);
+      if (isNum(kw) && (bestKw === null || kw > bestKw)){ bestKw = kw; best = c; }
+    });
+    var ct = (prod && isNum(prod.D) && isNum(prod.E) && isNum(routeKm) && isNum(bestKw))
+      ? sim.chargeTimeHours({ batteryKwh: prod.D, kwhPerKm: prod.E, distanceKm: routeKm, chargerKw: bestKw })
       : null;
-    if (ct){
+    if (stops.length && reach.reachableCount > 0 && ct){
+      var bhp = sim.headlinePlug(best);
       var mins = Math.round(ct.hours * 60);
       var hh = Math.floor(mins / 60), mm = mins % 60;
       var hhmm = (hh > 0 ? (hh + ' h ') : '') + mm + ' min';
-      cards += '<div class="charge-read"><h4>Estimated route top-up time</h4>' +
-        '<div class="cr-verdict ' + (ct.cappedByBattery ? 'warn' : 'ok') + '">~' + hhmm + '</div>' +
-        crLine('For route (km)', fmtText(Math.round(routeKm))) +
-        crLine('Energy for the leg (kWh)', fmtText(Math.round(ct.energyNeededKwh * 10) / 10)) +
-        crLine('Grid energy incl. loss (kWh)', fmtText(Math.round(ct.gridKwh * 10) / 10)) +
-        crLine('At nearest charger', fmtText((topCharger.current || 'n.a.') + ' &middot; ' + chargerKw + ' kW')) +
-        '<p class="small" style="margin:4px 0 0">' +
-        (ct.cappedByBattery
-          ? 'The leg needs more than one usable charge (capped at ' + Math.round(ct.usableKwh) + ' kWh); plan more than a single top-up. '
-          : '') +
-        'Deterministic estimate at the charger&rsquo;s rated power (10% reserve, 10% charging loss); real sessions taper and queue.</p>' +
-        '</div>';
+      cards += '<div class="charge-read"><h4>Public charging</h4>' +
+        '<div class="cr-verdict ' + (ct.cappedByBattery ? 'warn' : 'ok') + '">' + reach.reachableCount + ' charger(s) in reach &middot; ~' + hhmm + ' top-up</div>' +
+        crLine('Best reachable charger', fmtText(esc(best.operator))) +
+        crLine('Type &middot; power (kW)', fmtText((bhp.current || 'n.a.') + ' &middot; ' + bestKw)) +
+        crLine('Per-kWh price (S$)', isNum(bhp.pricePerKwh) ? bhp.pricePerKwh.toFixed(2) : naSpan()) +
+        crLine('Distance to route (km)', fmtText(best.routeDistanceKm.toFixed(2))) +
+        crLine('Top-up energy incl. loss (kWh)', fmtText(Math.round(ct.gridKwh * 10) / 10)) +
+        '<p class="cr-sub">' +
+        (ct.cappedByBattery ? 'The route needs more than one usable charge (capped at ' + Math.round(ct.usableKwh) + ' kWh); plan more than one top-up. ' : '') +
+        'Charge time at the charger&rsquo;s rated power (10% reserve, 10% loss); real sessions taper and queue. Reachable = within ~3 km of the route.</p></div>';
     } else {
-      var why = !prod ? 'no EV plan selected'
-        : (!isNum(routeKm) ? 'no route / daily distance entered'
-          : (!isNum(chargerKw) ? 'no reachable charger with a published power' : 'inputs incomplete'));
-      cards += '<div class="charge-read"><h4>Estimated route top-up time</h4>' +
-        '<div class="cr-verdict na">n.a. (' + esc(why) + ')</div>' +
-        '<p class="small" style="margin:4px 0 0">A charge time needs a planned EV, a route/daily distance, and a nearby charger with a published power. Missing inputs stay n.a., never a fabricated zero.</p>' +
-        '</div>';
+      var whyP = !stops.length ? 'no route placed'
+        : (reach.reachableCount === 0 ? 'no public charger within ~3 km of the route'
+          : (!prod ? 'no EV plan selected'
+            : (!isNum(routeKm) ? 'no route distance' : 'no reachable charger with a published power')));
+      cards += '<div class="charge-read"><h4>Public charging</h4>' +
+        '<div class="cr-verdict na">n.a. (' + esc(whyP) + ')</div>' +
+        '<p class="cr-sub">Public-charging feasibility needs a placed route, at least one reachable public charger with a published power, and the active EV spec. The reachable chargers (if any) are highlighted on the map. Missing inputs stay n.a.</p></div>';
     }
+
     summaryBox.innerHTML = cards;
 
-    // ---- Preserved honesty caveat + attribution ----------------------------
+    // ---- Preserved honesty caveat + attribution (routing + basemap) --------
     var prov = (doc.provenance || {});
     if (caveatEl){
       caveatEl.innerHTML = 'Coarse planning / feasibility aid, <strong>not live availability</strong>. ' +
-        'Data is a <strong>dated snapshot</strong>' + (prov.lastUpdatedTime ? (' (last updated ' + esc(prov.lastUpdatedTime) + ')') : '') + '. ' +
-        'Distances are <strong>approximate great-circle</strong> (straight-line), not driving distance, and this is <strong>not a turn-by-turn router</strong>. ' +
-        'Chargers may be occupied, reserved, or out of service on the day.';
+        'Charger data is a <strong>dated snapshot</strong>' + (prov.lastUpdatedTime ? (' (last updated ' + esc(prov.lastUpdatedTime) + ')') : '') + '. ' +
+        'Distances and the route are <strong>approximate great-circle</strong> (straight-line), not driving distance, and this is <strong>not a turn-by-turn router</strong>. ' +
+        'Named areas are coarse planning anchors, not exact addresses. Chargers may be occupied, reserved, or out of service on the day.';
     }
     if (attribEl){
       var provTxt = prov.sourceLabel ? (' Snapshot: ' + prov.sourceLabel + (prov.lastUpdatedTime ? (', last updated ' + prov.lastUpdatedTime + '.') : '.')) : '';
-      attribEl.textContent = (doc.attribution || '') + provTxt;
+      var bmAttr = (window.HSBasemap && window.HSBasemap.attribution) ? (' ' + window.HSBasemap.attribution) : '';
+      attribEl.textContent = (doc.attribution || '') + provTxt + bmAttr;
     }
   }
 
@@ -4622,7 +5086,11 @@ window.HSChargingLocations = {"schemaVersion":1,"provenance":{"source":"lta-data
     ocRow: ocRow, ecRow: ecRow, productNames: productNames,
     parseEditable: parseEditable, el: el, isNum: isNum,
     fmtMoney: fmtMoney, fmtText: fmtText, naSpan: naSpan, NA: NA,
-    computeFleet: function(s){ return computeFleet(s); }
+    computeFleet: function(s){ return computeFleet(s); },
+    // Test hook (FEAT-004): let the harness place a deterministic route
+    // (depot/start + stops) on the geographic simulator, exactly as the map
+    // click / named-area picker would. Display-only; no engine coupling.
+    __rsimSetStops: function(stops){ rsimState.stops = (stops || []).slice(); }
   };
 
   // FEAT-003 switch-over: set of competitor model names the user has toggled
