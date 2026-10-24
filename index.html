@@ -449,6 +449,17 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  * public-charging context). Clean cards + inline-SVG bars, consistent with
  * the day0/matched card style. No new fonts, no runtime network. */
 .charge-panel{margin:0 0 var(--gutter)}
+/* FEAT-004: the resequenced LEAD card (route-sim + depot feasibility) gets a
+   subtle accent rail so the strongest objective evidence reads as the primary
+   answer to the adoption question without shouting. */
+.charge-panel-lead{border-left:4px solid var(--accent);padding-left:14px;border-radius:0 6px 6px 0;background:var(--soft)}
+/* FEAT-004: consolidated Methodology & notes disclosure for the Charging stage.
+   One discoverable home for the de-duplicated caveats. */
+.charge-notes{margin:4px 0 var(--gutter);border:1px solid var(--line2);border-radius:6px;background:var(--paper)}
+.charge-notes>summary{cursor:pointer;padding:10px 12px;font-weight:600;color:var(--accent);font-size:13px}
+.charge-notes>summary:hover{background:var(--soft)}
+.charge-notes .inner{padding:4px 14px 12px}
+.charge-notes .inner .small{margin:8px 0}
 /* auto-FIT (not auto-fill): collapse empty tracks so a 2-card read never leaves
    3 dead columns of whitespace on the right at 1440px -- the two cards stretch
    to balanced equal columns instead. minmax floor keeps cards readable; the
@@ -864,54 +875,20 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      adoption gates. The deeper charger-location integration is a later phase. -->
 <section class="stage stage-hidden" id="stage-charging" role="tabpanel" aria-labelledby="step-charging">
 <p class="block-title">3 &middot; Charging &amp; site</p>
-<p class="lead">A charging assessment, read from the same engine output as the TCO stage plus a build-time snapshot of Singapore&rsquo;s public charger network. It is a <strong>coarse operational screen</strong>, not a routing optimiser or an arrival-by-arrival scheduler.</p>
+<p class="lead">Can this fleet run on EV trucks? The cards below lead with the strongest concrete evidence &mdash; whether the chosen <strong>SRM</strong> covers the real route on one charge &mdash; then widen to public-charging reach, Singapore-wide charger density, and the operational screens. Every figure is read from the same frozen engine as the TCO stage or from a dated public-charger snapshot. See <a href="#charging-notes">Methodology &amp; notes</a> for the caveats that apply to all four cards.</p>
 
-<!-- PANEL 1: route-energy / capacity screen + site build-up human read. -->
-<section class="charge-panel" id="charging"><p class="block-title">Route energy, capacity screen &amp; site build-up</p>
-<p class="small">The charging site is costed once per plan and shared across its EVs. Completeness and access gates must pass before a numeric site cost is produced; otherwise the plan total stays &quot;n.a.&quot; (the model never substitutes zero for an unknown).</p>
-<div class="charge-readgrid" id="charge-site-read"></div>
-<div class="table-wrap"><table id="site-table"><thead><tr><th>Site build-up</th><th class="num">Plan A</th><th class="num">Plan B</th><th>Meaning</th></tr></thead><tbody id="site-body"></tbody></table></div>
-<p class="small">Charger grant ceiling = MIN(30000, 0.5 &times; accepted cost per charger) &times; MIN(3, approved funded chargers). The ceiling is a budget estimate only; only an entered, checked award reduces TCO.</p>
-
-<p class="block-title" style="margin-top:18px">Conditions that must hold before adoption</p>
-<p class="small">A numeric range or payload pass is an <strong>assumed technical pass</strong>, not an evidence pass. The gates below are the model&apos;s own screens at the current inputs.</p>
-<div class="table-wrap"><table id="gates-table"><thead><tr><th>Gate</th><th>Plan A</th><th>Plan B</th><th>Evidence needed</th></tr></thead><tbody id="gates-body"></tbody></table></div>
-<p class="small">Service screen is the per-plan vehicle service / evidence status. Capacity gate is the site completeness / access status. No plan reaches an evidence pass while any verification flag reads No or Unconfirmed.</p>
-</section>
-
-<!-- PANEL 2: coarse detour / queue / recovery read of the engine's public-visit
-     intermediates. Honesty per approved proposal Q2: a coarse screen, NOT a
-     scheduler. -->
-<section class="charge-panel" id="charging-detour"><p class="block-title">Detour, queue &amp; recovery &mdash; coarse screen</p>
-<p class="small"><span class="coarse-label">Coarse screen &middot; not an arrival-by-arrival scheduler</span> This reads the engine&rsquo;s own public-charging intermediates for the EV paths (public top-up visits per year and the detour energy they add). It is a feasibility screen only: it does not simulate arrival times, queueing, or charger availability.</p>
-<div class="charge-readgrid" id="charge-detour-read"></div>
-<p class="caveat-line" id="charge-detour-note">&ldquo;Recovery&rdquo; is a what-if on the entered backup / substitute-service rate, not a measured outcome. A confirmed plan still needs a loaded route-and-charging trial with measured grid kWh.</p>
-</section>
-
-<!-- PANEL 3: public-charging context from window.HSChargingContext (compact
-     build-time aggregates). Context/evidence only. -->
-<section class="charge-panel" id="charging-public"><p class="block-title">Singapore-wide public-charging context (by region &amp; operator)</p>
-<p class="small"><span class="coarse-label">Public context, not a routing recommendation</span> National aggregates derived at build time from a Singapore-wide snapshot of public EV chargers, summarised by region and by operator. These are <strong>not</strong> filtered to the specific depots in play &mdash; they are background evidence only, not depot-specific and not a per-truck routing or charger recommendation. Shown as context for the detour read above; it does not pick chargers or routes for any truck.</p>
-<div class="charge-readgrid" id="charge-public-totals"></div>
-<p class="sub-title" style="margin-top:14px"><strong>Power bands</strong> (charging points by rated power)</p>
-<div class="charge-bands" id="charge-public-bands"></div>
-<p class="sub-title" style="margin-top:14px"><strong>Per-kWh tariff range by region</strong> (public, where published)</p>
-<div class="table-wrap"><table id="charge-region-table"><thead><tr><th>Region</th><th class="num">Points</th><th class="num">AC</th><th class="num">DC</th><th class="num">Tariff S$/kWh (min &middot; median &middot; max)</th></tr></thead><tbody id="charge-region-body"></tbody></table></div>
-<p class="sub-title" style="margin-top:14px"><strong>Top operators</strong> (by charging-point count)</p>
-<div class="table-wrap"><table id="charge-operator-table"><thead><tr><th>Operator</th><th class="num">Points</th><th class="num">AC</th><th class="num">DC</th><th class="num">Tariff S$/kWh (min &middot; median &middot; max)</th></tr></thead><tbody id="charge-operator-body"></tbody></table></div>
-<p class="charge-attrib" id="charge-attribution"></p>
-</section>
-
-<!-- PANEL 4: public-charging ROUTING SIMULATOR (FEAT-003). Fully client-side
-     and deterministic, computed in the browser from the build-time-bundled
-     charger subset (window.HSChargingLocations) via the additive module
-     src/routing_sim.js (window.HSRoutingSim). It ties the active EV catalogue
-     row (SRM model: battery kWh + kWh/km) to the reachable charger power for a
-     charge-time estimate. NO runtime network / API / map tile. It is a COARSE
-     planning aid for a fleet NOT installing a depot charger, NOT a live feed or
-     a turn-by-turn router. -->
-<section class="charge-panel" id="charging-routing"><p class="block-title">Public-charging routing simulator &mdash; where to top up without a depot charger</p>
-<p class="small"><span class="coarse-label">Coarse planning aid &middot; not live availability</span> For a fleet manager who chooses <strong>not</strong> to install a depot charger, this screens where the nearest public chargers are around a representative route, roughly how long a route top-up would take on the planned EV, and each charger&rsquo;s operational info (operator, AC/DC, power, per-kWh price). It is computed entirely in your browser from a <strong>dated, build-time snapshot</strong> of Singapore&rsquo;s public chargers &mdash; <strong>not</strong> a live connection, <strong>not</strong> real-time availability. The route is an <strong>approximate on-road route</strong> over a simplified bundled major-road network (OpenStreetMap, ODbL): more realistic than straight-line but <strong>not</strong> live traffic and <strong>not</strong> full turn-by-turn navigation; where no road path is found a leg falls back to a clearly-marked <strong>approximate great-circle</strong> (straight-line) distance. It does not queue, schedule, or route turn-by-turn.</p>
+<!-- CARD 1 (resequenced lead, FEAT-004): public-charging ROUTING SIMULATOR.
+     The strongest, most concrete SRM-tied evidence leads: the DEPOT-charge
+     feasibility verdict (does the active SRM cover the real on-road route on one
+     charge, with margin?) renders first inside #rsim-summary, with the
+     interactive on-road route sim + public-charging reachability beside it.
+     Fully client-side / deterministic from the bundled charger subset
+     (window.HSChargingLocations) via src/routing_sim.js; ties the active SRM
+     catalogue row (battery kWh + kWh/km) to reachable charger power. NO runtime
+     network / API / map tile. A coarse planning aid, consolidated caveats in
+     #charging-notes + the per-panel #rsim-caveat. -->
+<section class="charge-panel charge-panel-lead" id="charging-routing"><p class="block-title">Can the SRM cover the route? Depot charge, on-road sim &amp; public reach</p>
+<p class="small"><span class="coarse-label">Coarse planning aid &middot; not live availability</span> The <strong>Depot charging</strong> verdict below answers the core adoption question first: does the active <strong>SRM</strong> complete the real on-road route on a single depot charge, and by how much margin? The interactive map then shows public-charging reach for a fleet choosing <strong>not</strong> to install a depot charger. Computed in your browser from a dated public-charger snapshot over an <strong>approximate on-road route</strong> (OpenStreetMap, ODbL); it is <strong>not</strong> a live connection, not a turn-by-turn router. Where no road path is found a leg falls back to an <strong>approximate great-circle</strong> (straight-line) distance. Full caveats: <a href="#charging-notes">Methodology &amp; notes</a>.</p>
 <div class="rsim-controls" id="rsim-controls">
   <label class="rsim-ctl" for="rsim-area">Add a stop (named SG area)
     <select id="rsim-area" aria-label="Named Singapore area to add as a route stop"></select>
@@ -936,6 +913,63 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="caveat-line" id="rsim-caveat"></p>
 <p class="charge-attrib" id="rsim-attribution"></p>
 </section>
+
+<!-- CARD 2 (resequenced, FEAT-004): route-energy / capacity screen + site
+     build-up + the adoption gates. The engine-backed depot-charge economics and
+     the conditions that must hold before adoption. Caveats consolidated into
+     #charging-notes. -->
+<section class="charge-panel" id="charging"><p class="block-title">Depot site build-up, capacity screen &amp; adoption gates</p>
+<p class="small">The charging site is costed once per plan and shared across its EVs. A numeric site cost appears only once the completeness and access gates pass; otherwise the plan total stays <span class="na">n.a.</span> (never a substituted zero). Gate detail and the grant-ceiling formula are in <a href="#charging-notes">Methodology &amp; notes</a>.</p>
+<div class="charge-readgrid" id="charge-site-read"></div>
+<div class="table-wrap"><table id="site-table"><thead><tr><th>Site build-up</th><th class="num">Plan A</th><th class="num">Plan B</th><th>Meaning</th></tr></thead><tbody id="site-body"></tbody></table></div>
+
+<p class="block-title" style="margin-top:18px">Conditions that must hold before adoption</p>
+<p class="small">A numeric range or payload pass is an <strong>assumed technical pass</strong>, not an evidence pass; no plan reaches an evidence pass while any verification flag reads No or Unconfirmed.</p>
+<div class="table-wrap"><table id="gates-table"><thead><tr><th>Gate</th><th>Plan A</th><th>Plan B</th><th>Evidence needed</th></tr></thead><tbody id="gates-body"></tbody></table></div>
+</section>
+
+<!-- CARD 3 (resequenced, FEAT-004): Singapore-wide public-charging context from
+     window.HSChargingContext (compact build-time aggregates). Background
+     evidence only; caveat consolidated into #charging-notes. -->
+<section class="charge-panel" id="charging-public"><p class="block-title">Singapore-wide public-charging density (by region &amp; operator)</p>
+<p class="small"><span class="coarse-label">Public context, not a routing recommendation</span> National aggregates from a dated Singapore-wide public-charger snapshot &mdash; background evidence that EV operation is well served nationally, not a depot-specific or per-truck recommendation.</p>
+<div class="charge-readgrid" id="charge-public-totals"></div>
+<p class="sub-title" style="margin-top:14px"><strong>Power bands</strong> (charging points by rated power)</p>
+<div class="charge-bands" id="charge-public-bands"></div>
+<p class="sub-title" style="margin-top:14px"><strong>Per-kWh tariff range by region</strong> (public, where published)</p>
+<div class="table-wrap"><table id="charge-region-table"><thead><tr><th>Region</th><th class="num">Points</th><th class="num">AC</th><th class="num">DC</th><th class="num">Tariff S$/kWh (min &middot; median &middot; max)</th></tr></thead><tbody id="charge-region-body"></tbody></table></div>
+<p class="sub-title" style="margin-top:14px"><strong>Top operators</strong> (by charging-point count)</p>
+<div class="table-wrap"><table id="charge-operator-table"><thead><tr><th>Operator</th><th class="num">Points</th><th class="num">AC</th><th class="num">DC</th><th class="num">Tariff S$/kWh (min &middot; median &middot; max)</th></tr></thead><tbody id="charge-operator-body"></tbody></table></div>
+<p class="charge-attrib" id="charge-attribution"></p>
+</section>
+
+<!-- CARD 4 (resequenced, FEAT-004): coarse detour / queue / recovery read of the
+     engine's public-visit intermediates. A coarse screen, NOT a scheduler;
+     caveats consolidated into #charging-notes. The coarse-label + the
+     #charge-detour-note what-if framing are kept (harness asserts them). -->
+<section class="charge-panel" id="charging-detour"><p class="block-title">Detour, queue &amp; recovery &mdash; coarse screen</p>
+<p class="small"><span class="coarse-label">Coarse screen &middot; not an arrival-by-arrival scheduler</span> The engine&rsquo;s own public-top-up intermediates for the EV paths (visits/year and the detour energy they add). A feasibility screen only: it does not simulate arrival times, queueing, or charger availability.</p>
+<div class="charge-readgrid" id="charge-detour-read"></div>
+<p class="caveat-line" id="charge-detour-note">&ldquo;Recovery&rdquo; is a what-if on the entered backup / substitute-service rate, not a measured outcome. A confirmed plan still needs a loaded route-and-charging trial with measured grid kWh.</p>
+</section>
+
+<!-- CONSOLIDATED METHODOLOGY & NOTES (FEAT-004 Workstream B): ONE discoverable
+     place carrying each important Charging-stage caveat exactly once, so the
+     cards above stay concise without losing any honesty signal. Every KEEP
+     caveat de-duplicated from the panels lives here (coarse-screen /
+     dated-snapshot / diagnostic-not-a-quote / n.a.!=zero / finance-excluded /
+     attribution). It sits inside the stage so it prints with the cards and so
+     the routing-sim markup slice still carries its own framing. -->
+<details class="charge-notes" id="charging-notes"><summary>Methodology &amp; notes (caveats for all four cards)</summary><div class="inner">
+<p class="small"><strong>Coarse operational screen, not a scheduler or optimiser.</strong> Every card on this stage is a coarse feasibility screen. It does not simulate arrival times, queueing, charger availability, or turn-by-turn navigation, and it is not a live connection or real-time availability feed. Chargers may be occupied, reserved, or out of service on the day.</p>
+<p class="small"><strong>Dated public-charger snapshot.</strong> The public-charging density and the route simulator read a dated, build-time snapshot of Singapore&rsquo;s public chargers &mdash; not a live feed. The simulated route is an <strong>approximate on-road route</strong> over a simplified bundled major-road network (OpenStreetMap, ODbL): more realistic than straight-line but major roads only; where no road path is found a leg falls back to a clearly-marked <strong>approximate great-circle</strong> (straight-line) distance. Named areas are coarse planning anchors, not exact addresses.</p>
+<p class="small"><strong>Diagnostic, not a quote.</strong> The depot/public feasibility and site build-up are model diagnostics at the current inputs, not a quotation. A numeric range or payload pass is an <strong>assumed technical pass</strong>, not an evidence pass. A confirmed plan still needs a loaded route-and-charging trial with measured grid kWh.</p>
+<p class="small"><strong>Site cost &amp; grant ceiling.</strong> The charging site is costed once per plan and shared across its EVs; a numeric site cost appears only when input completeness is Complete and the access screen is clear. Charger grant ceiling = MIN(30000, 0.5 &times; accepted cost per charger) &times; MIN(3, approved funded chargers) &mdash; a budget estimate only; only an entered, checked award reduces the TCO.</p>
+<p class="small"><strong>Gates.</strong> The service screen is the per-plan vehicle service / evidence status; the capacity gate is the site completeness / access status. No plan reaches an evidence pass while any verification flag reads No or Unconfirmed.</p>
+<p class="small"><strong>n.a. is not zero.</strong> Wherever a gating input is missing the figure stays <span class="na">n.a.</span>; the model never substitutes a zero for an unknown.</p>
+<p class="small"><strong>Running-cost advantage lives in the TCO stage.</strong> The energy-vs-diesel and servicing/other running-cost split that underpins any EV savings is a committed output of the frozen engine and is shown in the <strong>Cost-component breakdown</strong> chart and <strong>Results breakdown</strong> table on the TCO stage. No maintenance figure is invented here. Any opt-in financing illustration is on the Proposal stage and is <strong>not</strong> part of the economic TCO.</p>
+<p class="small"><strong>Attribution.</strong> Public-charger aggregates: LTA DataMall under the Singapore Open Data Licence, plus BoCharge. Road network: OpenStreetMap contributors (ODbL). Boundary: geoBoundaries. The exact snapshot date is shown on the routing-simulator caveat line above.</p>
+</div></details>
 
 </section><!-- /stage-charging -->
 
