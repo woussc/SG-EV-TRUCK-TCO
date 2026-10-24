@@ -133,6 +133,22 @@ const prospectsBlock =
   `<script>\nwindow.HSProspectSeeds = ${JSON.stringify(seeds)};\n</script>\n` +
   `<!-- PROSPECTS:END -->`;
 
+// DEFAULT LANDING = the MID (SRM) illustrative case. The page controller reads
+// window.HSLandingCase.inputs via freshInputs() as the initial landing state,
+// so the app opens on an SRM scenario (TCO dashboard, routing sim active EV =
+// SRM, and proposal all render from mid on first load). This is a deep copy of
+// the mid seed's inputs, carrying the full product catalogue under
+// inputs.products.rows. If the mid seed is ever missing, fail loudly at build
+// time rather than silently ship the wrong landing case.
+const landingCase = seeds.cases.find((c) => c.id === 'mid');
+if (!landingCase) {
+  throw new Error('prospect_seeds.json has no "mid" case to use as default landing');
+}
+const landingBlock =
+  `<!-- LANDING:BEGIN  generated (mid case) from tools/fixtures/prospect_seeds.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<script>\nwindow.HSLandingCase = ${JSON.stringify({ id: landingCase.id, name: landingCase.name, inputs: landingCase.inputs })};\n</script>\n` +
+  `<!-- LANDING:END -->`;
+
 const portfolioBlock =
   `<!-- PORTFOLIO:BEGIN  generated from src/portfolio_fit.js by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<!-- src/portfolio_fit.js SHA-256: ${portfolioHash} -->\n` +
@@ -196,6 +212,13 @@ html = replaceBlock(
 );
 html = replaceBlock(
   html,
+  /<!-- LANDING:BEGIN[\s\S]*?-->/,
+  /<!-- LANDING:END -->/,
+  'LANDING',
+  landingBlock,
+);
+html = replaceBlock(
+  html,
   /<!-- PORTFOLIO:BEGIN[\s\S]*?-->/,
   /<!-- PORTFOLIO:END -->/,
   'PORTFOLIO',
@@ -236,6 +259,7 @@ console.log(`  engine  : src/engine.js (${engineSrc.length} bytes, sha256 ${engi
 console.log(`  portfolio: src/portfolio_fit.js (${portfolioSrc.length} bytes, sha256 ${portfolioHash.slice(0, 16)}...)`);
 console.log(`  demo    : tools/fixtures/demo_case.json inputs embedded`);
 console.log(`  prospects: tools/fixtures/prospect_seeds.json (${seeds.cases.length} seed cases) embedded`);
+console.log(`  landing : default landing case = '${landingCase.id}' (${landingCase.name}) embedded as window.HSLandingCase`);
 console.log(`  charging: tools/fixtures/charging_context.json (${(Buffer.byteLength(chargingRaw) / 1024).toFixed(2)} KB compact aggregates) embedded`);
 console.log(`  routing : src/routing_sim.js (${routingSrc.length} bytes, sha256 ${routingHash.slice(0, 16)}...)`);
 console.log(`  finance : src/finance.js (${financeSrc.length} bytes, sha256 ${financeHash.slice(0, 16)}...)`);

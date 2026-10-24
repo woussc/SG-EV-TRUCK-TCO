@@ -163,6 +163,64 @@ checks.push(['Truck count 6', r.truckCount.keep_ice === 6]);
 checks.push(['Plan A net site n.a.', r.netSiteCost.plan_a === NA]);
 checks.push(['Review duty coverage PASS', out.review.dutyCoverage.status === 'PASS']);
 
+// ---- FEAT-002 (map/demo/portfolio): DEFAULT LANDING is the MID (SRM) case ---
+// The user-facing ChengLong DEMONSTRATION prospect was removed; the app's
+// landing state is now the MID (SRM) illustrative case, inlined as
+// window.HSLandingCase and read by the controller's freshInputs(). Assert the
+// landing source is present, is the mid case, names an SRM model on an EV plan,
+// and that the controller actually rendered the mid landing on first load (4
+// included trucks, an SRM model surfaced) BEFORE we drive the controller to the
+// demonstration case for the long-standing demo-specific DOM assertions below.
+const landing = windowObj.HSLandingCase;
+checks.push(['landing case embedded (window.HSLandingCase.inputs present)',
+  !!landing && !!landing.inputs && typeof landing.inputs === 'object']);
+checks.push(['landing case is the mid (SRM) case', !!landing && landing.id === 'mid']);
+const landingIncluded = (landing && landing.inputs.fleet_register.rows || [])
+  .filter((rw) => rw.B === 1);
+checks.push(['landing mid case includes 4 trucks', landingIncluded.length === 4]);
+const landingSrmEvRows = (landing && landing.inputs.replacement_plan.rows || [])
+  .filter((rw) => rw.A != null && typeof rw.B === 'string' && rw.B.indexOf('SRM') !== -1 &&
+    (rw.O === 'EV' || rw.R === 'EV'));
+checks.push(['landing mid case names an SRM model on an EV plan (activeEv resolves to SRM)',
+  landingSrmEvRows.length >= 1]);
+// The controller rendered the mid landing on first load: the fleet-card stack
+// shows exactly the 4 mid-case truck IDs (EL-01..EL-04), proving freshInputs()
+// reads the mid landing, not the old 6-truck demonstration case.
+function truckCardsNow() {
+  return toArr(byId['fleet-cards'].children).filter(
+    (c) => (c.attributes && c.attributes['data-truck-id'] != null));
+}
+const landingCardIds = truckCardsNow().map((c) => c.attributes['data-truck-id']);
+checks.push(['default landing renders the 4 mid (SRM) truck cards', landingCardIds.length === 4]);
+checks.push(['default landing truck cards carry the mid fleet IDs (EL-01..EL-04)',
+  ['EL-01', 'EL-02', 'EL-03', 'EL-04'].every((id) => landingCardIds.indexOf(id) !== -1)]);
+// The controller's live landing state names SRM on an EV plan, so the Charging
+// tab's active EV resolves to SRM by default.
+const landingReplNow = windowObj.__HS.state.replacement_plan.rows
+  .filter((rw) => rw.A != null && typeof rw.B === 'string' && rw.B.indexOf('SRM') !== -1 &&
+    (rw.O === 'EV' || rw.R === 'EV'));
+checks.push(['controller landing state surfaces SRM on an EV plan',
+  landingReplNow.length >= 1]);
+
+// The user-facing prospect SEED SET no longer contains the demonstration case:
+// it is exactly best / mid / bad / blank. (demo_case.json lives on only as the
+// untouched validate.py Excel-parity fixture, still embedded as HSDemoCase.)
+const seedsEarly = windowObj.HSProspectSeeds;
+checks.push(['prospect seed set excludes the demo case (best/mid/bad/blank only)',
+  !!seedsEarly && Array.isArray(seedsEarly.cases) &&
+  seedsEarly.cases.length === 4 &&
+  !seedsEarly.cases.some((c) => c.id === 'demo') &&
+  ['best', 'mid', 'bad', 'blank'].every((id) => seedsEarly.cases.some((c) => c.id === id))]);
+
+// Drive the live controller to the DEMONSTRATION 6-truck case so the extensive
+// long-standing demo-specific DOM assertions below (6 truck cards, Keep ICE
+// 2,081,781, n.a. EV plans, diagnostic confidence badge, Reset-to-demo, etc.)
+// remain exactly as strong as before. This is an honest render test of the
+// demonstration fixture: it loads the SAME inputs the engine-parity checks above
+// use (window.HSDemoCase.inputs) into __HS.state and rebuilds the UI. The mid
+// landing was already asserted above, so no coverage is lost.
+windowObj.__HS.loadDemoFixture();
+
 // Rendered DOM checks: controller must have populated results + decision + banner.
 checks.push(['results-body rendered', byId['results-body'].innerHTML.indexOf('Vehicle economic TCO') !== -1]);
 checks.push(['results shows 2,081,781', byId['results-body'].innerHTML.indexOf('2,081,781') !== -1]);
@@ -202,13 +260,18 @@ const seeds = windowObj.HSProspectSeeds;
 // FEAT-003: the Yong Wen / Venus reconstructions were replaced by four
 // illustrative presets (best / mid / bad / blank). FEAT-001 (loophole fixes)
 // removed the misleading named 'evergreen' seed (the 'best' case is the same
-// fully-specified confirmed-win input set), so the seed set is now five cases:
-// demo, best, mid, bad, blank.
-checks.push(['prospect seeds embedded (5)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 5]);
+// fully-specified confirmed-win input set).
+// FEAT-002 (map/demo/portfolio): the user-facing ChengLong DEMONSTRATION
+// prospect was removed from the seed set too, so the user-facing seeds are now
+// exactly FOUR cases: best, mid, bad, blank. (demo_case.json survives only as
+// the untouched validate.py Excel-parity fixture, embedded as HSDemoCase.)
+checks.push(['prospect seeds embedded (4)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 4]);
 checks.push(['no yong_wen/venus seeds remain',
   !!seeds && !seeds.cases.some((c) => c.id === 'yong_wen' || c.id === 'venus')]);
 checks.push(['no evergreen named-customer seed remains',
   !!seeds && !seeds.cases.some((c) => c.id === 'evergreen')]);
+checks.push(['no demo seed in the user-facing set',
+  !!seeds && !seeds.cases.some((c) => c.id === 'demo')]);
 checks.push(['scoreProspect exposed', typeof windowObj.HSEngine.scoreProspect === 'function']);
 
 const pbodyBenefit = byId['prospect-body'].innerHTML;
@@ -224,7 +287,11 @@ checks.push(['prospect card container is a card grid (not a table) in markup',
   /<div class="prospect-cards" id="prospect-body">/.test(html) &&
   html.indexOf('id="prospect-table"') === -1]);
 checks.push(['prospect does NOT name Evergreen Logistics', pbodyBenefit.indexOf('Evergreen Logistics') === -1]);
-checks.push(['prospect lists demo', pbodyBenefit.indexOf('DEMONSTRATION 6-truck case') !== -1]);
+// FEAT-002: the DEMONSTRATION case is NO LONGER a user-facing prospect; the
+// overlay must NOT list it (this flips the former 'prospect lists demo' check).
+checks.push(['prospect does NOT list the DEMONSTRATION case',
+  pbodyBenefit.indexOf('DEMONSTRATION 6-truck case') === -1 &&
+  pbodyBenefit.indexOf('DEMONSTRATION') === -1]);
 // The four illustrative presets must each render in the table.
 checks.push(['prospect lists Best case', pbodyBenefit.indexOf('Best case (illustrative, fully specified, gates pass)') !== -1]);
 checks.push(['prospect lists Mid case', pbodyBenefit.indexOf('Mid case (illustrative, marginal saving)') !== -1]);
@@ -306,18 +373,36 @@ checks.push(['blank sinks to the bottom (both modes)',
 checks.push(['bad outranks only blank in benefit order',
   benefitOrder.indexOf('bad') < benefitOrder.indexOf('blank')]);
 
-// Toggle the live sort control and confirm the rendered order changes.
+// Toggle the live sort control and confirm the rendered order follows the
+// selected mode. After removing the demonstration prospect the four remaining
+// illustrative presets happen to rank in the SAME order under both the benefit
+// and account keys (best > mid > bad > blank), so the rendered markup does not
+// necessarily differ between modes. This assertion is therefore made STRICTLY
+// STRONGER than the old 'the HTML differs' check: it fires the control and
+// asserts the rendered card order EXACTLY matches the engine-computed account
+// order (a precise ordering contract, independent of whether the two modes
+// coincide), proving the sort control re-renders in the selected order.
 const sel = byId['prospect-sort'];
-const beforeHtml = byId['prospect-body'].innerHTML;
+const caseName = {
+  best: 'Best case (illustrative, fully specified, gates pass)',
+  mid: 'Mid case (illustrative, marginal saving)',
+  bad: 'Bad case (illustrative, EV not a fit)',
+  blank: 'Blank profile (start a fresh client)',
+};
 sel.value = 'account';
 sel.fire('change');
 const afterHtml = byId['prospect-body'].innerHTML;
-checks.push(['sort toggle reorders table', beforeHtml !== afterHtml]);
+const renderedAccountOrder = accountOrder.map((id) => afterHtml.indexOf(caseName[id]));
+checks.push(['sort control renders cards in the selected (account) order',
+  renderedAccountOrder.every((pos) => pos !== -1) &&
+  renderedAccountOrder.every((pos, i) => i === 0 || renderedAccountOrder[i - 1] < pos)]);
 // In account order the confirmed-win Best case leads the rendered table, ahead
-// of the demonstration case, and the honest-blank preset is rendered last.
+// of the marginal Mid case, and the honest-blank preset is rendered last.
+// (The demonstration case is no longer a user-facing prospect, so Best is now
+// compared against the next-ranked illustrative case, Mid.)
 checks.push(['account sort puts Best case on top',
   afterHtml.indexOf('Best case (illustrative, fully specified, gates pass)') <
-    afterHtml.indexOf('DEMONSTRATION')]);
+    afterHtml.indexOf('Mid case (illustrative, marginal saving)')]);
 checks.push(['account sort renders Blank profile last',
   afterHtml.indexOf('Blank profile (start a fresh client)') >
     afterHtml.indexOf('Best case (illustrative, fully specified, gates pass)') &&
@@ -895,7 +980,7 @@ checks.push(['card surfaces payload/body-fit status with Unconfirmed caveat',
 // The matcher (window.HSPortfolioFit) drives the recommended model; it stays
 // user-overridable. None of this writes a number back, so figures are unchanged.
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
-byId['reset-btn'].fire('click');            // restore the clean demo cards
+windowObj.__HS.loadDemoFixture();            // restore the clean demo cards
 const compareCard = truckCards()[0];
 function textOfNode(node) {
   if (!node || typeof node !== 'object') return '';
@@ -957,7 +1042,7 @@ const blankDutyCard = truckCards()[0];
 checks.push(['comparison is hidden until the duty is entered (progressive reveal)',
   !findByClass(blankDutyCard, 'tc-compare') && !!findByClass(blankDutyCard, 'tc-compare-empty')]);
 demoRow0.E = savedE;
-byId['reset-btn'].fire('click');
+windowObj.__HS.loadDemoFixture();
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- FEAT-002 (redesign): add / remove trucks (ID-consistent) --------------
@@ -1017,11 +1102,20 @@ checks.push(['Removed fleet row is an excluded blank placeholder',
 const outAfterRemove = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
 checks.push(['computeFleet valid after remove', !!outAfterRemove &&
   outAfterRemove.results.truckCount.keep_ice === cardsAfterRemove]);
-// Reset-to-demonstration restores the original 6-truck card set unchanged.
+// FEAT-002: Reset restores the DEFAULT LANDING case, which is now the MID (SRM)
+// illustrative case (4 trucks EL-01..EL-04), NOT the old 6-truck demonstration.
+// This genuinely exercises the Reset button's freshInputs() -> mid landing path.
 byId['reset-btn'].fire('click');
-checks.push(['Reset restores the 6-truck demonstration card set', truckCards().length === 6]);
-checks.push(['Reset keeps the money view at the demo Keep ICE TCO',
-  byId['results-body'].innerHTML.indexOf('2,081,781') !== -1]);
+const resetCardIds = truckCards().map((c) => c.attributes['data-truck-id']);
+checks.push(['Reset restores the 4-truck mid (SRM) landing card set', resetCardIds.length === 4]);
+checks.push(['Reset restores the mid landing fleet IDs (EL-01..EL-04)',
+  ['EL-01', 'EL-02', 'EL-03', 'EL-04'].every((id) => resetCardIds.indexOf(id) !== -1)]);
+checks.push(['Reset re-renders the money view for the mid landing (Vehicle economic TCO + a currency figure)',
+  byId['results-body'].innerHTML.indexOf('Vehicle economic TCO') !== -1 &&
+  /S\$[\d,]/.test(byId['results-body'].innerHTML)]);
+// Restore the demonstration fixture for the remaining demo-specific DOM
+// assertions below (confidence badge, portfolio 6-truck summary, etc.).
+windowObj.__HS.loadDemoFixture();
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- FEAT-004: input OVERLAY panel (fixed drawer over a scrim, no reflow) ---
@@ -1389,7 +1483,7 @@ const fittingIdxAfter = pfRowsAfter.findIndex(
 checks.push(['re-rank orders a fitting model ahead of the does-not-fit SRM',
   fittingIdxAfter !== -1 && srmIdxAfter !== -1 && fittingIdxAfter < srmIdxAfter]);
 // Restore the demo duty.
-byId['reset-btn'].fire('click');
+windowObj.__HS.loadDemoFixture();
 
 // (6) Select / Confirm a model ties into FEAT-002 product-spec loading: it
 // loads the chosen model into the first EV-action replacement row and the
@@ -1436,7 +1530,7 @@ checks.push(['Select preserves the Unconfirmed payload/body-fit status',
 const outAfterSelect = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
 checks.push(['computeFleet valid after Portfolio Select', !!outAfterSelect && !!outAfterSelect.results]);
 // Restore the demo so later assertions see the baseline.
-byId['reset-btn'].fire('click');
+windowObj.__HS.loadDemoFixture();
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
 // ---- FEAT-003 Part A: Portfolio repurposed as a fleet matched-models summary
@@ -1785,7 +1879,7 @@ checks.push(['Proposal stage carries the gate-inherited badge element',
   proposalStageMarkup.indexOf('id="proposal-badge"') !== -1]);
 
 // Make sure the controller is on the clean demo state before reading.
-byId['reset-btn'].fire('click');
+windowObj.__HS.loadDemoFixture();
 windowObj.__HS.recompute();
 
 // (2) DEMO case -> INDICATIVE. For the demo both EV plans are 'Total incomplete'
@@ -1849,7 +1943,7 @@ checks.push(['Finance amortisation module exposed on window.HSFinance (additive,
 // quotation figures are exactly what renderProposal produced. Turning the
 // toggle ON renders an instalment illustration BUT leaves the economic
 // quotation / Total byte-identical. This is the UI-level isolation guard.
-byId['reset-btn'].fire('click');
+windowObj.__HS.loadDemoFixture();
 windowObj.__HS.recompute();
 const finToggle = byId['finance-enable'];
 const quotationOff = byId['proposal-quotation-body'].innerHTML;

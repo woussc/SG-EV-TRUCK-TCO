@@ -51,6 +51,19 @@ function ok(name, pass) { checks.push([name, !!pass]); }
 
 console.log('EV TCO illustrative presets (engine-verified)\n');
 
+// ---- FEAT-002 (map/demo/portfolio): user-facing seed set is best/mid/bad/blank
+// The ChengLong DEMONSTRATION case was removed from the user-facing prospect
+// seeds (it survives only as the untouched validate.py Excel-parity fixture
+// tools/fixtures/demo_case.json). Assert the seed set is EXACTLY the four
+// illustrative presets, in that order, with NO 'demo' (or legacy named) case.
+const seedIds = seeds.cases.map((c) => c.id);
+ok('seed set is exactly best/mid/bad/blank (no demo)',
+  seedIds.length === 4 &&
+  ['best', 'mid', 'bad', 'blank'].every((id, i) => seedIds[i] === id));
+ok('no demo seed in the user-facing set', !seeds.cases.some((c) => c.id === 'demo'));
+ok('no legacy named-customer seeds remain',
+  !seeds.cases.some((c) => ['yong_wen', 'venus', 'evergreen'].indexOf(c.id) !== -1));
+
 // ---- score each preset, catching crashes (blank must NOT crash) -----------
 const scores = {};
 let blankCrashed = false;
