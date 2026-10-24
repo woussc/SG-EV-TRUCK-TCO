@@ -21,21 +21,56 @@ let m;
 while ((m = re.exec(html)) !== null) scripts.push(m[1]);
 if (scripts.length < 4) throw new Error('Expected >=4 inline scripts, found ' + scripts.length);
 
+// ---------------------------------------------------------------------------
+// HTMLCollection-like wrapper. A real element.children is a *live* HTMLCollection
+// which supports numeric index access, a live `.length` and `.item(i)`, but does
+// NOT inherit Array.prototype - so `.forEach/.map/.filter/.find/.some/.reduce`
+// are `undefined` and calling them THROWS. The old shim used a plain Array here,
+// which silently tolerated controller code that called `.forEach` on children -
+// exactly the bug that crashed the real browser. We now mimic the real contract
+// so such code fails here too.
+//
+// Backed by the element's internal real array (`arr`), so reads stay live: the
+// wrapper is a thin, prototype-less view created fresh on each `children` read.
+function makeChildrenView(arr) {
+  const view = Object.create(null); // no Array.prototype -> no iteration methods
+  for (let i = 0; i < arr.length; i++) view[i] = arr[i];
+  Object.defineProperty(view, 'length', { value: arr.length, enumerable: false });
+  Object.defineProperty(view, 'item', {
+    value: function (i) { return (i >= 0 && i < arr.length) ? arr[i] : null; },
+    enumerable: false,
+  });
+  return view;
+}
+
+// Local helper: copy any array-like (HTMLCollection-view, NodeList, or array)
+// into a real Array via length + indexed/item() access only. Deliberately does
+// NOT rely on Array.from over element.children, so it cannot mask a plain-array
+// regression of the shim - it reads strictly through the live contract.
+function toArr(coll) {
+  const a = [];
+  if (coll) {
+    const n = coll.length || 0;
+    for (let i = 0; i < n; i++) a.push(coll.item ? coll.item(i) : coll[i]);
+  }
+  return a;
+}
+
 // Minimal DOM shim. Elements collect innerHTML/children; listeners are stored.
 function makeEl(tag) {
-  return {
-    tagName: tag, _html: '', style: {}, children: [], attributes: {},
+  const el = {
+    tagName: tag, _html: '', style: {}, _children: [], attributes: {},
     listeners: {}, value: '',
     // Setting innerHTML replaces content: mirror the real DOM by also dropping
     // any previously-appended children (so re-rendered containers do not
     // accumulate stale nodes across repeated builds). Clearing to '' is the
     // common reset the controller uses before rebuilding a table/card list.
-    set innerHTML(v) { this._html = v; this.children = []; }, get innerHTML() { return this._html; },
+    set innerHTML(v) { this._html = v; this._children.length = 0; }, get innerHTML() { return this._html; },
     set textContent(v) { this._text = v; }, get textContent() { return this._text || ''; },
-    appendChild(c) { this.children.push(c); return c; },
+    appendChild(c) { this._children.push(c); return c; },
     replaceChild(nw, old) {
-      const i = this.children.indexOf(old);
-      if (i !== -1) this.children[i] = nw; else this.children.push(nw);
+      const i = this._children.indexOf(old);
+      if (i !== -1) this._children[i] = nw; else this._children.push(nw);
       return old;
     },
     addEventListener(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); },
@@ -46,6 +81,12 @@ function makeEl(tag) {
       (this.listeners[ev] || []).forEach((fn) => fn(evt));
     },
   };
+  // `children` is a live, HTMLCollection-like view WITHOUT Array methods.
+  Object.defineProperty(el, 'children', {
+    get() { return makeChildrenView(this._children); },
+    enumerable: true,
+  });
+  return el;
 }
 const byId = {};
 const ids = ['decision-cards','decision-lead','decision-notice','results-body','site-body',
@@ -125,7 +166,7 @@ checks.push(['review rendered PASS', byId['review-body'].innerHTML.indexOf('PASS
 // cards on initial load, and each card must carry a data-truck-id matching the
 // included fleet IDs (fleet + replacement are merged into one card per truck).
 function truckCards() {
-  return (byId['fleet-cards'].children || []).filter(
+  return toArr(byId['fleet-cards'].children).filter(
     (c) => (c.attributes && c.attributes['data-truck-id'] != null));
 }
 checks.push(['fleet rows built (6 truck cards on demo load)', truckCards().length === 6]);
@@ -363,7 +404,7 @@ const sensControls = byId['sens-controls'];
 function driverControls(panel) {
   // Returns { slider, box } for a driver panel: slider is input[type=range],
   // box is input[type=number].
-  const inputs = (panel.children || []).filter((c) => c.tagName === 'input');
+  const inputs = toArr(panel.children).filter((c) => c.tagName === 'input');
   const slider = inputs.find((c) => c.type === 'range') || inputs[0];
   const box = inputs.find((c) => c.type === 'number') || inputs[1];
   return { slider, box };
@@ -395,11 +436,11 @@ checks.push(['breakdown bar updates live on sensitivity slider input',
 // now reads that exact value on ec row 7 (B and C, the Q5 A/B pair) AND that
 // the sens-body renders the recomputed numbers (committed state, not a clone).
 function panelLabel(panel) {
-  const h = (panel.children || []).find((c) => c.tagName === 'h3');
+  const h = toArr(panel.children).find((c) => c.tagName === 'h3');
   return (h && (h.textContent || '')) || '';
 }
 let dieselPanel = null;
-for (const p of (sensControls.children || [])) {
+for (const p of toArr(sensControls.children)) {
   if (/diesel/i.test(panelLabel(p))) { dieselPanel = p; break; }
 }
 checks.push(['unified diesel driver present', !!dieselPanel]);
@@ -434,7 +475,7 @@ function collectMirrorSpans(node, acc) {
     node.attributes && node.attributes['data-mirror-of'] === 'B' &&
     node.attributes['data-ec-row'] != null;
   if (isMirror) acc.push(node);
-  (node.children || []).forEach((child) => collectMirrorSpans(child, acc));
+  toArr(node.children).forEach((child) => collectMirrorSpans(child, acc));
   return acc;
 }
 const mirrorSpans = collectMirrorSpans(byId['ec-body'], []);
@@ -474,7 +515,7 @@ checks.push(['results table agrees with the driven engine value (same source of 
 // no savingTarget). Moving it must change the rendered headroom / claim label
 // live, while the DEFAULT path still yields 'Meets entered 15% target'.
 let targetPanel = null;
-for (const p of (sensControls.children || [])) {
+for (const p of toArr(sensControls.children)) {
   if (/target/i.test(panelLabel(p))) { targetPanel = p; break; }
 }
 checks.push(['saving-target control present', !!targetPanel]);
@@ -545,6 +586,49 @@ const totalAfter = byId['chart-breakdown'].innerHTML;
 checks.push(['comparison charts update live on input change',
   totalBefore !== totalAfter && totalAfter.indexOf('<svg') !== -1]);
 
+// ---- real-DOM-safe iteration of live children (regression guard) ----------
+// The controller's refreshComparisons() iterates `cards.children`, which in a
+// real browser is a LIVE HTMLCollection with NO Array iteration methods. A
+// prior regression used `(cards.children || []).forEach(...)` and crashed on
+// load with `TypeError: ...forEach is not a function`; the old shim masked it
+// because `children` was a plain Array. This block is a two-part guard that is
+// STRICTLY stronger than the existing assertions:
+//
+//   (1) The shim's element.children must be HTMLCollection-like: it exposes
+//       numeric index + .length + item(i) but must NOT expose .forEach (calling
+//       it THROWS). If the shim is ever loosened back to a plain Array, this
+//       fails -> so a loosened shim can no longer hide an Array-method misuse.
+//   (2) recompute() runs the renderFleetComparisons -> refreshComparisons path
+//       over that strict children view WITHOUT throwing, and every rendered
+//       truck card still carries its per-truck .tc-compare node (refreshed in
+//       place). If index.html reverts to `.forEach` on children, refreshComparisons
+//       throws here and this assertion fails.
+(() => {
+  // (1) The children contract itself: no Array iteration method leaks through.
+  const probe = document.createElement('div');
+  probe.appendChild(document.createElement('span'));
+  const childrenHasNoForEach = typeof probe.children.forEach === 'undefined' &&
+    typeof probe.children.map === 'undefined' && typeof probe.children.filter === 'undefined' &&
+    probe.children.length === 1 && typeof probe.children.item === 'function' &&
+    probe.children.item(0) === probe.children[0];
+  let threwOnForEach = false;
+  try { probe.children.forEach(() => {}); } catch (e) { threwOnForEach = true; }
+
+  // (2) Exercise the recompute -> refreshComparisons path and confirm it neither
+  // throws nor drops the per-truck comparison nodes.
+  let recomputeThrew = false;
+  try { windowObj.__HS.recompute(); } catch (e) { recomputeThrew = true; }
+  const cards = toArr(byId['fleet-cards'].children)
+    .filter((c) => c.attributes && c.attributes['data-truck-id'] != null);
+  const everyCardRefreshed = cards.length > 0 && cards.every((card) => {
+    const kids = toArr(card.children);
+    return kids.some((k) => /(^|\s)tc-compare(\s|$)/.test(k.className || ''));
+  });
+
+  checks.push(['refreshComparisons iterates live children without Array.forEach (real-DOM-safe)',
+    childrenHasNoForEach && threwOnForEach && !recomputeThrew && everyCardRefreshed]);
+})();
+
 // ---- FEAT-002 (A): live update fires on 'input', NOT 'change' --------------
 // The editable fleet/energy fields must recompute as the user TYPES (the
 // 'input' event), matching the sensitivity sliders. This assertion is honest:
@@ -561,10 +645,10 @@ if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyn
 // amber <input>.
 function firstInputIn(container){
   if (!container) return null;
-  for (const row of container.children) {
-    const kids = (row && row.children) || [];
+  for (const row of toArr(container.children)) {
+    const kids = toArr(row && row.children);
     for (const td of kids) {
-      const gk = (td && td.children) || [];
+      const gk = toArr(td && td.children);
       // Skip the discrete include checkbox (wired on 'change' by design); the
       // live-update contract is about the editable text/number fields.
       for (const node of gk) { if (node && node.tagName === 'input' && node.type !== 'checkbox') return node; }
@@ -596,7 +680,7 @@ function findInputDeep(node, pred) {
   if (!node || typeof node !== 'object') return null;
   if ((node.tagName || '') === 'input' && node.type !== 'checkbox' &&
       (!pred || pred(node))) return node;
-  const kids = node.children || [];
+  const kids = toArr(node.children);
   for (const child of kids) {
     const hit = findInputDeep(child, pred);
     if (hit) return hit;
@@ -663,7 +747,7 @@ function collectLabels(node, acc) {
   // Do not descend into a per-card Advanced <details> (those are low-impact).
   const isAdv = (node.tagName || '') === 'details' &&
     /(^|\s)truck-adv(\s|$)/.test(node.className || '');
-  if (!isAdv) (node.children || []).forEach((c) => collectLabels(c, acc));
+  if (!isAdv) toArr(node.children).forEach((c) => collectLabels(c, acc));
   return acc;
 }
 const card0 = truckCards()[0];
@@ -682,7 +766,7 @@ checks.push(['truck card surfaces the ICE-duty + matched-EV primary fields',
 function hasTruckAdvDetails(node) {
   if (!node || typeof node !== 'object') return false;
   if ((node.tagName || '') === 'details' && /(^|\s)truck-adv(\s|$)/.test(node.className || '')) return true;
-  return (node.children || []).some(hasTruckAdvDetails);
+  return toArr(node.children).some(hasTruckAdvDetails);
 }
 checks.push(['no per-card Advanced <details> remains (consolidated globally)',
   !hasTruckAdvDetails(card0)]);
@@ -697,7 +781,7 @@ checks.push(['per-truck low-impact fields live in the consolidated Advanced area
   advLabels.indexOf('Straight-line SGD') !== -1]);
 // The consolidated #fleet-adv renders one group per shown truck (6 for demo).
 function truckAdvGroups() {
-  return (byId['fleet-adv'].children || []).filter(
+  return toArr(byId['fleet-adv'].children).filter(
     (c) => c.attributes && c.attributes['data-truck-adv-id'] != null);
 }
 checks.push(['consolidated Advanced renders one group per truck (6 demo trucks)',
@@ -786,7 +870,7 @@ windowObj.__HS.rebuildInputs();
 function findFitStatus(node) {
   if (!node || typeof node !== 'object') return null;
   if ((node.tagName || '') === 'span' && node.attributes && 'data-fit-status' in node.attributes) return node;
-  const kids = node.children || [];
+  const kids = toArr(node.children);
   for (const c of kids) { const hit = findFitStatus(c); if (hit) return hit; }
   return null;
 }
@@ -808,13 +892,13 @@ const compareCard = truckCards()[0];
 function textOfNode(node) {
   if (!node || typeof node !== 'object') return '';
   let t = (node._text || '');
-  (node.children || []).forEach((c) => { t += ' ' + textOfNode(c); });
+  toArr(node.children).forEach((c) => { t += ' ' + textOfNode(c); });
   return t;
 }
 function findByClass(node, cls) {
   if (!node || typeof node !== 'object') return null;
   if (new RegExp('(^|\\s)' + cls + '(\\s|$)').test(node.className || '')) return node;
-  const kids = node.children || [];
+  const kids = toArr(node.children);
   for (const c of kids) { const hit = findByClass(c, cls); if (hit) return hit; }
   return null;
 }
@@ -905,7 +989,7 @@ const addedCard = truckCards().find((c) => c.attributes['data-truck-id'] === new
 function findRemoveBtn(node) {
   if (!node || typeof node !== 'object') return null;
   if ((node.tagName || '') === 'button' && /(^|\s)remove-truck(\s|$)/.test(node.className || '')) return node;
-  const kids = node.children || [];
+  const kids = toArr(node.children);
   for (const c of kids) { const hit = findRemoveBtn(c); if (hit) return hit; }
   return null;
 }
@@ -1221,10 +1305,10 @@ const pfBody = byId['portfolio-body'];
 function textOf(node) {
   if (!node || typeof node !== 'object') return '';
   let t = (node._text || '');
-  (node.children || []).forEach((c) => { t += ' ' + textOf(c); });
+  toArr(node.children).forEach((c) => { t += ' ' + textOf(c); });
   return t;
 }
-const pfModelRows = (pfBody.children || []).filter(
+const pfModelRows = toArr(pfBody.children).filter(
   (r) => r.attributes && r.attributes['data-portfolio-model'] != null);
 const pfModelNames = pfModelRows.map((r) => r.attributes['data-portfolio-model']);
 // All seven catalogue models rank in the live demo view.
@@ -1251,7 +1335,7 @@ checks.push(['Portfolio shows NO clean Best fit while catalogue is Unconfirmed',
 function collectByAttr(node, attr, acc) {
   if (!node || typeof node !== 'object') return acc;
   if (node.attributes && attr in node.attributes) acc.push(node);
-  (node.children || []).forEach((c) => collectByAttr(c, attr, acc));
+  toArr(node.children).forEach((c) => collectByAttr(c, attr, acc));
   return acc;
 }
 const caveatTags = collectByAttr(pfBody, 'data-portfolio-caveat', []);
@@ -1259,7 +1343,7 @@ checks.push(['Portfolio shows at least one insufficient-data honesty caveat tag'
   caveatTags.length >= 1 &&
   caveatTags.every((t) => /(^|\s)unknown(\s|$)/.test(t.className || ''))]);
 // Per-row reasons are rendered (the 'Why this verdict' audit rows with a list).
-const pfReasonRows = (pfBody.children || []).filter(
+const pfReasonRows = toArr(pfBody.children).filter(
   (r) => r.attributes && r.attributes['data-portfolio-reasons'] != null);
 checks.push(['Portfolio renders a per-row reasons audit row for each model',
   pfReasonRows.length === pfModelRows.length]);
@@ -1285,7 +1369,7 @@ checks.push(['SRM T3EV is not already Does-not-fit at the light demo duty',
 windowObj.__HS.state.fleet_register.rows.forEach((r) => { if (r.B === 1) r.H = 4000; });
 windowObj.__HS.recompute();
 const pfBodyAfter = byId['portfolio-body'];
-const pfRowsAfter = (pfBodyAfter.children || []).filter(
+const pfRowsAfter = toArr(pfBodyAfter.children).filter(
   (r) => r.attributes && r.attributes['data-portfolio-model'] != null);
 const srmAfter = pfRowsAfter.find((r) => r.attributes['data-portfolio-model'] === 'SRM T3EV');
 checks.push(['raising peak cargo flips SRM T3EV to Does not fit (live re-rank)',
@@ -1308,7 +1392,7 @@ function findSelectBtn(body, name) {
     if (hit || !node || typeof node !== 'object') return;
     if ((node.tagName || '') === 'button' && node.attributes &&
         node.attributes['data-portfolio-select'] === name) { hit = node; return; }
-    (node.children || []).forEach(walk);
+    toArr(node.children).forEach(walk);
   })(body);
   return hit;
 }
@@ -1372,14 +1456,14 @@ checks.push(['Portfolio ranked guide demoted into a details disclosure',
 // The matched-models cards render one card per matched model (or honest buckets)
 // for the demo fleet, with a count. All six demo trucks are included.
 const matchGrid = byId['portfolio-matched-models'];
-const matchCards = (matchGrid.children || []).filter(
+const matchCards = toArr(matchGrid.children).filter(
   (c) => c.attributes && (c.attributes['data-matched-model'] != null ||
     c.attributes['data-matched-nofit'] != null || c.attributes['data-matched-none'] != null));
 checks.push(['Portfolio renders matched-model count cards for the fleet',
   matchCards.length >= 1]);
 // Every demo included truck appears in the per-truck match table.
 const fleetBody = byId['portfolio-fleet-body'];
-const fleetRows = (fleetBody.children || []).filter(
+const fleetRows = toArr(fleetBody.children).filter(
   (rrow) => rrow.attributes && rrow.attributes['data-fleet-truck'] != null);
 const demoMatches = windowObj.HSPortfolioFit.matchFleetToPortfolio(windowObj.__HS.state) || [];
 checks.push(['Portfolio per-truck match table has a row per included truck',
@@ -1395,7 +1479,7 @@ checks.push(['Portfolio fleet config preserves the Unconfirmed honesty caveat',
 // Live: the summary re-renders on recompute (it is wired via the portfolio
 // renderer). Firing a recompute keeps the per-truck rows populated.
 windowObj.__HS.recompute();
-const fleetRowsAfter = (byId['portfolio-fleet-body'].children || []).filter(
+const fleetRowsAfter = toArr(byId['portfolio-fleet-body'].children).filter(
   (rrow) => rrow.attributes && rrow.attributes['data-fleet-truck'] != null);
 checks.push(['Portfolio fleet summary re-renders live on recompute',
   fleetRowsAfter.length === demoMatches.length]);
@@ -1496,8 +1580,8 @@ checks.push(['breakdown bar renders a matching saving-target tick',
 // / saving-target but NOT the discount rate, which is relocated to the Advanced
 // assumptions area (rendered with its note).
 (() => {
-  const sensLabels = (byId['sens-controls'].children || []).map((p) => {
-    const h = (p.children || []).find((c) => c.tagName === 'h3');
+  const sensLabels = toArr(byId['sens-controls'].children).map((p) => {
+    const h = toArr(p.children).find((c) => c.tagName === 'h3');
     return (h && (h.textContent || '')) || '';
   });
   const joined = sensLabels.join(' | ');
@@ -1513,7 +1597,7 @@ checks.push(['breakdown bar renders a matching saving-target tick',
   function findDiscount(node) {
     if (!node || typeof node !== 'object') return null;
     if (node.attributes && node.attributes['data-oc-discount'] != null) return node;
-    const kids = node.children || [];
+    const kids = toArr(node.children);
     for (const c of kids) { const hit = findDiscount(c); if (hit) return hit; }
     return null;
   }
@@ -1522,7 +1606,7 @@ checks.push(['breakdown bar renders a matching saving-target tick',
   function textOfD(node) {
     if (!node || typeof node !== 'object') return '';
     let t = (node._text || '');
-    (node.children || []).forEach((c) => { t += ' ' + textOfD(c); });
+    toArr(node.children).forEach((c) => { t += ' ' + textOfD(c); });
     return t;
   }
   checks.push(['Advanced discount carries the only-bites-when-non-zero note',

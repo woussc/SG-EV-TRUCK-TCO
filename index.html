@@ -232,6 +232,15 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .chart-card-wide{grid-column:1 / -1}
 .chart-title{font-weight:600;font-size:13px;margin:0 0 6px}
 .chart-cap{color:var(--muted);font-size:11.5px;margin:6px 0 0;line-height:1.4}
+/* Award-tier hierarchy: demote the verbose chart notes behind a compact
+   disclosure so the hero chart and the figures lead the eye. All honesty text
+   is preserved verbatim inside the aside; nothing is deleted. */
+.chart-cap-aside{margin:8px 0 0;font-size:11.5px;color:var(--muted)}
+.chart-cap-aside>summary{cursor:pointer;font-weight:600;letter-spacing:.02em;list-style:none;color:var(--muted);font-size:11px;text-transform:uppercase}
+.chart-cap-aside>summary::-webkit-details-marker{display:none}
+.chart-cap-aside>summary::after{content:"\0000a0+";font-weight:400}
+.chart-cap-aside[open]>summary::after{content:"\0000a0\2212"}
+.chart-cap-aside>.chart-cap{margin-top:6px}
 .chart-box{width:100%}
 .chart-box svg{display:block;width:100%;height:auto}
 
@@ -244,25 +253,46 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  * (A2 removed the redundant sensitivity-response bar; A3 removed the sensitivity
  * table, so the band holds exactly these three surfaces.) */
 .tco-dashboard{min-width:0;position:relative}
-.tco-band{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr);gap:var(--gutter);align-items:start}
+/* Desktop base (~1440px): a 2-column dashboard. The HERO cumulative-TCO line
+   occupies a large LEFT column that SPANS THE FULL BAND HEIGHT (grid-row 1/3),
+   while the cost-component BREAKDOWN BAR and the Break-even/sensitivity card
+   STACK in a narrower RIGHT column. The right column's natural height (bar +
+   sliders + prose) sets the band height, and the hero stretches to match it,
+   so there is no dead vertical gap beneath the charts. The narrow max-width
+   breakpoints below override this for tablet/phone. */
+.tco-band{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);grid-template-rows:auto 1fr;gap:var(--gutter);align-items:stretch}
 .tco-band>*{min-width:0;margin:0}
-.tco-band-sens{min-width:0}
+.tco-band-line{grid-column:1;grid-row:1 / 3}
+.tco-band-bar{grid-column:2;grid-row:1}
+.tco-band-sens{grid-column:2;grid-row:2;min-width:0}
 /* The sensitivity drivers sit in a narrow band track: stack them one per row so
    the slider + number box never overflow. */
 .tco-band-sens #sens-controls{grid-template-columns:1fr}
-.chart-hero .chart-box{min-height:300px}
-.chart-hero svg{min-height:300px}
+/* HERO: make the line-chart figure a flex column so its chart-box fills all the
+   vertical space the tall right column creates. The SVG uses height:100% inside
+   that flexed box (its preserveAspectRatio keeps the plot undistorted), so the
+   hero reads as the dominant focal surface, clearly taller than the bar. */
+.chart-hero{display:flex;flex-direction:column}
+.chart-hero .chart-box{flex:1 1 auto;display:flex;min-height:460px}
+.chart-hero .chart-box svg{height:100%;min-height:460px;width:100%}
 /* Reflow to stacked on narrow screens (existing breakpoints). At 1023px the
    line spans full width and the bar + sensitivity sit two-up beneath it; at
    860px everything stacks to one column. */
 @media(max-width:1023px){
-  .tco-band{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-  .tco-band-line{grid-column:1 / -1}
+  .tco-band{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto}
+  .tco-band-line{grid-column:1 / -1;grid-row:auto}
+  .tco-band-bar{grid-column:auto;grid-row:auto}
+  .tco-band-sens{grid-column:auto;grid-row:auto}
   .tco-band-sens #sens-controls{grid-template-columns:1fr 1fr}
+  .chart-hero{display:block}
+  .chart-hero .chart-box{display:block;min-height:300px}
+  .chart-hero .chart-box svg{height:auto;min-height:300px}
 }
 @media(max-width:860px){
-  .tco-band{grid-template-columns:1fr}
-  .tco-band-line{grid-column:auto}
+  .tco-band{grid-template-columns:1fr;grid-template-rows:auto}
+  .tco-band-line{grid-column:auto;grid-row:auto}
+  .tco-band-bar{grid-column:auto;grid-row:auto}
+  .tco-band-sens{grid-column:auto;grid-row:auto}
   .tco-band-sens #sens-controls{grid-template-columns:1fr 1fr}
 }
 @media(max-width:700px){
@@ -592,8 +622,8 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <div class="tco-tooltip" id="tco-tooltip" role="status" aria-live="polite" hidden></div>
 <div class="tco-dashboard" id="tco-dashboard">
   <div class="tco-band" id="tco-band">
-    <figure class="chart-card chart-hero tco-band-line" id="tco-charts"><figcaption class="chart-title">Cumulative economic TCO over 10 years</figcaption><div class="chart-box" id="chart-cumulative"></div><figcaption class="chart-cap">Per-path running economic cost, years 0&ndash;10, with a labelled data point for every year. Marker lines call out the year&nbsp;3, year&nbsp;5 and year&nbsp;10 financial milestones. The dashed <strong>saving-target</strong> line shows the year-10 economic cost a plan must beat to meet the committed fleet saving target. n.a. years appear as dashed gaps, never as a zero.</figcaption></figure>
-    <figure class="chart-card tco-band-bar"><figcaption class="chart-title">Cost-component breakdown by path</figcaption><div class="chart-box" id="chart-breakdown"></div><figcaption class="chart-cap">Stacked economic cost per path: vehicle economic TCO (purchase + operating, net of disposal and grants) plus net charging-site ownership (charger installation and site works, net of any entered award). The height of each bar is the path&rsquo;s Total economic TCO. A dashed <strong>saving-target</strong> tick marks the level a plan must beat. Hover a segment for the exact component. A hatched bar marked n.a. means the aggregate gate did not clear, not a zero cost.</figcaption></figure>
+    <figure class="chart-card chart-hero tco-band-line" id="tco-charts"><figcaption class="chart-title">Cumulative economic TCO over 10 years</figcaption><div class="chart-box" id="chart-cumulative"></div><details class="chart-cap-aside"><summary>How to read this chart</summary><figcaption class="chart-cap">Per-path running economic cost, years 0&ndash;10, with a labelled data point for every year. Marker lines call out the year&nbsp;3, year&nbsp;5 and year&nbsp;10 financial milestones. The dashed <strong>saving-target</strong> line shows the year-10 economic cost a plan must beat to meet the committed fleet saving target. n.a. years appear as dashed gaps, never as a zero.</figcaption></details></figure>
+    <figure class="chart-card tco-band-bar"><figcaption class="chart-title">Cost-component breakdown by path</figcaption><div class="chart-box" id="chart-breakdown"></div><details class="chart-cap-aside"><summary>How to read this chart</summary><figcaption class="chart-cap">Stacked economic cost per path: vehicle economic TCO (purchase + operating, net of disposal and grants) plus net charging-site ownership (charger installation and site works, net of any entered award). The height of each bar is the path&rsquo;s Total economic TCO. A dashed <strong>saving-target</strong> tick marks the level a plan must beat. Hover a segment for the exact component. A hatched bar marked n.a. means the aggregate gate did not clear, not a zero cost.</figcaption></details></figure>
     <section class="tco-band-sens" id="sensitivity"><p class="block-title">Break-even &amp; sensitivity</p>
     <p class="small">Each slider changes one of the most-critical cost drivers and recomputes every path through the same engine, redrawing the line and bar beside it live. These are mathematical break-even conditions, not quoted prices. The baseline is always the current Keep ICE total at the unchanged inputs. The discount rate is a rarely-changed assumption and lives in the <strong>Advanced assumptions</strong> area in the Inputs panel.</p>
     <div class="grid" id="sens-controls"></div>
@@ -3783,15 +3813,19 @@ window.HSChargingContext = {"schemaVersion":1,"provenance":{"source":"lta-datama
     var cards = H.el('fleet-cards');
     if(!cards || !cards.children) return;
     var map = H.replByIdMap();
-    (cards.children || []).forEach(function(card){
-      if(!card || !card.getAttribute) return;
+    // cards.children is a LIVE HTMLCollection in real browsers (no .forEach) -
+    // iterate by index, matching the ES5-safe style used by the kids loop below.
+    var cs = cards.children;
+    for(var ci=0; ci<cs.length; ci++){
+      var card = cs[ci];
+      if(!card || !card.getAttribute) continue;
       var id = card.getAttribute('data-truck-id');
-      if(id==null || id==='') return;
+      if(id==null || id==='') continue;
       var row = null, fr = H.state.fleet_register.rows;
       for(var i=0;i<fr.length;i++){ if(String(fr[i].A)===String(id)){ row=fr[i]; break; } }
-      if(!row) return;
+      if(!row) continue;
       var rp = map[row.A];
-      if(!rp) return;
+      if(!rp) continue;
       var fresh = buildCompare(row, rp);
       // Find the existing comparison node (.tc-compare or .tc-compare-empty) and
       // swap it; if none exists yet (older card), append the fresh one.
@@ -3805,7 +3839,7 @@ window.HSChargingContext = {"schemaVersion":1,"provenance":{"source":"lta-datama
         }
       }
       if(!replaced && card.appendChild) card.appendChild(fresh);
-    });
+    }
   }
   H.refreshComparisons = refreshComparisons;
   if (typeof H.setFleetComparisonRenderer === 'function') H.setFleetComparisonRenderer(refreshComparisons);
@@ -4284,12 +4318,16 @@ window.HSChargingContext = {"schemaVersion":1,"provenance":{"source":"lta-datama
   function syncMirroredC(){
     var body = H.el('ec-body');
     if (!body || typeof body.querySelectorAll !== 'function') return;
-    body.querySelectorAll('span.mirror-c[data-ec-row]').forEach(function(span){
+    // querySelectorAll returns a NodeList (no .forEach in older browsers) -
+    // iterate by index, matching the file's ES5-safe style.
+    var ns = body.querySelectorAll('span.mirror-c[data-ec-row]');
+    for(var i=0;i<ns.length;i++){
+      var span = ns[i];
       var row = H.ecRow(Number(span.getAttribute('data-ec-row')));
-      if (!row || row.values==null) return;
+      if (!row || row.values==null) continue;
       var v = row.values.C;
       span.textContent = (v==null ? '' : v);
-    });
+    }
   }
 
   // Sensitivity renderer (A3). The former sensitivity TABLE was removed: its four
