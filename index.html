@@ -430,13 +430,25 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 /* ---- FEAT-003 Part C: full-portfolio switch-over table + provenance ---- */
 #portfolio-switchover{margin:var(--gutter) 0 0}
 #portfolio-provenance-legend{font-size:12px}
-.prov-badge{display:inline-block;font-size:10px;font-weight:600;line-height:1.3;padding:0 5px;border:1px solid var(--line2);border-radius:3px;margin-left:5px;white-space:nowrap;vertical-align:middle}
+.prov-badge{display:inline-block;font-size:13px;font-weight:600;line-height:1.3;padding:1px 6px;border:1px solid var(--line2);border-radius:3px;margin-left:5px;white-space:nowrap;vertical-align:middle}
 .prov-sourced{background:#e8f2ed;border-color:#bcd9c8;color:#1f5f3d}
 .prov-derived{background:#e9f0f7;border-color:#c3d4e6;color:#2a4c6d}
 .prov-unconfirmed{background:#eeeef0;border-color:var(--line2);color:#5a5a62}
+/* FEAT-005: a user-typed override is tagged User-entered - an explicit
+   assumption, NEVER a cited Source. A distinct amber swatch + a dotted
+   underline on the edited value make it visually unmistakable from a Sourced
+   figure. */
+.prov-userentered{background:#fff4e0;border-color:#e4c488;color:#8a5a12}
 #portfolio-switchover-table td,#portfolio-switchover-table th{vertical-align:top}
 #portfolio-switchover-table td.spec-cell{white-space:nowrap}
 #portfolio-switchover-table .spec-val.na{color:var(--muted);font-style:italic}
+/* FEAT-005: editable spec inputs in the switch-over table. Legible (>=13px),
+   compact, right-aligned to read as a number. A user-edited input carries the
+   .spec-edited amber ring + dotted underline so it is clearly distinct from a
+   cited (Sourced) default. */
+#portfolio-switchover-table input.spec-input{width:7.5em;max-width:100%;font-size:13px;font-family:inherit;text-align:right;padding:2px 5px;border:1px solid var(--line2);border-radius:4px;background:var(--paper);color:inherit}
+#portfolio-switchover-table input.spec-input:focus{outline:2px solid #c9922f;outline-offset:1px}
+#portfolio-switchover-table input.spec-input.spec-edited{border-color:#e4c488;background:#fff8ec;text-decoration:underline dotted #c9922f;font-weight:600}
 #portfolio-switchover-table tr.row-excluded{opacity:.5}
 #portfolio-switchover-table tr.row-excluded td strong{text-decoration:line-through}
 #portfolio-switchover-table .switchover-evidence{max-width:260px;overflow-wrap:anywhere;color:var(--muted)}
@@ -777,16 +789,17 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      'Unconfirmed' / 'n.a.', never a fabricated precise number. -->
 <div id="portfolio-switchover">
   <p class="block-title sub-title" style="margin-top:var(--gutter)">Full-portfolio switch-over</p>
-  <p class="small">Every catalogue EV model side by side. <strong>SRM is the primary / recommended model</strong> and is always in play. Use the <em>In play</em> toggles to include or exclude competitor models from the matching and per-truck comparison above &mdash; this re-runs the <em>additive matcher only</em>; it never changes the frozen TCO engine or any economic figure. Each spec carries a provenance badge so sourced figures are never confused with gaps.</p>
+  <p class="small">Every catalogue EV model side by side. <strong>SRM is the primary / recommended model</strong> and is always in play. Use the <em>In play</em> toggles to include or exclude competitor models from the matching and per-truck comparison above &mdash; this re-runs the <em>additive matcher only</em>; it never changes the frozen TCO engine or any economic figure. <strong>Every spec below is editable</strong>: type a corrected or missing figure and the fit verdicts re-rank live; if you edit the active <em>Plan&nbsp;A</em> (SRM) or <em>Plan&nbsp;B</em> (competitor) model, the TCO recomputes too. A figure you type is tagged <strong>User-entered</strong> (an explicit assumption) and never read as a cited source; your edits stay in this browser session only and never overwrite the bundled data.</p>
   <div class="notice" id="portfolio-provenance-legend"><strong>Provenance legend.</strong>
     <span class="prov-badge prov-sourced" data-prov-legend="sourced">Sourced</span> figure cited from a primary/authoritative source (see the evidence column) &middot;
     <span class="prov-badge prov-derived" data-prov-legend="derived">Derived</span> computed from other sourced figures (e.g. kWh/km from battery &divide; range), not a measured value &middot;
+    <span class="prov-badge prov-userentered" data-prov-legend="userentered">User-entered</span> a value <strong>you</strong> typed into the editable field &mdash; an explicit assumption, shown with an amber dotted underline so it is never confused with a cited source &middot;
     <span class="prov-badge prov-unconfirmed" data-prov-legend="unconfirmed">Unconfirmed</span> not verified from a source &mdash; shown as <code>Unconfirmed</code> / <code>n.a.</code>, never a fabricated number.
-    Nothing here is invented: an unsourced spec is always marked Unconfirmed or left n.a.</p>
+    Nothing here is invented: an unsourced spec is always marked Unconfirmed or left n.a.; a figure you type is marked User-entered, never Sourced.</p>
   <div class="table-wrap"><table id="portfolio-switchover-table"><thead><tr>
   <th>In play</th><th>Model</th><th class="num">Payload kg</th><th class="num">Battery kWh</th><th class="num">kWh/km</th><th class="num">AC kW</th><th class="num">DC kW</th><th class="num">Range km</th><th class="num">List price</th><th class="num">Service S$/km</th><th>Body-fit</th><th>Evidence</th>
   </tr></thead><tbody id="portfolio-switchover-body"></tbody></table></div>
-  <p class="small">The <em>In play</em> column locks SRM on (primary) and lets you toggle competitors. A spec cell shows the figure with its provenance badge; a missing/unsourced figure shows <code>n.a.</code> with an <strong>Unconfirmed</strong> badge. The evidence column links each row to its cited source (col&nbsp;K); body-fit (col&nbsp;L) stays <strong>Unconfirmed</strong> for every catalogue model until verified for the duty.</p>
+  <p class="small">The <em>In play</em> column locks SRM on (primary) and lets you toggle competitors. Each spec cell is an <strong>editable field</strong> with its provenance badge; a missing/unsourced figure starts empty with an <strong>Unconfirmed</strong> badge, and a figure you type retags to <strong>User-entered</strong>. Editing re-runs the fit matcher live and, for the active Plan&nbsp;A / Plan&nbsp;B model, flows into the TCO &mdash; the frozen engine and the bundled fixture are never changed. The evidence column links each row to its cited source (col&nbsp;K); body-fit (col&nbsp;L) stays <strong>Unconfirmed</strong> for every catalogue model until verified for the duty.</p>
 </div>
 
 <!-- Supporting detail: the full ranked fit guide for every catalogue model
@@ -7863,7 +7876,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   function provFor(row, col){
     if (row && row._prov && row._prov[col] && row._prov[col].status){
       var st = String(row._prov[col].status).toLowerCase();
-      if (st==='sourced' || st==='derived' || st==='unconfirmed' || st==='assumption') return st;
+      if (st==='sourced' || st==='derived' || st==='unconfirmed' || st==='assumption' || st==='userentered') return st;
     }
     return 'unconfirmed';
   }
@@ -7872,6 +7885,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     var cls='prov-unconfirmed', txt='Unconfirmed';
     if (status==='sourced'){ cls='prov-sourced'; txt='Sourced'; }
     else if (status==='derived'){ cls='prov-derived'; txt='Derived'; }
+    else if (status==='userentered'){ cls='prov-userentered'; txt='User-entered'; }
     else if (status==='assumption'){ cls='prov-unconfirmed'; txt='Assumption'; }
     span.className='prov-badge '+cls;
     span.setAttribute('data-prov', status);
@@ -7880,21 +7894,81 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   }
   // A numeric spec cell: value (formatted) + provenance badge. A blank / n.a.
   // figure shows 'n.a.' and is forced to the Unconfirmed badge.
-  function specCell(row, col, fmt){
+  //
+  // FEAT-005: every technical spec cell is now an EDITABLE <input> bound to an
+  // in-memory override of the catalogue row (H.state.products.rows[col]). A
+  // user can correct or complete a spec live:
+  //   - the typed value is written straight onto the live product row, so the
+  //     ADDITIVE matcher (activeProductRows -> HSPortfolioFit) re-ranks on the
+  //     new figure (duty/fit verdict inputs recompute), and if the edited model
+  //     is the active Plan A SRM or Plan B competitor the two-state recompute
+  //     (buildPlanState deep-clones state.products) reads the new figure, so the
+  //     TCO recomputes - all WITHOUT touching the frozen engine or mutating
+  //     tools/fixtures/demo_case.json on disk (the edit lives only on the UI
+  //     state object);
+  //   - PROVENANCE HONESTY: the edited field's badge retags to 'User-entered'
+  //     (an explicit assumption), NEVER 'Sourced'. The input also carries the
+  //     .spec-edited amber ring + dotted underline so a typed value is visually
+  //     unmistakable from a cited default. Clearing the field back to blank
+  //     reverts it to 'n.a.' + Unconfirmed.
+  // `step` tunes the number input granularity ('any' for decimals like kWh/km
+  // and service S$/km; '1' for integer-ish payload/battery/kW/range/price).
+  function specCell(row, col, fmt, step){
     var td=document.createElement('td'); td.className='num spec-cell';
     td.setAttribute('data-spec-col', col);
-    var raw=row[col];
-    var status=provFor(row, col);
-    var valSpan=document.createElement('span'); valSpan.className='spec-val';
-    if (isNum(raw)){
-      valSpan.textContent=fmt?fmt(raw):String(raw);
-    } else {
-      valSpan.textContent='n.a.';
-      valSpan.className='spec-val na';
-      status='unconfirmed';   // never badge a blank as sourced/derived
+    var badge=provBadge(provFor(row, col));
+
+    var inp=document.createElement('input');
+    inp.type='number'; inp.step=step||'any';
+    inp.className='spec-input';
+    inp.setAttribute('data-spec-input', col);
+    inp.setAttribute('inputmode','decimal');
+    // Show the raw numeric value (not the formatted display) so editing is
+    // predictable; a blank/n.a. figure starts empty with the Unconfirmed badge.
+    inp.value = isNum(row[col]) ? String(row[col]) : '';
+    inp.setAttribute('aria-label', String(row.A||'model')+' '+col);
+    inp.title = fmt && isNum(row[col]) ? fmt(row[col]) : 'Editable spec \u2014 your value tags as User-entered';
+
+    function refreshBadge(status, edited){
+      var fresh=provBadge(status);
+      td.replaceChild(fresh, badge);
+      badge=fresh;
+      if (edited) inp.className='spec-input spec-edited';
+      else inp.className='spec-input';
     }
-    td.appendChild(valSpan);
-    td.appendChild(provBadge(status));
+    // Reflect the starting state (an already-user-entered field stays edited
+    // across a re-render, e.g. after a matcher recompute re-draws the table).
+    if (provFor(row, col)==='userentered') inp.className='spec-input spec-edited';
+
+    inp.addEventListener('input', function(){
+      var parsed=H.parseEditable(inp.value);
+      if (!row._prov) row._prov={};
+      if (inp.value.trim()===''){
+        // Cleared -> blank/n.a. -> honest Unconfirmed, drop any user tag.
+        row[col]=null;
+        delete row._prov[col];
+        refreshBadge('unconfirmed', false);
+      } else if (typeof parsed==='number' && isFinite(parsed)){
+        row[col]=parsed;
+        // A user-typed figure is an explicit assumption, NEVER a cited source.
+        row._prov[col]={status:'userentered', note:'User-entered override (not a cited source).'};
+        refreshBadge('userentered', true);
+      } else {
+        // Non-numeric text in a number field: ignore for the engine/matcher but
+        // still flag it as user-entered, not sourced.
+        row[col]=null;
+        row._prov[col]={status:'userentered', note:'User-entered (non-numeric; treated as n.a.).'};
+        refreshBadge('userentered', true);
+      }
+      // Re-run the ADDITIVE matcher + two-state TCO recompute from the edited
+      // product row. recompute() reads the live state, so both the Portfolio
+      // fit verdicts and (for the active plans) the TCO update. The frozen
+      // engine formulas and demo_case.json on disk are untouched.
+      H.recompute();
+    });
+
+    td.appendChild(inp);
+    td.appendChild(badge);
     return td;
   }
   function fmtInt(v){ return Math.round(v).toLocaleString('en-SG'); }
@@ -7947,14 +8021,14 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       tr.appendChild(nameTd);
 
       // --- Key specs with per-field provenance ---
-      tr.appendChild(specCell(row,'B',fmtInt));      // payload kg
-      tr.appendChild(specCell(row,'D',fmtInt));      // battery kWh
-      tr.appendChild(specCell(row,'E',fmtKwhKm));    // kWh/km
-      tr.appendChild(specCell(row,'G',fmtInt));      // AC kW
-      tr.appendChild(specCell(row,'H',fmtInt));      // DC kW
-      tr.appendChild(specCell(row,'J',fmtInt));      // range km
-      tr.appendChild(specCell(row,'I',fmtPrice));    // list price
-      tr.appendChild(specCell(row,'P',fmtSvc));      // service S$/km
+      tr.appendChild(specCell(row,'B',fmtInt,'1'));      // payload kg
+      tr.appendChild(specCell(row,'D',fmtInt,'any'));    // battery kWh
+      tr.appendChild(specCell(row,'E',fmtKwhKm,'any'));  // kWh/km
+      tr.appendChild(specCell(row,'G',fmtInt,'any'));    // AC kW
+      tr.appendChild(specCell(row,'H',fmtInt,'any'));    // DC kW
+      tr.appendChild(specCell(row,'J',fmtInt,'1'));      // range km
+      tr.appendChild(specCell(row,'I',fmtPrice,'1'));    // list price
+      tr.appendChild(specCell(row,'P',fmtSvc,'any'));    // service S$/km
 
       // --- Body-fit (col L): always Unconfirmed for every catalogue model ---
       var fitTd=document.createElement('td'); fitTd.className='switchover-fit';

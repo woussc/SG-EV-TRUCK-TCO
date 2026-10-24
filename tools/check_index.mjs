@@ -1710,10 +1710,111 @@ checks.push(['switch-over: excluding a competitor keeps SRM in the active catalo
 const outAfterToggle = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
 checks.push(['switch-over: toggling a competitor does NOT break the frozen engine',
   !!outAfterToggle && !!outAfterToggle.results && outAfterToggle.results.truckCount.keep_ice === 6]);
-// Re-include the competitor and restore the demo baseline.
+// Re-include the competitor.
 if (compToggle) { compToggle.checked = true; compToggle.fire('change'); }
-windowObj.__HS.loadDemoFixture();
+
+// ===========================================================================
+// FEAT-005 (Workstream F): EDITABLE portfolio specs with user-entered
+// provenance + frozen-engine isolation. Every technical spec cell is an
+// editable <input>; editing it (a) feeds the additive matcher's verdict inputs
+// for that model, (b) retags the field's provenance to 'User-entered' (never
+// 'Sourced'), and (c) NEVER changes computeFleet's frozen outputs for the
+// pristine demo fixture nor mutates tools/fixtures/demo_case.json on disk.
+// ===========================================================================
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+windowObj.__HS.renderSwitchover();   // rebuild the table fresh for the edit tests
+
+// (a) spec fields are editable inputs: collect every data-spec-input in the
+//     switch-over body and confirm there is at least one per catalogue model
+//     and that they are real <input> elements with a spec column.
+const specInputs = soCollect(soBody, 'data-spec-input', []);
+checks.push(['FEAT-005: switch-over renders editable spec inputs (one grid of <input> per spec)',
+  specInputs.length >= soRows.length &&
+  specInputs.every((n) => String(n.tagName).toLowerCase() === 'input' &&
+    n.attributes['data-spec-input'] != null)]);
+// The key spec columns (payload B, battery D, kWh/km E, AC G, DC H, range J,
+// price I, service P) are all editable for at least one model.
+const EDITABLE_COLS = ['B', 'D', 'E', 'G', 'H', 'J', 'I', 'P'];
+const editableColSet = specInputs.map((n) => n.attributes['data-spec-input']);
+checks.push(['FEAT-005: all key technical spec columns are editable (payload/battery/kWh-km/AC/DC/range/price/service)',
+  EDITABLE_COLS.every((c) => editableColSet.indexOf(c) !== -1)]);
+
+// Snapshot the pristine fixture engine output BEFORE any edit, and the
+// on-disk fixture file, so we can prove (d) the edit never moves either.
+const FIT5 = windowObj.HSPortfolioFit;
+const demoBefore = windowObj.HSEngine.computeFleet(windowObj.HSDemoCase.inputs);
+const frozenPlanA = demoBefore.results.vehicleEconomicTco.plan_a;
+const frozenKeepIce = demoBefore.results.vehicleEconomicTco.keep_ice;
+const fixtureBytesBefore = readFileSync(resolve(here, '..', 'tools/fixtures/demo_case.json'), 'utf8');
+
+// Pick a competitor row with a sourced payload (BYD T35, payload 1900 kg) so a
+// payload edit demonstrably moves the matcher's payload-gate input. Score it on
+// a demanding duty BEFORE and AFTER the edit.
+const editName = 'BYD T35 Electric Light-Duty';
+const editRow = windowObj.__HS.state.products.rows.find((p) => p.A === editName);
+const editTr = rowOf(editName);
+function specInputOf(tr, col) {
+  return soCollect(tr, 'data-spec-input', []).find((n) => n.attributes['data-spec-input'] === col);
+}
+const payloadInput = editTr ? specInputOf(editTr, 'B') : null;
+checks.push(['FEAT-005: a competitor row exposes an editable payload input', !!payloadInput && !!editRow]);
+
+// Matcher duty the BYD T35 originally CLEARS on payload (sourced 1900 kg).
+const editDuty = {
+  peakCargoKg: 1500, routeKm: 150, workKmPerDay: 120,
+  availableChargeKw: 60, chargeWindowH: 10, includedCount: 1, blank: {},
+};
+const scoreBeforeEdit = FIT5.scoreModelFit(editDuty, editRow);
+checks.push(['FEAT-005: before edit the matcher reads the sourced payload as clearing the gate',
+  scoreBeforeEdit.cells.payload === 'ok']);
+
+// (c) EDIT the payload DOWN to 900 kg (below the 1500 kg peak cargo). Simulate
+//     typing into the input and firing its 'input' handler exactly as the UI.
+if (payloadInput) { payloadInput.value = '900'; payloadInput.fire('input'); }
+// The live product row now carries the typed figure...
+checks.push(['FEAT-005: editing a spec writes the typed value onto the live product row',
+  editRow.B === 900]);
+// ...tagged User-entered (an explicit assumption), NEVER Sourced.
+checks.push(['FEAT-005: an edited field retags provenance to user-entered (never sourced)',
+  editRow._prov && editRow._prov.B && String(editRow._prov.B.status).toLowerCase() === 'userentered']);
+// (b) the matcher's verdict input for that model changed: the same duty now
+//     reads the payload gate as UNDER (the edit flowed into the matcher).
+const scoreAfterEdit = FIT5.scoreModelFit(editDuty, editRow);
+checks.push(['FEAT-005: editing the payload changes the matcher verdict input (gate now fails)',
+  scoreBeforeEdit.cells.payload === 'ok' && scoreAfterEdit.cells.payload === 'under' &&
+  scoreAfterEdit.verdict === 'Does not fit']);
+// The re-rendered switch-over row shows the User-entered badge for that field,
+// visually distinct from a Sourced badge.
+const editTrAfter = toArr(soBody.children).find(
+  (r) => r.attributes && r.attributes['data-switchover-model'] === editName);
+const payloadCellBadges = editTrAfter
+  ? soCollect(editTrAfter, 'data-spec-col', [])
+      .filter((td) => td.attributes['data-spec-col'] === 'B')
+      .reduce((acc, td) => soCollect(td, 'data-prov', acc), [])
+  : [];
+checks.push(['FEAT-005: the edited cell renders a User-entered provenance badge (not Sourced)',
+  payloadCellBadges.some((b) => b.attributes['data-prov'] === 'userentered') &&
+  !payloadCellBadges.some((b) => b.attributes['data-prov'] === 'sourced')]);
+
+// (d) FROZEN-ENGINE ISOLATION: the pristine demo fixture's computeFleet output
+//     is UNCHANGED by the UI edit (edits live only on __HS.state), and the
+//     fixture file on disk is byte-for-byte identical.
+const demoAfter = windowObj.HSEngine.computeFleet(windowObj.HSDemoCase.inputs);
+checks.push(['FEAT-005: editing a portfolio spec does NOT change computeFleet frozen outputs for the demo fixture',
+  demoAfter.results.vehicleEconomicTco.plan_a === frozenPlanA &&
+  demoAfter.results.vehicleEconomicTco.keep_ice === frozenKeepIce]);
+const fixtureBytesAfter = readFileSync(resolve(here, '..', 'tools/fixtures/demo_case.json'), 'utf8');
+checks.push(['FEAT-005: editing a portfolio spec never mutates demo_case.json on disk',
+  fixtureBytesAfter === fixtureBytesBefore]);
+
+// Clearing the field reverts it to n.a./Unconfirmed (drops the user tag).
+if (payloadInput) { payloadInput.value = ''; payloadInput.fire('input'); }
+checks.push(['FEAT-005: clearing an edited spec reverts to n.a./Unconfirmed (user tag dropped)',
+  editRow.B == null && !(editRow._prov && editRow._prov.B)]);
+
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
+// Restore the clean demo baseline for the assertions that follow.
+windowObj.__HS.loadDemoFixture();
 
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html

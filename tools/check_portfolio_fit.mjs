@@ -245,6 +245,39 @@ const bydT35 = fit.scoreModelFit(compDuty, prod('BYD T35 Electric Light-Duty'));
 check('FEAT-005: feasible competitor (BYD T35, sourced payload+range) is a caveat, never a clean Best fit',
   bydT35.verdict !== 'Best fit' && bydT35.insufficientData === true);
 
+// (g) FEAT-005 EDITABLE SPECS drive the matcher: the switch-over page binds each
+//     editable spec input to an in-memory override of the product row the
+//     matcher reads. Simulate that override here on a CLONE of the catalogue
+//     row (the UI mutates __HS.state's copy, never the on-disk fixture) and
+//     confirm the additive matcher's verdict INPUTS move with the typed value:
+//     dropping the payload below the duty flips the payload gate from ok to
+//     under (Does not fit); raising it back clears the gate again. This is the
+//     module-level proof behind the DOM-level check in check_index.mjs.
+const editDuty = {
+  peakCargoKg: 1500, routeKm: 150, workKmPerDay: 120,
+  availableChargeKw: 60, chargeWindowH: 10, includedCount: 1, blank: {},
+};
+const editedRow = JSON.parse(JSON.stringify(prod('BYD T35 Electric Light-Duty')));
+const beforeEdit = fit.scoreModelFit(editDuty, editedRow);
+check('FEAT-005: before a spec edit the sourced payload clears the matcher payload gate',
+  beforeEdit.cells.payload === 'ok');
+// User types a lower payload (an override) + retags provenance User-entered.
+editedRow.B = 900;
+editedRow._prov = Object.assign({}, editedRow._prov, { B: { status: 'userentered' } });
+const afterEdit = fit.scoreModelFit(editDuty, editedRow);
+check('FEAT-005: an edited (lower) payload flips the matcher verdict input to Does not fit',
+  afterEdit.cells.payload === 'under' && afterEdit.verdict === 'Does not fit');
+check('FEAT-005: the edited field is tagged user-entered, never sourced',
+  String(editedRow._prov.B.status).toLowerCase() === 'userentered');
+// Raising the payload above the duty clears the gate again (live, reversible).
+editedRow.B = 2000;
+const afterRaise = fit.scoreModelFit(editDuty, editedRow);
+check('FEAT-005: raising the edited payload re-clears the matcher payload gate',
+  afterRaise.cells.payload === 'ok');
+// Isolation: the on-disk catalogue row is untouched by the clone edit.
+check('FEAT-005: editing the clone never mutates the on-disk catalogue payload',
+  prod('BYD T35 Electric Light-Duty').B === 1900);
+
 let ok = true;
 for (const [name, pass] of checks) {
   console.log((pass ? 'PASS  ' : 'FAIL  ') + name);
