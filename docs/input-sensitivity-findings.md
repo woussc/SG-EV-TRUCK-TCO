@@ -48,6 +48,11 @@ Ranked by a blended business-impact score = the larger of (a) Total-TCO swing as
 - PASS - Higher EV quote raises Total economic TCO (monotone)
 - PASS - Lower EV quote reduces Total economic TCO (monotone)
 - PASS - Halving diesel price reduces EV Saving %
+- PASS - Plan A EV-cost slider recomputes Plan A vehicle TCO
+- PASS - Plan B EV-cost slider recomputes Plan B vehicle TCO
+- PASS - Plan A EV-cost slider changes ONLY Plan A (Plan B TCO unchanged)
+- PASS - Plan B EV-cost slider changes ONLY Plan B (Plan A TCO unchanged)
+- PASS - Plan A (SRM) and Plan B (competitor) differ at equal EV price
 
 **Overall: model is usable - all sanity checks pass.**
 

@@ -635,6 +635,21 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <div class="formgrid" id="customer-form"></div>
 </div>
 
+<!-- DECISION FRAMING (FEAT-002).
+     Reframes the whole comparison around the customer's BUSINESS INTENTION and
+     makes the two plans explicit: Plan A = buy SRM, Plan B = buy a competitor
+     EV. The pickers choose WHICH SRM variant is Plan A and WHICH competitor is
+     Plan B; the TCO/Decision/charts relabel live to 'Plan A - SRM <variant>'
+     and 'Plan B - <competitor>'. These controls feed only the DERIVED
+     two-state recompute (buildPlanState), never the canonical validation
+     state. -->
+<div class="customer-head" id="decision-framing">
+<h3>Decision framing <span class="tag assumption">Assumption</span></h3>
+<p class="small">Set the customer&rsquo;s intention, then pick the two EVs being compared. <strong>Plan A = buy SRM</strong> vs <strong>Plan B = buy a competitor EV</strong>, for the same fleet duty. The results, decision cards and charts relabel to the chosen models live.</p>
+<div class="formgrid" id="decision-framing-form"></div>
+<p class="small" id="decision-framing-note"></p>
+</div>
+
 <h3>Current ICE fleet &rarr; matched EV <span class="tag assumption">Assumption</span></h3>
 <p class="small">One card per <strong>current ICE truck</strong>: enter its duty (work km/day, days/year, peak jobs and cargo, demanding-day route) and the most cost-effective catalogue EV is matched live, side by side. The matched EV is a <em>recommendation</em> and stays editable.</p>
 <div id="fleet-cards" class="truck-cards"></div>
@@ -802,7 +817,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <section id="results"><p class="block-title">Results breakdown</p>
 <p class="small">Four ownership paths at the current inputs. Keep ICE runs each truck to its COE expiry then buys a matched new ICE. All-new ICE replaces the cohort now. Plan A and Plan B follow the per-truck actions. Recomputes live on any input change. All figures to 2 decimal places.</p>
 <div class="table-wrap"><table id="results-table"><thead><tr>
-<th>Metric</th><th class="num">Keep ICE</th><th class="num">All-new ICE now</th><th class="num">Plan A</th><th class="num">Plan B</th>
+<th>Metric</th><th class="num" id="results-th-keep_ice">Keep ICE</th><th class="num" id="results-th-all_new_ice">All-new ICE now</th><th class="num" id="results-th-plan_a">Plan A</th><th class="num" id="results-th-plan_b">Plan B</th>
 </tr></thead><tbody id="results-body"></tbody></table></div>
 <p class="small">Signed credits reduce cost. Saving % = (Keep ICE total &minus; plan total) / Keep ICE total. Target headroom = (1 &minus; target) &times; Keep ICE total &minus; plan total, where the saving target defaults to 15%. Full derivations in Methodology &amp; assumptions below.</p>
 </section>
@@ -4338,7 +4353,17 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
 
   // ---- RESULTS rendering (depends on engine output) ----------------
   var PLAN_KEYS = ['keep_ice','all_new_ice','plan_a','plan_b'];
+  // PLAN_LABELS carry the DECISION FRAMING. Keep ICE and All-new ICE are fixed;
+  // Plan A / Plan B are relabelled live from the reframe pickers to read
+  // 'Plan A - SRM <variant>' and 'Plan B - <competitor>'. refreshPlanLabels()
+  // is called at the top of every recompute so the labels track the pickers.
   var PLAN_LABELS = {keep_ice:'Keep ICE', all_new_ice:'All-new ICE now', plan_a:'Plan A', plan_b:'Plan B'};
+  function refreshPlanLabels(){
+    var rf = (typeof reframe==='function') ? reframe() : null;
+    if (!rf) return;
+    PLAN_LABELS.plan_a = 'Plan A - ' + rf.planAModel;
+    PLAN_LABELS.plan_b = 'Plan B - ' + rf.planBModel;
+  }
 
   // Committed saving target as a percentage string (mirrors the engine's
   // resolveSavingTarget domain guard + formatTargetPct); drives the dynamic
@@ -4352,6 +4377,12 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   function renderResults(out){
     var r = out.results;
     var tp = committedTargetPct();
+    // Keep the results-table column headers in step with the decision framing
+    // (Plan A - SRM <variant> / Plan B - <competitor>).
+    PLAN_KEYS.forEach(function(k){
+      var th = el('results-th-' + k);
+      if (th) th.textContent = PLAN_LABELS[k];
+    });
     var rows = [
       ['Truck count', r.truckCount, 'int'],
       ['Vehicle economic TCO', r.vehicleEconomicTco, 'money'],
@@ -5593,9 +5624,158 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     }
   }
 
+  /* ================================================================== *
+   * BUSINESS-INTENTION REFRAME (FEAT-002)  --  engine FROZEN.
+   * ------------------------------------------------------------------
+   * The decision story is reframed around the customer's BUSINESS INTENTION
+   * (Add new vehicle / Replace ICE vehicle) and two EXPLICIT comparison plans:
+   *   Plan A = buy SRM (a chosen SRM variant)
+   *   Plan B = buy a competitor EV (a chosen competitor model)
+   *
+   * ENGINE CONSTRAINT (verified in src/engine.js buildPath): the engine binds a
+   * SINGLE per-truck col-B EV model (rp.B, read once) and a SINGLE col-D EV
+   * quote (rp.D) that it uses for BOTH Plan A (col O action) and Plan B (col R
+   * action). There is NO per-plan EV model and NO per-plan EV quote. A genuine
+   * "Plan A = SRM vs Plan B = a different competitor" therefore CANNOT come from
+   * one computeFleet call. The honest, engine-frozen way (NO formula change) is
+   * to run the PURE computeFleet twice over two derived input states and read
+   * one EV path from each:
+   *   state_A : every included EV-action truck col B = chosen SRM variant,
+   *             col O = 'EV', col D = Plan A EV price  -> read path 2 (plan_a)
+   *   state_B : every included EV-action truck col B = chosen competitor,
+   *             col R = 'EV', col D = Plan B EV price  -> read path 3 (plan_b)
+   * Keep ICE (path 0) and All-new ICE (path 1) ignore the EV model, so they are
+   * identical across the two states; we keep them from state_A.
+   *
+   * The merged output below is a drop-in for the single computeFleet(state)
+   * result that every downstream renderer already consumes (out.results,
+   * out.sites, out.annualSeries, out.perPlan, out.review): plan_a / code 2
+   * slots come from state_A, plan_b / code 3 slots from state_B.
+   *
+   * ADD vs REPLACE: the engine has no "net-added vehicle" concept -- every path
+   * acts on an EXISTING fleet row (Keep / New-ICE / EV replacement at col M/P/S
+   * month). 'Replace ICE vehicle' maps directly to the replacement action with
+   * the COE / replacement month honoured. 'Add new vehicle' is the SAME
+   * replacement action with the replacement month pulled to month 0 (buy now),
+   * which is the closest honest in-model representation; a truly net-added unit
+   * (growing the fleet count) is NOT an engine input, so the UI surfaces this
+   * limitation rather than inventing a field. This choice changes ONLY the
+   * derived state_A / state_B used for the Plan A/B comparison; it never mutates
+   * the canonical H.state the validation/prospects path reads.
+   * ================================================================== */
+  var SRM_VARIANTS = ['SRM T3EV','SRM T3EV+','SRM T3'];
+  var REFRAME_DEFAULTS = {
+    intention: 'replace',            // 'replace' | 'add'
+    planAModel: 'SRM T3EV+',         // current MID landing SRM variant
+    planBModel: 'ChengLong L2EV',    // sensible competitor default (in catalogue)
+    evPriceA: 234000,                // current MID landing SRM EV quote (col D)
+    evPriceB: 171800                 // ChengLong L2EV catalogue fallback (78800 + 93000 COE)
+  };
+  function reframe(){
+    if (!state.__reframe) state.__reframe = {};
+    var rf = state.__reframe;
+    for (var k in REFRAME_DEFAULTS){
+      if (!Object.prototype.hasOwnProperty.call(rf, k) || rf[k]==null) rf[k]=REFRAME_DEFAULTS[k];
+    }
+    return rf;
+  }
+  // Catalogue model names that are SRM (Plan A candidates) vs competitor EV
+  // (Plan B candidates). Reads the LIVE catalogue so preset swaps are reflected.
+  function catalogueModels(){
+    var rows=(state.products&&state.products.rows)?state.products.rows:[];
+    var srm=[], comp=[];
+    rows.forEach(function(r){
+      if(!r||r.A==null) return;
+      if(String(r.A).indexOf('SRM')===0) srm.push(r.A); else comp.push(r.A);
+    });
+    return {srm:srm, comp:comp};
+  }
+  // (exposed on window.__HS below, once that object is created)
+
+  // Build a derived input state for one plan: deep-clone H.state, and for every
+  // INCLUDED truck whose matching action slot is (or becomes) EV, set col B to
+  // `modelName`, force the plan action to 'EV', and set the EV quote (col D) to
+  // `evPrice`. `slot` is 'O' for Plan A (path 2) or 'R' for Plan B (path 3).
+  // `intention` 'add' pulls the replacement month for that slot to 0 (buy now);
+  // 'replace' leaves the COE / replacement month untouched. The canonical
+  // H.state is never mutated (deep clone), so validation/prospects stay exact.
+  function buildPlanState(modelName, slot, evPrice, intention){
+    var s = JSON.parse(JSON.stringify(state));
+    delete s.__reframe;   // never let the non-engine reframe blob reach buildModel
+    var inc = {};
+    state.fleet_register.rows.forEach(function(r){
+      if (r.A!=null && hasFleetData(r)) inc[r.A]=true;
+    });
+    var monthCol = (slot==='O') ? 'P' : 'S';
+    s.replacement_plan.rows.forEach(function(rp){
+      if (!rp || rp.A==null || !inc[rp.A]) return;
+      // Only trucks that were going EV on this slot participate in the EV
+      // comparison; keep the rest exactly as the user set them.
+      if (rp[slot]!=='EV') return;
+      rp.B = modelName;
+      rp[slot] = 'EV';
+      if (isNum(evPrice)) rp.D = evPrice;
+      if (intention==='add') rp[monthCol] = 0;   // buy-now approximation
+    });
+    return s;
+  }
+
+  // Run the two-state recompute and merge into one drop-in output object.
+  function computeReframed(){
+    var rf = reframe();
+    var baseOut = computeFleet(state);           // engine-exact single state
+    // Catalogue may not contain the chosen models after a preset swap; fall back
+    // to the base output's plan if a model is missing so nothing crashes.
+    var cat = catalogueModels();
+    var haveA = cat.srm.indexOf(rf.planAModel)>=0 || cat.comp.indexOf(rf.planAModel)>=0;
+    var haveB = cat.srm.indexOf(rf.planBModel)>=0 || cat.comp.indexOf(rf.planBModel)>=0;
+    if (!haveA && !haveB) return baseOut;
+    var outA = haveA ? computeFleet(buildPlanState(rf.planAModel,'O',rf.evPriceA,rf.intention)) : baseOut;
+    var outB = haveB ? computeFleet(buildPlanState(rf.planBModel,'R',rf.evPriceB,rf.intention)) : baseOut;
+    return mergeTwoState(outA, outB);
+  }
+
+  // Merge state_A (keep_ice/all_new_ice + plan_a) with state_B's plan_b slots.
+  // Every structure keyed by plan key ('plan_b') or numeric code (3) has that
+  // slot overwritten from outB; the rest comes from outA. Purely a projection
+  // of two frozen-engine outputs -- no number is recomputed here.
+  function mergeTwoState(outA, outB){
+    var out = {};
+    // results: {field:{keep_ice,all_new_ice,plan_a,plan_b}}
+    out.results = {};
+    for (var f in outA.results){
+      var av = outA.results[f];
+      if (av && typeof av==='object' && ('plan_b' in av)){
+        var merged={}; for (var kk in av) merged[kk]=av[kk];
+        if (outB.results[f] && ('plan_b' in outB.results[f])) merged.plan_b = outB.results[f].plan_b;
+        out.results[f]=merged;
+      } else {
+        out.results[f]=av;
+      }
+    }
+    // annualSeries: {keep_ice,all_new_ice,plan_a,plan_b}
+    out.annualSeries = {};
+    for (var pk in outA.annualSeries) out.annualSeries[pk]=outA.annualSeries[pk];
+    if (outB.annualSeries && outB.annualSeries.plan_b) out.annualSeries.plan_b = outB.annualSeries.plan_b;
+    // sites / perPlan: keyed by code 0..3 -> code 3 from outB.
+    out.sites = { 0: outA.sites[0], 1: outA.sites[1], 2: outA.sites[2], 3: outB.sites[3] };
+    out.perPlan = { 0: outA.perPlan[0], 1: outA.perPlan[1], 2: outA.perPlan[2], 3: outB.perPlan[3] };
+    // review: take plan-B-specific checks from outB, the rest from outA.
+    out.review = {};
+    for (var rk in outA.review) out.review[rk]=outA.review[rk];
+    ['planBBridge','planBEvCount'].forEach(function(rk){
+      if (outB.review && outB.review[rk]) out.review[rk]=outB.review[rk];
+    });
+    out.pathCount = outA.pathCount;
+    out.includedTruckCount = outA.includedTruckCount;
+    return out;
+  }
+  // (reframe, catalogueModels, computeReframed exposed on window.__HS below)
+
   recompute = function(){
     if (!computeFleet){ return; }
-    var out = computeFleet(state);
+    refreshPlanLabels();
+    var out = computeReframed();
     renderDecision(out);
     renderResults(out);
     renderDay0Cards(out);
@@ -5620,6 +5800,9 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     parseEditable: parseEditable, el: el, isNum: isNum,
     fmtMoney: fmtMoney, fmtText: fmtText, naSpan: naSpan, NA: NA,
     computeFleet: function(s){ return computeFleet(s); },
+    // FEAT-002 business-intention reframe: the live reframe state blob, the
+    // SRM/competitor catalogue split, and the two-state merged recompute.
+    reframe: reframe, catalogueModels: catalogueModels, computeReframed: computeReframed,
     // Test hook (FEAT-004): let the harness place a deterministic route
     // (depot/start + stops) on the geographic simulator, exactly as the map
     // click / named-area picker would. Display-only; no engine coupling.
@@ -6363,20 +6546,18 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   function setElec(v){ var r=H.ecRow(10); if(r){ r.values.B=v; r.values.C=v; } }
   function getDisc(){ var r=H.ocRow(54); return r?r.values.B:undefined; }
   function setDisc(v){ var r=H.ocRow(54); if(r){ r.values.B=v; } }
-  function getEvPrice(){
-    // Use the first EV quote present, else fall back to the ChengLong L2EV demo quote 181000.
-    var map=H.replByIdMap();
-    var ids=H.includedFleet().map(function(r){return r.A;});
-    for(var i=0;i<ids.length;i++){ var rp=map[ids[i]]; if(rp && H.isNum(rp.D)) return rp.D; }
-    return 181000;
-  }
-  function setEvPrice(v){
-    // Fan the single EV quote to col D for every truck whose Plan A or Plan B
-    // action is EV (the quote basis the engine reads for the EV paths).
-    var map=H.replByIdMap();
-    var ids=H.includedFleet().map(function(r){return r.A;});
-    ids.forEach(function(id){ var rp=map[id]; if(rp && (rp.O==='EV'||rp.R==='EV')) rp.D=v; });
-  }
+  // ---- Per-plan EV-cost drivers (FEAT-002) --------------------------------
+  // The single shared EV-price slider is SPLIT into two independent drivers:
+  //   evprice_a -> Plan A EV cost (SRM): drives col D in the derived state_A only
+  //   evprice_b -> Plan B EV cost (competitor): drives col D in state_B only
+  // Each value is stored on the non-engine H.state.__reframe blob that
+  // buildPlanState() reads when it clones the state for each plan's recompute.
+  // Moving one slider changes ONLY its plan's EV purchase cost (the other
+  // plan's derived state is untouched), and each recomputes its plan's TCO.
+  function getEvPriceA(){ var rf=H.reframe(); return H.isNum(rf.evPriceA)?rf.evPriceA:234000; }
+  function setEvPriceA(v){ var rf=H.reframe(); rf.evPriceA=v; }
+  function getEvPriceB(){ var rf=H.reframe(); return H.isNum(rf.evPriceB)?rf.evPriceB:171800; }
+  function setEvPriceB(v){ var rf=H.reframe(); rf.evPriceB=v; }
   function getTarget(){
     // Mirror the engine's resolveSavingTarget domain guard so the control shows
     // the value computeFleet will actually use (default 0.15 when out of range).
@@ -6402,7 +6583,8 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   var SENS = [
     {id:'diesel', label:'Commercial diesel (SGD/litre)', min:1.5, max:5, step:0.05, get:getDiesel, set:setDiesel, kind:'num'},
     {id:'elec', label:'Depot electricity (SGD/grid kWh)', min:0.2, max:0.8, step:0.01, get:getElec, set:setElec, kind:'num'},
-    {id:'evprice', label:'EV purchase price (SGD/truck)', min:120000, max:260000, step:1000, get:getEvPrice, set:setEvPrice, kind:'num'},
+    {id:'evprice_a', label:'Plan A EV cost - SRM (SGD/truck)', min:120000, max:300000, step:1000, get:getEvPriceA, set:setEvPriceA, kind:'num'},
+    {id:'evprice_b', label:'Plan B EV cost - competitor (SGD/truck)', min:120000, max:300000, step:1000, get:getEvPriceB, set:setEvPriceB, kind:'num'},
     {id:'target', label:'Fleet saving target (%)', min:0.05, max:0.30, step:0.005, get:getTarget, set:setTarget, kind:'pct'}
   ];
 
@@ -6630,8 +6812,74 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     });
   }
 
+  // ---- Decision framing controls (FEAT-002) --------------------------------
+  // Business intention + Plan A (SRM) picker + Plan B (competitor) picker. These
+  // write the non-engine H.state.__reframe blob that the two-state recompute
+  // (computeReframed/buildPlanState) reads; they never mutate the canonical
+  // validation/prospects state, and the engine ignores __reframe entirely.
+  function buildDecisionFraming(){
+    var form=H.el('decision-framing-form');
+    if(!form || typeof H.reframe!=='function') return;
+    form.innerHTML='';
+    var rf=H.reframe();
+    var cat=(typeof H.catalogueModels==='function')?H.catalogueModels():{srm:[],comp:[]};
+
+    function fld(labelText, node){
+      var div=document.createElement('div'); div.className='field';
+      var lab=document.createElement('label'); lab.textContent=labelText;
+      div.appendChild(lab); div.appendChild(node); return div;
+    }
+    function selectFor(opts, cur, onPick){
+      var sel=document.createElement('select'); sel.className='amber';
+      opts.forEach(function(o){
+        var op=document.createElement('option'); op.value=o; op.textContent=o;
+        if(o===cur) op.selected=true; sel.appendChild(op);
+      });
+      sel.addEventListener('input',function(){ onPick(sel.value); H.recompute(); });
+      return sel;
+    }
+
+    // Business intention.
+    var intSel=document.createElement('select'); intSel.className='amber';
+    [['replace','Replace ICE vehicle in the fleet'],['add','Add new vehicle to the fleet']].forEach(function(o){
+      var op=document.createElement('option'); op.value=o[0]; op.textContent=o[1];
+      if(o[0]===rf.intention) op.selected=true; intSel.appendChild(op);
+    });
+    intSel.addEventListener('input',function(){ rf.intention=intSel.value; updateNote(); H.recompute(); });
+    form.appendChild(fld('Business intention', intSel));
+
+    // Plan A SRM variant picker (SRM catalogue models only).
+    var srmOpts = cat.srm.length ? cat.srm : [rf.planAModel];
+    if (srmOpts.indexOf(rf.planAModel)<0) rf.planAModel = srmOpts[0];
+    form.appendChild(fld('Plan A - SRM variant', selectFor(srmOpts, rf.planAModel, function(v){ rf.planAModel=v; })));
+
+    // Plan B competitor picker (non-SRM catalogue models only).
+    var compOpts = cat.comp.length ? cat.comp : [rf.planBModel];
+    if (compOpts.indexOf(rf.planBModel)<0) rf.planBModel = compOpts[0];
+    form.appendChild(fld('Plan B - competitor EV', selectFor(compOpts, rf.planBModel, function(v){ rf.planBModel=v; })));
+
+    function updateNote(){
+      var note=H.el('decision-framing-note');
+      if(!note) return;
+      var common = 'Plan A and Plan B are computed by running the frozen engine twice ' +
+        '(once with every EV-plan truck set to the chosen SRM variant, once with the chosen competitor), ' +
+        'because the engine binds a single EV model per truck. Keep ICE stays the shared baseline. ' +
+        '<em>Model limitation:</em> a truly <strong>net-added</strong> unit (growing the fleet count) is ' +
+        'out of model scope, so &ldquo;Add new vehicle&rdquo; is approximated within the existing per-truck replacement inputs.';
+      if(rf.intention==='add'){
+        note.innerHTML = '<strong>Add new vehicle:</strong> the engine has no net-added-unit input &mdash; ' +
+          'every path acts on an existing fleet row &mdash; so this is approximated as <strong>buying the EV now (month 0)</strong> ' +
+          'in place of the current vehicle. A true fleet-count increase is out of model scope. ' + common;
+      } else {
+        note.innerHTML = '<strong>Replace ICE vehicle:</strong> the EV is bought at the vehicle&rsquo;s ' +
+          'replacement / COE month exactly as the engine models a replacement. ' + common;
+      }
+    }
+    updateNote();
+  }
+
   function buildAll(){
-    buildCustomer(); buildFleet(); buildOperating(); buildEnergy(); buildSensitivity();
+    buildCustomer(); buildDecisionFraming(); buildFleet(); buildOperating(); buildEnergy(); buildSensitivity();
   }
 
   // Expose the input-table rebuilder so other controllers (Prospects) can
@@ -7551,8 +7799,17 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   };
   // Per-path colours: primary (accent) on the EV plans, inks/greys on the rest.
   var PATHS = ['keep_ice','all_new_ice','plan_a','plan_b'];
+  // Chart series labels. Keep ICE / All-new ICE are fixed; Plan A / Plan B are
+  // refreshed from the reframe pickers (refreshChartLabels, called by renderAll)
+  // so every graph legend reads 'Plan A - SRM <variant>' / 'Plan B - <competitor>'.
   var PLABEL = {keep_ice:'Keep ICE', all_new_ice:'All-new ICE', plan_a:'Plan A', plan_b:'Plan B'};
   var PCOLOR = {keep_ice:'#8aa0ad', all_new_ice:'#5a6b78', plan_a:'#2f8fb0', plan_b:'#12556b'};
+  function refreshChartLabels(){
+    var rf = (H && typeof H.reframe==='function') ? H.reframe() : null;
+    if (!rf) return;
+    PLABEL.plan_a = 'Plan A - ' + rf.planAModel;
+    PLABEL.plan_b = 'Plan B - ' + rf.planBModel;
+  }
 
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function money0(v){
@@ -7936,6 +8193,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   /* ---- Wire into the live recompute + sensitivity paths ----------- */
   function renderAll(out){
     if(!out) return;
+    refreshChartLabels();
     renderCumulative(out);
     renderBreakdown(out);
   }

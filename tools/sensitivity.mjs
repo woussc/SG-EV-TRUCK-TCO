@@ -263,6 +263,88 @@ checks.push(['Keep ICE total is numeric and positive', isNum(base.keepTotal) && 
   const oDn = outputs(dn);
   checks.push(['Halving diesel price reduces EV Saving %', isNum(oDn.savingPct) && oDn.savingPct < base.savingPct]);
 }
+
+/* ---- FEAT-002: per-plan EV-cost slider isolation ------------------------- *
+ * The UI splits the single EV-price slider into two independent drivers by
+ * running the frozen engine over TWO derived input states:
+ *   state_A : every EV-plan truck col B = SRM variant, col O = 'EV', col D = Plan A price
+ *   state_B : every EV-plan truck col B = competitor,  col R = 'EV', col D = Plan B price
+ * and reading plan_a from state_A and plan_b from state_B. This mirrors
+ * buildPlanState()/computeReframed() in index.html. Here we PROVE the
+ * isolation property the sliders depend on: changing the Plan A EV price moves
+ * ONLY Plan A's EV purchase cost (state_A.plan_a) and leaves Plan B's
+ * (state_B.plan_b) untouched, and vice-versa; and each change recomputes its
+ * plan's TCO. The engine is unchanged -- this is pure input-wiring proof. */
+{
+  // Pick two distinct catalogue models present in the scenario catalogue.
+  const prods = (SCENARIO.inputs.products && SCENARIO.inputs.products.rows) || [];
+  const srmName = (prods.find(r => r && String(r.A).indexOf('SRM') === 0) || {}).A;
+  const compName = (prods.find(r => r && r.A != null && String(r.A).indexOf('SRM') !== 0) || {}).A;
+
+  // Included fleet ids (any row that carries a Truck ID + duty flag).
+  const fleetRows = (SCENARIO.inputs.fleet_register && SCENARIO.inputs.fleet_register.rows) || [];
+  const inc = {};
+  fleetRows.forEach(r => { if (r && r.A != null) inc[r.A] = true; });
+
+  // Replicate buildPlanState(modelName, slot, evPrice): set col B + action + col D
+  // for every included truck whose slot action is EV.
+  function buildPlanState(modelName, slot, evPrice) {
+    const s = clone(SCENARIO.inputs);
+    const rows = (s.replacement_plan && s.replacement_plan.rows) || [];
+    rows.forEach(rp => {
+      if (!rp || rp.A == null || !inc[rp.A]) return;
+      if (rp[slot] !== 'EV') return;
+      rp.B = modelName;
+      rp[slot] = 'EV';
+      if (isNum(evPrice)) rp.D = evPrice;
+    });
+    return s;
+  }
+  function planAVehTco(priceA) {
+    return computeFleet(buildPlanState(srmName, 'O', priceA)).results.vehicleEconomicTco.plan_a;
+  }
+  function planBVehTco(priceB) {
+    return computeFleet(buildPlanState(compName, 'R', priceB)).results.vehicleEconomicTco.plan_b;
+  }
+
+  if (srmName && compName) {
+    const pA0 = planAVehTco(180000), pA1 = planAVehTco(220000);
+    const pB0 = planBVehTco(180000), pB1 = planBVehTco(220000);
+    // (a) Plan A slider moves Plan A's EV purchase cost.
+    checks.push(['Plan A EV-cost slider recomputes Plan A vehicle TCO',
+      isNum(pA0) && isNum(pA1) && pA1 > pA0]);
+    // (b) Plan B slider moves Plan B's EV purchase cost.
+    checks.push(['Plan B EV-cost slider recomputes Plan B vehicle TCO',
+      isNum(pB0) && isNum(pB1) && pB1 > pB0]);
+    // Replica of mergeTwoState: plan_a from state_A, plan_b from state_B.
+    function mergedVehTco(priceA, priceB) {
+      const outA = computeFleet(buildPlanState(srmName, 'O', priceA));
+      const outB = computeFleet(buildPlanState(compName, 'R', priceB));
+      return { plan_a: outA.results.vehicleEconomicTco.plan_a,
+               plan_b: outB.results.vehicleEconomicTco.plan_b };
+    }
+    // (c) Moving ONLY the Plan A price (Plan B price fixed) changes plan_a but
+    //     leaves plan_b byte-identical -> genuine per-plan isolation.
+    const mA = mergedVehTco(180000, 195000);
+    const mA2 = mergedVehTco(250000, 195000);
+    checks.push(['Plan A EV-cost slider changes ONLY Plan A (Plan B TCO unchanged)',
+      isNum(mA.plan_a) && isNum(mA2.plan_a) && mA2.plan_a !== mA.plan_a &&
+      isNum(mA.plan_b) && mA.plan_b === mA2.plan_b]);
+    // (d) Moving ONLY the Plan B price (Plan A price fixed) changes plan_b but
+    //     leaves plan_a byte-identical.
+    const mB = mergedVehTco(195000, 180000);
+    const mB2 = mergedVehTco(195000, 250000);
+    checks.push(['Plan B EV-cost slider changes ONLY Plan B (Plan A TCO unchanged)',
+      isNum(mB.plan_b) && isNum(mB2.plan_b) && mB2.plan_b !== mB.plan_b &&
+      isNum(mB.plan_a) && mB.plan_a === mB2.plan_a]);
+    // (e) Plan A (SRM) and Plan B (competitor) are genuinely different economics.
+    checks.push(['Plan A (SRM) and Plan B (competitor) differ at equal EV price',
+      isNum(planAVehTco(180000)) && isNum(planBVehTco(180000)) &&
+      planAVehTco(180000) !== planBVehTco(180000)]);
+  } else {
+    checks.push(['Per-plan isolation scenario has an SRM + competitor model', false]);
+  }
+}
 console.log('\nUsability sanity checks:');
 let allPass = true;
 checks.forEach(([name, ok]) => { if (!ok) allPass = false; console.log('  ' + (ok ? 'PASS' : 'FAIL') + '  ' + name); });

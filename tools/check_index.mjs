@@ -121,6 +121,10 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'portfolio-provenance-legend',
   // FEAT-002: folded-in customer profile + consolidated per-truck Advanced.
   'customer-form','fleet-adv',
+  // FEAT-002 (Workstream D): business-intention reframe + Plan A/B pickers.
+  'decision-framing','decision-framing-form','decision-framing-note',
+  'decision-cards',
+  'results-th-keep_ice','results-th-all_new_ice','results-th-plan_a','results-th-plan_b',
   // FEAT-002 (Part C): Stage-4 charging assessment panels.
   'charge-site-read','charge-detour-read','charge-public-totals',
   'charge-public-bands','charge-region-body','charge-operator-body',
@@ -1801,12 +1805,82 @@ checks.push(['breakdown bar renders a matching saving-target tick',
     return (h && (h.textContent || '')) || '';
   });
   const joined = sensLabels.join(' | ');
-  checks.push(['headline sens controls include diesel/elec/EV price/target',
-    /diesel/i.test(joined) && /electricity/i.test(joined) &&
-    /EV purchase price/i.test(joined) && /saving target/i.test(joined)]);
+  // FEAT-002: the single shared 'EV purchase price' slider is SPLIT into two
+  // independent per-plan drivers -- Plan A EV cost (SRM) and Plan B EV cost
+  // (competitor). Both must be present alongside diesel / electricity / target.
+  checks.push(['headline sens controls include diesel/elec/target + BOTH per-plan EV-cost sliders',
+    /diesel/i.test(joined) && /electricity/i.test(joined) && /saving target/i.test(joined) &&
+    /plan a ev cost/i.test(joined) && /plan b ev cost/i.test(joined)]);
   checks.push(['headline sens controls do NOT include the discount rate',
     !/discount/i.test(joined)]);
 })();
+
+// FEAT-002 (Workstream D): the decision-framing controls exist -- a business
+// intention <select> (Add / Replace) + a Plan A SRM picker + a Plan B
+// competitor picker -- and the reframe API is exposed on __HS.
+(() => {
+  const selects = toArr(byId['decision-framing-form'].children)
+    .map((f) => toArr(f.children).find((c) => c.tagName === 'select'))
+    .filter(Boolean);
+  checks.push(['decision-framing offers 3 pickers (intention + Plan A + Plan B)',
+    selects.length >= 3]);
+  const allOpts = selects.map((s) => toArr(s.children)
+    .map((o) => (o.textContent || '') + '|' + (o.attributes && o.attributes.value != null ? o.attributes.value : '')).join(' '));
+  const framingText = allOpts.join(' || ');
+  checks.push(['business-intention picker offers Add new vehicle + Replace ICE',
+    /add new vehicle/i.test(framingText) && /replace ice/i.test(framingText)]);
+  checks.push(['Plan A picker offers an SRM variant; Plan B picker offers a competitor',
+    /SRM/i.test(framingText) && /(ChengLong|Farizon|BYD|Foton|Forland|JAC|Qingling)/i.test(framingText)]);
+  // The add-vs-replace limitation is surfaced honestly in the framing note.
+  const note = byId['decision-framing-note'].innerHTML || '';
+  checks.push(['decision-framing note surfaces the add-vs-replace model limitation',
+    /net-added|out of model scope|approximated/i.test(note)]);
+  // The reframe two-state API is exposed for the live recompute.
+  checks.push(['__HS exposes the reframe + two-state recompute API',
+    typeof windowObj.__HS.reframe === 'function' &&
+    typeof windowObj.__HS.computeReframed === 'function' &&
+    typeof windowObj.__HS.catalogueModels === 'function']);
+})();
+
+// FEAT-002: the TCO + Decision surfaces carry the decision framing labels
+// 'Plan A - SRM <variant>' and 'Plan B - <competitor>' (live from the pickers),
+// and the frozen Keep ICE / All-new ICE labels are preserved.
+(() => {
+  const thA = byId['results-th-plan_a'].textContent || '';
+  const thB = byId['results-th-plan_b'].textContent || '';
+  const thKeep = byId['results-th-keep_ice'].textContent || '';
+  checks.push(['results header relabels Plan A -> "Plan A - SRM <variant>"',
+    /^Plan A - SRM/i.test(thA)]);
+  checks.push(['results header relabels Plan B -> "Plan B - <competitor>"',
+    /^Plan B - /i.test(thB) && !/SRM/i.test(thB.replace(/^Plan B - /i, ''))]);
+  checks.push(['results header keeps the Keep ICE baseline label', /Keep ICE/i.test(thKeep)]);
+  const dec = byId['decision-cards'].innerHTML || '';
+  checks.push(['decision cards carry the Plan A - SRM / Plan B - competitor framing',
+    /Plan A - SRM/i.test(dec) && /Plan B - /i.test(dec)]);
+})();
+
+// FEAT-002: live per-plan isolation through the actual page API. Moving the
+// Plan A EV price changes ONLY plan_a; moving Plan B changes ONLY plan_b. This
+// drives __HS.reframe()/__HS.computeReframed() exactly as the sliders do.
+(() => {
+  const isNum = (v) => typeof v === 'number' && isFinite(v);
+  const rf = windowObj.__HS.reframe();
+  const vA = () => windowObj.__HS.computeReframed().results.vehicleEconomicTco.plan_a;
+  const vB = () => windowObj.__HS.computeReframed().results.vehicleEconomicTco.plan_b;
+  const priceA0 = rf.evPriceA, priceB0 = rf.evPriceB;
+  const a0 = vA(), b0 = vB();
+  rf.evPriceA = priceA0 + 40000;                 // move Plan A only
+  const a1 = vA(), b1 = vB();
+  checks.push(['live Plan A EV price moves plan_a only (plan_b unchanged)',
+    isNum(a0) && isNum(a1) && a1 !== a0 && isNum(b0) && b0 === b1]);
+  rf.evPriceA = priceA0;                          // restore
+  rf.evPriceB = priceB0 + 40000;                  // move Plan B only
+  const a2 = vA(), b2 = vB();
+  checks.push(['live Plan B EV price moves plan_b only (plan_a unchanged)',
+    isNum(b0) && isNum(b2) && b2 !== b0 && isNum(a0) && a0 === a2]);
+  rf.evPriceB = priceB0;                          // restore
+})();
+
 // A4: the discount rate is editable in the Advanced area, carrying its relocate
 // note. buildOperating() renders it into #oc-form-adv with a data-oc-discount hook.
 (() => {
