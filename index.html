@@ -9,7 +9,7 @@ a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
 .mark{width:28px;height:28px;flex:0 0 28px;border:1.5px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:700;font-size:14px}
 .brand{font-weight:600;font-size:15px}
 .scope{color:var(--muted);font-size:13px;border-left:1px solid var(--line2);padding-left:12px}
-.topbar .caveat{margin-left:auto;font-size:12.5px;color:var(--muted)}
+.topbar .caveat{margin-left:auto;font-size:13px;color:var(--muted)}
 /* Canvas */
 main{padding:28px var(--margin) 8px}
 .titlerow{margin:0 0 20px}
@@ -58,7 +58,7 @@ h1{font-size:30px;line-height:1.18;margin:0 0 6px;font-weight:650;max-width:900p
 .sidebar-toggle:hover{background:var(--soft)}
 .sidebar-toggle .tgl-icon{font-size:14px;line-height:1}
 /* Advanced-input disclosure holds rarely-changed assumptions at demonstration defaults. */
-.adv-help{font-size:12px;color:var(--muted);margin:0 0 8px}
+.adv-help{font-size:13px;color:var(--muted);margin:0 0 8px}
 section{background:var(--paper);padding:20px;margin:0;border:1px solid var(--line);border-radius:10px}
 .block-title{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:0 0 14px}
 h2{font-size:18px;line-height:1.25;margin:0 0 12px;font-weight:620}
@@ -68,10 +68,10 @@ h4{margin:14px 0 6px;font-size:14px}
 p{margin:8px 0 12px}
 .lead{font-size:15px;color:var(--muted)}
 .small{font-size:13px;color:var(--muted)}
-.caveat-line{font-size:12.5px;color:var(--muted)}
+.caveat-line{font-size:13px;color:var(--muted)}
 .notice{border-left:3px solid var(--line2);padding:10px 14px;background:var(--soft);margin:12px 0;font-size:13px;color:var(--muted)}
 .note{padding:12px 14px;background:var(--soft);margin:12px 0;border-radius:6px}
-.banner{font-size:12.5px;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:7px 12px;margin:0 0 14px}
+.banner{font-size:13px;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:7px 12px;margin:0 0 14px}
 /* JOURNEY STEPPER + CONFIDENCE BADGE.
    A tablist-like row of five clickable, keyboard-navigable steps that switch a
    single visible stage viewport (no routing, no fetch). Flat surfaces (no
@@ -80,13 +80,13 @@ p{margin:8px 0 12px}
 .stepper{display:flex;gap:6px;flex:1 1 auto;min-width:0;overflow-x:auto}
 .step{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;cursor:pointer;background:var(--paper);color:var(--ink);border:1px solid var(--line2);border-radius:999px;font:13px -apple-system,'Segoe UI',Arial;font-weight:600;white-space:nowrap;transition:background .18s ease,border-color .18s ease,color .18s ease}
 .step:hover{background:var(--soft)}
-.step .step-no{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex:0 0 20px;border-radius:999px;border:1px solid var(--line2);font-size:12px;line-height:1;color:var(--muted);transition:background .18s ease,border-color .18s ease,color .18s ease}
+.step .step-no{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex:0 0 20px;border-radius:999px;border:1px solid var(--line2);font-size:13px;line-height:1;color:var(--muted);transition:background .18s ease,border-color .18s ease,color .18s ease}
 .step[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .step[aria-selected="true"] .step-no{background:#fff;border-color:#fff;color:var(--accent)}
 .step:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* Persistent confidence badge: colour + wording are driven by the live gate /
    saving-claim status for the best EV plan, never a fabricated probability. */
-.confidence{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;padding:7px 12px;border:1px solid var(--line2);border-radius:999px;background:var(--paper);font-size:12.5px;color:var(--muted)}
+.confidence{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;padding:7px 12px;border:1px solid var(--line2);border-radius:999px;background:var(--paper);font-size:13px;color:var(--muted)}
 .conf-dot{display:inline-block;width:10px;height:10px;flex:0 0 10px;border-radius:999px;background:var(--line2)}
 .confidence.conf-confirmed{border-color:#9ccbb0;background:#eef6f1;color:#1f6b3b}
 .confidence.conf-confirmed .conf-dot{background:#1f6b3b}
@@ -100,12 +100,30 @@ p{margin:8px 0 12px}
    ('INDICATIVE / pending evidence'). No decorative shadow/gradient (flat). */
 .proposal-head{margin:0 0 16px}
 .proposal-head-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.proposal-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border:1px solid var(--line2);border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;background:var(--paper);color:var(--muted)}
+.proposal-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border:1px solid var(--line2);border-radius:999px;font-size:13px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;background:var(--paper);color:var(--muted)}
 .proposal-badge.pb-confirmed{border-color:#9ccbb0;background:#eef6f1;color:#1f6b3b}
 .proposal-badge.pb-indicative{border-color:var(--amberline);background:var(--amber);color:var(--warn)}
 .proposal-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gutter);align-items:start}
+/* FEAT-003 per-plan proposal: Plan A (SRM) and Plan B (competitor) side by side,
+   each column stacking its quotation / servicing / conditions blocks. Each
+   column carries its OWN gate-inherited badge. */
+.proposal-plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gutter);align-items:start}
+.proposal-plan-col{display:flex;flex-direction:column;gap:var(--gutter)}
+.proposal-plan-col>.proposal-block{margin:0}
+.proposal-plan-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0}
+.proposal-plan-head .block-title{font-size:16px}
+@media (max-width:860px){.proposal-plan-grid{grid-template-columns:1fr}}
+/* FEAT-003 per-plan financing: Plan A and Plan B financing columns side by side;
+   each column's controls + financial-component breakdown are independent. */
+.finance-plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gutter);align-items:start;margin-top:14px}
+.finance-plan-col{border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:var(--paper)}
+@media (max-width:860px){.finance-plan-grid{grid-template-columns:1fr}}
 .proposal-block{border:1px solid var(--line);border-radius:8px;padding:18px 20px;background:var(--paper)}
 .proposal-block-wide{grid-column:1 / -1}
+/* FEAT-003 visibility: proposal + finance body text and small print never drop
+   below ~12px so the leave-behind stays legible on screen and in print. */
+.proposal-block .small,.proposal-plan-col .small,.finance-plan-col .small{font-size:13px}
+.proposal-block table,.finance-plan-col table{font-size:13px}
 /* The block titles are the proposal's section spine: give them a hairline
    underline so the Quotation / Servicing / Conditions / Financing hierarchy is
    legible at a glance across the leave-behind. */
@@ -127,7 +145,7 @@ p{margin:8px 0 12px}
    1440px; each control stretches to fill its track. width:100% overrides the
    global input[type=number] fixed width so the number fields fill their cell. */
 .finance-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px 18px;margin:14px 0}
-.finance-ctl{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:var(--muted)}
+.finance-ctl{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--muted)}
 .finance-ctl input,.finance-ctl select{font-size:13px;padding:6px 8px;border:1px solid var(--line2);border-radius:5px;background:var(--paper);color:var(--ink);min-width:0;width:100%}
 .finance-ctl input[type=number]{width:100%;text-align:right}
 .finance-off-note{color:var(--muted)}
@@ -143,12 +161,12 @@ p{margin:8px 0 12px}
 table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.4}
 caption{text-align:left;color:var(--muted);padding:0 0 8px;font-size:13px}
 th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-th{font-weight:600;color:var(--muted);font-size:12.5px}
+th{font-weight:600;color:var(--muted);font-size:13px}
 td:not(:first-child),th:not(:first-child){font-variant-numeric:tabular-nums}
 td.num,th.num{text-align:right;white-space:nowrap}
-.tag{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 6px;border:1px solid var(--line2);border-radius:3px;margin-right:4px;white-space:nowrap}
+.tag{display:inline-block;font-size:13px;font-weight:600;padding:1px 6px;border:1px solid var(--line2);border-radius:3px;margin-right:4px;white-space:nowrap}
 .fact{background:#e8f2ed}.assumption{background:#fff3df}.inference{background:#e9f0f7}.unknown{background:#eeeef0}.illustrative{background:#e9f0f7}
-.ref{font-size:11.5px;white-space:nowrap}
+.ref{font-size:13px;white-space:nowrap}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gutter)}
 .grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .panel{padding:14px;background:var(--soft);border-radius:6px}
@@ -165,25 +183,25 @@ details{margin:12px 0;border:1px solid var(--line);border-radius:8px;padding:0}
 details[open]{padding-bottom:4px}
 summary{cursor:pointer;color:var(--accent);font-weight:600;padding:12px 16px;font-size:14px}
 details .inner{padding:0 16px}
-pre{overflow:auto;white-space:pre-wrap;font:12.5px/1.55 Consolas,'SFMono-Regular',Menlo,monospace;padding:14px;background:var(--soft);border-radius:6px}
-footer{padding:16px var(--margin) 40px;color:var(--muted);font-size:12.5px;max-width:1000px}
+pre{overflow:auto;white-space:pre-wrap;font:13px/1.55 Consolas,'SFMono-Regular',Menlo,monospace;padding:14px;background:var(--soft);border-radius:6px}
+footer{padding:16px var(--margin) 40px;color:var(--muted);font-size:13px;max-width:1000px}
 input,select{font:13px -apple-system,'Segoe UI',Arial,sans-serif;color:var(--ink);padding:5px 6px;border:1px solid var(--line2);border-radius:4px;background:#fff}
 input[type=number]{width:104px;text-align:right}
 input.amber,select.amber{background:var(--amber);border:1px solid var(--amberline)}
 .editwrap table td{padding:6px 8px}
 .editwrap input,.editwrap select{width:100%;min-width:72px}
 .editwrap td{min-width:84px}
-.legend{font-size:12.5px;color:var(--muted);margin:6px 0 2px}
+.legend{font-size:13px;color:var(--muted);margin:6px 0 2px}
 .legend .swatch{display:inline-block;width:12px;height:12px;background:var(--amber);border:1px solid var(--amberline);vertical-align:middle;margin:0 4px 2px 10px}
-.kpi{font-size:12.5px;color:var(--muted)}
+.kpi{font-size:13px;color:var(--muted)}
 .resultline td:first-child{min-width:200px}
 .statusok{color:#1f6b3b}.statuswarn{color:var(--warn)}
-.chip{display:inline-block;background:var(--soft);border:1px solid var(--line);border-radius:3px;padding:1px 7px;margin:2px 3px 2px 0;font-size:12px;white-space:nowrap}
+.chip{display:inline-block;background:var(--soft);border:1px solid var(--line);border-radius:3px;padding:1px 7px;margin:2px 3px 2px 0;font-size:13px;white-space:nowrap}
 .prospect-audit td{background:#fbfcfd;border-bottom:2px solid var(--line);color:var(--muted)}
 .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px}
 .field{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0;border-bottom:1px dotted var(--line)}
 .field label{font-size:13px}
-.field .u{font-size:11.5px;color:var(--muted);min-width:88px;text-align:right}
+.field .u{font-size:13px;color:var(--muted);min-width:88px;text-align:right}
 .rowctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .btn{padding:8px 14px;cursor:pointer;background:var(--accent);color:#fff;border:0;border-radius:5px;font:13px -apple-system,'Segoe UI',Arial;transition:background .15s ease,transform .08s ease}
 .btn:hover{background:#0e4557}
@@ -218,14 +236,14 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
    Pinning every grid/flex child to min-width:0 lets the track shrink and the
    box-sizing:border-box width:100% input contain itself inside the column. */
 .truck-card .fld{display:flex;flex-direction:column;gap:4px;padding:3px 0;min-width:0}
-.truck-card .fld label{font-size:12px;color:var(--muted)}
+.truck-card .fld label{font-size:13px;color:var(--muted)}
 .truck-card .fld input,.truck-card .fld select{width:100%;min-width:0;max-width:100%;box-sizing:border-box;text-align:left}
 .truck-card .fld input[type=number]{text-align:right}
-.truck-card .tc-spec{font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.45}
+.truck-card .tc-spec{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.45}
 .truck-card .tc-caveat{color:var(--warn);font-style:italic}
-.truck-card .remove-truck{padding:5px 10px;cursor:pointer;background:var(--paper);color:var(--warn);border:1px solid var(--amberline);border-radius:5px;font:12px -apple-system,'Segoe UI',Arial;font-weight:600;transition:background .18s ease}
+.truck-card .remove-truck{padding:5px 10px;cursor:pointer;background:var(--paper);color:var(--warn);border:1px solid var(--amberline);border-radius:5px;font:13px -apple-system,'Segoe UI',Arial;font-weight:600;transition:background .18s ease}
 .truck-card .remove-truck:hover{background:var(--amber)}
-.truck-card .tc-section{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:14px 0 6px}
+.truck-card .tc-section{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:14px 0 6px}
 .truck-card .tc-section:first-of-type{margin-top:2px}
 /* SIDE-BY-SIDE ICE vs matched-EV comparison. Two equal columns inside the card
    that reveal as the duty fills in. Each child pins min-width:0 to contain. */
@@ -233,17 +251,17 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .tc-compare.one{grid-template-columns:1fr}
 .tc-col{min-width:0;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--soft)}
 .tc-col.tc-col-ev{background:#eef5f3;border-color:#bfd8ce}
-.tc-col h5{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.tc-col h5{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
 .tc-line{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:4px 0;border-bottom:1px dotted var(--line);min-width:0}
 .tc-line:last-child{border-bottom:0}
-.tc-line .tc-lab{font-size:12px;color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.tc-line .tc-lab{font-size:13px;color:var(--muted);min-width:0;overflow-wrap:anywhere}
 .tc-line .tc-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
 .tc-line.tc-total{margin-top:4px;border-top:1px solid var(--line2);border-bottom:0;padding-top:8px}
 .tc-line.tc-total .tc-lab{font-weight:600;color:var(--ink)}
 .tc-match-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px;min-width:0}
-.tc-match-head .tc-rec{font-size:11.5px;color:var(--muted)}
-.tc-match-note{font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.4}
-.tc-compare-empty{font-size:12px;color:var(--muted);font-style:italic;margin:12px 0 0;padding-top:12px;border-top:1px dotted var(--line)}
+.tc-match-head .tc-rec{font-size:13px;color:var(--muted)}
+.tc-match-note{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.4}
+.tc-compare-empty{font-size:13px;color:var(--muted);font-style:italic;margin:12px 0 0;padding-top:12px;border-top:1px dotted var(--line)}
 @media(max-width:620px){.truck-card .tc-grid,.truck-card .tc-grid.three,.tc-compare{grid-template-columns:1fr}}
 /* Customer / company profile header folded into the top of the input panel. */
 .customer-head{border:1px solid var(--line2);border-radius:10px;padding:16px;background:var(--soft);margin:0 0 16px}
@@ -254,12 +272,12 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .chart-card{margin:0;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--paper);min-width:0}
 .chart-card-wide{grid-column:1 / -1}
 .chart-title{font-weight:600;font-size:13px;margin:0 0 6px}
-.chart-cap{color:var(--muted);font-size:11.5px;margin:6px 0 0;line-height:1.4}
+.chart-cap{color:var(--muted);font-size:13px;margin:6px 0 0;line-height:1.4}
 /* Award-tier hierarchy: demote the verbose chart notes behind a compact
    disclosure so the hero chart and the figures lead the eye. All honesty text
    is preserved verbatim inside the aside; nothing is deleted. */
-.chart-cap-aside{margin:8px 0 0;font-size:11.5px;color:var(--muted)}
-.chart-cap-aside>summary{cursor:pointer;font-weight:600;letter-spacing:.02em;list-style:none;color:var(--muted);font-size:11px;text-transform:uppercase}
+.chart-cap-aside{margin:8px 0 0;font-size:13px;color:var(--muted)}
+.chart-cap-aside>summary{cursor:pointer;font-weight:600;letter-spacing:.02em;list-style:none;color:var(--muted);font-size:13px;text-transform:uppercase}
 .chart-cap-aside>summary::-webkit-details-marker{display:none}
 .chart-cap-aside>summary::after{content:"\0000a0+";font-weight:400}
 .chart-cap-aside[open]>summary::after{content:"\0000a0\2212"}
@@ -338,7 +356,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 }
 /* Floating tooltip for the interactive charts (hand-rolled, no library). */
 .tco-dashboard{--tt-pad:8px}
-.tco-tooltip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;line-height:1.5;padding:8px 10px;border-radius:7px;max-width:260px;font-variant-numeric:tabular-nums}
+.tco-tooltip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;line-height:1.5;padding:8px 10px;border-radius:7px;max-width:260px;font-variant-numeric:tabular-nums}
 .tco-tooltip[hidden]{display:none}
 .tco-tooltip .tt-title{font-weight:600;display:block;margin:0 0 2px}
 .tco-tooltip .tt-row{display:block;white-space:nowrap}
@@ -355,7 +373,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .day0-card{min-width:0;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--paper)}
 .day0-card h3{margin:0 0 6px;font-size:13px}
 .day0-card .d0-total{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;margin:0 0 6px}
-.day0-card .d0-line{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;border-bottom:1px dotted var(--line);min-width:0}
+.day0-card .d0-line{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0;border-bottom:1px dotted var(--line);min-width:0}
 .day0-card .d0-line:last-child{border-bottom:0}
 .day0-card .d0-line .d0-lab{color:var(--muted);overflow-wrap:anywhere}
 .day0-card .d0-line .d0-val{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -376,15 +394,15 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .prospect-card .pc-rank{font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
 .prospect-card .pc-name{margin:0;font-size:14px;overflow-wrap:anywhere;flex:1 1 auto}
 .prospect-card .pc-tags{flex:0 0 auto}
-.prospect-card .pc-status{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px}
+.prospect-card .pc-status{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px}
 .prospect-card .pc-target{color:var(--muted)}
 .prospect-card .pc-metrics{display:grid;grid-template-columns:1fr;gap:4px;margin:2px 0 0}
-.prospect-card .pc-metric{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;border-bottom:1px dotted var(--line);min-width:0}
+.prospect-card .pc-metric{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0;border-bottom:1px dotted var(--line);min-width:0}
 .prospect-card .pc-metric:last-child{border-bottom:0}
 .prospect-card .pc-metric .pc-k{color:var(--muted);overflow-wrap:anywhere}
 .prospect-card .pc-metric .pc-v{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere}
 .prospect-card .pc-details{border-top:1px solid var(--line);padding-top:6px}
-.prospect-card .pc-details>summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)}
+.prospect-card .pc-details>summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--muted)}
 .prospect-card .pc-details-inner{margin:6px 0 0}
 .prospect-card .pc-details-inner p{margin:0 0 6px}
 .prospect-card .pc-actions{margin-top:auto}
@@ -402,8 +420,8 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .matched-card.mc-none{background:var(--soft)}
 .matched-card h4{margin:0 0 2px;font-size:13px;overflow-wrap:anywhere}
 .matched-card .mc-count{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
-.matched-card .mc-sub{font-size:11.5px;color:var(--muted);margin:2px 0 0}
-.matched-card .mc-verdict{font-size:11px;margin:6px 0 0}
+.matched-card .mc-sub{font-size:13px;color:var(--muted);margin:2px 0 0}
+.matched-card .mc-verdict{font-size:13px;margin:6px 0 0}
 .portfolio-detail{margin:var(--gutter) 0 0;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
 .portfolio-detail>summary{cursor:pointer;padding:12px 14px;font-weight:600;font-size:13px}
 .portfolio-detail>.inner{padding:0 14px 14px}
@@ -411,14 +429,26 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 
 /* ---- FEAT-003 Part C: full-portfolio switch-over table + provenance ---- */
 #portfolio-switchover{margin:var(--gutter) 0 0}
-#portfolio-provenance-legend{font-size:12px}
-.prov-badge{display:inline-block;font-size:10px;font-weight:600;line-height:1.3;padding:0 5px;border:1px solid var(--line2);border-radius:3px;margin-left:5px;white-space:nowrap;vertical-align:middle}
+#portfolio-provenance-legend{font-size:13px}
+.prov-badge{display:inline-block;font-size:13px;font-weight:600;line-height:1.3;padding:1px 6px;border:1px solid var(--line2);border-radius:3px;margin-left:5px;white-space:nowrap;vertical-align:middle}
 .prov-sourced{background:#e8f2ed;border-color:#bcd9c8;color:#1f5f3d}
 .prov-derived{background:#e9f0f7;border-color:#c3d4e6;color:#2a4c6d}
 .prov-unconfirmed{background:#eeeef0;border-color:var(--line2);color:#5a5a62}
+/* FEAT-005: a user-typed override is tagged User-entered - an explicit
+   assumption, NEVER a cited Source. A distinct amber swatch + a dotted
+   underline on the edited value make it visually unmistakable from a Sourced
+   figure. */
+.prov-userentered{background:#fff4e0;border-color:#e4c488;color:#8a5a12}
 #portfolio-switchover-table td,#portfolio-switchover-table th{vertical-align:top}
 #portfolio-switchover-table td.spec-cell{white-space:nowrap}
 #portfolio-switchover-table .spec-val.na{color:var(--muted);font-style:italic}
+/* FEAT-005: editable spec inputs in the switch-over table. Legible (>=13px),
+   compact, right-aligned to read as a number. A user-edited input carries the
+   .spec-edited amber ring + dotted underline so it is clearly distinct from a
+   cited (Sourced) default. */
+#portfolio-switchover-table input.spec-input{width:7.5em;max-width:100%;font-size:13px;font-family:inherit;text-align:right;padding:2px 5px;border:1px solid var(--line2);border-radius:4px;background:var(--paper);color:inherit}
+#portfolio-switchover-table input.spec-input:focus{outline:2px solid #c9922f;outline-offset:1px}
+#portfolio-switchover-table input.spec-input.spec-edited{border-color:#e4c488;background:#fff8ec;text-decoration:underline dotted #c9922f;font-weight:600}
 #portfolio-switchover-table tr.row-excluded{opacity:.5}
 #portfolio-switchover-table tr.row-excluded td strong{text-decoration:line-through}
 #portfolio-switchover-table .switchover-evidence{max-width:260px;overflow-wrap:anywhere;color:var(--muted)}
@@ -431,6 +461,17 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  * public-charging context). Clean cards + inline-SVG bars, consistent with
  * the day0/matched card style. No new fonts, no runtime network. */
 .charge-panel{margin:0 0 var(--gutter)}
+/* FEAT-004: the resequenced LEAD card (route-sim + depot feasibility) gets a
+   subtle accent rail so the strongest objective evidence reads as the primary
+   answer to the adoption question without shouting. */
+.charge-panel-lead{border-left:4px solid var(--accent);padding-left:14px;border-radius:0 6px 6px 0;background:var(--soft)}
+/* FEAT-004: consolidated Methodology & notes disclosure for the Charging stage.
+   One discoverable home for the de-duplicated caveats. */
+.charge-notes{margin:4px 0 var(--gutter);border:1px solid var(--line2);border-radius:6px;background:var(--paper)}
+.charge-notes>summary{cursor:pointer;padding:10px 12px;font-weight:600;color:var(--accent);font-size:13px}
+.charge-notes>summary:hover{background:var(--soft)}
+.charge-notes .inner{padding:4px 14px 12px}
+.charge-notes .inner .small{margin:8px 0}
 /* auto-FIT (not auto-fill): collapse empty tracks so a 2-card read never leaves
    3 dead columns of whitespace on the right at 1440px -- the two cards stretch
    to balanced equal columns instead. minmax floor keeps cards readable; the
@@ -449,34 +490,34 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 /* Verdict reads as a status pill directly under the title so the eye lands on
    the pass/warn/n.a. state before the detail lines. Colour-on-data via the
    .ok/.warn/.na modifiers below; the pill tint is a faint wash of the same hue. */
-.charge-read .cr-verdict{font-size:12px;font-weight:600;align-self:flex-start;padding:2px 9px;border-radius:999px;border:1px solid var(--line2);background:var(--soft);margin:1px 0 2px}
+.charge-read .cr-verdict{font-size:13px;font-weight:600;align-self:flex-start;padding:2px 9px;border-radius:999px;border:1px solid var(--line2);background:var(--soft);margin:1px 0 2px}
 .charge-read .cr-verdict.ok{border-color:#9ccbb0;background:#eef6f1}
 .charge-read .cr-verdict.warn{border-color:var(--amberline);background:var(--amber)}
 .charge-read .cr-verdict.na{border-color:var(--line2);background:var(--soft)}
 .charge-read .cr-verdict.ok{color:#1f6b3b}.charge-read .cr-verdict.warn{color:var(--warn)}.charge-read .cr-verdict.na{color:var(--muted);font-style:italic}
-.charge-read .cr-line{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;border-bottom:1px dotted var(--line);min-width:0}
+.charge-read .cr-line{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0;border-bottom:1px dotted var(--line);min-width:0}
 .charge-read .cr-line:last-child{border-bottom:0}
 .charge-read .cr-k{color:var(--muted);overflow-wrap:anywhere}
 .charge-read .cr-v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
-.coarse-label{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 7px;border:1px solid var(--line2);border-radius:3px;color:var(--muted);background:var(--soft)}
+.coarse-label{display:inline-block;font-size:13px;font-weight:600;padding:1px 7px;border:1px solid var(--line2);border-radius:3px;color:var(--muted);background:var(--soft)}
 .charge-bands{margin:10px 0 0;display:flex;flex-direction:column;gap:6px}
-.charge-band{display:grid;grid-template-columns:150px 1fr 70px;align-items:center;gap:10px;font-size:12px}
+.charge-band{display:grid;grid-template-columns:150px 1fr 70px;align-items:center;gap:10px;font-size:13px}
 .charge-band .cb-lab{color:var(--muted);overflow-wrap:anywhere}
 .charge-band .cb-track{background:var(--soft);border-radius:4px;height:14px;overflow:hidden}
 .charge-band .cb-fill{height:100%;background:var(--accent);border-radius:4px}
 .charge-band .cb-val{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
-.charge-attrib{font-size:11.5px;color:var(--muted);border-left:3px solid var(--line2);padding:8px 12px;background:var(--soft);margin:12px 0 0;border-radius:0 6px 6px 0}
+.charge-attrib{font-size:13px;color:var(--muted);border-left:3px solid var(--line2);padding:8px 12px;background:var(--soft);margin:12px 0 0;border-radius:0 6px 6px 0}
 /* Routing simulator (Panel 4): controls row + REAL geographic offline inline-
    SVG Singapore map. The outline is drawn from the bundled, build-time
    simplified basemap (window.HSBasemap); chargers plot by lat/lon; depot/start
    + route stops are set via the named-area dropdown AND by clicking the map.
    NO external map tiles / CDN / geocoder - everything is inlined and offline. */
 .rsim-controls{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;margin:12px 0 0}
-.rsim-ctl{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.rsim-ctl{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
 .rsim-ctl select{font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
 .rsim-ctl-check{flex-direction:row;align-items:center;gap:7px}
 .rsim-ctl-check input{width:auto}
-.rsim-btn{font-size:12.5px;font-weight:600;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);cursor:pointer;transition:border-color .15s ease,background .15s ease}
+.rsim-btn{font-size:13px;font-weight:600;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);cursor:pointer;transition:border-color .15s ease,background .15s ease}
 @media(hover:hover){.rsim-btn:hover{border-color:var(--accent)}}
 .rsim-btn-ghost{color:var(--muted)}
 .rsim-btn-sm{padding:3px 9px;min-width:30px;font-size:13px}
@@ -509,7 +550,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 #rsim-map .rsim-lab{font-size:9px;fill:#fff;font-weight:700;paint-order:stroke;stroke:none;text-anchor:middle;dominant-baseline:central;pointer-events:none}
 /* Colour-on-data legend for the markers, so the map is self-explanatory
    without a tooltip. Display-only, no new data. */
-.rsim-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11.5px;color:var(--muted)}
+.rsim-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
 .rsim-legend .rl-item{display:inline-flex;align-items:center;gap:6px}
 .rsim-legend .rl-dot{display:inline-block;width:10px;height:10px;border-radius:999px;flex:0 0 10px}
 .rsim-legend .rl-line{display:inline-block;width:16px;height:0;flex:0 0 16px;border-top-width:3px;border-top-style:solid}
@@ -521,21 +562,73 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .rsim-legend .rl-ac{background:var(--line2)}
 .rsim-legend .rl-far{background:#c9ced6}
 /* Side-by-side depot vs public feasibility verdict detail list. */
-.charge-read .cr-sub{font-size:11.5px;color:var(--muted);margin:2px 0 0}
+.charge-read .cr-sub{font-size:13px;color:var(--muted);margin:2px 0 0}
 @media(max-width:700px){.charge-band{grid-template-columns:110px 1fr 56px}}
 @media(max-width:1023px){.workspace{grid-template-columns:1fr}}
 @media(max-width:860px){.grid,.formgrid{grid-template-columns:1fr}.grid4{grid-template-columns:1fr}}
-@media(max-width:700px){h1{font-size:24px}main{padding:18px 16px 8px}.topbar{flex-wrap:wrap;padding:10px 16px}.topbar .caveat{margin-left:0;flex-basis:100%;order:3}section{padding:16px}table{font-size:12.5px}th,td{padding:7px}
- /* Phone: the overlay becomes a full-width sheet (still a fixed overlay over a
-    scrim, so the content behind still does not reflow). */
- #input-col{width:100vw;max-width:100vw;border-right:0}
- #prospects-col{width:100vw;max-width:100vw;border-left:0}
+@media(max-width:700px){h1{font-size:24px}main{padding:18px 16px 8px}.topbar{flex-wrap:wrap;padding:10px 16px}.topbar .caveat{margin-left:0;flex-basis:100%;order:3}section{padding:16px}table{font-size:13px}th,td{padding:7px}
+ /* FEAT-007 Phone sheets: the two edge overlays become FULL-SCREEN SHEETS.
+    Hover/edge-reveal does not exist on touch, so at phone width each overlay is
+    a full-viewport fixed sheet (still over its dismissable scrim, so the content
+    behind never reflows). The in-panel Close button, the scrim tap and Escape
+    all dismiss it (wired in JS); the sheet body scrolls (overflow-y:auto was set
+    on #input-col / #prospects-col at the desktop base). The close affordance is
+    enlarged to a comfortable touch target and the sticky header keeps it reachable
+    while the sheet scrolls. */
+ #input-col{width:100vw;max-width:100vw;border-right:0;padding:16px}
+ #prospects-col{width:100vw;max-width:100vw;border-left:0;padding:16px}
+ .input-overlay-head{position:sticky;top:0;z-index:1;background:var(--paper);margin:-16px -16px 10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+ .input-overlay-close{padding:10px 14px;font-size:14px}
  /* Phone: the stepper collapses to a horizontally scrollable chip row and the
-    confidence badge drops onto its own line below it. */
+    confidence badge drops onto its own line below it. Taller tap targets. */
  .journeybar{gap:10px}
- .stepper{flex-basis:100%;-webkit-overflow-scrolling:touch}
- .step{padding:7px 12px}
+ .stepper{flex-basis:100%;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+ .step{padding:9px 13px;font-size:13px}
  .confidence{flex-basis:100%}
+ /* FEAT-007 Phone forms: number inputs are pinned to 104px at the desktop base,
+    which overflows a phone-width field row. Let them shrink to share the row. */
+ input[type=number]{width:auto;min-width:0;max-width:100%;flex:1 1 auto}
+ .field{flex-wrap:wrap}
+ .field .u{min-width:0}
+ .finance-controls{grid-template-columns:1fr}
+ .finance-ctl input,.finance-ctl select{font-size:13px}
+ /* FEAT-007 Phone map: stack the route-sim controls so the named-area select and
+    each action button are full-width, comfortably tappable rows; let the legend
+    wrap and keep the zoom buttons as a clear touch target. The map SVG already
+    fits width (width:100%;height:auto) at the desktop base. */
+ .rsim-controls{flex-direction:column;align-items:stretch;gap:10px}
+ .rsim-ctl{width:100%}
+ .rsim-ctl select{width:100%}
+ .rsim-ctl-check{flex-direction:row;align-items:center}
+ .rsim-controls .rsim-btn{width:100%;padding:10px 12px;font-size:14px}
+ .rsim-maptools{flex-direction:column;align-items:flex-start;gap:10px}
+ .rsim-zoom{align-self:flex-end}
+ .rsim-zoom .rsim-btn-sm{padding:8px 12px;min-width:40px;font-size:14px}
+ /* FEAT-007 Phone proposal/finance: the per-plan grids already stack at 860px;
+    keep the per-plan finance block padding tidy at phone width. */
+ .finance-plan-col{padding:12px 14px}
+ .proposal-block{padding:14px 16px}
+}
+/* FEAT-007 Phone tier (~390px): the tightest layout. Every surface stacks to a
+   single column and no element may force horizontal overflow of the viewport. */
+@media(max-width:480px){
+ .journeybar{gap:8px}
+ /* TCO dashboard: the three surfaces (hero line, breakdown bar, sensitivity
+    sliders) are already one column at <=860px; hold chart text at the FEAT-006
+    >=13px floor and keep the hero a usable height on a tall-narrow phone. */
+ .tco-band{gap:14px}
+ .chart-hero .chart-box,.chart-hero .chart-box svg{min-height:260px}
+ .tco-band-sens #sens-controls{grid-template-columns:1fr}
+ .chart-cap,.chart-title,.legend,.kpi{font-size:13px}
+ /* Portfolio: the wide switch-over table stays usable via horizontal scroll
+    (.table-wrap{overflow-x:auto} at the base); keep the editable spec inputs
+    tappable and never let them collapse below a legible width. */
+ #portfolio-switchover-table input.spec-input{width:6.5em;font-size:13px;padding:5px 6px}
+ .matched-grid,.prospect-cards{grid-template-columns:1fr}
+ /* Map: cap nothing extra; the SVG fits width. Legend stays >=13px and wraps. */
+ .rsim-legend{font-size:13px}
+ /* Day-0 / charge read cards already one column at <=860px; keep tap padding. */
+ .day0-card,.charge-read{padding:12px 14px}
 }
 @media print{
  body{background:white;font-size:10pt}
@@ -568,6 +661,12 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  .proposal-badge.pb-confirmed{border-color:#1f6b3b!important;color:#1f6b3b!important}
  .proposal-badge.pb-indicative{border-color:#8a6d00!important;color:#8a6d00!important}
  .proposal-grid{display:block}
+ /* Per-plan proposal + finance columns stay side by side in print so a reader
+    can compare Plan A against Plan B on the page; the finance controls stay
+    .noprint and only the per-plan breakdown tables print. */
+ .proposal-plan-grid,.finance-plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+ .proposal-plan-col{display:block}
+ .finance-plan-col{border:1px solid #bbb;break-inside:avoid}
  .proposal-block{border:1px solid #bbb;margin-bottom:10px;break-inside:avoid}
  #stage-proposal{break-before:page}
 }
@@ -633,6 +732,21 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <h3>Customer profile <span class="tag assumption">Assumption</span></h3>
 <p class="small">Who this fleet belongs to. Context only &mdash; these fields do not enter the TCO maths.</p>
 <div class="formgrid" id="customer-form"></div>
+</div>
+
+<!-- DECISION FRAMING (FEAT-002).
+     Reframes the whole comparison around the customer's BUSINESS INTENTION and
+     makes the two plans explicit: Plan A = buy SRM, Plan B = buy a competitor
+     EV. The pickers choose WHICH SRM variant is Plan A and WHICH competitor is
+     Plan B; the TCO/Decision/charts relabel live to 'Plan A - SRM <variant>'
+     and 'Plan B - <competitor>'. These controls feed only the DERIVED
+     two-state recompute (buildPlanState), never the canonical validation
+     state. -->
+<div class="customer-head" id="decision-framing">
+<h3>Decision framing <span class="tag assumption">Assumption</span></h3>
+<p class="small">Set the customer&rsquo;s intention, then pick the two EVs being compared. <strong>Plan A = buy SRM</strong> vs <strong>Plan B = buy a competitor EV</strong>, for the same fleet duty. The results, decision cards and charts relabel to the chosen models live.</p>
+<div class="formgrid" id="decision-framing-form"></div>
+<p class="small" id="decision-framing-note"></p>
 </div>
 
 <h3>Current ICE fleet &rarr; matched EV <span class="tag assumption">Assumption</span></h3>
@@ -727,16 +841,17 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      'Unconfirmed' / 'n.a.', never a fabricated precise number. -->
 <div id="portfolio-switchover">
   <p class="block-title sub-title" style="margin-top:var(--gutter)">Full-portfolio switch-over</p>
-  <p class="small">Every catalogue EV model side by side. <strong>SRM is the primary / recommended model</strong> and is always in play. Use the <em>In play</em> toggles to include or exclude competitor models from the matching and per-truck comparison above &mdash; this re-runs the <em>additive matcher only</em>; it never changes the frozen TCO engine or any economic figure. Each spec carries a provenance badge so sourced figures are never confused with gaps.</p>
+  <p class="small">Every catalogue EV model side by side. <strong>SRM is the primary / recommended model</strong> and is always in play. Use the <em>In play</em> toggles to include or exclude competitor models from the matching and per-truck comparison above &mdash; this re-runs the <em>additive matcher only</em>; it never changes the frozen TCO engine or any economic figure. <strong>Every spec below is editable</strong>: type a corrected or missing figure and the fit verdicts re-rank live; if you edit the active <em>Plan&nbsp;A</em> (SRM) or <em>Plan&nbsp;B</em> (competitor) model, the TCO recomputes too. A figure you type is tagged <strong>User-entered</strong> (an explicit assumption) and never read as a cited source; your edits stay in this browser session only and never overwrite the bundled data.</p>
   <div class="notice" id="portfolio-provenance-legend"><strong>Provenance legend.</strong>
     <span class="prov-badge prov-sourced" data-prov-legend="sourced">Sourced</span> figure cited from a primary/authoritative source (see the evidence column) &middot;
     <span class="prov-badge prov-derived" data-prov-legend="derived">Derived</span> computed from other sourced figures (e.g. kWh/km from battery &divide; range), not a measured value &middot;
+    <span class="prov-badge prov-userentered" data-prov-legend="userentered">User-entered</span> a value <strong>you</strong> typed into the editable field &mdash; an explicit assumption, shown with an amber dotted underline so it is never confused with a cited source &middot;
     <span class="prov-badge prov-unconfirmed" data-prov-legend="unconfirmed">Unconfirmed</span> not verified from a source &mdash; shown as <code>Unconfirmed</code> / <code>n.a.</code>, never a fabricated number.
-    Nothing here is invented: an unsourced spec is always marked Unconfirmed or left n.a.</p>
+    Nothing here is invented: an unsourced spec is always marked Unconfirmed or left n.a.; a figure you type is marked User-entered, never Sourced.</p>
   <div class="table-wrap"><table id="portfolio-switchover-table"><thead><tr>
   <th>In play</th><th>Model</th><th class="num">Payload kg</th><th class="num">Battery kWh</th><th class="num">kWh/km</th><th class="num">AC kW</th><th class="num">DC kW</th><th class="num">Range km</th><th class="num">List price</th><th class="num">Service S$/km</th><th>Body-fit</th><th>Evidence</th>
   </tr></thead><tbody id="portfolio-switchover-body"></tbody></table></div>
-  <p class="small">The <em>In play</em> column locks SRM on (primary) and lets you toggle competitors. A spec cell shows the figure with its provenance badge; a missing/unsourced figure shows <code>n.a.</code> with an <strong>Unconfirmed</strong> badge. The evidence column links each row to its cited source (col&nbsp;K); body-fit (col&nbsp;L) stays <strong>Unconfirmed</strong> for every catalogue model until verified for the duty.</p>
+  <p class="small">The <em>In play</em> column locks SRM on (primary) and lets you toggle competitors. Each spec cell is an <strong>editable field</strong> with its provenance badge; a missing/unsourced figure starts empty with an <strong>Unconfirmed</strong> badge, and a figure you type retags to <strong>User-entered</strong>. Editing re-runs the fit matcher live and, for the active Plan&nbsp;A / Plan&nbsp;B model, flows into the TCO &mdash; the frozen engine and the bundled fixture are never changed. The evidence column links each row to its cited source (col&nbsp;K); body-fit (col&nbsp;L) stays <strong>Unconfirmed</strong> for every catalogue model until verified for the duty.</p>
 </div>
 
 <!-- Supporting detail: the full ranked fit guide for every catalogue model
@@ -802,7 +917,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <section id="results"><p class="block-title">Results breakdown</p>
 <p class="small">Four ownership paths at the current inputs. Keep ICE runs each truck to its COE expiry then buys a matched new ICE. All-new ICE replaces the cohort now. Plan A and Plan B follow the per-truck actions. Recomputes live on any input change. All figures to 2 decimal places.</p>
 <div class="table-wrap"><table id="results-table"><thead><tr>
-<th>Metric</th><th class="num">Keep ICE</th><th class="num">All-new ICE now</th><th class="num">Plan A</th><th class="num">Plan B</th>
+<th>Metric</th><th class="num" id="results-th-keep_ice">Keep ICE</th><th class="num" id="results-th-all_new_ice">All-new ICE now</th><th class="num" id="results-th-plan_a">Plan A</th><th class="num" id="results-th-plan_b">Plan B</th>
 </tr></thead><tbody id="results-body"></tbody></table></div>
 <p class="small">Signed credits reduce cost. Saving % = (Keep ICE total &minus; plan total) / Keep ICE total. Target headroom = (1 &minus; target) &times; Keep ICE total &minus; plan total, where the saving target defaults to 15%. Full derivations in Methodology &amp; assumptions below.</p>
 </section>
@@ -825,54 +940,20 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      adoption gates. The deeper charger-location integration is a later phase. -->
 <section class="stage stage-hidden" id="stage-charging" role="tabpanel" aria-labelledby="step-charging">
 <p class="block-title">3 &middot; Charging &amp; site</p>
-<p class="lead">A charging assessment, read from the same engine output as the TCO stage plus a build-time snapshot of Singapore&rsquo;s public charger network. It is a <strong>coarse operational screen</strong>, not a routing optimiser or an arrival-by-arrival scheduler.</p>
+<p class="lead">Can this fleet run on EV trucks? The cards below lead with the strongest concrete evidence &mdash; whether the chosen <strong>SRM</strong> covers the real route on one charge &mdash; then widen to public-charging reach, Singapore-wide charger density, and the operational screens. Every figure is read from the same frozen engine as the TCO stage or from a dated public-charger snapshot. See <a href="#charging-notes">Methodology &amp; notes</a> for the caveats that apply to all four cards.</p>
 
-<!-- PANEL 1: route-energy / capacity screen + site build-up human read. -->
-<section class="charge-panel" id="charging"><p class="block-title">Route energy, capacity screen &amp; site build-up</p>
-<p class="small">The charging site is costed once per plan and shared across its EVs. Completeness and access gates must pass before a numeric site cost is produced; otherwise the plan total stays &quot;n.a.&quot; (the model never substitutes zero for an unknown).</p>
-<div class="charge-readgrid" id="charge-site-read"></div>
-<div class="table-wrap"><table id="site-table"><thead><tr><th>Site build-up</th><th class="num">Plan A</th><th class="num">Plan B</th><th>Meaning</th></tr></thead><tbody id="site-body"></tbody></table></div>
-<p class="small">Charger grant ceiling = MIN(30000, 0.5 &times; accepted cost per charger) &times; MIN(3, approved funded chargers). The ceiling is a budget estimate only; only an entered, checked award reduces TCO.</p>
-
-<p class="block-title" style="margin-top:18px">Conditions that must hold before adoption</p>
-<p class="small">A numeric range or payload pass is an <strong>assumed technical pass</strong>, not an evidence pass. The gates below are the model&apos;s own screens at the current inputs.</p>
-<div class="table-wrap"><table id="gates-table"><thead><tr><th>Gate</th><th>Plan A</th><th>Plan B</th><th>Evidence needed</th></tr></thead><tbody id="gates-body"></tbody></table></div>
-<p class="small">Service screen is the per-plan vehicle service / evidence status. Capacity gate is the site completeness / access status. No plan reaches an evidence pass while any verification flag reads No or Unconfirmed.</p>
-</section>
-
-<!-- PANEL 2: coarse detour / queue / recovery read of the engine's public-visit
-     intermediates. Honesty per approved proposal Q2: a coarse screen, NOT a
-     scheduler. -->
-<section class="charge-panel" id="charging-detour"><p class="block-title">Detour, queue &amp; recovery &mdash; coarse screen</p>
-<p class="small"><span class="coarse-label">Coarse screen &middot; not an arrival-by-arrival scheduler</span> This reads the engine&rsquo;s own public-charging intermediates for the EV paths (public top-up visits per year and the detour energy they add). It is a feasibility screen only: it does not simulate arrival times, queueing, or charger availability.</p>
-<div class="charge-readgrid" id="charge-detour-read"></div>
-<p class="caveat-line" id="charge-detour-note">&ldquo;Recovery&rdquo; is a what-if on the entered backup / substitute-service rate, not a measured outcome. A confirmed plan still needs a loaded route-and-charging trial with measured grid kWh.</p>
-</section>
-
-<!-- PANEL 3: public-charging context from window.HSChargingContext (compact
-     build-time aggregates). Context/evidence only. -->
-<section class="charge-panel" id="charging-public"><p class="block-title">Singapore-wide public-charging context (by region &amp; operator)</p>
-<p class="small"><span class="coarse-label">Public context, not a routing recommendation</span> National aggregates derived at build time from a Singapore-wide snapshot of public EV chargers, summarised by region and by operator. These are <strong>not</strong> filtered to the specific depots in play &mdash; they are background evidence only, not depot-specific and not a per-truck routing or charger recommendation. Shown as context for the detour read above; it does not pick chargers or routes for any truck.</p>
-<div class="charge-readgrid" id="charge-public-totals"></div>
-<p class="sub-title" style="margin-top:14px"><strong>Power bands</strong> (charging points by rated power)</p>
-<div class="charge-bands" id="charge-public-bands"></div>
-<p class="sub-title" style="margin-top:14px"><strong>Per-kWh tariff range by region</strong> (public, where published)</p>
-<div class="table-wrap"><table id="charge-region-table"><thead><tr><th>Region</th><th class="num">Points</th><th class="num">AC</th><th class="num">DC</th><th class="num">Tariff S$/kWh (min &middot; median &middot; max)</th></tr></thead><tbody id="charge-region-body"></tbody></table></div>
-<p class="sub-title" style="margin-top:14px"><strong>Top operators</strong> (by charging-point count)</p>
-<div class="table-wrap"><table id="charge-operator-table"><thead><tr><th>Operator</th><th class="num">Points</th><th class="num">AC</th><th class="num">DC</th><th class="num">Tariff S$/kWh (min &middot; median &middot; max)</th></tr></thead><tbody id="charge-operator-body"></tbody></table></div>
-<p class="charge-attrib" id="charge-attribution"></p>
-</section>
-
-<!-- PANEL 4: public-charging ROUTING SIMULATOR (FEAT-003). Fully client-side
-     and deterministic, computed in the browser from the build-time-bundled
-     charger subset (window.HSChargingLocations) via the additive module
-     src/routing_sim.js (window.HSRoutingSim). It ties the active EV catalogue
-     row (SRM model: battery kWh + kWh/km) to the reachable charger power for a
-     charge-time estimate. NO runtime network / API / map tile. It is a COARSE
-     planning aid for a fleet NOT installing a depot charger, NOT a live feed or
-     a turn-by-turn router. -->
-<section class="charge-panel" id="charging-routing"><p class="block-title">Public-charging routing simulator &mdash; where to top up without a depot charger</p>
-<p class="small"><span class="coarse-label">Coarse planning aid &middot; not live availability</span> For a fleet manager who chooses <strong>not</strong> to install a depot charger, this screens where the nearest public chargers are around a representative route, roughly how long a route top-up would take on the planned EV, and each charger&rsquo;s operational info (operator, AC/DC, power, per-kWh price). It is computed entirely in your browser from a <strong>dated, build-time snapshot</strong> of Singapore&rsquo;s public chargers &mdash; <strong>not</strong> a live connection, <strong>not</strong> real-time availability. The route is an <strong>approximate on-road route</strong> over a simplified bundled major-road network (OpenStreetMap, ODbL): more realistic than straight-line but <strong>not</strong> live traffic and <strong>not</strong> full turn-by-turn navigation; where no road path is found a leg falls back to a clearly-marked <strong>approximate great-circle</strong> (straight-line) distance. It does not queue, schedule, or route turn-by-turn.</p>
+<!-- CARD 1 (resequenced lead, FEAT-004): public-charging ROUTING SIMULATOR.
+     The strongest, most concrete SRM-tied evidence leads: the DEPOT-charge
+     feasibility verdict (does the active SRM cover the real on-road route on one
+     charge, with margin?) renders first inside #rsim-summary, with the
+     interactive on-road route sim + public-charging reachability beside it.
+     Fully client-side / deterministic from the bundled charger subset
+     (window.HSChargingLocations) via src/routing_sim.js; ties the active SRM
+     catalogue row (battery kWh + kWh/km) to reachable charger power. NO runtime
+     network / API / map tile. A coarse planning aid, consolidated caveats in
+     #charging-notes + the per-panel #rsim-caveat. -->
+<section class="charge-panel charge-panel-lead" id="charging-routing"><p class="block-title">Can the SRM cover the route? Depot charge, on-road sim &amp; public reach</p>
+<p class="small"><span class="coarse-label">Coarse planning aid &middot; not live availability</span> The <strong>Depot charging</strong> verdict below answers the core adoption question first: does the active <strong>SRM</strong> complete the real on-road route on a single depot charge, and by how much margin? The interactive map then shows public-charging reach for a fleet choosing <strong>not</strong> to install a depot charger. Computed in your browser from a dated public-charger snapshot over an <strong>approximate on-road route</strong> (OpenStreetMap, ODbL); it is <strong>not</strong> a live connection, not a turn-by-turn router. Where no road path is found a leg falls back to an <strong>approximate great-circle</strong> (straight-line) distance. Full caveats: <a href="#charging-notes">Methodology &amp; notes</a>.</p>
 <div class="rsim-controls" id="rsim-controls">
   <label class="rsim-ctl" for="rsim-area">Add a stop (named SG area)
     <select id="rsim-area" aria-label="Named Singapore area to add as a route stop"></select>
@@ -898,6 +979,63 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="charge-attrib" id="rsim-attribution"></p>
 </section>
 
+<!-- CARD 2 (resequenced, FEAT-004): route-energy / capacity screen + site
+     build-up + the adoption gates. The engine-backed depot-charge economics and
+     the conditions that must hold before adoption. Caveats consolidated into
+     #charging-notes. -->
+<section class="charge-panel" id="charging"><p class="block-title">Depot site build-up, capacity screen &amp; adoption gates</p>
+<p class="small">The charging site is costed once per plan and shared across its EVs. A numeric site cost appears only once the completeness and access gates pass; otherwise the plan total stays <span class="na">n.a.</span> (never a substituted zero). Gate detail and the grant-ceiling formula are in <a href="#charging-notes">Methodology &amp; notes</a>.</p>
+<div class="charge-readgrid" id="charge-site-read"></div>
+<div class="table-wrap"><table id="site-table"><thead><tr><th>Site build-up</th><th class="num">Plan A</th><th class="num">Plan B</th><th>Meaning</th></tr></thead><tbody id="site-body"></tbody></table></div>
+
+<p class="block-title" style="margin-top:18px">Conditions that must hold before adoption</p>
+<p class="small">A numeric range or payload pass is an <strong>assumed technical pass</strong>, not an evidence pass; no plan reaches an evidence pass while any verification flag reads No or Unconfirmed.</p>
+<div class="table-wrap"><table id="gates-table"><thead><tr><th>Gate</th><th>Plan A</th><th>Plan B</th><th>Evidence needed</th></tr></thead><tbody id="gates-body"></tbody></table></div>
+</section>
+
+<!-- CARD 3 (resequenced, FEAT-004): Singapore-wide public-charging context from
+     window.HSChargingContext (compact build-time aggregates). Background
+     evidence only; caveat consolidated into #charging-notes. -->
+<section class="charge-panel" id="charging-public"><p class="block-title">Singapore-wide public-charging density (by region &amp; operator)</p>
+<p class="small"><span class="coarse-label">Public context, not a routing recommendation</span> National aggregates from a dated Singapore-wide public-charger snapshot &mdash; background evidence that EV operation is well served nationally, not a depot-specific or per-truck recommendation.</p>
+<div class="charge-readgrid" id="charge-public-totals"></div>
+<p class="sub-title" style="margin-top:14px"><strong>Power bands</strong> (charging points by rated power)</p>
+<div class="charge-bands" id="charge-public-bands"></div>
+<p class="sub-title" style="margin-top:14px"><strong>Per-kWh tariff range by region</strong> (public, where published)</p>
+<div class="table-wrap"><table id="charge-region-table"><thead><tr><th>Region</th><th class="num">Points</th><th class="num">AC</th><th class="num">DC</th><th class="num">Tariff S$/kWh (min &middot; median &middot; max)</th></tr></thead><tbody id="charge-region-body"></tbody></table></div>
+<p class="sub-title" style="margin-top:14px"><strong>Top operators</strong> (by charging-point count)</p>
+<div class="table-wrap"><table id="charge-operator-table"><thead><tr><th>Operator</th><th class="num">Points</th><th class="num">AC</th><th class="num">DC</th><th class="num">Tariff S$/kWh (min &middot; median &middot; max)</th></tr></thead><tbody id="charge-operator-body"></tbody></table></div>
+<p class="charge-attrib" id="charge-attribution"></p>
+</section>
+
+<!-- CARD 4 (resequenced, FEAT-004): coarse detour / queue / recovery read of the
+     engine's public-visit intermediates. A coarse screen, NOT a scheduler;
+     caveats consolidated into #charging-notes. The coarse-label + the
+     #charge-detour-note what-if framing are kept (harness asserts them). -->
+<section class="charge-panel" id="charging-detour"><p class="block-title">Detour, queue &amp; recovery &mdash; coarse screen</p>
+<p class="small"><span class="coarse-label">Coarse screen &middot; not an arrival-by-arrival scheduler</span> The engine&rsquo;s own public-top-up intermediates for the EV paths (visits/year and the detour energy they add). A feasibility screen only: it does not simulate arrival times, queueing, or charger availability.</p>
+<div class="charge-readgrid" id="charge-detour-read"></div>
+<p class="caveat-line" id="charge-detour-note">&ldquo;Recovery&rdquo; is a what-if on the entered backup / substitute-service rate, not a measured outcome. A confirmed plan still needs a loaded route-and-charging trial with measured grid kWh.</p>
+</section>
+
+<!-- CONSOLIDATED METHODOLOGY & NOTES (FEAT-004 Workstream B): ONE discoverable
+     place carrying each important Charging-stage caveat exactly once, so the
+     cards above stay concise without losing any honesty signal. Every KEEP
+     caveat de-duplicated from the panels lives here (coarse-screen /
+     dated-snapshot / diagnostic-not-a-quote / n.a.!=zero / finance-excluded /
+     attribution). It sits inside the stage so it prints with the cards and so
+     the routing-sim markup slice still carries its own framing. -->
+<details class="charge-notes" id="charging-notes"><summary>Methodology &amp; notes (caveats for all four cards)</summary><div class="inner">
+<p class="small"><strong>Coarse operational screen, not a scheduler or optimiser.</strong> Every card on this stage is a coarse feasibility screen. It does not simulate arrival times, queueing, charger availability, or turn-by-turn navigation, and it is not a live connection or real-time availability feed. Chargers may be occupied, reserved, or out of service on the day.</p>
+<p class="small"><strong>Dated public-charger snapshot.</strong> The public-charging density and the route simulator read a dated, build-time snapshot of Singapore&rsquo;s public chargers &mdash; not a live feed. The simulated route is an <strong>approximate on-road route</strong> over a simplified bundled major-road network (OpenStreetMap, ODbL): more realistic than straight-line but major roads only; where no road path is found a leg falls back to a clearly-marked <strong>approximate great-circle</strong> (straight-line) distance. Named areas are coarse planning anchors, not exact addresses.</p>
+<p class="small"><strong>Diagnostic, not a quote.</strong> The depot/public feasibility and site build-up are model diagnostics at the current inputs, not a quotation. A numeric range or payload pass is an <strong>assumed technical pass</strong>, not an evidence pass. A confirmed plan still needs a loaded route-and-charging trial with measured grid kWh.</p>
+<p class="small"><strong>Site cost &amp; grant ceiling.</strong> The charging site is costed once per plan and shared across its EVs; a numeric site cost appears only when input completeness is Complete and the access screen is clear. Charger grant ceiling = MIN(30000, 0.5 &times; accepted cost per charger) &times; MIN(3, approved funded chargers) &mdash; a budget estimate only; only an entered, checked award reduces the TCO.</p>
+<p class="small"><strong>Gates.</strong> The service screen is the per-plan vehicle service / evidence status; the capacity gate is the site completeness / access status. No plan reaches an evidence pass while any verification flag reads No or Unconfirmed.</p>
+<p class="small"><strong>n.a. is not zero.</strong> Wherever a gating input is missing the figure stays <span class="na">n.a.</span>; the model never substitutes a zero for an unknown.</p>
+<p class="small"><strong>Running-cost advantage lives in the TCO stage.</strong> The energy-vs-diesel and servicing/other running-cost split that underpins any EV savings is a committed output of the frozen engine and is shown in the <strong>Cost-component breakdown</strong> chart and <strong>Results breakdown</strong> table on the TCO stage. No maintenance figure is invented here. Any opt-in financing illustration is on the Proposal stage and is <strong>not</strong> part of the economic TCO.</p>
+<p class="small"><strong>Attribution.</strong> Public-charger aggregates: LTA DataMall under the Singapore Open Data Licence, plus BoCharge. Road network: OpenStreetMap contributors (ODbL). Boundary: geoBoundaries. The exact snapshot date is shown on the routing-simulator caveat line above.</p>
+</div></details>
+
 </section><!-- /stage-charging -->
 
 <!-- STAGE 4: STANDARD PROPOSAL (FEAT-003 Part C). A presentation-only,
@@ -922,29 +1060,73 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
     <p class="block-title" style="margin:0">4 &middot; Standard proposal</p>
     <span class="proposal-badge" id="proposal-badge" role="status" aria-live="polite" title="Driven by the live gate / saving-claim status for the chosen plan; not an adoption probability.">&mdash;</span>
   </div>
-  <p class="lead" id="proposal-lead">The chosen path, funding and grants assembled into a shareable, printable leave-behind. Every figure is a committed output of the same engine that drives the Results and Charging stages &mdash; nothing here is re-derived. Print this stage (the controls hide automatically) to hand it over.</p>
+  <p class="lead" id="proposal-lead">Plan A (buy SRM) and Plan B (buy a competitor EV) assembled side by side into a shareable, printable leave-behind. Every figure is a committed output of the same engine that drives the Results and Charging stages &mdash; nothing here is re-derived. Each plan carries its OWN INDICATIVE / Confirmed honesty label, driven by that plan&apos;s live gate / saving-claim status. Print this stage (the controls hide automatically) to hand it over.</p>
   <p class="small" id="proposal-status-line">&mdash;</p>
 </div>
 
-<div class="proposal-grid">
-  <section class="proposal-block" id="proposal-quotation-block">
-    <p class="block-title">Quotation</p>
-    <p class="small" id="proposal-quotation-note">Vehicle quote(s), COE split, charging-site cost, Day-0 funding and the Total economic TCO for the chosen plan. All figures to 2 decimal places; an unavailable figure is shown as <span class="na">n.a.</span>, never a zero.</p>
-    <div class="table-wrap"><table id="proposal-quotation-table"><thead><tr><th>Line</th><th class="num">Amount</th></tr></thead><tbody id="proposal-quotation-body"></tbody></table></div>
-    <p class="caveat-line" id="proposal-quotation-caveat"></p>
+<!-- PER-PLAN PROPOSAL (FEAT-003 / Workstream E). Plan A (SRM) and Plan B
+     (competitor) render SIDE BY SIDE. Each plan column owns a quotation,
+     a servicing-coverage and an unresolved-conditions block, built ENTIRELY
+     from that plan's committed two-state engine output (Plan A <- plan_a /
+     code 2 / state_A; Plan B <- plan_b / code 3 / state_B). Each column's
+     badge inherits that plan's own gate / saving-claim status (INDICATIVE vs
+     Confirmed); nothing is re-derived and n.a. is shown as n.a., never a zero.
+     renderProposal(out) populates every table live on each recompute. -->
+<div class="proposal-plan-grid" id="proposal-plan-grid">
+  <section class="proposal-plan-col" id="proposal-col-plan_a" data-proposal-plan="plan_a">
+    <div class="proposal-plan-head">
+      <p class="block-title" id="proposal-plan-title-plan_a" style="margin:0">Plan A</p>
+      <span class="proposal-badge" id="proposal-badge-plan_a" role="status" aria-live="polite" title="Driven by this plan's live gate / saving-claim status; not an adoption probability.">&mdash;</span>
+    </div>
+    <p class="small" id="proposal-status-plan_a">&mdash;</p>
+
+    <section class="proposal-block" id="proposal-quotation-block-plan_a">
+      <p class="block-title">Quotation</p>
+      <p class="small">Vehicle quote, COE split, charging-site cost, Day-0 funding and the Total economic TCO for this plan. All figures to 2 decimal places; an unavailable figure is shown as <span class="na">n.a.</span>, never a zero.</p>
+      <div class="table-wrap"><table id="proposal-quotation-table-plan_a"><thead><tr><th>Line</th><th class="num">Amount</th></tr></thead><tbody id="proposal-quotation-body-plan_a"></tbody></table></div>
+      <p class="caveat-line" id="proposal-quotation-caveat-plan_a"></p>
+    </section>
+
+    <section class="proposal-block" id="proposal-servicing-block-plan_a">
+      <p class="block-title">Servicing coverage</p>
+      <p class="small">EV service basis is the supplied 200,000&nbsp;km schedule; per-km rate = schedule total / 200,000 (<span class="tag assumption">Assumption</span> average smooths timing). Committed engine outputs for this plan.</p>
+      <div class="table-wrap"><table id="proposal-servicing-table-plan_a"><thead><tr><th>Item</th><th class="num">Value</th></tr></thead><tbody id="proposal-servicing-body-plan_a"></tbody></table></div>
+      <p class="small">Use beyond 200,000&nbsp;km is a projection, not a quoted schedule. The service / evidence status is the model&apos;s own screen, not a signed service contract.</p>
+    </section>
+
+    <section class="proposal-block" id="proposal-conditions-block-plan_a">
+      <p class="block-title">Unresolved conditions</p>
+      <p class="small">What must be confirmed before this plan reads as a firm quotation: the model&apos;s own gates at the current inputs, plus every <span class="na">n.a.</span> / Unconfirmed / diagnostic flag on this plan.</p>
+      <div class="table-wrap"><table id="proposal-conditions-table-plan_a"><thead><tr><th>Condition</th><th>Status</th><th>What must be confirmed</th></tr></thead><tbody id="proposal-conditions-body-plan_a"></tbody></table></div>
+    </section>
   </section>
 
-  <section class="proposal-block" id="proposal-servicing-block">
-    <p class="block-title">Servicing coverage</p>
-    <p class="small">The EV service basis is the supplied 200,000&nbsp;km service schedule; the per-km service rate = schedule total / 200,000 (<span class="tag assumption">Assumption</span> average smooths timing). Figures below are committed engine outputs for the chosen plan.</p>
-    <div class="table-wrap"><table id="proposal-servicing-table"><thead><tr><th>Item</th><th class="num">Value</th></tr></thead><tbody id="proposal-servicing-body"></tbody></table></div>
-    <p class="small" id="proposal-servicing-caveat">Use beyond 200,000&nbsp;km is a projection, not a quoted schedule. The service / evidence status below is the model&apos;s own per-plan screen, not a signed service contract.</p>
-  </section>
+  <section class="proposal-plan-col" id="proposal-col-plan_b" data-proposal-plan="plan_b">
+    <div class="proposal-plan-head">
+      <p class="block-title" id="proposal-plan-title-plan_b" style="margin:0">Plan B</p>
+      <span class="proposal-badge" id="proposal-badge-plan_b" role="status" aria-live="polite" title="Driven by this plan's live gate / saving-claim status; not an adoption probability.">&mdash;</span>
+    </div>
+    <p class="small" id="proposal-status-plan_b">&mdash;</p>
 
-  <section class="proposal-block proposal-block-wide" id="proposal-conditions-block">
-    <p class="block-title">Unresolved conditions</p>
-    <p class="small">What must be confirmed before this reads as a firm quotation. These are the model&apos;s own gates at the current inputs, plus every <span class="na">n.a.</span> / Unconfirmed / diagnostic flag on the chosen plan. An empty list is only possible for a fully-cleared case.</p>
-    <div class="table-wrap"><table id="proposal-conditions-table"><thead><tr><th>Condition</th><th>Status</th><th>What must be confirmed</th></tr></thead><tbody id="proposal-conditions-body"></tbody></table></div>
+    <section class="proposal-block" id="proposal-quotation-block-plan_b">
+      <p class="block-title">Quotation</p>
+      <p class="small">Vehicle quote, COE split, charging-site cost, Day-0 funding and the Total economic TCO for this plan. All figures to 2 decimal places; an unavailable figure is shown as <span class="na">n.a.</span>, never a zero.</p>
+      <div class="table-wrap"><table id="proposal-quotation-table-plan_b"><thead><tr><th>Line</th><th class="num">Amount</th></tr></thead><tbody id="proposal-quotation-body-plan_b"></tbody></table></div>
+      <p class="caveat-line" id="proposal-quotation-caveat-plan_b"></p>
+    </section>
+
+    <section class="proposal-block" id="proposal-servicing-block-plan_b">
+      <p class="block-title">Servicing coverage</p>
+      <p class="small">EV service basis is the supplied 200,000&nbsp;km schedule; per-km rate = schedule total / 200,000 (<span class="tag assumption">Assumption</span> average smooths timing). Committed engine outputs for this plan.</p>
+      <div class="table-wrap"><table id="proposal-servicing-table-plan_b"><thead><tr><th>Item</th><th class="num">Value</th></tr></thead><tbody id="proposal-servicing-body-plan_b"></tbody></table></div>
+      <p class="small">Use beyond 200,000&nbsp;km is a projection, not a quoted schedule. The service / evidence status is the model&apos;s own screen, not a signed service contract.</p>
+    </section>
+
+    <section class="proposal-block" id="proposal-conditions-block-plan_b">
+      <p class="block-title">Unresolved conditions</p>
+      <p class="small">What must be confirmed before this plan reads as a firm quotation: the model&apos;s own gates at the current inputs, plus every <span class="na">n.a.</span> / Unconfirmed / diagnostic flag on this plan.</p>
+      <div class="table-wrap"><table id="proposal-conditions-table-plan_b"><thead><tr><th>Condition</th><th>Status</th><th>What must be confirmed</th></tr></thead><tbody id="proposal-conditions-body-plan_b"></tbody></table></div>
+    </section>
   </section>
 </div>
 
@@ -962,45 +1144,97 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      proposal's INDICATIVE / Confirmed wording and keeps n.a. as n.a. The block
      is printable (NOT .noprint) when the toggle is ON so it accompanies the
      proposal; its controls are .noprint. -->
+<!-- STAGE 5 FINANCE (illustrative) block (FEAT-003 per-plan rework). A SEPARATE,
+     OPT-IN financing illustration applied to Plan A (SRM) and Plan B (competitor)
+     SEPARATELY. It is deliberately NOT part of the economic TCO: the economic TCO
+     excludes loans and interest by design (README). The block is OFF BY DEFAULT
+     behind a single toggle; when off, nothing finance-related touches either
+     plan's quotation / servicing / conditions blocks or either economic Total.
+     When on, renderFinance() reads the per-plan controls and calls the additive
+     src/finance.js amortise() ONCE PER PLAN with that plan's own principal
+     (defaulting read-only to that plan's already-computed Day-0 funding). Each
+     plan renders its own financial-component breakdown (upfront / principal
+     financed / total interest / total repaid / monthly instalment). It writes NO
+     economic number and never mutates the state used by computeFleet, and
+     src/finance.js never imports or references the frozen engine. The block is
+     printable (NOT .noprint) when the toggle is ON; its controls are .noprint. -->
 <section class="proposal-block proposal-block-wide proposal-finance" id="proposal-finance-block">
   <div class="proposal-finance-head">
-    <p class="block-title" style="margin:0">Financing (illustrative)</p>
+    <p class="block-title" style="margin:0">Financing (illustrative) &mdash; per plan</p>
     <label class="finance-toggle noprint" for="finance-enable">
       <input type="checkbox" id="finance-enable"> Show a financing illustration
     </label>
   </div>
-  <p class="small finance-exclusion" id="finance-exclusion"><strong>NOT part of the economic TCO.</strong> The economic TCO above excludes loans and interest by design &mdash; it is an all-cash ownership cost. This is a <strong>separate, illustrative</strong> instalment view for discussion only; changing anything here does <strong>not</strong> change any figure in the quotation, servicing or conditions blocks, or the Total economic TCO.</p>
-  <div class="finance-controls noprint" id="finance-controls" hidden>
-    <label class="finance-ctl" for="finance-principal-src">Amount to finance
-      <select id="finance-principal-src" aria-label="Which amount to finance">
-        <option value="day0">Chosen plan Day-0 funding (from the quotation)</option>
-        <option value="custom">Enter a custom principal</option>
-      </select>
-    </label>
-    <label class="finance-ctl" for="finance-principal">Principal S$
-      <input type="number" id="finance-principal" min="0" step="1000" inputmode="decimal" aria-label="Principal to finance (S$)">
-    </label>
-    <label class="finance-ctl" for="finance-deposit">Deposit / down-payment S$
-      <input type="number" id="finance-deposit" min="0" step="1000" value="0" inputmode="decimal" aria-label="Deposit / down-payment (S$)">
-    </label>
-    <label class="finance-ctl" for="finance-apr">Interest rate APR %
-      <input type="number" id="finance-apr" min="0" step="0.1" value="4.5" inputmode="decimal" aria-label="Annual interest rate (APR %)">
-    </label>
-    <label class="finance-ctl" for="finance-term">Term
-      <input type="number" id="finance-term" min="1" step="1" value="60" inputmode="numeric" aria-label="Loan term">
-    </label>
-    <label class="finance-ctl" for="finance-term-unit">Term unit
-      <select id="finance-term-unit" aria-label="Term unit">
-        <option value="months">months</option>
-        <option value="years">years</option>
-      </select>
-    </label>
-  </div>
-  <p class="small finance-off-note" id="finance-off-note">Financing illustration is <strong>off</strong>. Tick &ldquo;Show a financing illustration&rdquo; to model an instalment plan for the chosen quotation. It stays separate from the economic TCO.</p>
-  <div id="finance-output" hidden>
-    <p class="small" id="finance-status-line">&mdash;</p>
-    <div class="table-wrap"><table id="finance-summary-table"><thead><tr><th>Line</th><th class="num">Amount</th></tr></thead><tbody id="finance-summary-body"></tbody></table></div>
-    <p class="caveat-line" id="finance-caveat"></p>
+  <p class="small finance-exclusion" id="finance-exclusion"><strong>NOT part of the economic TCO &mdash; for BOTH Plan A and Plan B.</strong> The economic TCO above excludes loans and interest by design &mdash; it is an all-cash ownership cost. This is a <strong>separate, illustrative</strong> instalment view for discussion only; changing any financing input here does <strong>not</strong> change any figure in either plan&apos;s quotation, servicing or conditions blocks, or either Total economic TCO.</p>
+  <p class="small finance-off-note" id="finance-off-note">Financing illustration is <strong>off</strong>. Tick &ldquo;Show a financing illustration&rdquo; to model a per-plan instalment plan for Plan A and Plan B. It stays separate from the economic TCO.</p>
+  <div class="finance-plan-grid" id="finance-output" hidden>
+    <!-- PLAN A financing column. Controls + breakdown are independent of Plan B. -->
+    <section class="finance-plan-col" id="finance-col-plan_a" data-finance-plan="plan_a">
+      <p class="block-title" id="finance-plan-title-plan_a" style="margin:0 0 6px">Plan A financing</p>
+      <p class="small" id="finance-status-line" aria-live="polite">&mdash;</p>
+      <div class="finance-controls noprint" id="finance-controls">
+        <label class="finance-ctl" for="finance-principal-src">Amount to finance
+          <select id="finance-principal-src" aria-label="Plan A: which amount to finance">
+            <option value="day0">Plan A Day-0 funding (from its quotation)</option>
+            <option value="custom">Enter a custom principal</option>
+          </select>
+        </label>
+        <label class="finance-ctl" for="finance-principal">Principal S$
+          <input type="number" id="finance-principal" min="0" step="1000" inputmode="decimal" aria-label="Plan A principal to finance (S$)">
+        </label>
+        <label class="finance-ctl" for="finance-deposit">Deposit / down-payment S$
+          <input type="number" id="finance-deposit" min="0" step="1000" value="0" inputmode="decimal" aria-label="Plan A deposit / down-payment (S$)">
+        </label>
+        <label class="finance-ctl" for="finance-apr">Interest rate APR %
+          <input type="number" id="finance-apr" min="0" step="0.1" value="4.5" inputmode="decimal" aria-label="Plan A annual interest rate (APR %)">
+        </label>
+        <label class="finance-ctl" for="finance-term">Term
+          <input type="number" id="finance-term" min="1" step="1" value="60" inputmode="numeric" aria-label="Plan A loan term">
+        </label>
+        <label class="finance-ctl" for="finance-term-unit">Term unit
+          <select id="finance-term-unit" aria-label="Plan A term unit">
+            <option value="months">months</option>
+            <option value="years">years</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-wrap"><table id="finance-summary-table"><thead><tr><th>Financial component</th><th class="num">Amount</th></tr></thead><tbody id="finance-summary-body"></tbody></table></div>
+      <p class="caveat-line" id="finance-caveat"></p>
+    </section>
+
+    <!-- PLAN B financing column. Controls + breakdown are independent of Plan A. -->
+    <section class="finance-plan-col" id="finance-col-plan_b" data-finance-plan="plan_b">
+      <p class="block-title" id="finance-plan-title-plan_b" style="margin:0 0 6px">Plan B financing</p>
+      <p class="small" id="finance-status-line-b" aria-live="polite">&mdash;</p>
+      <div class="finance-controls noprint" id="finance-controls-b">
+        <label class="finance-ctl" for="finance-principal-src-b">Amount to finance
+          <select id="finance-principal-src-b" aria-label="Plan B: which amount to finance">
+            <option value="day0">Plan B Day-0 funding (from its quotation)</option>
+            <option value="custom">Enter a custom principal</option>
+          </select>
+        </label>
+        <label class="finance-ctl" for="finance-principal-b">Principal S$
+          <input type="number" id="finance-principal-b" min="0" step="1000" inputmode="decimal" aria-label="Plan B principal to finance (S$)">
+        </label>
+        <label class="finance-ctl" for="finance-deposit-b">Deposit / down-payment S$
+          <input type="number" id="finance-deposit-b" min="0" step="1000" value="0" inputmode="decimal" aria-label="Plan B deposit / down-payment (S$)">
+        </label>
+        <label class="finance-ctl" for="finance-apr-b">Interest rate APR %
+          <input type="number" id="finance-apr-b" min="0" step="0.1" value="4.5" inputmode="decimal" aria-label="Plan B annual interest rate (APR %)">
+        </label>
+        <label class="finance-ctl" for="finance-term-b">Term
+          <input type="number" id="finance-term-b" min="1" step="1" value="60" inputmode="numeric" aria-label="Plan B loan term">
+        </label>
+        <label class="finance-ctl" for="finance-term-unit-b">Term unit
+          <select id="finance-term-unit-b" aria-label="Plan B term unit">
+            <option value="months">months</option>
+            <option value="years">years</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-wrap"><table id="finance-summary-table-b"><thead><tr><th>Financial component</th><th class="num">Amount</th></tr></thead><tbody id="finance-summary-body-b"></tbody></table></div>
+      <p class="caveat-line" id="finance-caveat-b"></p>
+    </section>
   </div>
 </section>
 </section>
@@ -4338,7 +4572,17 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
 
   // ---- RESULTS rendering (depends on engine output) ----------------
   var PLAN_KEYS = ['keep_ice','all_new_ice','plan_a','plan_b'];
+  // PLAN_LABELS carry the DECISION FRAMING. Keep ICE and All-new ICE are fixed;
+  // Plan A / Plan B are relabelled live from the reframe pickers to read
+  // 'Plan A - SRM <variant>' and 'Plan B - <competitor>'. refreshPlanLabels()
+  // is called at the top of every recompute so the labels track the pickers.
   var PLAN_LABELS = {keep_ice:'Keep ICE', all_new_ice:'All-new ICE now', plan_a:'Plan A', plan_b:'Plan B'};
+  function refreshPlanLabels(){
+    var rf = (typeof reframe==='function') ? reframe() : null;
+    if (!rf) return;
+    PLAN_LABELS.plan_a = 'Plan A - ' + rf.planAModel;
+    PLAN_LABELS.plan_b = 'Plan B - ' + rf.planBModel;
+  }
 
   // Committed saving target as a percentage string (mirrors the engine's
   // resolveSavingTarget domain guard + formatTargetPct); drives the dynamic
@@ -4352,6 +4596,12 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   function renderResults(out){
     var r = out.results;
     var tp = committedTargetPct();
+    // Keep the results-table column headers in step with the decision framing
+    // (Plan A - SRM <variant> / Plan B - <competitor>).
+    PLAN_KEYS.forEach(function(k){
+      var th = el('results-th-' + k);
+      if (th) th.textContent = PLAN_LABELS[k];
+    });
     var rows = [
       ['Truck count', r.truckCount, 'int'],
       ['Vehicle economic TCO', r.vehicleEconomicTco, 'money'],
@@ -5291,72 +5541,84 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   }
 
   // ---- Stage 5 standard proposal (presentation-only leave-behind) ---------
-  // Built ENTIRELY from existing engine outputs. The best EV plan is chosen the
-  // same way the Prospects view does (window.HSEngine.scoreProspect); the three
-  // blocks read that result's committed figures. The whole header + quotation
-  // INHERIT the chosen plan's gate / claim status: only a fully-cleared case
-  // (gatePass true, numeric Total, 'Meets entered X% target') reads as a
-  // confirmed quotation; everything else (diagnostic, illustrative, below
-  // target, failing gates, n.a. Total) reads as 'INDICATIVE / pending evidence',
-  // and the same wording prints. No new economic math is done here.
-  function renderProposal(out){
-    var stage = el('stage-proposal');
-    var badge = el('proposal-badge');
-    if (!badge) return;
-    var r = out.results;
-    var score = scoreProspect ? scoreProspect(out) : null;
-
-    // The chosen plan. Fall back to the saving-% best EV plan (same helper the
-    // confidence badge uses) if scoreProspect is unavailable.
-    var key = (score && score.bestPlanKey) ? score.bestPlanKey : bestEvPlanKey(out);
-    var label = score && score.bestPlanLabel && score.bestPlanLabel !== 'n.a.'
-      ? score.bestPlanLabel : (PLAN_LABELS[key] || 'n.a.');
+  // FEAT-003 / Workstream E: the proposal now mirrors the TCO Plan A (SRM) vs
+  // Plan B (competitor) framing. Plan A and Plan B render SIDE BY SIDE, each
+  // column built ENTIRELY from that plan's committed two-state engine output
+  // (Plan A <- plan_a / code 2 / state_A; Plan B <- plan_b / code 3 / state_B).
+  // Each column INHERITS ITS OWN gate / saving-claim honesty: a plan that
+  // clears all gates, has a numeric Total and meets the saving target reads as
+  // a confirmed quotation; otherwise it reads INDICATIVE / pending evidence.
+  // Nothing is re-derived; n.a. stays n.a., never a zero. No new economic math.
+  //
+  // planGate(r,key) replicates (does NOT re-derive) the same gate logic
+  // scoreProspect uses, but PER PLAN KEY, so each column's badge is driven by
+  // that plan's own committed vehicle/site/claim/Total status.
+  function planGate(r, key){
+    var vehicleStatus = r.vehicleStatus[key];
+    var siteStatus = r.siteStatus[key];
     var claim = r.savingClaimStatus[key];
-
-    // A confirmed quotation requires ALL of: scoreProspect gatePass true, a
-    // numeric Total economic TCO, and the committed saving-claim met.
-    var gatePass = !!(score && score.gatePass);
+    var failsVehicle = vehicleStatus === 'Fails entered limits';
+    var siteFails = siteStatus === 'Site timing/power fails' ||
+      siteStatus === 'Missing site quote' || siteStatus === 'Missing public fixed cost' ||
+      siteStatus === 'Review site inputs';
+    var diagnostic = claim === 'Diagnostic only' || claim === 'Total incomplete';
+    var gatePass = !failsVehicle && !diagnostic && !siteFails;
+    var gateStatus;
+    if (failsVehicle) gateStatus = 'Fails entered limits';
+    else if (diagnostic) gateStatus = 'Diagnostic only';
+    else if (siteFails) gateStatus = 'Site inputs incomplete';
+    else if (vehicleStatus === 'Vehicle evidence open') gateStatus = 'Vehicle evidence open';
+    else gateStatus = 'Within entered limits';
     var totalNumeric = isNum(r.totalEconomicTco[key]);
     var claimMet = typeof claim === 'string' && claim.indexOf('Meets entered') === 0;
-    var confirmed = gatePass && totalNumeric && claimMet;
+    return {
+      gatePass: gatePass, gateStatus: gateStatus, claim: claim,
+      totalNumeric: totalNumeric, claimMet: claimMet,
+      confirmed: gatePass && totalNumeric && claimMet
+    };
+  }
 
-    // Badge + header wording inherit the status.
-    var bcls = confirmed ? 'pb-confirmed' : 'pb-indicative';
-    badge.className = 'proposal-badge ' + bcls;
+  // Render ONE plan column (quotation + servicing + unresolved conditions +
+  // its own INDICATIVE/Confirmed badge) for the given plan key ('plan_a' |
+  // 'plan_b'). Every figure is a committed engine output read from `out`.
+  function renderProposalPlan(out, key){
+    var r = out.results;
+    var badge = el('proposal-badge-' + key);
+    if (!badge) return null;
+    var label = PLAN_LABELS[key] || 'n.a.';
+    var g = planGate(r, key);
+    var confirmed = g.confirmed;
+
+    // Per-plan badge inherits that plan's own status.
+    badge.className = 'proposal-badge ' + (confirmed ? 'pb-confirmed' : 'pb-indicative');
     badge.innerHTML = confirmed
       ? 'Confirmed quotation &middot; ' + esc(label)
       : 'INDICATIVE &middot; pending evidence';
-    if (stage){
-      var base = (stage.className || 'stage')
-        .replace(/\s*proposal-confirmed/g,'').replace(/\s*proposal-pending/g,'');
-      stage.className = base.trim() + (confirmed ? ' proposal-confirmed' : ' proposal-pending');
-    }
 
-    var gateStatus = score ? score.gateStatus : null;
-    var statusLine = el('proposal-status-line');
+    var title = el('proposal-plan-title-' + key);
+    if (title) title.textContent = label;
+
+    var statusLine = el('proposal-status-' + key);
     if (statusLine){
+      statusLine.className = 'small' + (confirmed ? '' : ' finance-indicative');
       if (confirmed){
-        statusLine.innerHTML = 'Chosen plan: <strong>' + esc(label) + '</strong>. ' +
-          'All gates clear and the committed saving target is met, so this reads as a ' +
-          'confirmed quotation &mdash; still <strong>conditional on the supplied figures</strong>, not an adoption probability.';
+        statusLine.innerHTML = '<strong>' + esc(label) + '</strong>: all gates clear and the committed ' +
+          'saving target is met, so this reads as a confirmed quotation &mdash; still ' +
+          '<strong>conditional on the supplied figures</strong>, not an adoption probability.';
       } else {
-        statusLine.innerHTML = 'Chosen plan: <strong>' + esc(label) + '</strong>. ' +
-          'This is an <strong>indicative</strong> leave-behind, not a firm quotation: ' +
-          (gateStatus ? 'gate status <strong>' + esc(gateStatus) + '</strong>; ' : '') +
-          'saving-claim status <strong>' + fmtText(claim) + '</strong>. ' +
+        statusLine.innerHTML = '<strong>' + esc(label) + '</strong>: this is an <strong>indicative</strong> ' +
+          'leave-behind, not a firm quotation &mdash; gate status <strong>' + esc(g.gateStatus) + '</strong>; ' +
+          'saving-claim status <strong>' + fmtText(g.claim) + '</strong>. ' +
           'The unresolved conditions below list what must be confirmed first.';
       }
     }
 
-    // ---- QUOTATION block (committed figures for the chosen plan) ----------
-    // Vehicle economic TCO split into vehicle + COE where the per-plan Day-0
-    // charging-site cost is read from the site intermediates (same source the
-    // Day-0 cards use). No figure is re-derived; n.a. stays n.a.
+    // ---- QUOTATION block (committed figures for this plan) ----------------
     var code = ({keep_ice:0,all_new_ice:1,plan_a:2,plan_b:3})[key];
     var sites = out.sites || {};
     var site = sites[code];
     var siteDay0 = (site && (code===2||code===3)) ? site.initialLessAward : NA;
-    var qb = el('proposal-quotation-body');
+    var qb = el('proposal-quotation-body-' + key);
     if (qb){
       function qrow(line, v, strong){
         var cls = strong ? ' class="resultline proposal-total"' : '';
@@ -5372,7 +5634,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       html += qrow('Total economic TCO (10-year)', r.totalEconomicTco[key], true);
       qb.innerHTML = html;
     }
-    var qcav = el('proposal-quotation-caveat');
+    var qcav = el('proposal-quotation-caveat-' + key);
     if (qcav){
       qcav.innerHTML = confirmed
         ? 'Confirmed on the supplied figures only. The COE line is the acquisition COE embedded in the vehicle economic TCO, not a separate charge. Saving % is whole-fleet, not per-truck.'
@@ -5380,7 +5642,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     }
 
     // ---- SERVICING COVERAGE block (committed outputs) ---------------------
-    var sb = el('proposal-servicing-body');
+    var sb = el('proposal-servicing-body-' + key);
     if (sb){
       function srow(item, html){ return '<tr><td>' + item + '</td><td class="num">' + html + '</td></tr>'; }
       var cpk = r.costPerKm[key];
@@ -5394,84 +5656,130 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     }
 
     // ---- UNRESOLVED CONDITIONS block (honesty backbone) -------------------
-    // The gates (same data as the gates-table) PLUS every n.a. / Unconfirmed /
-    // diagnostic flag on the chosen plan. For a confirmed case this may be an
-    // explicit 'all cleared' note.
-    var cb = el('proposal-conditions-body');
+    var cb = el('proposal-conditions-body-' + key);
     if (cb){
       function cond(name, status, cls, need){
         return '<tr><td>' + name + '</td><td class="' + (cls||'') + '">' + status + '</td><td>' + need + '</td></tr>';
       }
       function openFlag(s){
-        // A status that is NOT a clean pass is an open condition.
         if (s === 'Within entered limits' || s === 'Within entered site limits' ||
             s === 'Complete' || s === 'Public only' || s === 'Public access entered' ||
             s === 'Access OK') return false;
         return true;
       }
       var rows = [];
-      // Vehicle service gate.
       var vs = r.vehicleStatus[key];
       rows.push(cond('Service screen (vehicle evidence)', fmtText(vs),
         openFlag(vs) ? 'statuswarn' : 'statusok',
         'Completed-body payload, battery route allowance and entered limits.'));
-      // Capacity / site gate.
       var ss = r.siteStatus[key];
       rows.push(cond('Capacity gate (site access)', fmtText(ss),
         openFlag(ss) ? 'statuswarn' : 'statusok',
         'Spare power, plug-hours, an approved parking plug per EV and a surveyed site.'));
-      // Evidence verification flags (same oc rows as the gates table).
       [['Backup confirmed',58,'Costed substitute-service contract for the same workload.'],
        ['Loaded trial confirmed',59,'Loaded route and charging trial with measured grid kWh.'],
-       ['Energy prices confirmed',60,'Current company diesel and electricity contracts.']].forEach(function(g){
-        var val = ocVal(g[1]);
+       ['Energy prices confirmed',60,'Current company diesel and electricity contracts.']].forEach(function(gg){
+        var val = ocVal(gg[1]);
         var clean = (val === 'Yes' || val === 'Verified');
-        rows.push(cond(g[0], fmtText(val), clean ? 'statusok' : 'statuswarn', g[2]));
+        rows.push(cond(gg[0], fmtText(val), clean ? 'statusok' : 'statuswarn', gg[2]));
       });
-      // Total / saving-claim flag.
-      if (!totalNumeric){
+      if (!g.totalNumeric){
         rows.push(cond('Total economic TCO', naSpan(), 'statuswarn',
           'A plan Total stays n.a. until the gate that drives it clears (e.g. the charging-site quote). Shown as n.a., never a zero.'));
       }
-      if (!claimMet){
-        rows.push(cond('Saving-claim status', fmtText(claim), 'statuswarn',
+      if (!g.claimMet){
+        rows.push(cond('Saving-claim status', fmtText(g.claim), 'statuswarn',
           'The committed fleet saving target must be met on the supplied figures before this reads as a confirmed win.'));
       }
       cb.innerHTML = rows.join('');
     }
 
-    // Publish the read-only context the SEPARATE finance illustration needs:
-    // the chosen plan's already-computed Day-0 funding (never re-derived), the
-    // confirmed/indicative status wording to inherit, and the plan label. This
-    // is one-way: renderProposal -> finance. The finance block NEVER writes back
-    // into `state`, `r`, or any economic figure.
+    return { key: key, label: label, confirmed: confirmed,
+      day0Funding: r.day0Funding[key] };
+  }
+
+  function renderProposal(out){
+    var stage = el('stage-proposal');
+    if (!el('proposal-badge-plan_a')) return;
+    var r = out.results;
+
+    // Render BOTH plan columns from their own committed outputs.
+    var ctxA = renderProposalPlan(out, 'plan_a');
+    var ctxB = renderProposalPlan(out, 'plan_b');
+
+    // Stage-level state class: 'confirmed' only when BOTH plans are confirmed,
+    // otherwise 'pending' (each column still carries its own badge). The score
+    // helper still drives the top status line for the recommended plan.
+    var score = scoreProspect ? scoreProspect(out) : null;
+    var bothConfirmed = !!(ctxA && ctxA.confirmed && ctxB && ctxB.confirmed);
+    if (stage){
+      var base = (stage.className || 'stage')
+        .replace(/\s*proposal-confirmed/g,'').replace(/\s*proposal-pending/g,'');
+      stage.className = base.trim() + (bothConfirmed ? ' proposal-confirmed' : ' proposal-pending');
+    }
+    var statusLine = el('proposal-status-line');
+    if (statusLine){
+      var recKey = (score && score.bestPlanKey) ? score.bestPlanKey : bestEvPlanKey(out);
+      var recLabel = PLAN_LABELS[recKey] || 'n.a.';
+      var aLab = ctxA ? ctxA.label : (PLAN_LABELS.plan_a||'Plan A');
+      var bLab = ctxB ? ctxB.label : (PLAN_LABELS.plan_b||'Plan B');
+      statusLine.innerHTML = 'Comparing <strong>' + esc(aLab) + '</strong> and <strong>' + esc(bLab) +
+        '</strong> side by side. Each plan carries its own INDICATIVE / Confirmed label from its live ' +
+        'gate / saving-claim status. On the model&apos;s own screen the stronger EV plan is ' +
+        '<strong>' + esc(recLabel) + '</strong> &mdash; still <strong>conditional on the supplied figures</strong>, not an adoption probability.';
+    }
+
+    // Publish the read-only, PER-PLAN context the SEPARATE finance illustration
+    // needs: each plan's already-computed Day-0 funding (never re-derived), its
+    // confirmed/indicative status and label. One-way: renderProposal -> finance.
+    // The finance block NEVER writes back into `state`, `r`, or any economic
+    // figure (proved by check_finance.mjs).
     financeContext = {
-      day0Funding: r.day0Funding[key],
-      confirmed: confirmed,
-      label: label,
+      plan_a: {
+        day0Funding: ctxA ? ctxA.day0Funding : NA,
+        confirmed: ctxA ? ctxA.confirmed : false,
+        label: ctxA ? ctxA.label : (PLAN_LABELS.plan_a || 'Plan A')
+      },
+      plan_b: {
+        day0Funding: ctxB ? ctxB.day0Funding : NA,
+        confirmed: ctxB ? ctxB.confirmed : false,
+        label: ctxB ? ctxB.label : (PLAN_LABELS.plan_b || 'Plan B')
+      }
     };
     renderFinance();
   }
 
-  // ---- Stage 5 FINANCE (illustrative) block (FEAT-004) --------------------
-  // A SEPARATE, OPT-IN financing illustration. It is deliberately EXCLUDED from
-  // the economic TCO (the economic TCO excludes loans/interest by design), and
-  // it is PROVABLY isolated from the frozen engine: it reads only a read-only
-  // copy of the chosen plan's Day-0 funding (published by renderProposal above)
-  // and calls window.HSFinance.amortise() -- a module that does NOT import or
-  // reference computeFleet. renderFinance() writes NO economic number and never
-  // mutates `state`. When the toggle is OFF the output is hidden and nothing
-  // here touches the quotation / servicing / conditions / Total.
-  var financeContext = { day0Funding: NA, confirmed: false, label: 'n.a.' };
+  // ---- Stage 5 FINANCE (illustrative) block (FEAT-003 per-plan rework) ----
+  // A SEPARATE, OPT-IN financing illustration applied to Plan A (SRM) and Plan B
+  // (competitor) SEPARATELY. It is deliberately EXCLUDED from the economic TCO
+  // (the economic TCO excludes loans/interest by design) and is PROVABLY
+  // isolated from the frozen engine: it reads only a read-only copy of each
+  // plan's Day-0 funding (published PER PLAN by renderProposal above) and calls
+  // window.HSFinance.amortise() ONCE PER PLAN with that plan's own principal --
+  // a module that does NOT import or reference computeFleet / scoreProspect.
+  // renderFinance() writes NO economic number and never mutates `state`. Each
+  // plan's controls (APR / term / deposit / principal-source) drive ONLY that
+  // plan's breakdown, so a Plan A input never perturbs Plan B's figures and
+  // vice-versa. When the toggle is OFF the output is hidden and nothing here
+  // touches either plan's quotation / servicing / conditions / Total.
+  var financeContext = {
+    plan_a: { day0Funding: NA, confirmed: false, label: 'Plan A' },
+    plan_b: { day0Funding: NA, confirmed: false, label: 'Plan B' }
+  };
   var financeWired = false;
 
-  // Wire the finance controls ONCE. Every control just re-renders the finance
-  // illustration; NONE of them call recompute() or touch `state`, so the
-  // economic TCO is never affected by anything the user does here.
+  // Per-plan control id suffix: Plan A uses the base ids, Plan B uses '-b'.
+  var FINANCE_PLAN_SUFFIX = { plan_a: '', plan_b: '-b' };
+
+  // Wire BOTH plans' finance controls (+ the shared toggle) ONCE. Every control
+  // just re-renders the finance illustration; NONE of them call recompute() or
+  // touch `state`, so the economic TCO is never affected by anything the user
+  // does here.
   function wireFinanceControls(){
     if (financeWired) return;
-    var ids = ['finance-enable','finance-principal-src','finance-principal',
-      'finance-deposit','finance-apr','finance-term','finance-term-unit'];
+    var ids = ['finance-enable',
+      'finance-principal-src','finance-principal','finance-deposit','finance-apr','finance-term','finance-term-unit',
+      'finance-principal-src-b','finance-principal-b','finance-deposit-b','finance-apr-b','finance-term-b','finance-term-unit-b'];
     var any = false;
     ids.forEach(function(id){
       var node = el(id);
@@ -5489,79 +5797,73 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     return !!(t && t.checked);
   }
 
-  // Resolve the principal from the control: either the chosen plan's Day-0
-  // funding (read-only, from financeContext) or a user-entered custom value.
-  function financePrincipal(){
-    var srcSel = el('finance-principal-src');
+  // Resolve ONE plan's principal from that plan's own controls: either the
+  // plan's Day-0 funding (read-only, from financeContext[key]) or a per-plan
+  // user-entered custom value. Reads only this plan's inputs.
+  function financePrincipal(key){
+    var sfx = FINANCE_PLAN_SUFFIX[key] || '';
+    var srcSel = el('finance-principal-src' + sfx);
     var src = srcSel ? srcSel.value : 'day0';
-    var pin = el('finance-principal');
+    var pin = el('finance-principal' + sfx);
     if (src === 'custom'){
       var cv = pin ? parseFloat(pin.value) : NaN;
       return isNum(cv) ? cv : null;
     }
-    // Day-0 funding source: use the published figure (may be n.a.).
-    var d0 = financeContext.day0Funding;
+    var d0 = financeContext[key] ? financeContext[key].day0Funding : NA;
     var val = (d0 === NA || !isNum(d0)) ? null : d0;
-    // Keep the principal input in sync as a read-only reflection of the Day-0
-    // figure, so the user can see (and then override) the defaulted number.
+    // Reflect the Day-0 figure into this plan's principal box (read-only
+    // default the user can then override) without disturbing the other plan.
     if (pin && val != null) pin.value = String(Math.round(val * 100) / 100);
     return val;
   }
 
-  function renderFinance(){
-    var block = el('proposal-finance-block');
-    if (!block) return;
-    wireFinanceControls();
-    var controls = el('finance-controls');
-    var output = el('finance-output');
-    var offNote = el('finance-off-note');
-    var on = financeEnabled();
-
-    // Toggle the printable/visible state. The block prints only when ON.
-    var base = (block.className || '').replace(/\s*finance-on/g, '');
-    block.className = base.trim() + (on ? ' finance-on' : '');
-    if (controls) controls.hidden = !on;
-    if (output) output.hidden = !on;
-    if (offNote) offNote.hidden = on;
-    if (!on) return; // OFF: nothing finance-related is computed or shown.
-
+  // Render ONE plan's financial-component breakdown by calling amortise() with
+  // THIS plan's own principal / deposit / APR / term. Returns nothing; writes
+  // only into this plan's own summary body + caveat + status line.
+  function renderFinancePlan(key){
     var HSF = (typeof window !== 'undefined') ? window.HSFinance : null;
-    var statusLine = el('finance-status-line');
-    var body = el('finance-summary-body');
-    var caveat = el('finance-caveat');
+    var sfx = FINANCE_PLAN_SUFFIX[key] || '';
+    var ctx = financeContext[key] || { confirmed: false, label: key };
+    var statusLine = el('finance-status-line' + sfx);
+    var body = el('finance-summary-body' + sfx);
+    var caveat = el('finance-caveat' + sfx);
+    var title = el('finance-plan-title-' + key);
+    if (title) title.textContent = (ctx.label || key) + ' financing';
 
-    // Inherit the proposal's INDICATIVE / Confirmed wording.
-    var indicative = !financeContext.confirmed;
+    // Inherit THIS plan's INDICATIVE / Confirmed wording.
+    var indicative = !ctx.confirmed;
     if (statusLine){
       statusLine.className = 'small' + (indicative ? ' finance-indicative' : '');
-      statusLine.innerHTML = 'Illustrative financing for the chosen plan <strong>' +
-        esc(financeContext.label) + '</strong>, ' +
+      statusLine.innerHTML = 'Illustrative financing for <strong>' + esc(ctx.label || key) + '</strong>, ' +
         (indicative
-          ? 'inheriting the <strong>INDICATIVE</strong> status of the quotation above (pending evidence). '
-          : 'alongside the <strong>confirmed</strong> quotation above (still conditional on the supplied figures). ') +
+          ? 'inheriting the <strong>INDICATIVE</strong> status of this plan&apos;s quotation (pending evidence). '
+          : 'alongside this plan&apos;s <strong>confirmed</strong> quotation (still conditional on the supplied figures). ') +
         'It is <strong>not</strong> part of the economic TCO.';
     }
 
-    // Resolve inputs. Term may be entered in months or years.
-    var principal = financePrincipal();
-    var depEl = el('finance-deposit');
+    // Resolve THIS plan's inputs. Term may be entered in months or years.
+    var principal = financePrincipal(key);
+    var depEl = el('finance-deposit' + sfx);
     var deposit = depEl ? parseFloat(depEl.value) : 0;
     if (!isNum(deposit) || deposit < 0) deposit = 0;
-    var aprEl = el('finance-apr');
+    var aprEl = el('finance-apr' + sfx);
     var apr = aprEl ? parseFloat(aprEl.value) : NaN;
-    var termEl = el('finance-term');
+    var termEl = el('finance-term' + sfx);
     var term = termEl ? parseFloat(termEl.value) : NaN;
-    var unitEl = el('finance-term-unit');
+    var unitEl = el('finance-term-unit' + sfx);
     var unit = unitEl ? unitEl.value : 'months';
     var termMonths = (unit === 'years') ? term * 12 : term;
 
-    // Financed amount = principal - deposit (module guards the arithmetic).
+    // Financed amount = principal - deposit (the module guards the arithmetic).
     var financed = (HSF && principal != null)
       ? HSF.financedAmount(principal, deposit) : null;
 
+    // amortise() is called ONCE for THIS plan with THIS plan's own principal.
     var result = (HSF && financed != null)
       ? HSF.amortise({ principal: financed, annualRatePct: apr, termMonths: termMonths })
       : (HSF ? HSF.naResult('financed amount not available') : null);
+    // summarise() carries the compact headline figures of the same result.
+    var summ = (HSF && result) ? HSF.summarise(result) : null;
 
     if (body){
       function frow(line, html, strong){
@@ -5573,29 +5875,199 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       var monthsLabel = (unit === 'years')
         ? (isNum(term) ? (term + ' yr (' + (isNum(termMonths)?termMonths:naSpan()) + ' months)') : naSpan())
         : (isNum(termMonths) ? (termMonths + ' months') : naSpan());
+      // FINANCIAL-COMPONENT BREAKDOWN (per plan): upfront / down-payment, loan
+      // principal financed, total interest, total repaid, monthly instalment.
       var html = '';
-      html += frow('Principal (before deposit)', (principal!=null?fmtMoney(principal):naSpan()), false);
-      html += frow('Deposit / down-payment', fmtMoney(deposit), false);
-      html += frow('Financed amount (principal &minus; deposit)', (financed!=null?fmtMoney(financed):naSpan()), false);
+      html += frow('Upfront / down-payment', fmtMoney(deposit), false);
+      html += frow('Loan principal financed (principal &minus; deposit)', (financed!=null?fmtMoney(financed):naSpan()), false);
       html += frow('Interest rate (APR)', (isNum(apr)?(apr.toFixed(2)+'%'):naSpan()), false);
       html += frow('Term', monthsLabel, false);
-      html += frow('Monthly instalment', (okRes?fmtMoney(result.monthlyInstalment):naSpan()), true);
-      html += frow('Total interest (illustrative)', (okRes?fmtMoney(result.totalInterest):naSpan()), false);
-      html += frow('Total repaid over the term', (okRes?fmtMoney(result.totalRepaid):naSpan()), false);
+      html += frow('Monthly instalment', ((summ&&summ.ok)?fmtMoney(summ.monthlyInstalment):naSpan()), true);
+      html += frow('Total interest paid (illustrative)', ((summ&&summ.ok)?fmtMoney(summ.totalInterest):naSpan()), false);
+      html += frow('Total repaid over the term', ((summ&&summ.ok)?fmtMoney(summ.totalRepaid):naSpan()), false);
       body.innerHTML = html;
     }
 
     if (caveat){
       var why = (result && !result.ok && result.reason) ? (' (' + esc(result.reason) + ')') : '';
       caveat.innerHTML = (result && result.ok)
-        ? 'Equal-monthly-instalment (annuity) illustration on the supplied rate, term and deposit only. Interest and loan structuring are <strong>excluded from the economic TCO by design</strong>; this figure never feeds back into any economic number above. An <span class="na">n.a.</span> stays n.a.'
-        : 'Enter a positive financed amount, a non-negative APR and a whole-month term to see an instalment illustration. An unavailable figure is shown as <span class="na">n.a.</span>' + why + ', never a zero. This block is excluded from the economic TCO.';
+        ? 'Equal-monthly-instalment (annuity) illustration on this plan&apos;s supplied rate, term and deposit only. Interest and loan structuring are <strong>excluded from the economic TCO by design</strong>; this figure never feeds back into any economic number above, and it is independent of the other plan&apos;s financing. An <span class="na">n.a.</span> stays n.a.'
+        : 'Enter a positive financed amount, a non-negative APR and a whole-month term to see an instalment illustration for this plan. An unavailable figure is shown as <span class="na">n.a.</span>' + why + ', never a zero. This block is excluded from the economic TCO.';
     }
   }
 
+  function renderFinance(){
+    var block = el('proposal-finance-block');
+    if (!block) return;
+    wireFinanceControls();
+    var output = el('finance-output');
+    var offNote = el('finance-off-note');
+    var on = financeEnabled();
+
+    // Toggle the printable/visible state. The block prints only when ON.
+    var base = (block.className || '').replace(/\s*finance-on/g, '');
+    block.className = base.trim() + (on ? ' finance-on' : '');
+    if (output) output.hidden = !on;
+    if (offNote) offNote.hidden = on;
+    if (!on) return; // OFF: nothing finance-related is computed or shown.
+
+    // Render EACH plan's breakdown independently (amortise() once per plan).
+    renderFinancePlan('plan_a');
+    renderFinancePlan('plan_b');
+  }
+
+  /* ================================================================== *
+   * BUSINESS-INTENTION REFRAME (FEAT-002)  --  engine FROZEN.
+   * ------------------------------------------------------------------
+   * The decision story is reframed around the customer's BUSINESS INTENTION
+   * (Add new vehicle / Replace ICE vehicle) and two EXPLICIT comparison plans:
+   *   Plan A = buy SRM (a chosen SRM variant)
+   *   Plan B = buy a competitor EV (a chosen competitor model)
+   *
+   * ENGINE CONSTRAINT (verified in src/engine.js buildPath): the engine binds a
+   * SINGLE per-truck col-B EV model (rp.B, read once) and a SINGLE col-D EV
+   * quote (rp.D) that it uses for BOTH Plan A (col O action) and Plan B (col R
+   * action). There is NO per-plan EV model and NO per-plan EV quote. A genuine
+   * "Plan A = SRM vs Plan B = a different competitor" therefore CANNOT come from
+   * one computeFleet call. The honest, engine-frozen way (NO formula change) is
+   * to run the PURE computeFleet twice over two derived input states and read
+   * one EV path from each:
+   *   state_A : every included EV-action truck col B = chosen SRM variant,
+   *             col O = 'EV', col D = Plan A EV price  -> read path 2 (plan_a)
+   *   state_B : every included EV-action truck col B = chosen competitor,
+   *             col R = 'EV', col D = Plan B EV price  -> read path 3 (plan_b)
+   * Keep ICE (path 0) and All-new ICE (path 1) ignore the EV model, so they are
+   * identical across the two states; we keep them from state_A.
+   *
+   * The merged output below is a drop-in for the single computeFleet(state)
+   * result that every downstream renderer already consumes (out.results,
+   * out.sites, out.annualSeries, out.perPlan, out.review): plan_a / code 2
+   * slots come from state_A, plan_b / code 3 slots from state_B.
+   *
+   * ADD vs REPLACE: the engine has no "net-added vehicle" concept -- every path
+   * acts on an EXISTING fleet row (Keep / New-ICE / EV replacement at col M/P/S
+   * month). 'Replace ICE vehicle' maps directly to the replacement action with
+   * the COE / replacement month honoured. 'Add new vehicle' is the SAME
+   * replacement action with the replacement month pulled to month 0 (buy now),
+   * which is the closest honest in-model representation; a truly net-added unit
+   * (growing the fleet count) is NOT an engine input, so the UI surfaces this
+   * limitation rather than inventing a field. This choice changes ONLY the
+   * derived state_A / state_B used for the Plan A/B comparison; it never mutates
+   * the canonical H.state the validation/prospects path reads.
+   * ================================================================== */
+  var SRM_VARIANTS = ['SRM T3EV','SRM T3EV+','SRM T3'];
+  var REFRAME_DEFAULTS = {
+    intention: 'replace',            // 'replace' | 'add'
+    planAModel: 'SRM T3EV+',         // current MID landing SRM variant
+    planBModel: 'ChengLong L2EV',    // sensible competitor default (in catalogue)
+    evPriceA: 234000,                // current MID landing SRM EV quote (col D)
+    evPriceB: 171800                 // ChengLong L2EV catalogue fallback (78800 + 93000 COE)
+  };
+  function reframe(){
+    if (!state.__reframe) state.__reframe = {};
+    var rf = state.__reframe;
+    for (var k in REFRAME_DEFAULTS){
+      if (!Object.prototype.hasOwnProperty.call(rf, k) || rf[k]==null) rf[k]=REFRAME_DEFAULTS[k];
+    }
+    return rf;
+  }
+  // Catalogue model names that are SRM (Plan A candidates) vs competitor EV
+  // (Plan B candidates). Reads the LIVE catalogue so preset swaps are reflected.
+  function catalogueModels(){
+    var rows=(state.products&&state.products.rows)?state.products.rows:[];
+    var srm=[], comp=[];
+    rows.forEach(function(r){
+      if(!r||r.A==null) return;
+      if(String(r.A).indexOf('SRM')===0) srm.push(r.A); else comp.push(r.A);
+    });
+    return {srm:srm, comp:comp};
+  }
+  // (exposed on window.__HS below, once that object is created)
+
+  // Build a derived input state for one plan: deep-clone H.state, and for every
+  // INCLUDED truck whose matching action slot is (or becomes) EV, set col B to
+  // `modelName`, force the plan action to 'EV', and set the EV quote (col D) to
+  // `evPrice`. `slot` is 'O' for Plan A (path 2) or 'R' for Plan B (path 3).
+  // `intention` 'add' pulls the replacement month for that slot to 0 (buy now);
+  // 'replace' leaves the COE / replacement month untouched. The canonical
+  // H.state is never mutated (deep clone), so validation/prospects stay exact.
+  function buildPlanState(modelName, slot, evPrice, intention){
+    var s = JSON.parse(JSON.stringify(state));
+    delete s.__reframe;   // never let the non-engine reframe blob reach buildModel
+    var inc = {};
+    state.fleet_register.rows.forEach(function(r){
+      if (r.A!=null && hasFleetData(r)) inc[r.A]=true;
+    });
+    var monthCol = (slot==='O') ? 'P' : 'S';
+    s.replacement_plan.rows.forEach(function(rp){
+      if (!rp || rp.A==null || !inc[rp.A]) return;
+      // Only trucks that were going EV on this slot participate in the EV
+      // comparison; keep the rest exactly as the user set them.
+      if (rp[slot]!=='EV') return;
+      rp.B = modelName;
+      rp[slot] = 'EV';
+      if (isNum(evPrice)) rp.D = evPrice;
+      if (intention==='add') rp[monthCol] = 0;   // buy-now approximation
+    });
+    return s;
+  }
+
+  // Run the two-state recompute and merge into one drop-in output object.
+  function computeReframed(){
+    var rf = reframe();
+    var baseOut = computeFleet(state);           // engine-exact single state
+    // Catalogue may not contain the chosen models after a preset swap; fall back
+    // to the base output's plan if a model is missing so nothing crashes.
+    var cat = catalogueModels();
+    var haveA = cat.srm.indexOf(rf.planAModel)>=0 || cat.comp.indexOf(rf.planAModel)>=0;
+    var haveB = cat.srm.indexOf(rf.planBModel)>=0 || cat.comp.indexOf(rf.planBModel)>=0;
+    if (!haveA && !haveB) return baseOut;
+    var outA = haveA ? computeFleet(buildPlanState(rf.planAModel,'O',rf.evPriceA,rf.intention)) : baseOut;
+    var outB = haveB ? computeFleet(buildPlanState(rf.planBModel,'R',rf.evPriceB,rf.intention)) : baseOut;
+    return mergeTwoState(outA, outB);
+  }
+
+  // Merge state_A (keep_ice/all_new_ice + plan_a) with state_B's plan_b slots.
+  // Every structure keyed by plan key ('plan_b') or numeric code (3) has that
+  // slot overwritten from outB; the rest comes from outA. Purely a projection
+  // of two frozen-engine outputs -- no number is recomputed here.
+  function mergeTwoState(outA, outB){
+    var out = {};
+    // results: {field:{keep_ice,all_new_ice,plan_a,plan_b}}
+    out.results = {};
+    for (var f in outA.results){
+      var av = outA.results[f];
+      if (av && typeof av==='object' && ('plan_b' in av)){
+        var merged={}; for (var kk in av) merged[kk]=av[kk];
+        if (outB.results[f] && ('plan_b' in outB.results[f])) merged.plan_b = outB.results[f].plan_b;
+        out.results[f]=merged;
+      } else {
+        out.results[f]=av;
+      }
+    }
+    // annualSeries: {keep_ice,all_new_ice,plan_a,plan_b}
+    out.annualSeries = {};
+    for (var pk in outA.annualSeries) out.annualSeries[pk]=outA.annualSeries[pk];
+    if (outB.annualSeries && outB.annualSeries.plan_b) out.annualSeries.plan_b = outB.annualSeries.plan_b;
+    // sites / perPlan: keyed by code 0..3 -> code 3 from outB.
+    out.sites = { 0: outA.sites[0], 1: outA.sites[1], 2: outA.sites[2], 3: outB.sites[3] };
+    out.perPlan = { 0: outA.perPlan[0], 1: outA.perPlan[1], 2: outA.perPlan[2], 3: outB.perPlan[3] };
+    // review: take plan-B-specific checks from outB, the rest from outA.
+    out.review = {};
+    for (var rk in outA.review) out.review[rk]=outA.review[rk];
+    ['planBBridge','planBEvCount'].forEach(function(rk){
+      if (outB.review && outB.review[rk]) out.review[rk]=outB.review[rk];
+    });
+    out.pathCount = outA.pathCount;
+    out.includedTruckCount = outA.includedTruckCount;
+    return out;
+  }
+  // (reframe, catalogueModels, computeReframed exposed on window.__HS below)
+
   recompute = function(){
     if (!computeFleet){ return; }
-    var out = computeFleet(state);
+    refreshPlanLabels();
+    var out = computeReframed();
     renderDecision(out);
     renderResults(out);
     renderDay0Cards(out);
@@ -5620,6 +6092,9 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     parseEditable: parseEditable, el: el, isNum: isNum,
     fmtMoney: fmtMoney, fmtText: fmtText, naSpan: naSpan, NA: NA,
     computeFleet: function(s){ return computeFleet(s); },
+    // FEAT-002 business-intention reframe: the live reframe state blob, the
+    // SRM/competitor catalogue split, and the two-state merged recompute.
+    reframe: reframe, catalogueModels: catalogueModels, computeReframed: computeReframed,
     // Test hook (FEAT-004): let the harness place a deterministic route
     // (depot/start + stops) on the geographic simulator, exactly as the map
     // click / named-area picker would. Display-only; no engine coupling.
@@ -6363,20 +6838,18 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   function setElec(v){ var r=H.ecRow(10); if(r){ r.values.B=v; r.values.C=v; } }
   function getDisc(){ var r=H.ocRow(54); return r?r.values.B:undefined; }
   function setDisc(v){ var r=H.ocRow(54); if(r){ r.values.B=v; } }
-  function getEvPrice(){
-    // Use the first EV quote present, else fall back to the ChengLong L2EV demo quote 181000.
-    var map=H.replByIdMap();
-    var ids=H.includedFleet().map(function(r){return r.A;});
-    for(var i=0;i<ids.length;i++){ var rp=map[ids[i]]; if(rp && H.isNum(rp.D)) return rp.D; }
-    return 181000;
-  }
-  function setEvPrice(v){
-    // Fan the single EV quote to col D for every truck whose Plan A or Plan B
-    // action is EV (the quote basis the engine reads for the EV paths).
-    var map=H.replByIdMap();
-    var ids=H.includedFleet().map(function(r){return r.A;});
-    ids.forEach(function(id){ var rp=map[id]; if(rp && (rp.O==='EV'||rp.R==='EV')) rp.D=v; });
-  }
+  // ---- Per-plan EV-cost drivers (FEAT-002) --------------------------------
+  // The single shared EV-price slider is SPLIT into two independent drivers:
+  //   evprice_a -> Plan A EV cost (SRM): drives col D in the derived state_A only
+  //   evprice_b -> Plan B EV cost (competitor): drives col D in state_B only
+  // Each value is stored on the non-engine H.state.__reframe blob that
+  // buildPlanState() reads when it clones the state for each plan's recompute.
+  // Moving one slider changes ONLY its plan's EV purchase cost (the other
+  // plan's derived state is untouched), and each recomputes its plan's TCO.
+  function getEvPriceA(){ var rf=H.reframe(); return H.isNum(rf.evPriceA)?rf.evPriceA:234000; }
+  function setEvPriceA(v){ var rf=H.reframe(); rf.evPriceA=v; }
+  function getEvPriceB(){ var rf=H.reframe(); return H.isNum(rf.evPriceB)?rf.evPriceB:171800; }
+  function setEvPriceB(v){ var rf=H.reframe(); rf.evPriceB=v; }
   function getTarget(){
     // Mirror the engine's resolveSavingTarget domain guard so the control shows
     // the value computeFleet will actually use (default 0.15 when out of range).
@@ -6402,7 +6875,8 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   var SENS = [
     {id:'diesel', label:'Commercial diesel (SGD/litre)', min:1.5, max:5, step:0.05, get:getDiesel, set:setDiesel, kind:'num'},
     {id:'elec', label:'Depot electricity (SGD/grid kWh)', min:0.2, max:0.8, step:0.01, get:getElec, set:setElec, kind:'num'},
-    {id:'evprice', label:'EV purchase price (SGD/truck)', min:120000, max:260000, step:1000, get:getEvPrice, set:setEvPrice, kind:'num'},
+    {id:'evprice_a', label:'Plan A EV cost - SRM (SGD/truck)', min:120000, max:300000, step:1000, get:getEvPriceA, set:setEvPriceA, kind:'num'},
+    {id:'evprice_b', label:'Plan B EV cost - competitor (SGD/truck)', min:120000, max:300000, step:1000, get:getEvPriceB, set:setEvPriceB, kind:'num'},
     {id:'target', label:'Fleet saving target (%)', min:0.05, max:0.30, step:0.005, get:getTarget, set:setTarget, kind:'pct'}
   ];
 
@@ -6630,8 +7104,74 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     });
   }
 
+  // ---- Decision framing controls (FEAT-002) --------------------------------
+  // Business intention + Plan A (SRM) picker + Plan B (competitor) picker. These
+  // write the non-engine H.state.__reframe blob that the two-state recompute
+  // (computeReframed/buildPlanState) reads; they never mutate the canonical
+  // validation/prospects state, and the engine ignores __reframe entirely.
+  function buildDecisionFraming(){
+    var form=H.el('decision-framing-form');
+    if(!form || typeof H.reframe!=='function') return;
+    form.innerHTML='';
+    var rf=H.reframe();
+    var cat=(typeof H.catalogueModels==='function')?H.catalogueModels():{srm:[],comp:[]};
+
+    function fld(labelText, node){
+      var div=document.createElement('div'); div.className='field';
+      var lab=document.createElement('label'); lab.textContent=labelText;
+      div.appendChild(lab); div.appendChild(node); return div;
+    }
+    function selectFor(opts, cur, onPick){
+      var sel=document.createElement('select'); sel.className='amber';
+      opts.forEach(function(o){
+        var op=document.createElement('option'); op.value=o; op.textContent=o;
+        if(o===cur) op.selected=true; sel.appendChild(op);
+      });
+      sel.addEventListener('input',function(){ onPick(sel.value); H.recompute(); });
+      return sel;
+    }
+
+    // Business intention.
+    var intSel=document.createElement('select'); intSel.className='amber';
+    [['replace','Replace ICE vehicle in the fleet'],['add','Add new vehicle to the fleet']].forEach(function(o){
+      var op=document.createElement('option'); op.value=o[0]; op.textContent=o[1];
+      if(o[0]===rf.intention) op.selected=true; intSel.appendChild(op);
+    });
+    intSel.addEventListener('input',function(){ rf.intention=intSel.value; updateNote(); H.recompute(); });
+    form.appendChild(fld('Business intention', intSel));
+
+    // Plan A SRM variant picker (SRM catalogue models only).
+    var srmOpts = cat.srm.length ? cat.srm : [rf.planAModel];
+    if (srmOpts.indexOf(rf.planAModel)<0) rf.planAModel = srmOpts[0];
+    form.appendChild(fld('Plan A - SRM variant', selectFor(srmOpts, rf.planAModel, function(v){ rf.planAModel=v; })));
+
+    // Plan B competitor picker (non-SRM catalogue models only).
+    var compOpts = cat.comp.length ? cat.comp : [rf.planBModel];
+    if (compOpts.indexOf(rf.planBModel)<0) rf.planBModel = compOpts[0];
+    form.appendChild(fld('Plan B - competitor EV', selectFor(compOpts, rf.planBModel, function(v){ rf.planBModel=v; })));
+
+    function updateNote(){
+      var note=H.el('decision-framing-note');
+      if(!note) return;
+      var common = 'Plan A and Plan B are computed by running the frozen engine twice ' +
+        '(once with every EV-plan truck set to the chosen SRM variant, once with the chosen competitor), ' +
+        'because the engine binds a single EV model per truck. Keep ICE stays the shared baseline. ' +
+        '<em>Model limitation:</em> a truly <strong>net-added</strong> unit (growing the fleet count) is ' +
+        'out of model scope, so &ldquo;Add new vehicle&rdquo; is approximated within the existing per-truck replacement inputs.';
+      if(rf.intention==='add'){
+        note.innerHTML = '<strong>Add new vehicle:</strong> the engine has no net-added-unit input &mdash; ' +
+          'every path acts on an existing fleet row &mdash; so this is approximated as <strong>buying the EV now (month 0)</strong> ' +
+          'in place of the current vehicle. A true fleet-count increase is out of model scope. ' + common;
+      } else {
+        note.innerHTML = '<strong>Replace ICE vehicle:</strong> the EV is bought at the vehicle&rsquo;s ' +
+          'replacement / COE month exactly as the engine models a replacement. ' + common;
+      }
+    }
+    updateNote();
+  }
+
   function buildAll(){
-    buildCustomer(); buildFleet(); buildOperating(); buildEnergy(); buildSensitivity();
+    buildCustomer(); buildDecisionFraming(); buildFleet(); buildOperating(); buildEnergy(); buildSensitivity();
   }
 
   // Expose the input-table rebuilder so other controllers (Prospects) can
@@ -7388,7 +7928,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   function provFor(row, col){
     if (row && row._prov && row._prov[col] && row._prov[col].status){
       var st = String(row._prov[col].status).toLowerCase();
-      if (st==='sourced' || st==='derived' || st==='unconfirmed' || st==='assumption') return st;
+      if (st==='sourced' || st==='derived' || st==='unconfirmed' || st==='assumption' || st==='userentered') return st;
     }
     return 'unconfirmed';
   }
@@ -7397,6 +7937,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     var cls='prov-unconfirmed', txt='Unconfirmed';
     if (status==='sourced'){ cls='prov-sourced'; txt='Sourced'; }
     else if (status==='derived'){ cls='prov-derived'; txt='Derived'; }
+    else if (status==='userentered'){ cls='prov-userentered'; txt='User-entered'; }
     else if (status==='assumption'){ cls='prov-unconfirmed'; txt='Assumption'; }
     span.className='prov-badge '+cls;
     span.setAttribute('data-prov', status);
@@ -7405,21 +7946,81 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   }
   // A numeric spec cell: value (formatted) + provenance badge. A blank / n.a.
   // figure shows 'n.a.' and is forced to the Unconfirmed badge.
-  function specCell(row, col, fmt){
+  //
+  // FEAT-005: every technical spec cell is now an EDITABLE <input> bound to an
+  // in-memory override of the catalogue row (H.state.products.rows[col]). A
+  // user can correct or complete a spec live:
+  //   - the typed value is written straight onto the live product row, so the
+  //     ADDITIVE matcher (activeProductRows -> HSPortfolioFit) re-ranks on the
+  //     new figure (duty/fit verdict inputs recompute), and if the edited model
+  //     is the active Plan A SRM or Plan B competitor the two-state recompute
+  //     (buildPlanState deep-clones state.products) reads the new figure, so the
+  //     TCO recomputes - all WITHOUT touching the frozen engine or mutating
+  //     tools/fixtures/demo_case.json on disk (the edit lives only on the UI
+  //     state object);
+  //   - PROVENANCE HONESTY: the edited field's badge retags to 'User-entered'
+  //     (an explicit assumption), NEVER 'Sourced'. The input also carries the
+  //     .spec-edited amber ring + dotted underline so a typed value is visually
+  //     unmistakable from a cited default. Clearing the field back to blank
+  //     reverts it to 'n.a.' + Unconfirmed.
+  // `step` tunes the number input granularity ('any' for decimals like kWh/km
+  // and service S$/km; '1' for integer-ish payload/battery/kW/range/price).
+  function specCell(row, col, fmt, step){
     var td=document.createElement('td'); td.className='num spec-cell';
     td.setAttribute('data-spec-col', col);
-    var raw=row[col];
-    var status=provFor(row, col);
-    var valSpan=document.createElement('span'); valSpan.className='spec-val';
-    if (isNum(raw)){
-      valSpan.textContent=fmt?fmt(raw):String(raw);
-    } else {
-      valSpan.textContent='n.a.';
-      valSpan.className='spec-val na';
-      status='unconfirmed';   // never badge a blank as sourced/derived
+    var badge=provBadge(provFor(row, col));
+
+    var inp=document.createElement('input');
+    inp.type='number'; inp.step=step||'any';
+    inp.className='spec-input';
+    inp.setAttribute('data-spec-input', col);
+    inp.setAttribute('inputmode','decimal');
+    // Show the raw numeric value (not the formatted display) so editing is
+    // predictable; a blank/n.a. figure starts empty with the Unconfirmed badge.
+    inp.value = isNum(row[col]) ? String(row[col]) : '';
+    inp.setAttribute('aria-label', String(row.A||'model')+' '+col);
+    inp.title = fmt && isNum(row[col]) ? fmt(row[col]) : 'Editable spec \u2014 your value tags as User-entered';
+
+    function refreshBadge(status, edited){
+      var fresh=provBadge(status);
+      td.replaceChild(fresh, badge);
+      badge=fresh;
+      if (edited) inp.className='spec-input spec-edited';
+      else inp.className='spec-input';
     }
-    td.appendChild(valSpan);
-    td.appendChild(provBadge(status));
+    // Reflect the starting state (an already-user-entered field stays edited
+    // across a re-render, e.g. after a matcher recompute re-draws the table).
+    if (provFor(row, col)==='userentered') inp.className='spec-input spec-edited';
+
+    inp.addEventListener('input', function(){
+      var parsed=H.parseEditable(inp.value);
+      if (!row._prov) row._prov={};
+      if (inp.value.trim()===''){
+        // Cleared -> blank/n.a. -> honest Unconfirmed, drop any user tag.
+        row[col]=null;
+        delete row._prov[col];
+        refreshBadge('unconfirmed', false);
+      } else if (typeof parsed==='number' && isFinite(parsed)){
+        row[col]=parsed;
+        // A user-typed figure is an explicit assumption, NEVER a cited source.
+        row._prov[col]={status:'userentered', note:'User-entered override (not a cited source).'};
+        refreshBadge('userentered', true);
+      } else {
+        // Non-numeric text in a number field: ignore for the engine/matcher but
+        // still flag it as user-entered, not sourced.
+        row[col]=null;
+        row._prov[col]={status:'userentered', note:'User-entered (non-numeric; treated as n.a.).'};
+        refreshBadge('userentered', true);
+      }
+      // Re-run the ADDITIVE matcher + two-state TCO recompute from the edited
+      // product row. recompute() reads the live state, so both the Portfolio
+      // fit verdicts and (for the active plans) the TCO update. The frozen
+      // engine formulas and demo_case.json on disk are untouched.
+      H.recompute();
+    });
+
+    td.appendChild(inp);
+    td.appendChild(badge);
     return td;
   }
   function fmtInt(v){ return Math.round(v).toLocaleString('en-SG'); }
@@ -7472,14 +8073,14 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       tr.appendChild(nameTd);
 
       // --- Key specs with per-field provenance ---
-      tr.appendChild(specCell(row,'B',fmtInt));      // payload kg
-      tr.appendChild(specCell(row,'D',fmtInt));      // battery kWh
-      tr.appendChild(specCell(row,'E',fmtKwhKm));    // kWh/km
-      tr.appendChild(specCell(row,'G',fmtInt));      // AC kW
-      tr.appendChild(specCell(row,'H',fmtInt));      // DC kW
-      tr.appendChild(specCell(row,'J',fmtInt));      // range km
-      tr.appendChild(specCell(row,'I',fmtPrice));    // list price
-      tr.appendChild(specCell(row,'P',fmtSvc));      // service S$/km
+      tr.appendChild(specCell(row,'B',fmtInt,'1'));      // payload kg
+      tr.appendChild(specCell(row,'D',fmtInt,'any'));    // battery kWh
+      tr.appendChild(specCell(row,'E',fmtKwhKm,'any'));  // kWh/km
+      tr.appendChild(specCell(row,'G',fmtInt,'any'));    // AC kW
+      tr.appendChild(specCell(row,'H',fmtInt,'any'));    // DC kW
+      tr.appendChild(specCell(row,'J',fmtInt,'1'));      // range km
+      tr.appendChild(specCell(row,'I',fmtPrice,'1'));    // list price
+      tr.appendChild(specCell(row,'P',fmtSvc,'any'));    // service S$/km
 
       // --- Body-fit (col L): always Unconfirmed for every catalogue model ---
       var fitTd=document.createElement('td'); fitTd.className='switchover-fit';
@@ -7551,8 +8152,22 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   };
   // Per-path colours: primary (accent) on the EV plans, inks/greys on the rest.
   var PATHS = ['keep_ice','all_new_ice','plan_a','plan_b'];
+  // Chart series labels. Keep ICE / All-new ICE are fixed; Plan A / Plan B are
+  // refreshed from the reframe pickers (refreshChartLabels, called by renderAll)
+  // so every graph legend reads 'Plan A - SRM <variant>' / 'Plan B - <competitor>'.
   var PLABEL = {keep_ice:'Keep ICE', all_new_ice:'All-new ICE', plan_a:'Plan A', plan_b:'Plan B'};
+  // FEAT-006: SHORT axis labels for the narrow breakdown bar. The full
+  // 'Plan A - SRM ...' names stay on the hero end-labels, the tooltip and the
+  // results table; the breakdown x-axis uses these compact labels so the
+  // enlarged (>=13px) text does not collide across the four bars.
+  var PSHORT = {keep_ice:'Keep ICE', all_new_ice:'New ICE', plan_a:'Plan A', plan_b:'Plan B'};
   var PCOLOR = {keep_ice:'#8aa0ad', all_new_ice:'#5a6b78', plan_a:'#2f8fb0', plan_b:'#12556b'};
+  function refreshChartLabels(){
+    var rf = (H && typeof H.reframe==='function') ? H.reframe() : null;
+    if (!rf) return;
+    PLABEL.plan_a = 'Plan A - ' + rf.planAModel;
+    PLABEL.plan_b = 'Plan B - ' + rf.planBModel;
+  }
 
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function money0(v){
@@ -7575,9 +8190,15 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       '<rect width="6" height="6" fill="'+C.paper+'"/>'+
       '<line x1="0" y1="0" x2="0" y2="6" stroke="'+C.line2+'" stroke-width="2"/></pattern></defs>';
   }
-  function svgOpen(w,h){
+  // FEAT-006 typography floor: SVG text is sized in viewBox USER UNITS, which
+  // the browser scales by (renderedPxWidth / viewBoxWidth). To keep every chart
+  // label at or above the ~13px visibility floor at the 1440px desktop render,
+  // each chart passes a base font-size in user units calibrated to its own
+  // render scale (the narrow breakdown bar downscales hardest, so it needs the
+  // largest user-unit size). Default 14 covers a ~1:1 chart.
+  function svgOpen(w,h,fs){
     return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img" '+
-      'font-family="-apple-system,Segoe UI,Arial,sans-serif" font-size="11">';
+      'font-family="-apple-system,Segoe UI,Arial,sans-serif" font-size="'+(fs||14)+'">';
   }
 
   // DISPLAY-ONLY 2dp currency used across the dashboard tooltips + point labels.
@@ -7681,7 +8302,11 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   function renderCumulative(out){
     var box = el('chart-cumulative'); if(!box) return;
     var series = out && out.annualSeries;
-    var W=920,Hh=1120, mL=70,mR=120,mT=26,mB=60;
+    // FEAT-006: the hero renders ~0.93x (viewBox 920 -> ~854px left column), so
+    // a 15-user-unit base clears the ~13px floor (~14px rendered). Wider right
+    // margin + bigger de-collision gap keep the enlarged end/target labels legible.
+    var FS=15;
+    var W=920,Hh=1120, mL=78,mR=150,mT=30,mB=66;
     var plotW=W-mL-mR, plotH=Hh-mT-mB;
     var years=11;
     var max=0, any=false;
@@ -7690,7 +8315,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       if(!s) return;
       for(var y=0;y<years;y++){ if(isNum(s[y])){ any=true; if(s[y]>max) max=s[y]; } }
     });
-    if(!any){ box.innerHTML = svgOpen(W,Hh)+'<text x="'+(W/2)+'" y="'+(Hh/2)+'" text-anchor="middle" fill="'+C.muted+'">No numeric series</text></svg>'; return; }
+    if(!any){ box.innerHTML = svgOpen(W,Hh,FS)+'<text x="'+(W/2)+'" y="'+(Hh/2)+'" text-anchor="middle" fill="'+C.muted+'">No numeric series</text></svg>'; return; }
     // A5 SAVING-TARGET MARKER (display-only; no engine change). The level a plan's
     // year-10 cumulative must BEAT to meet the committed fleet saving target is
     //   targetLevel = (1 - savingTarget) * keepTotal
@@ -7711,7 +8336,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     var top=niceCeil(scaleMax);
     function xOf(y){ return mL + (plotW*(y/(years-1))); }
     function yOf(v){ return mT + plotH - (plotH*(v/top)); }
-    var svg=svgOpen(W,Hh);
+    var svg=svgOpen(W,Hh,FS);
     // horizontal gridlines + value-axis labels
     var gl=5;
     for(var g=0; g<=gl; g++){
@@ -7723,8 +8348,8 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     [3,5,10].forEach(function(my){
       var mx=xOf(my);
       svg+='<line data-tco-milestone="'+my+'" x1="'+mx.toFixed(1)+'" y1="'+mT+'" x2="'+mx.toFixed(1)+'" y2="'+(mT+plotH)+'" stroke="'+C.warn+'" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>';
-      svg+='<rect x="'+(mx-18).toFixed(1)+'" y="'+(mT-16)+'" width="36" height="14" rx="3" fill="'+C.warn+'" opacity="0.12"/>';
-      svg+='<text x="'+mx.toFixed(1)+'" y="'+(mT-5)+'" text-anchor="middle" fill="'+C.warn+'" font-weight="600">Yr '+my+'</text>';
+      svg+='<rect x="'+(mx-22).toFixed(1)+'" y="'+(mT-20)+'" width="44" height="17" rx="3" fill="'+C.warn+'" opacity="0.12"/>';
+      svg+='<text x="'+mx.toFixed(1)+'" y="'+(mT-7)+'" text-anchor="middle" fill="'+C.warn+'" font-weight="600">Yr '+my+'</text>';
     });
     // A5: the display-only saving-target reference line at targetLevel, labelled
     // with the committed target %. Drawn only when keepTotal (and thus the level)
@@ -7734,8 +8359,8 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       var ty = yOf(targetLevel);
       var tpct = (H && typeof H.fmtTargetPct==='function') ? H.fmtTargetPct(savingTarget) : String(Math.round(savingTarget*100));
       svg+='<line data-tco-target="1" x1="'+mL+'" y1="'+ty.toFixed(1)+'" x2="'+(mL+plotW)+'" y2="'+ty.toFixed(1)+'" stroke="'+C.good+'" stroke-width="1.5" stroke-dasharray="6 4"/>';
-      svg+='<rect x="'+(mL+plotW+2).toFixed(1)+'" y="'+(ty-8).toFixed(1)+'" width="'+(mR-4)+'" height="16" rx="3" fill="'+C.good+'" opacity="0.12"/>';
-      svg+='<text data-tco-target-label="1" x="'+(mL+plotW+6).toFixed(1)+'" y="'+(ty+3).toFixed(1)+'" fill="'+C.good+'" font-weight="600" font-size="10">Meet '+esc(tpct)+'% target</text>';
+      svg+='<rect x="'+(mL+plotW+2).toFixed(1)+'" y="'+(ty-10).toFixed(1)+'" width="'+(mR-4)+'" height="20" rx="3" fill="'+C.good+'" opacity="0.12"/>';
+      svg+='<text data-tco-target-label="1" x="'+(mL+plotW+6).toFixed(1)+'" y="'+(ty+4).toFixed(1)+'" fill="'+C.good+'" font-weight="600">Meet '+esc(tpct)+'% target</text>';
     }
     // all year axis labels 0..10
     for(var yy=0; yy<years; yy++){
@@ -7788,7 +8413,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     // a minimum gap so every path name stays readable in its own PCOLOR. The
     // saving-target 'Meet N% target' label sits at targetLevel (ty) in the same
     // right margin, so keep a clear gap from it too.
-    var EL_GAP = 15;                       // min vertical gap between labels
+    var EL_GAP = 21;                       // min vertical gap between labels (sized for the 15u font)
     var EL_X   = mL + plotW + 8;           // common left edge in the right margin
     var targetY = isNum(targetLevel) ? yOf(targetLevel) : null;
     endLabels.sort(function(a,b){ return a.y - b.y; });
@@ -7822,7 +8447,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       if(Math.abs(lab.ly - lab.y) > 1.5){
         svg+='<line x1="'+(mL+plotW).toFixed(1)+'" y1="'+lab.y.toFixed(1)+'" x2="'+(EL_X-2).toFixed(1)+'" y2="'+lab.ly.toFixed(1)+'" stroke="'+lab.col+'" stroke-width="1" opacity="0.5"/>';
       }
-      svg+='<text x="'+EL_X.toFixed(1)+'" y="'+(lab.ly+3).toFixed(1)+'" fill="'+lab.col+'" font-weight="600" font-size="10">'+lab.name+'</text>';
+      svg+='<text x="'+EL_X.toFixed(1)+'" y="'+(lab.ly+4).toFixed(1)+'" fill="'+lab.col+'" font-weight="600">'+lab.name+'</text>';
     });
     svg+='</svg>';
     box.innerHTML=svg;
@@ -7843,7 +8468,13 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   function renderBreakdown(out){
     var box=el('chart-breakdown'); if(!box) return;
     var res=out&&out.results;
-    var W=520,Hh=250, mL=58,mR=12,mT=16,mB=44;
+    // FEAT-006: this bar lives in the NARROW right band track (~394px render of
+    // a 520 viewBox, ~0.76x), so it downscales hardest. An 18-user-unit base
+    // clears the ~13px floor (~13.6px rendered). Taller viewBox + bigger top/
+    // bottom margins give the enlarged axis values, bar totals, short plan
+    // labels and the two-line legend room so nothing collides.
+    var FS=18;
+    var W=520,Hh=320, mL=72,mR=14,mT=46,mB=60;
     var plotW=W-mL-mR, plotH=Hh-mT-mB;
     // Per-path numeric total of the components (NA if any component is NA).
     function comps(p){
@@ -7867,12 +8498,12 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     if (isNum(targetLevel) && targetLevel > max) max = targetLevel;
     var top=niceCeil(max||1);
     var n=PATHS.length, slot=plotW/n, bw=slot*0.56, hatch='hatch_breakdown';
-    var svg=svgOpen(W,Hh)+defs(hatch);
+    var svg=svgOpen(W,Hh,FS)+defs(hatch);
     var gl=4;
     for(var g=0; g<=gl; g++){
       var gv=top*g/gl, gy=mT+plotH-(plotH*(gv/top));
       svg+='<line x1="'+mL+'" y1="'+gy.toFixed(1)+'" x2="'+(mL+plotW)+'" y2="'+gy.toFixed(1)+'" stroke="'+C.line+'" stroke-width="1"/>';
-      svg+='<text x="'+(mL-6)+'" y="'+(gy+3).toFixed(1)+'" text-anchor="end" fill="'+C.muted+'">'+moneyShort(gv)+'</text>';
+      svg+='<text x="'+(mL-8)+'" y="'+(gy+4).toFixed(1)+'" text-anchor="end" fill="'+C.muted+'">'+moneyShort(gv)+'</text>';
     }
     var baseY=mT+plotH;
     PATHS.forEach(function(p,i){
@@ -7888,13 +8519,14 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
             'x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" fill="'+seg.sd.color+'"><title>'+esc(PLABEL[p]+' - '+seg.sd.label)+': '+esc(money2(seg.v))+'</title></rect>';
           yTop=y;
         });
-        svg+='<text x="'+cx.toFixed(1)+'" y="'+(yTop-4).toFixed(1)+'" text-anchor="middle" fill="'+C.ink+'">'+esc(moneyShort(c.sum))+'</text>';
+        svg+='<text x="'+cx.toFixed(1)+'" y="'+(yTop-6).toFixed(1)+'" text-anchor="middle" fill="'+C.ink+'" font-weight="600">'+esc(moneyShort(c.sum))+'</text>';
       } else {
         var nah=Math.max(18,plotH*0.22), ny=baseY-nah;
         svg+='<rect x="'+x.toFixed(1)+'" y="'+ny.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+nah.toFixed(1)+'" fill="url(#'+hatch+')" stroke="'+C.line2+'" stroke-dasharray="3 2"/>';
-        svg+='<text x="'+cx.toFixed(1)+'" y="'+(ny-4).toFixed(1)+'" text-anchor="middle" fill="'+C.muted+'">n.a.</text>';
+        svg+='<text x="'+cx.toFixed(1)+'" y="'+(ny-6).toFixed(1)+'" text-anchor="middle" fill="'+C.muted+'">n.a.</text>';
       }
-      svg+='<text x="'+cx.toFixed(1)+'" y="'+(baseY+14)+'" text-anchor="middle" fill="'+C.muted+'">'+esc(PLABEL[p])+'</text>';
+      // Short axis label (full model name is on the hero chart + tooltip + table).
+      svg+='<text x="'+cx.toFixed(1)+'" y="'+(baseY+22)+'" text-anchor="middle" fill="'+C.muted+'">'+esc(PSHORT[p])+'</text>';
     });
     svg+='<line x1="'+mL+'" y1="'+baseY+'" x2="'+(mL+plotW)+'" y2="'+baseY+'" stroke="'+C.line2+'" stroke-width="1"/>';
     // A5: the saving-target tick across the bars, labelled with the committed %.
@@ -7902,13 +8534,15 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       var tyB = mT+plotH-(plotH*(targetLevel/top));
       var tpctB = (H && typeof H.fmtTargetPct==='function') ? H.fmtTargetPct(savingTarget) : String(Math.round(savingTarget*100));
       svg+='<line data-tco-target="1" x1="'+mL+'" y1="'+tyB.toFixed(1)+'" x2="'+(mL+plotW)+'" y2="'+tyB.toFixed(1)+'" stroke="'+C.good+'" stroke-width="1.5" stroke-dasharray="6 4"/>';
-      svg+='<text data-tco-target-label="1" x="'+(mL+2)+'" y="'+(tyB-3).toFixed(1)+'" fill="'+C.good+'" font-weight="600" font-size="10">Meet '+esc(tpctB)+'% target</text>';
+      svg+='<text data-tco-target-label="1" x="'+(mL+2)+'" y="'+(tyB-5).toFixed(1)+'" fill="'+C.good+'" font-weight="600">Meet '+esc(tpctB)+'% target</text>';
     }
-    // compact legend for the components
-    var lx=mL, ly=mT+2;
+    // Component legend in the top margin, STACKED one per line so the enlarged
+    // (>=13px) swatch + label never collide across the narrow 520 viewBox.
+    var lx=mL, ly=18;
     SEG_DEFS.forEach(function(sd,li){
-      svg+='<rect x="'+(lx+li*150)+'" y="'+(ly-8)+'" width="9" height="9" fill="'+sd.color+'"/>';
-      svg+='<text x="'+(lx+li*150+13)+'" y="'+ly+'" fill="'+C.muted+'">'+esc(sd.label)+'</text>';
+      var ry=ly+li*19;
+      svg+='<rect x="'+lx+'" y="'+(ry-12)+'" width="13" height="13" fill="'+sd.color+'"/>';
+      svg+='<text x="'+(lx+19)+'" y="'+ry+'" fill="'+C.muted+'">'+esc(sd.label)+'</text>';
     });
     svg+='</svg>';
     box.innerHTML=svg;
@@ -7936,6 +8570,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   /* ---- Wire into the live recompute + sensitivity paths ----------- */
   function renderAll(out){
     if(!out) return;
+    refreshChartLabels();
     renderCumulative(out);
     renderBreakdown(out);
   }

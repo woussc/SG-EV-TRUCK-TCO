@@ -121,6 +121,10 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'portfolio-provenance-legend',
   // FEAT-002: folded-in customer profile + consolidated per-truck Advanced.
   'customer-form','fleet-adv',
+  // FEAT-002 (Workstream D): business-intention reframe + Plan A/B pickers.
+  'decision-framing','decision-framing-form','decision-framing-note',
+  'decision-cards',
+  'results-th-keep_ice','results-th-all_new_ice','results-th-plan_a','results-th-plan_b',
   // FEAT-002 (Part C): Stage-4 charging assessment panels.
   'charge-site-read','charge-detour-read','charge-public-totals',
   'charge-public-bands','charge-region-body','charge-operator-body',
@@ -130,11 +134,22 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'rsim-dconly','rsim-origin-note','rsim-summary','rsim-map','rsim-charger-table',
   'rsim-charger-body','rsim-caveat','rsim-attribution',
   'rsim-zoom-in','rsim-zoom-out','rsim-zoom-reset',
-  // FEAT-004 (Workstream C): Stage-5 Financing (illustrative) opt-in block.
+  // FEAT-004 (Workstream C) + FEAT-003 (Workstream E): Stage-5 per-plan
+  // proposal columns + per-plan Financing (illustrative) opt-in block.
+  'proposal-plan-grid','proposal-status-line',
+  'proposal-badge-plan_a','proposal-status-plan_a','proposal-plan-title-plan_a',
+  'proposal-quotation-body-plan_a','proposal-quotation-caveat-plan_a',
+  'proposal-servicing-body-plan_a','proposal-conditions-body-plan_a',
+  'proposal-badge-plan_b','proposal-status-plan_b','proposal-plan-title-plan_b',
+  'proposal-quotation-body-plan_b','proposal-quotation-caveat-plan_b',
+  'proposal-servicing-body-plan_b','proposal-conditions-body-plan_b',
   'proposal-finance-block','finance-enable','finance-controls','finance-exclusion',
   'finance-principal-src','finance-principal','finance-deposit','finance-apr',
   'finance-term','finance-term-unit','finance-off-note','finance-output',
-  'finance-status-line','finance-summary-body','finance-caveat'];
+  'finance-status-line','finance-summary-body','finance-caveat',
+  'finance-controls-b','finance-principal-src-b','finance-principal-b','finance-deposit-b',
+  'finance-apr-b','finance-term-b','finance-term-unit-b',
+  'finance-status-line-b','finance-summary-body-b','finance-caveat-b'];
 ids.forEach((id) => { byId[id] = makeEl('div'); });
 
 const document = {
@@ -1695,10 +1710,111 @@ checks.push(['switch-over: excluding a competitor keeps SRM in the active catalo
 const outAfterToggle = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
 checks.push(['switch-over: toggling a competitor does NOT break the frozen engine',
   !!outAfterToggle && !!outAfterToggle.results && outAfterToggle.results.truckCount.keep_ice === 6]);
-// Re-include the competitor and restore the demo baseline.
+// Re-include the competitor.
 if (compToggle) { compToggle.checked = true; compToggle.fire('change'); }
-windowObj.__HS.loadDemoFixture();
+
+// ===========================================================================
+// FEAT-005 (Workstream F): EDITABLE portfolio specs with user-entered
+// provenance + frozen-engine isolation. Every technical spec cell is an
+// editable <input>; editing it (a) feeds the additive matcher's verdict inputs
+// for that model, (b) retags the field's provenance to 'User-entered' (never
+// 'Sourced'), and (c) NEVER changes computeFleet's frozen outputs for the
+// pristine demo fixture nor mutates tools/fixtures/demo_case.json on disk.
+// ===========================================================================
+if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+windowObj.__HS.renderSwitchover();   // rebuild the table fresh for the edit tests
+
+// (a) spec fields are editable inputs: collect every data-spec-input in the
+//     switch-over body and confirm there is at least one per catalogue model
+//     and that they are real <input> elements with a spec column.
+const specInputs = soCollect(soBody, 'data-spec-input', []);
+checks.push(['FEAT-005: switch-over renders editable spec inputs (one grid of <input> per spec)',
+  specInputs.length >= soRows.length &&
+  specInputs.every((n) => String(n.tagName).toLowerCase() === 'input' &&
+    n.attributes['data-spec-input'] != null)]);
+// The key spec columns (payload B, battery D, kWh/km E, AC G, DC H, range J,
+// price I, service P) are all editable for at least one model.
+const EDITABLE_COLS = ['B', 'D', 'E', 'G', 'H', 'J', 'I', 'P'];
+const editableColSet = specInputs.map((n) => n.attributes['data-spec-input']);
+checks.push(['FEAT-005: all key technical spec columns are editable (payload/battery/kWh-km/AC/DC/range/price/service)',
+  EDITABLE_COLS.every((c) => editableColSet.indexOf(c) !== -1)]);
+
+// Snapshot the pristine fixture engine output BEFORE any edit, and the
+// on-disk fixture file, so we can prove (d) the edit never moves either.
+const FIT5 = windowObj.HSPortfolioFit;
+const demoBefore = windowObj.HSEngine.computeFleet(windowObj.HSDemoCase.inputs);
+const frozenPlanA = demoBefore.results.vehicleEconomicTco.plan_a;
+const frozenKeepIce = demoBefore.results.vehicleEconomicTco.keep_ice;
+const fixtureBytesBefore = readFileSync(resolve(here, '..', 'tools/fixtures/demo_case.json'), 'utf8');
+
+// Pick a competitor row with a sourced payload (BYD T35, payload 1900 kg) so a
+// payload edit demonstrably moves the matcher's payload-gate input. Score it on
+// a demanding duty BEFORE and AFTER the edit.
+const editName = 'BYD T35 Electric Light-Duty';
+const editRow = windowObj.__HS.state.products.rows.find((p) => p.A === editName);
+const editTr = rowOf(editName);
+function specInputOf(tr, col) {
+  return soCollect(tr, 'data-spec-input', []).find((n) => n.attributes['data-spec-input'] === col);
+}
+const payloadInput = editTr ? specInputOf(editTr, 'B') : null;
+checks.push(['FEAT-005: a competitor row exposes an editable payload input', !!payloadInput && !!editRow]);
+
+// Matcher duty the BYD T35 originally CLEARS on payload (sourced 1900 kg).
+const editDuty = {
+  peakCargoKg: 1500, routeKm: 150, workKmPerDay: 120,
+  availableChargeKw: 60, chargeWindowH: 10, includedCount: 1, blank: {},
+};
+const scoreBeforeEdit = FIT5.scoreModelFit(editDuty, editRow);
+checks.push(['FEAT-005: before edit the matcher reads the sourced payload as clearing the gate',
+  scoreBeforeEdit.cells.payload === 'ok']);
+
+// (c) EDIT the payload DOWN to 900 kg (below the 1500 kg peak cargo). Simulate
+//     typing into the input and firing its 'input' handler exactly as the UI.
+if (payloadInput) { payloadInput.value = '900'; payloadInput.fire('input'); }
+// The live product row now carries the typed figure...
+checks.push(['FEAT-005: editing a spec writes the typed value onto the live product row',
+  editRow.B === 900]);
+// ...tagged User-entered (an explicit assumption), NEVER Sourced.
+checks.push(['FEAT-005: an edited field retags provenance to user-entered (never sourced)',
+  editRow._prov && editRow._prov.B && String(editRow._prov.B.status).toLowerCase() === 'userentered']);
+// (b) the matcher's verdict input for that model changed: the same duty now
+//     reads the payload gate as UNDER (the edit flowed into the matcher).
+const scoreAfterEdit = FIT5.scoreModelFit(editDuty, editRow);
+checks.push(['FEAT-005: editing the payload changes the matcher verdict input (gate now fails)',
+  scoreBeforeEdit.cells.payload === 'ok' && scoreAfterEdit.cells.payload === 'under' &&
+  scoreAfterEdit.verdict === 'Does not fit']);
+// The re-rendered switch-over row shows the User-entered badge for that field,
+// visually distinct from a Sourced badge.
+const editTrAfter = toArr(soBody.children).find(
+  (r) => r.attributes && r.attributes['data-switchover-model'] === editName);
+const payloadCellBadges = editTrAfter
+  ? soCollect(editTrAfter, 'data-spec-col', [])
+      .filter((td) => td.attributes['data-spec-col'] === 'B')
+      .reduce((acc, td) => soCollect(td, 'data-prov', acc), [])
+  : [];
+checks.push(['FEAT-005: the edited cell renders a User-entered provenance badge (not Sourced)',
+  payloadCellBadges.some((b) => b.attributes['data-prov'] === 'userentered') &&
+  !payloadCellBadges.some((b) => b.attributes['data-prov'] === 'sourced')]);
+
+// (d) FROZEN-ENGINE ISOLATION: the pristine demo fixture's computeFleet output
+//     is UNCHANGED by the UI edit (edits live only on __HS.state), and the
+//     fixture file on disk is byte-for-byte identical.
+const demoAfter = windowObj.HSEngine.computeFleet(windowObj.HSDemoCase.inputs);
+checks.push(['FEAT-005: editing a portfolio spec does NOT change computeFleet frozen outputs for the demo fixture',
+  demoAfter.results.vehicleEconomicTco.plan_a === frozenPlanA &&
+  demoAfter.results.vehicleEconomicTco.keep_ice === frozenKeepIce]);
+const fixtureBytesAfter = readFileSync(resolve(here, '..', 'tools/fixtures/demo_case.json'), 'utf8');
+checks.push(['FEAT-005: editing a portfolio spec never mutates demo_case.json on disk',
+  fixtureBytesAfter === fixtureBytesBefore]);
+
+// Clearing the field reverts it to n.a./Unconfirmed (drops the user tag).
+if (payloadInput) { payloadInput.value = ''; payloadInput.fire('input'); }
+checks.push(['FEAT-005: clearing an edited spec reverts to n.a./Unconfirmed (user tag dropped)',
+  editRow.B == null && !(editRow._prov && editRow._prov.B)]);
+
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
+// Restore the clean demo baseline for the assertions that follow.
+windowObj.__HS.loadDemoFixture();
 
 // ---- App-screen layout + honesty invariants (FEAT-004) --------------------
 // Static checks a DOM harness CAN see, read straight from the raw index.html
@@ -1801,12 +1917,82 @@ checks.push(['breakdown bar renders a matching saving-target tick',
     return (h && (h.textContent || '')) || '';
   });
   const joined = sensLabels.join(' | ');
-  checks.push(['headline sens controls include diesel/elec/EV price/target',
-    /diesel/i.test(joined) && /electricity/i.test(joined) &&
-    /EV purchase price/i.test(joined) && /saving target/i.test(joined)]);
+  // FEAT-002: the single shared 'EV purchase price' slider is SPLIT into two
+  // independent per-plan drivers -- Plan A EV cost (SRM) and Plan B EV cost
+  // (competitor). Both must be present alongside diesel / electricity / target.
+  checks.push(['headline sens controls include diesel/elec/target + BOTH per-plan EV-cost sliders',
+    /diesel/i.test(joined) && /electricity/i.test(joined) && /saving target/i.test(joined) &&
+    /plan a ev cost/i.test(joined) && /plan b ev cost/i.test(joined)]);
   checks.push(['headline sens controls do NOT include the discount rate',
     !/discount/i.test(joined)]);
 })();
+
+// FEAT-002 (Workstream D): the decision-framing controls exist -- a business
+// intention <select> (Add / Replace) + a Plan A SRM picker + a Plan B
+// competitor picker -- and the reframe API is exposed on __HS.
+(() => {
+  const selects = toArr(byId['decision-framing-form'].children)
+    .map((f) => toArr(f.children).find((c) => c.tagName === 'select'))
+    .filter(Boolean);
+  checks.push(['decision-framing offers 3 pickers (intention + Plan A + Plan B)',
+    selects.length >= 3]);
+  const allOpts = selects.map((s) => toArr(s.children)
+    .map((o) => (o.textContent || '') + '|' + (o.attributes && o.attributes.value != null ? o.attributes.value : '')).join(' '));
+  const framingText = allOpts.join(' || ');
+  checks.push(['business-intention picker offers Add new vehicle + Replace ICE',
+    /add new vehicle/i.test(framingText) && /replace ice/i.test(framingText)]);
+  checks.push(['Plan A picker offers an SRM variant; Plan B picker offers a competitor',
+    /SRM/i.test(framingText) && /(ChengLong|Farizon|BYD|Foton|Forland|JAC|Qingling)/i.test(framingText)]);
+  // The add-vs-replace limitation is surfaced honestly in the framing note.
+  const note = byId['decision-framing-note'].innerHTML || '';
+  checks.push(['decision-framing note surfaces the add-vs-replace model limitation',
+    /net-added|out of model scope|approximated/i.test(note)]);
+  // The reframe two-state API is exposed for the live recompute.
+  checks.push(['__HS exposes the reframe + two-state recompute API',
+    typeof windowObj.__HS.reframe === 'function' &&
+    typeof windowObj.__HS.computeReframed === 'function' &&
+    typeof windowObj.__HS.catalogueModels === 'function']);
+})();
+
+// FEAT-002: the TCO + Decision surfaces carry the decision framing labels
+// 'Plan A - SRM <variant>' and 'Plan B - <competitor>' (live from the pickers),
+// and the frozen Keep ICE / All-new ICE labels are preserved.
+(() => {
+  const thA = byId['results-th-plan_a'].textContent || '';
+  const thB = byId['results-th-plan_b'].textContent || '';
+  const thKeep = byId['results-th-keep_ice'].textContent || '';
+  checks.push(['results header relabels Plan A -> "Plan A - SRM <variant>"',
+    /^Plan A - SRM/i.test(thA)]);
+  checks.push(['results header relabels Plan B -> "Plan B - <competitor>"',
+    /^Plan B - /i.test(thB) && !/SRM/i.test(thB.replace(/^Plan B - /i, ''))]);
+  checks.push(['results header keeps the Keep ICE baseline label', /Keep ICE/i.test(thKeep)]);
+  const dec = byId['decision-cards'].innerHTML || '';
+  checks.push(['decision cards carry the Plan A - SRM / Plan B - competitor framing',
+    /Plan A - SRM/i.test(dec) && /Plan B - /i.test(dec)]);
+})();
+
+// FEAT-002: live per-plan isolation through the actual page API. Moving the
+// Plan A EV price changes ONLY plan_a; moving Plan B changes ONLY plan_b. This
+// drives __HS.reframe()/__HS.computeReframed() exactly as the sliders do.
+(() => {
+  const isNum = (v) => typeof v === 'number' && isFinite(v);
+  const rf = windowObj.__HS.reframe();
+  const vA = () => windowObj.__HS.computeReframed().results.vehicleEconomicTco.plan_a;
+  const vB = () => windowObj.__HS.computeReframed().results.vehicleEconomicTco.plan_b;
+  const priceA0 = rf.evPriceA, priceB0 = rf.evPriceB;
+  const a0 = vA(), b0 = vB();
+  rf.evPriceA = priceA0 + 40000;                 // move Plan A only
+  const a1 = vA(), b1 = vB();
+  checks.push(['live Plan A EV price moves plan_a only (plan_b unchanged)',
+    isNum(a0) && isNum(a1) && a1 !== a0 && isNum(b0) && b0 === b1]);
+  rf.evPriceA = priceA0;                          // restore
+  rf.evPriceB = priceB0 + 40000;                  // move Plan B only
+  const a2 = vA(), b2 = vB();
+  checks.push(['live Plan B EV price moves plan_b only (plan_a unchanged)',
+    isNum(b0) && isNum(b2) && b2 !== b0 && isNum(a0) && a0 === a2]);
+  rf.evPriceB = priceB0;                          // restore
+})();
+
 // A4: the discount rate is editable in the Advanced area, carrying its relocate
 // note. buildOperating() renders it into #oc-form-adv with a data-oc-discount hook.
 (() => {
@@ -1976,114 +2162,172 @@ checks.push(['raw charger snapshot is NOT inlined (compact aggregates only)',
 // explicitly EXCLUDED from the economic TCO; toggling it changes NO economic
 // figure.
 
-// (1) The old placeholder is gone; the real proposal chrome is present.
+// (1) The old placeholder is gone; the real PER-PLAN proposal chrome is present.
+// FEAT-003 (Workstream E): the proposal mirrors the TCO Plan A (SRM) vs Plan B
+// (competitor) framing -- Plan A and Plan B render SIDE BY SIDE, each column
+// owning its own quotation / servicing / unresolved-conditions tables and its
+// own gate-inherited INDICATIVE/Confirmed badge.
 const proposalStageMarkup = (() => {
   const i = html.indexOf('id="stage-proposal"');
   if (i === -1) return '';
   const j = html.indexOf('</section>\n\n</div><!-- /results-col', i);
-  return j === -1 ? html.slice(i, i + 6000) : html.slice(i, j);
+  return j === -1 ? html.slice(i, i + 12000) : html.slice(i, j);
 })();
 checks.push(['Proposal stage drops the old Coming next placeholder',
   proposalStageMarkup.indexOf('Coming next') === -1]);
-checks.push(['Proposal stage renders the quotation / servicing / unresolved-conditions chrome',
-  proposalStageMarkup.indexOf('id="proposal-quotation-table"') !== -1 &&
-  proposalStageMarkup.indexOf('id="proposal-servicing-table"') !== -1 &&
-  proposalStageMarkup.indexOf('id="proposal-conditions-table"') !== -1]);
-checks.push(['Proposal stage carries the gate-inherited badge element',
-  proposalStageMarkup.indexOf('id="proposal-badge"') !== -1]);
+checks.push(['Proposal stage renders the PER-PLAN quotation / servicing / unresolved-conditions chrome (Plan A + Plan B)',
+  proposalStageMarkup.indexOf('id="proposal-quotation-table-plan_a"') !== -1 &&
+  proposalStageMarkup.indexOf('id="proposal-servicing-table-plan_a"') !== -1 &&
+  proposalStageMarkup.indexOf('id="proposal-conditions-table-plan_a"') !== -1 &&
+  proposalStageMarkup.indexOf('id="proposal-quotation-table-plan_b"') !== -1 &&
+  proposalStageMarkup.indexOf('id="proposal-servicing-table-plan_b"') !== -1 &&
+  proposalStageMarkup.indexOf('id="proposal-conditions-table-plan_b"') !== -1]);
+checks.push(['Proposal stage carries a PER-PLAN gate-inherited badge for Plan A and Plan B',
+  proposalStageMarkup.indexOf('id="proposal-badge-plan_a"') !== -1 &&
+  proposalStageMarkup.indexOf('id="proposal-badge-plan_b"') !== -1]);
+checks.push(['Proposal lays Plan A and Plan B out SIDE BY SIDE (per-plan grid)',
+  proposalStageMarkup.indexOf('id="proposal-plan-grid"') !== -1 &&
+  /\.proposal-plan-grid\s*\{[^}]*grid-template-columns\s*:\s*1fr\s+1fr/.test(html)]);
 
 // Make sure the controller is on the clean demo state before reading.
 windowObj.__HS.loadDemoFixture();
 windowObj.__HS.recompute();
 
-// (2) DEMO case -> INDICATIVE. For the demo both EV plans are 'Total incomplete'
-// (site cost n.a.), so the proposal must NOT read as a firm quotation: the badge
-// is pb-indicative (not pb-confirmed) and the wording says pending evidence.
-const propBadge = byId['proposal-badge'];
+// (2) DEMO case -> INDICATIVE for BOTH plans. For the demo both EV plans are
+// 'Total incomplete' (site cost n.a.), so neither plan reads as a firm
+// quotation: each plan badge is pb-indicative (not pb-confirmed).
+const propBadgeA = byId['proposal-badge-plan_a'];
+const propBadgeB = byId['proposal-badge-plan_b'];
 const propStage = byId['stage-proposal'];
-checks.push(['Proposal renders the quotation block from engine output',
-  byId['proposal-quotation-body'].innerHTML.indexOf('Total economic TCO') !== -1 &&
-  byId['proposal-quotation-body'].innerHTML.indexOf('Day-0 funding') !== -1]);
-checks.push(['Proposal quotation preserves n.a. for the diagnostic demo (not zeroed)',
-  byId['proposal-quotation-body'].innerHTML.indexOf('n.a.') !== -1]);
-checks.push(['Proposal renders the servicing coverage block (cost/km + service status)',
-  byId['proposal-servicing-body'].innerHTML.indexOf('productive km') !== -1 &&
-  byId['proposal-servicing-body'].innerHTML.indexOf('service / evidence') !== -1]);
+checks.push(['Proposal renders the Plan A quotation block from engine output',
+  byId['proposal-quotation-body-plan_a'].innerHTML.indexOf('Total economic TCO') !== -1 &&
+  byId['proposal-quotation-body-plan_a'].innerHTML.indexOf('Day-0 funding') !== -1]);
+checks.push(['Proposal renders the Plan B quotation block from engine output',
+  byId['proposal-quotation-body-plan_b'].innerHTML.indexOf('Total economic TCO') !== -1 &&
+  byId['proposal-quotation-body-plan_b'].innerHTML.indexOf('Day-0 funding') !== -1]);
+checks.push(['Proposal quotation preserves n.a. for the diagnostic demo (not zeroed), both plans',
+  byId['proposal-quotation-body-plan_a'].innerHTML.indexOf('n.a.') !== -1 &&
+  byId['proposal-quotation-body-plan_b'].innerHTML.indexOf('n.a.') !== -1]);
+checks.push(['Proposal renders the Plan A + Plan B servicing coverage blocks (cost/km + service status)',
+  byId['proposal-servicing-body-plan_a'].innerHTML.indexOf('productive km') !== -1 &&
+  byId['proposal-servicing-body-plan_a'].innerHTML.indexOf('service / evidence') !== -1 &&
+  byId['proposal-servicing-body-plan_b'].innerHTML.indexOf('productive km') !== -1]);
 checks.push(['Proposal servicing block states the 200,000 km schedule basis + caveat',
-  byId['proposal-servicing-body'].innerHTML.indexOf('200,000') !== -1 &&
+  byId['proposal-servicing-body-plan_a'].innerHTML.indexOf('200,000') !== -1 &&
   proposalStageMarkup.indexOf('beyond 200,000') !== -1]);
-checks.push(['Proposal unresolved-conditions block lists the gates',
-  byId['proposal-conditions-body'].innerHTML.indexOf('Service screen') !== -1 &&
-  byId['proposal-conditions-body'].innerHTML.indexOf('Capacity gate') !== -1]);
-checks.push(['Proposal unresolved-conditions block lists an n.a. / diagnostic flag for the demo',
-  byId['proposal-conditions-body'].innerHTML.indexOf('n.a.') !== -1 ||
-  byId['proposal-conditions-body'].innerHTML.indexOf('Total incomplete') !== -1]);
-checks.push(['Proposal badge is INDICATIVE for the diagnostic demo (not a firm quotation)',
-  /(^|\s)pb-indicative(\s|$)/.test(propBadge.className || '') &&
-  !/(^|\s)pb-confirmed(\s|$)/.test(propBadge.className || '') &&
-  propBadge.innerHTML.indexOf('INDICATIVE') !== -1 &&
-  propBadge.innerHTML.indexOf('Confirmed quotation') === -1]);
+checks.push(['Proposal unresolved-conditions blocks list the gates (both plans)',
+  byId['proposal-conditions-body-plan_a'].innerHTML.indexOf('Service screen') !== -1 &&
+  byId['proposal-conditions-body-plan_a'].innerHTML.indexOf('Capacity gate') !== -1 &&
+  byId['proposal-conditions-body-plan_b'].innerHTML.indexOf('Service screen') !== -1]);
+checks.push(['Proposal unresolved-conditions block lists an n.a. / diagnostic flag for the demo (both plans)',
+  (byId['proposal-conditions-body-plan_a'].innerHTML.indexOf('n.a.') !== -1 ||
+   byId['proposal-conditions-body-plan_a'].innerHTML.indexOf('Total incomplete') !== -1) &&
+  (byId['proposal-conditions-body-plan_b'].innerHTML.indexOf('n.a.') !== -1 ||
+   byId['proposal-conditions-body-plan_b'].innerHTML.indexOf('Total incomplete') !== -1)]);
+checks.push(['Both plan badges are INDICATIVE for the diagnostic demo (not a firm quotation)',
+  /(^|\s)pb-indicative(\s|$)/.test(propBadgeA.className || '') &&
+  !/(^|\s)pb-confirmed(\s|$)/.test(propBadgeA.className || '') &&
+  propBadgeA.innerHTML.indexOf('INDICATIVE') !== -1 &&
+  /(^|\s)pb-indicative(\s|$)/.test(propBadgeB.className || '') &&
+  !/(^|\s)pb-confirmed(\s|$)/.test(propBadgeB.className || '') &&
+  propBadgeB.innerHTML.indexOf('INDICATIVE') !== -1]);
 checks.push(['Proposal stage carries the proposal-pending state class for the demo',
   /(^|\s)proposal-pending(\s|$)/.test(propStage.className || '') &&
   !/(^|\s)proposal-confirmed(\s|$)/.test(propStage.className || '')]);
-checks.push(['Proposal status line names the chosen plan and the indicative framing',
-  byId['proposal-status-line'].innerHTML.toLowerCase().indexOf('indicative') !== -1]);
+checks.push(['Proposal per-plan status lines carry the indicative framing (both plans)',
+  byId['proposal-status-plan_a'].innerHTML.toLowerCase().indexOf('indicative') !== -1 &&
+  byId['proposal-status-plan_b'].innerHTML.toLowerCase().indexOf('indicative') !== -1]);
+// Per-plan labels read 'Plan A - SRM ...' / 'Plan B - ...' (two-state framing).
+checks.push(['Proposal per-plan quotation names the SRM Plan A and competitor Plan B labels',
+  /Plan A - SRM/.test(byId['proposal-quotation-body-plan_a'].innerHTML) &&
+  /Plan B - /.test(byId['proposal-quotation-body-plan_b'].innerHTML)]);
 
-// (3) FEAT-004: the deferred placeholder is gone, REPLACED by a real,
-// clearly-labelled 'Financing (illustrative)' block that is OPT-IN (off by
-// default) and explicitly NOT part of the economic TCO. This is STRICTLY
-// stronger than the old 'next phase' note assertion: it requires a working,
-// labelled, toggle-gated block AND proves it changes no economic figure.
-checks.push(['Proposal replaces the deferred placeholder with a Financing (illustrative) block',
+// (3) FEAT-003: the finance block is a SEPARATE, OPT-IN 'Financing
+// (illustrative)' block that is off by default and explicitly NOT part of the
+// economic TCO, now applied to Plan A and Plan B SEPARATELY with a per-plan
+// financial-component breakdown.
+checks.push(['Proposal carries a Financing (illustrative) block',
   proposalStageMarkup.indexOf('Financing (illustrative)') !== -1 &&
   proposalStageMarkup.indexOf('separate opt-in module, next phase') === -1 &&
   proposalStageMarkup.indexOf('id="proposal-finance-block"') !== -1]);
-checks.push(['Financing block is clearly labelled NOT part of the economic TCO (loans/interest excluded by design)',
+checks.push(['Financing block is clearly labelled NOT part of the economic TCO for BOTH plans (loans/interest excluded by design)',
   /NOT part of the economic TCO/i.test(proposalStageMarkup) &&
-  /excludes? loans and interest/i.test(proposalStageMarkup)]);
+  /excludes? loans and interest/i.test(proposalStageMarkup) &&
+  /both plan|per plan|plan a and plan b/i.test(proposalStageMarkup)]);
 checks.push(['Financing block is OPT-IN behind a toggle that is OFF by default',
   proposalStageMarkup.indexOf('id="finance-enable"') !== -1 &&
   // the checkbox markup carries NO `checked` attribute -> off by default
   !/id="finance-enable"[^>]*\bchecked\b/.test(proposalStageMarkup)]);
-checks.push(['Financing block exposes its OWN finance inputs (APR / term / deposit / principal)',
+checks.push(['Financing block exposes PER-PLAN finance inputs (APR / term / deposit / principal for Plan A AND Plan B)',
   /id="finance-apr"/.test(proposalStageMarkup) && /id="finance-term"/.test(proposalStageMarkup) &&
-  /id="finance-deposit"/.test(proposalStageMarkup) && /id="finance-principal"/.test(proposalStageMarkup)]);
+  /id="finance-deposit"/.test(proposalStageMarkup) && /id="finance-principal"/.test(proposalStageMarkup) &&
+  /id="finance-apr-b"/.test(proposalStageMarkup) && /id="finance-term-b"/.test(proposalStageMarkup) &&
+  /id="finance-deposit-b"/.test(proposalStageMarkup) && /id="finance-principal-b"/.test(proposalStageMarkup)]);
 checks.push(['Finance amortisation module exposed on window.HSFinance (additive, separate)',
   !!windowObj.HSFinance && typeof windowObj.HSFinance.amortise === 'function' &&
-  typeof windowObj.HSFinance.financedAmount === 'function']);
+  typeof windowObj.HSFinance.financedAmount === 'function' &&
+  typeof windowObj.HSFinance.summarise === 'function']);
 
 // (3b) OPT-IN behaviour + ISOLATION from the economic quotation. With the
-// toggle OFF (the default) the finance output stays hidden and the economic
-// quotation figures are exactly what renderProposal produced. Turning the
-// toggle ON renders an instalment illustration BUT leaves the economic
-// quotation / Total byte-identical. This is the UI-level isolation guard.
+// toggle OFF (the default) the finance output stays hidden and both plans'
+// economic quotation figures are exactly what renderProposal produced. Turning
+// the toggle ON renders a per-plan instalment illustration BUT leaves both
+// economic quotations byte-identical. This is the UI-level isolation guard.
 windowObj.__HS.loadDemoFixture();
 windowObj.__HS.recompute();
 const finToggle = byId['finance-enable'];
-const quotationOff = byId['proposal-quotation-body'].innerHTML;
+const quotationOffA = byId['proposal-quotation-body-plan_a'].innerHTML;
+const quotationOffB = byId['proposal-quotation-body-plan_b'].innerHTML;
 const financeOutputOff = byId['finance-output'];
 checks.push(['Financing output is hidden while the toggle is OFF (default)',
   finToggle.checked !== true && financeOutputOff.hidden === true &&
   byId['finance-summary-body'].innerHTML.indexOf('Monthly instalment') === -1]);
 
 // Flip the toggle ON and re-render the finance block (no recompute -> cannot
-// touch the engine). Default principal source is the chosen plan's Day-0
+// touch the engine). Per-plan default principal source is each plan's own Day-0
 // funding (read-only), APR 4.5%, term 60 months.
 finToggle.checked = true;
 finToggle.fire('change'); finToggle.fire('input');
-const quotationOnAfter = byId['proposal-quotation-body'].innerHTML;
-checks.push(['Economic quotation figures are BYTE-IDENTICAL with the finance toggle on vs off (isolation)',
-  quotationOff === quotationOnAfter]);
-checks.push(['Financing illustration renders a monthly instalment when enabled',
+const quotationOnAfterA = byId['proposal-quotation-body-plan_a'].innerHTML;
+const quotationOnAfterB = byId['proposal-quotation-body-plan_b'].innerHTML;
+checks.push(['Both economic quotations are BYTE-IDENTICAL with the finance toggle on vs off (isolation)',
+  quotationOffA === quotationOnAfterA && quotationOffB === quotationOnAfterB]);
+checks.push(['Per-plan financing breakdown renders a monthly instalment + interest + total repaid when enabled (both plans)',
   byId['finance-output'].hidden === false &&
-  byId['finance-summary-body'].innerHTML.indexOf('Monthly instalment') !== -1]);
-checks.push(['Financing illustration inherits the INDICATIVE wording for the diagnostic demo',
+  byId['finance-summary-body'].innerHTML.indexOf('Monthly instalment') !== -1 &&
+  byId['finance-summary-body'].innerHTML.indexOf('Total interest paid') !== -1 &&
+  byId['finance-summary-body'].innerHTML.indexOf('Total repaid') !== -1 &&
+  byId['finance-summary-body-b'].innerHTML.indexOf('Monthly instalment') !== -1]);
+checks.push(['Per-plan financing breakdown shows the upfront / down-payment + principal financed rows (both plans)',
+  byId['finance-summary-body'].innerHTML.indexOf('Upfront') !== -1 &&
+  byId['finance-summary-body'].innerHTML.indexOf('Loan principal financed') !== -1 &&
+  byId['finance-summary-body-b'].innerHTML.indexOf('Upfront') !== -1 &&
+  byId['finance-summary-body-b'].innerHTML.indexOf('Loan principal financed') !== -1]);
+checks.push(['Per-plan financing inherits the INDICATIVE wording for the diagnostic demo (both plans)',
   byId['finance-status-line'].innerHTML.toLowerCase().indexOf('indicative') !== -1 &&
-  byId['finance-status-line'].innerHTML.toLowerCase().indexOf('not') !== -1]);
-// Toggling the finance block ON must not have changed ANY economic engine
-// number: recompute the demo and compare the authoritative figures.
+  byId['finance-status-line'].innerHTML.toLowerCase().indexOf('not') !== -1 &&
+  byId['finance-status-line-b'].innerHTML.toLowerCase().indexOf('indicative') !== -1]);
+
+// (3c) PER-PLAN INDEPENDENCE at the UI level: changing Plan B's finance inputs
+// leaves Plan A's breakdown byte-identical, and vice-versa.
+const planABreakdownBefore = byId['finance-summary-body'].innerHTML;
+const aprB = byId['finance-apr-b'];
+aprB.value = '9.9'; aprB.fire('input');
+checks.push(['Changing Plan B finance APR leaves Plan A breakdown byte-identical (per-plan independence)',
+  byId['finance-summary-body'].innerHTML === planABreakdownBefore]);
+const planBBreakdownBefore = byId['finance-summary-body-b'].innerHTML;
+const aprA = byId['finance-apr'];
+aprA.value = '1.1'; aprA.fire('input');
+checks.push(['Changing Plan A finance APR leaves Plan B breakdown byte-identical (per-plan independence)',
+  byId['finance-summary-body-b'].innerHTML === planBBreakdownBefore]);
+// Reset the APR inputs back to the default.
+aprA.value = '4.5'; aprA.fire('input');
+aprB.value = '4.5'; aprB.fire('input');
+
+// Toggling the finance block ON (and moving per-plan inputs) must not have
+// changed ANY economic engine number: recompute the demo and compare.
 const econAfterFinance = windowObj.HSEngine.computeFleet(windowObj.__HS.state).results;
-checks.push(['computeFleet economic figures unchanged after the finance toggle (no feedback)',
+checks.push(['computeFleet economic figures unchanged after the finance toggle + per-plan inputs (no feedback)',
   approx(econAfterFinance.vehicleEconomicTco.keep_ice, 2081781.0, 0.5) &&
   approx(econAfterFinance.day0Funding.all_new_ice, 852000, 0.5)]);
 // Reset the toggle so later blocks see the clean default again.
@@ -2096,17 +2340,17 @@ finToggle.fire('change'); finToggle.fire('input');
 // and the whole block is hidden in print when the toggle is OFF.
 checks.push(['Proposal badge is preserved + colour-forced in @media print',
   /@media\s*print[\s\S]*\.proposal-badge\s*\{[^}]*print-color-adjust/i.test(html)]);
-checks.push(['Finance controls are .noprint and the block hides in print when the toggle is off',
+checks.push(['Per-plan finance controls are .noprint and the block hides in print when the toggle is off',
   /<div[^>]*id="finance-controls"[^>]*class="[^"]*noprint/.test(html) ||
   /<div[^>]*class="[^"]*noprint[^"]*"[^>]*id="finance-controls"/.test(html)]);
 checks.push(['Financing block is hidden in print when the toggle is OFF (prints only when enabled)',
   /#proposal-finance-block:not\(\.finance-on\)\s*\{[^}]*display\s*:\s*none/i.test(html)]);
 
-// (5) CONFIRMED case -> flips the badge. Loading the gate-passing 'best' seed
-// (numeric Total, gates pass, saving claim met) must flip the badge to
-// pb-confirmed and read as a confirmed quotation, proving the badge reads
-// directly from the live status (not a frozen literal). Snapshot + restore the
-// demo state around the load so nothing downstream is disturbed.
+// (5) CONFIRMED case -> flips the PER-PLAN badges. Loading the gate-passing
+// 'best' seed (numeric Total, gates pass, saving claim met) must flip the
+// recommended plan's badge to pb-confirmed and read as a confirmed quotation,
+// proving each plan badge reads directly from that plan's live status (not a
+// frozen literal). Snapshot + restore the demo state around the load.
 const propSnapshot = JSON.parse(JSON.stringify(windowObj.__HS.state));
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
 byId['prospect-body'].fire('click', { target: { getAttribute: (k) => (k === 'data-load' ? 'best' : null), parentNode: byId['prospect-body'] } });
@@ -2116,17 +2360,19 @@ checks.push(['loaded Best case is a gate-passing confirmed win (precondition)',
   bestScore.gatePass === true &&
   typeof bestScore.totalEconomicTco === 'number' && isFinite(bestScore.totalEconomicTco) &&
   bestScore.fifteenTargetMet === 'Meets entered 15% target']);
-checks.push(['Proposal badge flips to CONFIRMED quotation for the cleared Best case',
-  /(^|\s)pb-confirmed(\s|$)/.test(byId['proposal-badge'].className || '') &&
-  byId['proposal-badge'].innerHTML.indexOf('Confirmed quotation') !== -1 &&
-  byId['proposal-badge'].innerHTML.indexOf('INDICATIVE') === -1]);
-checks.push(['Proposal stage carries the proposal-confirmed state class for the cleared case',
-  /(^|\s)proposal-confirmed(\s|$)/.test(byId['stage-proposal'].className || '')]);
-checks.push(['Confirmed proposal quotation shows a numeric 2dp Total (not n.a.)',
-  /S\$[\d,]+\.\d\d/.test(byId['proposal-quotation-body'].innerHTML)]);
+// At least one plan column flips to a CONFIRMED quotation for the cleared case.
+checks.push(['A proposal plan badge flips to CONFIRMED quotation for the cleared Best case',
+  (/(^|\s)pb-confirmed(\s|$)/.test(byId['proposal-badge-plan_a'].className || '') &&
+   byId['proposal-badge-plan_a'].innerHTML.indexOf('Confirmed quotation') !== -1) ||
+  (/(^|\s)pb-confirmed(\s|$)/.test(byId['proposal-badge-plan_b'].className || '') &&
+   byId['proposal-badge-plan_b'].innerHTML.indexOf('Confirmed quotation') !== -1)]);
+checks.push(['Confirmed proposal quotation shows a numeric 2dp Total (not n.a.) for a cleared plan',
+  /S\$[\d,]+\.\d\d/.test(byId['proposal-quotation-body-plan_a'].innerHTML) ||
+  /S\$[\d,]+\.\d\d/.test(byId['proposal-quotation-body-plan_b'].innerHTML)]);
 checks.push(['Confirmed proposal keeps the conditional-on-supplied-figures caveat (not an adoption probability)',
   byId['proposal-status-line'].innerHTML.toLowerCase().indexOf('conditional on the supplied figures') !== -1 ||
-  byId['proposal-quotation-caveat'].innerHTML.toLowerCase().indexOf('supplied figures') !== -1]);
+  byId['proposal-status-plan_a'].innerHTML.toLowerCase().indexOf('supplied figures') !== -1 ||
+  byId['proposal-quotation-caveat-plan_a'].innerHTML.toLowerCase().indexOf('supplied figures') !== -1]);
 // Restore the demo state so later assertions (if any) see the baseline.
 Object.keys(windowObj.__HS.state).forEach((k) => { delete windowObj.__HS.state[k]; });
 Object.keys(propSnapshot).forEach((k) => { windowObj.__HS.state[k] = propSnapshot[k]; });
@@ -2417,6 +2663,46 @@ checks.push(['routing-sim panel markup frames it as a coarse aid, not live avail
       /live connection/i.test(slice) && /approximate great-circle/i.test(slice);
   })()]);
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
+
+// FEAT-006 TYPOGRAPHY FLOOR (static source scan, additive). The desktop
+// visibility sweep set a ~13px (>=~10pt) floor for ALL screen text and raised
+// the inline-SVG chart text (sized in viewBox user units) above the floor at
+// the 1440px render. Guard the floor so a later edit cannot silently
+// reintroduce sub-floor text:
+//   (a) No screen CSS `font-size:Npx` below 13px. The ONE allowed exception is
+//       the #rsim-map .rsim-lab marker glyph: it is SVG text on the ~760u map
+//       viewBox that the browser UPSCALES (~1.6x) to ~15px, and it must stay
+//       small enough to sit inside its 6.5-8u marker circle.
+//   (b) No inline-SVG chart `font-size="N"` user-unit base below 14 (the hero
+//       uses 15, the harder-downscaled breakdown bar uses 18; the old 10/11
+//       values rendered below the floor and were removed).
+// Print `pt` sizes are intentionally out of scope (print, not the 1440px screen).
+const styleBlock = (html.match(/<style>([\s\S]*?)<\/style>/) || [,''])[1];
+const cssFontPx = [];
+{
+  const fre = /font(?:-size)?:\s*([0-9]+(?:\.[0-9]+)?)px/g; let fm;
+  while ((fm = fre.exec(styleBlock)) !== null) cssFontPx.push(parseFloat(fm[1]));
+}
+// The single allowed sub-floor CSS value is the rsim-lab 9px (upscaled on the map).
+const cssBelowFloor = cssFontPx.filter(v => v < 13);
+checks.push(['typography floor: no screen CSS font-size below 13px except the upscaled rsim-lab marker glyph',
+  cssBelowFloor.length === 1 && cssBelowFloor[0] === 9 &&
+  /\.rsim-lab\{font-size:9px/.test(styleBlock)]);
+// The chart text size is the SVG root user-unit base from svgOpen(w,h,fs); the
+// per-chart bases are the `var FS=` constants in renderCumulative / renderBreakdown
+// plus the svgOpen default. No literal sub-floor font-size="N" attribute may
+// survive (the old 10/11 overrides were removed), and every declared base is >= 14.
+checks.push(['typography floor: no literal sub-14 font-size="N" attribute remains in the inline-SVG charts',
+  !/font-size="(?:[0-9]|1[0-3])"/.test(html)]);
+const svgBases = [];
+{
+  const svgDefault = (html.match(/font-size="'\+\(fs\|\|([0-9]+)\)\+'"/) || [])[1];
+  if (svgDefault) svgBases.push(parseInt(svgDefault, 10));
+  const fsre = /var FS=([0-9]+)/g; let fsm;
+  while ((fsm = fsre.exec(html)) !== null) svgBases.push(parseInt(fsm[1], 10));
+}
+checks.push(['typography floor: every inline-SVG chart font-size user-unit base is >= 14',
+  svgBases.length >= 3 && svgBases.every(v => v >= 14)]);
 
 let ok = true;
 for (const [name, pass] of checks) {

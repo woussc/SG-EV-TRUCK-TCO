@@ -39,6 +39,57 @@ integrity rule for a client-facing business model:
   model, following the existing catalogue convention, so no competitor can read
   as a confirmed fit.
 
+## Workstream C — sgcarmart.com research attempt (FEAT-005)
+
+The FEAT-005 brief asked that competitor specs be researched via
+**sgcarmart.com**, citing it (URL + access date) **only where it genuinely
+yields a figure**, and keeping the prior EVhubs/vendor-PDF sources for anything
+it cannot confirm. The **no-fabrication rule is absolute**: no sgcarmart
+citation may be written unless the figure actually came from a reachable
+sgcarmart page.
+
+**Attempt (2026-10-24):** every sgcarmart endpoint tried returned **HTTP 403
+Forbidden** to the automated fetch available in this environment:
+
+- `https://www.sgcarmart.com/` — 403
+- `https://www.sgcarmart.com/new_cars/newcars_overview.php` — 403
+- `https://www.sgcarmart.com/new_cars/newcars_listing.php?...` (commercial/van group) — 403
+- `https://www.sgcarmart.com/used_cars/listing.php?...` (commercial-vehicle filter) — 403
+
+sgcarmart is therefore **effectively unreachable programmatically** here.
+Separately, sgcarmart is a **passenger-car / used-car marketplace**; it does not
+publish spec sheets for the Chinese commercial battery-electric **light-truck**
+models in this catalogue (BYD T35 Electric Light-Duty, Foton eMiler, Forland S1
+EV, JAC N40EV, Qingling EQ2; and the already-catalogued ChengLong L2EV and
+Farizon F3E/H5E/H9E). So even with access it would not be a source for these
+commercial-truck figures.
+
+**Outcome per model (sgcarmart-yielded vs kept-on-prior-source vs Unconfirmed):**
+
+| Model | sgcarmart yielded | Kept on prior source | Still Unconfirmed |
+|---|---|---|---|
+| BYD T35 Electric Light-Duty | **nothing** (403 / not a truck source) | payload, battery, kWh/km (derived), AC, DC, range — **EVhubs** | 2nd weight, price, service |
+| Foton eMiler | **nothing** (403) | payload, battery, kWh/km (derived), AC, DC, range — **EVhubs** | 2nd weight, price, service |
+| Forland S1 EV | **nothing** (403) | battery, kWh/km (derived), range — **EVhubs** | payload, 2nd weight, AC, DC, price, service |
+| JAC N40EV | **nothing** (403) | battery, kWh/km (derived), range — **EVhubs** | payload, 2nd weight, AC, DC, price, service |
+| Qingling EQ2 | **nothing** (403) | payload, battery, kWh/km (derived), AC, DC, range — **EVhubs** | 2nd weight, price, service |
+| ChengLong L2EV | **nothing** (403) | vendor PDF (unchanged) | per existing row |
+| Farizon F3E / H5E / H9E | **nothing** (403) | vendor PDF / EVhubs (unchanged) | per existing row |
+
+**Net effect on the data:** because sgcarmart yielded no reachable figure, **no
+`_prov` citation was added or changed** for Workstream C — every sourced/derived
+figure keeps its existing EVhubs/vendor-PDF citation and every honest gap stays
+`Unconfirmed` / `n.a.`. This keeps the `_prov` edits numerically neutral (the
+engine ignores `_prov`), so `validate.py` stays **19/19** and the engine sha256
+stays frozen. **No sgcarmart citation appears anywhere**, because none could be
+truthfully made.
+
+Separately, FEAT-005 makes every switch-over spec **user-editable** (Workstream
+F). A figure a user types is tagged **User-entered** (an explicit assumption,
+amber dotted underline), never `Sourced`, so a hand-entered value can never be
+mistaken for a cited figure — the same honesty discipline the sgcarmart rule
+enforces.
+
 Gaps were genuinely closed with sourced data wherever a credible figure exists:
 four of the five trucks carry a sourced battery, a sourced range and a derived
 kWh/km, and three of them additionally carry a sourced payload and sourced AC
@@ -189,6 +240,18 @@ Body: **14 ft body** on a cab-and-chassis electric light goods vehicle.
   (`window.HSPortfolioFit`) only; it never touches the frozen engine. SRM is
   locked on as the primary model and no competitor can read as a clean Best fit
   (col L stays `Unconfirmed`).
+- **FEAT-005: every spec on the switch-over page is editable.** Each spec cell
+  is a number `<input>` bound to an in-memory override of the catalogue row on
+  the UI state (`__HS.state.products.rows`). Typing a value: (1) retags that
+  field's provenance to **User-entered** (an explicit assumption with an amber
+  dotted-underline swatch, never `Sourced`); (2) re-runs the additive matcher so
+  the fit verdicts re-rank live on the new figure; and (3) if the edited model
+  is the active **Plan A** (SRM) or **Plan B** (competitor) EV from the
+  business-intention reframe, flows into the catalogue defaults the two-state
+  recompute reads (`buildPlanState` deep-clones `state.products`), so the **TCO
+  recomputes** — all **without touching `src/engine.js`** and **without mutating
+  `tools/fixtures/demo_case.json` on disk** (edits are UI-session state only).
+  Clearing an edited field reverts it to `n.a.` / `Unconfirmed`.
 
 ## Verification
 
