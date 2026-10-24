@@ -567,16 +567,68 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 @media(max-width:1023px){.workspace{grid-template-columns:1fr}}
 @media(max-width:860px){.grid,.formgrid{grid-template-columns:1fr}.grid4{grid-template-columns:1fr}}
 @media(max-width:700px){h1{font-size:24px}main{padding:18px 16px 8px}.topbar{flex-wrap:wrap;padding:10px 16px}.topbar .caveat{margin-left:0;flex-basis:100%;order:3}section{padding:16px}table{font-size:13px}th,td{padding:7px}
- /* Phone: the overlay becomes a full-width sheet (still a fixed overlay over a
-    scrim, so the content behind still does not reflow). */
- #input-col{width:100vw;max-width:100vw;border-right:0}
- #prospects-col{width:100vw;max-width:100vw;border-left:0}
+ /* FEAT-007 Phone sheets: the two edge overlays become FULL-SCREEN SHEETS.
+    Hover/edge-reveal does not exist on touch, so at phone width each overlay is
+    a full-viewport fixed sheet (still over its dismissable scrim, so the content
+    behind never reflows). The in-panel Close button, the scrim tap and Escape
+    all dismiss it (wired in JS); the sheet body scrolls (overflow-y:auto was set
+    on #input-col / #prospects-col at the desktop base). The close affordance is
+    enlarged to a comfortable touch target and the sticky header keeps it reachable
+    while the sheet scrolls. */
+ #input-col{width:100vw;max-width:100vw;border-right:0;padding:16px}
+ #prospects-col{width:100vw;max-width:100vw;border-left:0;padding:16px}
+ .input-overlay-head{position:sticky;top:0;z-index:1;background:var(--paper);margin:-16px -16px 10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+ .input-overlay-close{padding:10px 14px;font-size:14px}
  /* Phone: the stepper collapses to a horizontally scrollable chip row and the
-    confidence badge drops onto its own line below it. */
+    confidence badge drops onto its own line below it. Taller tap targets. */
  .journeybar{gap:10px}
- .stepper{flex-basis:100%;-webkit-overflow-scrolling:touch}
- .step{padding:7px 12px}
+ .stepper{flex-basis:100%;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+ .step{padding:9px 13px;font-size:13px}
  .confidence{flex-basis:100%}
+ /* FEAT-007 Phone forms: number inputs are pinned to 104px at the desktop base,
+    which overflows a phone-width field row. Let them shrink to share the row. */
+ input[type=number]{width:auto;min-width:0;max-width:100%;flex:1 1 auto}
+ .field{flex-wrap:wrap}
+ .field .u{min-width:0}
+ .finance-controls{grid-template-columns:1fr}
+ .finance-ctl input,.finance-ctl select{font-size:13px}
+ /* FEAT-007 Phone map: stack the route-sim controls so the named-area select and
+    each action button are full-width, comfortably tappable rows; let the legend
+    wrap and keep the zoom buttons as a clear touch target. The map SVG already
+    fits width (width:100%;height:auto) at the desktop base. */
+ .rsim-controls{flex-direction:column;align-items:stretch;gap:10px}
+ .rsim-ctl{width:100%}
+ .rsim-ctl select{width:100%}
+ .rsim-ctl-check{flex-direction:row;align-items:center}
+ .rsim-controls .rsim-btn{width:100%;padding:10px 12px;font-size:14px}
+ .rsim-maptools{flex-direction:column;align-items:flex-start;gap:10px}
+ .rsim-zoom{align-self:flex-end}
+ .rsim-zoom .rsim-btn-sm{padding:8px 12px;min-width:40px;font-size:14px}
+ /* FEAT-007 Phone proposal/finance: the per-plan grids already stack at 860px;
+    keep the per-plan finance block padding tidy at phone width. */
+ .finance-plan-col{padding:12px 14px}
+ .proposal-block{padding:14px 16px}
+}
+/* FEAT-007 Phone tier (~390px): the tightest layout. Every surface stacks to a
+   single column and no element may force horizontal overflow of the viewport. */
+@media(max-width:480px){
+ .journeybar{gap:8px}
+ /* TCO dashboard: the three surfaces (hero line, breakdown bar, sensitivity
+    sliders) are already one column at <=860px; hold chart text at the FEAT-006
+    >=13px floor and keep the hero a usable height on a tall-narrow phone. */
+ .tco-band{gap:14px}
+ .chart-hero .chart-box,.chart-hero .chart-box svg{min-height:260px}
+ .tco-band-sens #sens-controls{grid-template-columns:1fr}
+ .chart-cap,.chart-title,.legend,.kpi{font-size:13px}
+ /* Portfolio: the wide switch-over table stays usable via horizontal scroll
+    (.table-wrap{overflow-x:auto} at the base); keep the editable spec inputs
+    tappable and never let them collapse below a legible width. */
+ #portfolio-switchover-table input.spec-input{width:6.5em;font-size:13px;padding:5px 6px}
+ .matched-grid,.prospect-cards{grid-template-columns:1fr}
+ /* Map: cap nothing extra; the SVG fits width. Legend stays >=13px and wraps. */
+ .rsim-legend{font-size:13px}
+ /* Day-0 / charge read cards already one column at <=860px; keep tap padding. */
+ .day0-card,.charge-read{padding:12px 14px}
 }
 @media print{
  body{background:white;font-size:10pt}
