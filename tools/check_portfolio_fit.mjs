@@ -26,7 +26,10 @@ const repoRoot = resolve(here, '..');
 const fit = (await import(resolve(repoRoot, 'src/portfolio_fit.js'))).default;
 const demo = JSON.parse(readFileSync(resolve(repoRoot, 'tools/fixtures/demo_case.json'), 'utf8'));
 
-// Real catalogue rows (12 EV models: 7 original + 5 FEAT-003 competitors).
+// Real catalogue rows (12 EV models: 7 original + 5 EV light-TRUCK competitors).
+// FEAT-005 swapped the 5 FEAT-003 panel VANS for 5 EV LIGHT TRUCKS (10-14 ft
+// LGV, cab-and-chassis with a cargo body) per the user's requirement to compare
+// trucks, not vans.
 const products = demo.inputs.products.rows.filter((r) => r.A != null);
 function prod(name) { return products.find((p) => p.A === name); }
 
@@ -145,8 +148,8 @@ check('deriveDuty uses site-limited available charge power (min of rated 60 and 
 
 // Full live ranking on the real demo: every model is an honest verdict (all
 // catalogue payload/body-fit is Unconfirmed), none fabricated as Best fit, and
-// the list is non-empty. FEAT-003 appended 5 real competitor models, so the
-// catalogue is now 12 (7 original + 5 competitors).
+// the list is non-empty. FEAT-005 swapped 5 vans for 5 real EV light-truck
+// competitors, so the catalogue is still 12 (7 original + 5 truck competitors).
 const live = fit.rankModelsForInputs(demo.inputs);
 check('live demo ranking is non-empty (12 catalogue models)', live.verdicts.length === 12);
 check('live demo ranking has NO Best fit (all Unconfirmed)',
@@ -159,20 +162,31 @@ check('live demo ranking: every non-does-not-fit model carries insufficient-data
   live.verdicts.every((v) => v.verdict === 'Does not fit' || v.insufficientData === true));
 
 // ===========================================================================
-// FEAT-003: the 5 appended competitor models + their honest per-field
-// provenance. The integrity rule is NON-NEGOTIABLE: no confirmed numeric spec
-// may appear without a source; an unsourced figure must be blank/n.a. or tagged
-// Unconfirmed/Assumption/Derived. These assertions enforce that on the catalogue.
+// FEAT-005: the 5 EV LIGHT-TRUCK competitor models + their honest per-field
+// provenance. The 5 FEAT-003 panel VANS were REMOVED and replaced with 5 real
+// battery-electric LIGHT GOODS VEHICLE TRUCKS (10-14 ft LGV, cab-and-chassis
+// with a cargo box / drop-side / open deck), because the user compares TRUCKS,
+// not vans. The integrity rule is NON-NEGOTIABLE: no confirmed numeric spec may
+// appear without a source; an unsourced figure must be blank/n.a. or tagged
+// Unconfirmed/Assumption/Derived. These assertions enforce that on the trucks.
 // ===========================================================================
 const NEW_MODELS = [
+  'BYD T35 Electric Light-Duty', 'Foton eMiler', 'Forland S1 EV',
+  'JAC N40EV', 'Qingling EQ2',
+];
+// The 5 panel VANS swapped out in FEAT-005; they must NO LONGER be present.
+const OLD_VANS = [
   'BYD T3 (ETP3)', 'Maxus eDeliver 9', 'Maxus eDeliver 3 (EV30)',
   'Farizon SV (Supervan)', 'DFSK EC35',
 ];
-// (a) all 5 new models are present in the catalogue.
-check('FEAT-003: all 5 new competitor models present in the catalogue',
+// (a) all 5 new truck models are present in the catalogue.
+check('FEAT-005: all 5 new EV light-truck models present in the catalogue',
   NEW_MODELS.every((n) => !!prod(n)));
+// (a2) the 5 removed vans are GONE from the catalogue.
+check('FEAT-005: the 5 removed panel vans are no longer present',
+  OLD_VANS.every((v) => !prod(v)));
 // (b) the catalogue is exactly the 7 original + 5 new = 12 models.
-check('FEAT-003: catalogue is 12 models (7 original + 5 competitors)',
+check('FEAT-005: catalogue is 12 models (7 original + 5 truck competitors)',
   products.length === 12);
 // (c) SRM remains present and is the primary/recommended family (both SRM rows
 //     survive; the primary matcher key 'SRM' is still in the catalogue).
@@ -220,14 +234,16 @@ for (const name of NEW_MODELS) {
 
 // (f) the matcher excludes a 'Does not fit' competitor but is never crowned a
 //     clean pass; and a feasible competitor keeps its Unconfirmed caveat. Use a
-//     duty the Farizon SV (payload 1350, derived range ~397 km) can clear.
+//     duty the BYD T35 light truck (sourced payload 1900 kg, sourced range
+//     367 km) can clear on payload and range, so it is a FEASIBLE competitor -
+//     yet col L stays 'Unconfirmed', so it can never be a clean Best fit.
 const compDuty = {
   peakCargoKg: 1200, routeKm: 150, workKmPerDay: 120,
   availableChargeKw: 60, chargeWindowH: 10, includedCount: 1, blank: {},
 };
-const farizonSv = fit.scoreModelFit(compDuty, prod('Farizon SV (Supervan)'));
-check('FEAT-003: feasible competitor (Farizon SV) is a caveat, never a clean Best fit',
-  farizonSv.verdict !== 'Best fit' && farizonSv.insufficientData === true);
+const bydT35 = fit.scoreModelFit(compDuty, prod('BYD T35 Electric Light-Duty'));
+check('FEAT-005: feasible competitor (BYD T35, sourced payload+range) is a caveat, never a clean Best fit',
+  bydT35.verdict !== 'Best fit' && bydT35.insufficientData === true);
 
 let ok = true;
 for (const [name, pass] of checks) {
