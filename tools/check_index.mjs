@@ -2664,6 +2664,46 @@ checks.push(['routing-sim panel markup frames it as a coarse aid, not live avail
   })()]);
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
+// FEAT-006 TYPOGRAPHY FLOOR (static source scan, additive). The desktop
+// visibility sweep set a ~13px (>=~10pt) floor for ALL screen text and raised
+// the inline-SVG chart text (sized in viewBox user units) above the floor at
+// the 1440px render. Guard the floor so a later edit cannot silently
+// reintroduce sub-floor text:
+//   (a) No screen CSS `font-size:Npx` below 13px. The ONE allowed exception is
+//       the #rsim-map .rsim-lab marker glyph: it is SVG text on the ~760u map
+//       viewBox that the browser UPSCALES (~1.6x) to ~15px, and it must stay
+//       small enough to sit inside its 6.5-8u marker circle.
+//   (b) No inline-SVG chart `font-size="N"` user-unit base below 14 (the hero
+//       uses 15, the harder-downscaled breakdown bar uses 18; the old 10/11
+//       values rendered below the floor and were removed).
+// Print `pt` sizes are intentionally out of scope (print, not the 1440px screen).
+const styleBlock = (html.match(/<style>([\s\S]*?)<\/style>/) || [,''])[1];
+const cssFontPx = [];
+{
+  const fre = /font(?:-size)?:\s*([0-9]+(?:\.[0-9]+)?)px/g; let fm;
+  while ((fm = fre.exec(styleBlock)) !== null) cssFontPx.push(parseFloat(fm[1]));
+}
+// The single allowed sub-floor CSS value is the rsim-lab 9px (upscaled on the map).
+const cssBelowFloor = cssFontPx.filter(v => v < 13);
+checks.push(['typography floor: no screen CSS font-size below 13px except the upscaled rsim-lab marker glyph',
+  cssBelowFloor.length === 1 && cssBelowFloor[0] === 9 &&
+  /\.rsim-lab\{font-size:9px/.test(styleBlock)]);
+// The chart text size is the SVG root user-unit base from svgOpen(w,h,fs); the
+// per-chart bases are the `var FS=` constants in renderCumulative / renderBreakdown
+// plus the svgOpen default. No literal sub-floor font-size="N" attribute may
+// survive (the old 10/11 overrides were removed), and every declared base is >= 14.
+checks.push(['typography floor: no literal sub-14 font-size="N" attribute remains in the inline-SVG charts',
+  !/font-size="(?:[0-9]|1[0-3])"/.test(html)]);
+const svgBases = [];
+{
+  const svgDefault = (html.match(/font-size="'\+\(fs\|\|([0-9]+)\)\+'"/) || [])[1];
+  if (svgDefault) svgBases.push(parseInt(svgDefault, 10));
+  const fsre = /var FS=([0-9]+)/g; let fsm;
+  while ((fsm = fsre.exec(html)) !== null) svgBases.push(parseInt(fsm[1], 10));
+}
+checks.push(['typography floor: every inline-SVG chart font-size user-unit base is >= 14',
+  svgBases.length >= 3 && svgBases.every(v => v >= 14)]);
+
 let ok = true;
 for (const [name, pass] of checks) {
   console.log((pass ? 'PASS  ' : 'FAIL  ') + name);
