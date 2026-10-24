@@ -277,14 +277,19 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .tco-band-sens .sens-intro{margin:4px 0 8px}
 .tco-band-sens #sens-note{margin-top:8px}
 /* HERO: a flex column (title, plot, then the 'How to read this chart'
-   disclosure directly beneath the plot). The SVG sizes to its own (now taller,
-   ~1.53:1) viewBox via height:auto, so the plot FILLS the box with no letterbox
-   void and the disclosure follows immediately under it instead of being pushed
-   to the bottom of a stretched box. The taller viewBox (920x600) makes the hero
-   the dominant focal surface, clearly larger than the breakdown bar. */
+   disclosure directly beneath the plot). The chart-box flex-fills the leftover
+   hero height between the title and the disclosure (flex:1 1 auto; min-height:0)
+   and the SVG is set to height:100% so it expands to FILL the stretched hero
+   cell with no dead void below the disclosure. The SVG viewBox is tall-narrow
+   (920x1120, intrinsic aspect ~0.82:1) to closely match the tall-narrow hero
+   cell, so the default preserveAspectRatio xMidYMid meet produces only a
+   negligible (<~5%) letterbox and the line plot stays undistorted. The tall
+   viewBox also keeps the hero the dominant focal surface, clearly larger than
+   the breakdown bar. The narrow max-width breakpoints below reset the SVG to
+   height:auto;min-height:300px so tablet/phone stacking is unaffected. */
 .chart-hero{display:flex;flex-direction:column}
-.chart-hero .chart-box{display:block}
-.chart-hero .chart-box svg{display:block;width:100%;height:auto}
+.chart-hero .chart-box{flex:1 1 auto;min-height:0;display:flex}
+.chart-hero .chart-box svg{display:block;width:100%;height:100%}
 /* Reflow to stacked on narrow screens (existing breakpoints). At 1023px the
    line spans full width and the bar + sensitivity sit two-up beneath it; at
    860px everything stacks to one column. */
@@ -5387,7 +5392,7 @@ window.HSChargingContext = {"schemaVersion":1,"provenance":{"source":"lta-datama
   function renderCumulative(out){
     var box = el('chart-cumulative'); if(!box) return;
     var series = out && out.annualSeries;
-    var W=920,Hh=600, mL=70,mR=120,mT=26,mB=50;
+    var W=920,Hh=1120, mL=70,mR=120,mT=26,mB=60;
     var plotW=W-mL-mR, plotH=Hh-mT-mB;
     var years=11;
     var max=0, any=false;
