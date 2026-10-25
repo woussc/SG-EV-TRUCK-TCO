@@ -102,6 +102,8 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   // overlay): top-chrome trigger + scrim + in-panel close button + dialog.
   'prospects-toggle','prospects-toggle-label','prospects-col',
   'prospects-scrim','prospects-overlay-close','inputs',
+  // FEAT-003 (Workstream C): offline download of the simulation-results brief.
+  'download-brief','download-brief-label',
   // FEAT-002: journey stepper (Customer stage removed -> 4 stages), stage
   // viewports + confidence badge hooks.
   'stepper','step-portfolio','step-tco','step-charging','step-proposal',
@@ -1298,9 +1300,18 @@ Object.keys(windowObj.__HS.state).forEach((k) => { delete windowObj.__HS.state[k
 Object.keys(stateSnapshot).forEach((k) => { windowObj.__HS.state[k] = stateSnapshot[k]; });
 if (windowObj.__HS.rebuildInputs) windowObj.__HS.rebuildInputs();
 windowObj.__HS.recompute();
-// No references to the removed evergreen case anywhere in the prospects markup.
-checks.push(['prospects markup has no evergreen reference',
-  html.toLowerCase().indexOf('evergreen') === -1]);
+// No references to the removed evergreen prospect CASE anywhere in the page
+// markup. The check is scoped to EXCLUDE the FEAT-003 SIMBRIEF data block: that
+// block embeds the planner-authored simulation-results brief verbatim, and the
+// brief legitimately documents the illustrative "Evergreen fleet" preset family
+// in prose (it is not the removed prospect seed, and it is bundled data, not
+// prospects markup). Stripping the SIMBRIEF block keeps the original assertion
+// at full strength for the prospects markup while not penalising the verbatim
+// embed. (The seed-id check at line ~302 and the rendered prospect-body check
+// at ~320 independently guarantee no 'evergreen' seed/customer remains.)
+const htmlWithoutSimBrief = html.replace(/<!-- SIMBRIEF:BEGIN[\s\S]*?<!-- SIMBRIEF:END -->/, '');
+checks.push(['prospects markup has no evergreen reference (SIMBRIEF embed excluded)',
+  htmlWithoutSimBrief.toLowerCase().indexOf('evergreen') === -1]);
 
 // ---- FEAT-002: journey stepper + stage viewports + confidence badge --------
 // FEAT-002 removed the standalone Customer stage (its profile + duty inputs
@@ -2922,6 +2933,79 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
   checks.push(['switchover: spec input font-size stays >= 13px after the trim',
     /#portfolio-switchover-table input\.spec-input\{[^}]*font-size:13px/.test(swStyle)]);
 }
+
+// ---- FEAT-003 (Workstream C): offline simulation-brief download ------------
+// Two things must hold, additively and without any runtime network:
+//   (a) the Download affordance exists in the topbar as a real <button>, is
+//       keyboard-focusable, carries the noprint class and a label/aria-label;
+//   (b) the planner-authored brief is bundled verbatim as window.HSSimBrief
+//       (non-empty markdown + filename) and contains the four key section
+//       headings plus the two grounding figures;
+//   (c) the download handler is purely client-side: it reads
+//       window.HSSimBrief, builds a Blob + createObjectURL, and NEVER fetches.
+// (a) + part of (c) are asserted at the SOURCE level against the raw index.html
+// (the DOM shim synthesises generic <div> stand-ins for ids, so attribute-level
+// facts about the hand-written button markup are checked on the HTML string).
+(function(){
+  // (a) Download button markup: a real <button type="button"> with the id,
+  // the noprint class, and an aria-label.
+  const btnM = html.match(/<button\b[^>]*id="download-brief"[^>]*>[\s\S]*?<\/button>/);
+  const btnTag = btnM ? btnM[0] : '';
+  const btnOpen = btnM ? (btnTag.match(/<button\b[^>]*>/) || [''])[0] : '';
+  checks.push(['download: #download-brief is a <button>', !!btnM]);
+  checks.push(['download: button is type="button"', /type="button"/.test(btnOpen)]);
+  checks.push(['download: button carries the noprint class (never prints)',
+    /class="[^"]*\bnoprint\b[^"]*"/.test(btnOpen)]);
+  // Reuses the focusable topbar styling so it is keyboard-reachable.
+  checks.push(['download: button reuses .sidebar-toggle styling (keyboard-focusable)',
+    /class="[^"]*\bsidebar-toggle\b[^"]*"/.test(btnOpen)]);
+  // A clear label: an aria-label AND visible text.
+  checks.push(['download: button has a non-empty aria-label',
+    /aria-label="[^"]+"/.test(btnOpen)]);
+  checks.push(['download: button has a visible label (download-brief-label)',
+    /id="download-brief-label"[^>]*>[^<]+</.test(btnTag) ||
+    /id="download-brief-label"\s*>[^<]+</.test(btnTag) ||
+    /download-brief-label[^>]*>[\s\S]*?Download/.test(btnTag)]);
+  // The id exists in the DOM shim (affordance reachable via getElementById).
+  checks.push(['download: #download-brief resolvable in the DOM', !!byId['download-brief']]);
+
+  // (b) Embedded brief: window.HSSimBrief present, non-empty, with filename
+  // and all key anchors.
+  const brief = windowObj.HSSimBrief;
+  const md = brief && typeof brief.markdown === 'string' ? brief.markdown : '';
+  checks.push(['simbrief: window.HSSimBrief is present with a markdown string', !!brief && typeof md === 'string']);
+  checks.push(['simbrief: embedded markdown is non-empty', md.length > 0]);
+  checks.push(['simbrief: filename is the expected .md name',
+    !!brief && brief.filename === 'ev-truck-tco-simulation-results.md']);
+  const sections = [
+    'What the simulation actually computes',
+    'Which variables matter most',
+    'The threshold for a sensible ICE-to-EV conversion',
+    'Which client types realistically accept the quantitative case',
+  ];
+  sections.forEach((h) => {
+    checks.push(['simbrief: embedded brief contains section "' + h + '"', md.indexOf(h) !== -1]);
+  });
+  checks.push(['simbrief: embedded brief carries grounding figure S$1,047,412', md.indexOf('S$1,047,412') !== -1]);
+  checks.push(['simbrief: embedded brief carries grounding figure 29.52%', md.indexOf('29.52%') !== -1]);
+
+  // (c) The download path is a client-side Blob/object-URL, NOT a fetch. Scope
+  // the grep to the wireBriefDownload handler source so the assertion is
+  // precise and robust to unrelated code elsewhere.
+  const handlerM = html.match(/function wireBriefDownload\(\)\{[\s\S]*?\}\)\(\);/);
+  const handlerSrc = handlerM ? handlerM[0] : '';
+  checks.push(['download: handler wireBriefDownload present', !!handlerM]);
+  checks.push(['download: handler reads window.HSSimBrief (bundled string, not a request)',
+    /window\.HSSimBrief/.test(handlerSrc)]);
+  checks.push(['download: handler builds a Blob', /new Blob\(/.test(handlerSrc)]);
+  checks.push(['download: handler uses createObjectURL', /createObjectURL\(/.test(handlerSrc)]);
+  checks.push(['download: handler revokes the object URL', /revokeObjectURL\(/.test(handlerSrc)]);
+  checks.push(['download: handler sets <a download> to the bundled filename',
+    /\.download\s*=/.test(handlerSrc)]);
+  checks.push(['download: handler introduces NO fetch (offline)', !/\bfetch\s*\(/.test(handlerSrc)]);
+  checks.push(['download: handler introduces NO XMLHttpRequest (offline)',
+    !/XMLHttpRequest/.test(handlerSrc)]);
+})();
 
 let ok = true;
 for (const [name, pass] of checks) {
