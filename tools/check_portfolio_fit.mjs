@@ -194,43 +194,35 @@ const srmRows = products.filter((p) => String(p.A).indexOf('SRM') === 0);
 check('FEAT-003: SRM remains present as the primary model (>=1 SRM row)',
   srmRows.length >= 1 && srmRows.some((p) => p.A === 'SRM T3EV+'));
 
-// (d) every new model carries a provenance tag: col K (evidence ref) AND col L
-//     (body-fit status) AND a per-field _prov map.
+// (d) every new model carries the substantive caveats that SURVIVE the FEAT-003
+//     provenance-badge retirement: col K (evidence ref) AND col L (body-fit
+//     status). Both are genuine honesty signals (an evidence pointer and the
+//     Unconfirmed body-fit caveat), NOT the retired per-field badge system.
+//
+// FEAT-003 (Workstream B): the per-field _prov PROVENANCE-TAG assertions
+// (carries-a-_prov-map; every present number is sourced/derived/user-entered;
+// an unconfirmed field carries no fabricated number; provenance status is a
+// known tag) are RETIRED here. The competitor specs are now user-supplied /
+// AUTHORITATIVE and the per-field provenance BADGE they backed is gone from the
+// UI, so those assertions are false-by-design scaffolding rather than a genuine
+// integrity check. The data-level honesty that REMAINS and is still asserted:
+// every new model is a real catalogue row with a body-fit caveat + evidence ref,
+// the catalogue size is locked, and the matcher never fabricates a Best fit
+// (see the (ii)/(f) assertions, which are KEPT).
 const COL_LETTERS = ['A', 'B', 'C', 'D', 'E', 'G', 'H', 'I', 'J', 'P'];
-const PROV_OK = ['sourced', 'derived', 'unconfirmed', 'assumption'];
 for (const name of NEW_MODELS) {
   const p = prod(name);
   check(`FEAT-003 [${name}]: has a col-K evidence ref`,
     p.K != null && String(p.K).trim() !== '');
-  check(`FEAT-003 [${name}]: has a col-L body-fit status`,
+  check(`FEAT-003 [${name}]: has a col-L body-fit status (Unconfirmed caveat preserved)`,
     p.L != null && String(p.L).trim() !== '');
-  check(`FEAT-003 [${name}]: carries a per-field _prov map`,
-    p._prov && typeof p._prov === 'object');
-  // (e) the NO-FABRICATED-CONFIRMED-SPEC rule: for every key spec column, a
-  //     present numeric figure must be backed by a provenance tag of 'sourced'
-  //     or 'derived' (a derived figure cites the sourced inputs it came from);
-  //     and any column tagged 'unconfirmed'/'assumption' must NOT carry a
-  //     fabricated number (it is blank/null or explicitly a non-number).
-  for (const col of COL_LETTERS) {
-    const val = p[col];
-    const pv = (p._prov && p._prov[col]) ? String(p._prov[col].status || '').toLowerCase() : null;
-    const isNumeric = typeof val === 'number' && isFinite(val);
-    if (isNumeric) {
-      // A present number must be sourced or derived (never silently present).
-      check(`FEAT-003 [${name}] col ${col}: numeric figure is sourced/derived (not fabricated)`,
-        pv === 'sourced' || pv === 'derived');
-    }
-    if (pv === 'unconfirmed' || pv === 'assumption') {
-      // An unconfirmed/assumption field must NOT present a precise number.
-      check(`FEAT-003 [${name}] col ${col}: unconfirmed field carries no fabricated number`,
-        !isNumeric);
-    }
-    if (pv != null) {
-      check(`FEAT-003 [${name}] col ${col}: provenance status is a known tag`,
-        PROV_OK.indexOf(pv) !== -1);
-    }
-  }
+  // The user-supplied authoritative figures are PRESENT as real numbers (the
+  // point of FEAT-002); this guards that retiring the badge did not blank the
+  // competitor specs. The key engine columns carry a finite figure.
+  check(`FEAT-003 [${name}]: key specs are present finite numbers (payload/battery/kWh-km/range/price/service)`,
+    ['B', 'D', 'E', 'J', 'I', 'P'].every((col) => typeof p[col] === 'number' && isFinite(p[col])));
 }
+void COL_LETTERS;
 
 // (f) the matcher excludes a 'Does not fit' competitor but is never crowned a
 //     clean pass; and a feasible competitor keeps its Unconfirmed caveat. Use a

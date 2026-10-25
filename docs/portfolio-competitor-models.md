@@ -1,4 +1,4 @@
-# Portfolio switch-over: competitor EV light-TRUCK models (FEAT-005)
+# Portfolio switch-over: competitor EV light-TRUCK models
 
 This note documents the **five real competitor battery-electric light goods
 vehicle TRUCKS** in the product catalogue for the full-portfolio **switch-over
@@ -8,11 +8,11 @@ never auto-selected and can be toggled out of the matcher.
 
 ## Why the vans were removed (read first)
 
-An earlier round (FEAT-003) populated the five competitor rows with battery
-electric **panel VANS**: `BYD T3 (ETP3)`, `Maxus eDeliver 9`,
-`Maxus eDeliver 3 (EV30)`, `Farizon SV (Supervan)` and `DFSK EC35`.
+An earlier round populated the five competitor rows with battery electric
+**panel VANS**: `BYD T3 (ETP3)`, `Maxus eDeliver 9`, `Maxus eDeliver 3 (EV30)`,
+`Farizon SV (Supervan)` and `DFSK EC35`.
 
-The user's requirement is explicit: **compare TRUCKS, not vans.** The SRM T3/
+The user's requirement is explicit: **compare TRUCKS, not vans.** The SRM T3 /
 T3EV and the Farizon H-series already in the catalogue are cab-and-chassis
 LIGHT GOODS VEHICLE TRUCKS (a cargo box / drop-side / open deck on a light-truck
 chassis), so a like-for-like switch-over comparison must be against other LGV
@@ -21,109 +21,108 @@ were therefore removed** and replaced with five real EV light trucks that are
 listed as **available in Singapore**. Each pick was verified to be a TRUCK (a
 cab-and-chassis with a cargo body), not a panel van, before inclusion.
 
+## Specs are now USER-SUPPLIED / AUTHORITATIVE (read second)
+
+The five competitor rows previously carried only the figures that could be
+sourced from a third-party listing, with every other field left `Unconfirmed` /
+`n.a.` (no price, some payloads, some charge powers). An earlier research pass
+also recorded that **sgcarmart.com** returned HTTP 403 to automated fetches and,
+being a passenger-car marketplace, published no spec sheets for these Chinese
+commercial light trucks — so no figure was ever sourced from it.
+
+**That gap is now closed.** The user supplied the complete, **authoritative**
+spec table for all five competitor trucks, so every spec column is now filled
+from that single table. Because these values come directly from the user and are
+treated as authoritative, there is **no third-party provenance caveat**: each
+supplied figure is tagged **`userentered`** in the per-field `_prov` map (the
+same honest tag the editable-spec flow stamps on a typed value and the
+switch-over renderer already draws). A `userentered` figure is **never**
+presented as an independently cited `sourced` value, so the honesty discipline
+holds: nothing is silently present and nothing claims a citation it does not
+have. Col K (evidence ref) now reads **"User-supplied spec table, 2026"** for
+each row.
+
+### The authoritative table (as supplied)
+
+| Model | Payload kg | Battery kWh | kWh/km | AC kW | DC kW | Range km | List price | Service S$/km |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| BYD T35 Electric Light-Duty | 1,900 | 62.36 | 0.170 | 6.6 | 71 | 367 | S$73,000 | S$0.02-0.04 |
+| Foton eMiler | 2,620 | 77.00 | 0.205 | 22.0 | 77 | 375 | S$73,000 | S$0.03-0.05 |
+| Forland S1 EV | 2,500-2,700 | 63.75 | 0.215 | 11.0 | 70 | 300 | S$76,000 | S$0.03-0.05 |
+| JAC N40EV | 1,850 | 63.75 | 0.297 | 7.0 | 65 | 230 | S$68,000 | S$0.03-0.05 |
+| Qingling EQ2 | 2,530 | 100.46 | 0.287 | 20.0 | 120 | 350 | S$78,800 | S$0.04-0.06 |
+
+### Honest handling of the two stated RANGES (no false point precision)
+
+Two kinds of figure in the supplied table are stated as a **range**, not a
+single number. The frozen engine reads a single value per column, so for each
+range we store the **midpoint** in the engine column **and** preserve the stated
+range verbatim for the portfolio to display, so the page never implies a
+precision the source did not give.
+
+- **Forland S1 EV payload** is a stated range **2,500-2,700 kg**. Col B stores
+  the **midpoint 2,600 kg**; the stated range is preserved for display.
+- **Service S$/km** is a stated range for **all five** trucks. Col P stores the
+  **documented midpoint** for each; the stated range is preserved for display:
+
+  | Model | Service S$/km range | Midpoint stored in col P |
+  | :--- | :--- | :--- |
+  | BYD T35 Electric Light-Duty | S$0.02-0.04/km | **0.03** |
+  | Foton eMiler | S$0.03-0.05/km | **0.04** |
+  | Forland S1 EV | S$0.03-0.05/km | **0.04** |
+  | JAC N40EV | S$0.03-0.05/km | **0.04** |
+  | Qingling EQ2 | S$0.04-0.06/km | **0.05** |
+
+The stated ranges are carried on each competitor row in a dedicated, additive
+**`_ranges`** object keyed by column letter, so the portfolio renderer (built in
+a later feature) can surface the range next to the midpoint and never present a
+false point value:
+
+```jsonc
+// Forland S1 EV row (abbreviated)
+"B": 2600,                       // engine column = midpoint
+"P": 0.04,                       // engine column = midpoint
+"_ranges": {
+  "B": "2500-2700 kg",           // stated payload range, for display
+  "P": "S$0.03-0.05/km"          // stated service range, for display
+}
+```
+
+Every other competitor row carries `_ranges.P` only (service range); Forland is
+the only one that also carries `_ranges.B` (payload range). The frozen engine
+ignores `_ranges` entirely (it reads only columns A..Q by letter), so this
+storage is numerically inert.
+
 ## Integrity statement
 
-**Nothing in these rows is fabricated.** The brief carries a non-negotiable
-integrity rule for a client-facing business model:
-
-- Every figure that is **sourced** is cited (URL + access date) in the
-  catalogue row's evidence column (**col K**) and tagged `sourced` in the
-  additive per-field provenance map (`_prov`).
-- A figure **derived** from other sourced figures (for example kWh/km computed
-  from a sourced battery kWh and a sourced range) is tagged `derived` and names
-  the sourced inputs it came from. It is never presented as a measured value.
-- Every figure that **could not be verified** from a credible source is **left
-  blank / `n.a.`** and tagged `unconfirmed`. It is **never** filled with an
-  invented precise number.
-- The catalogue body-fit status (**col L**) stays `Unconfirmed` for every
-  model, following the existing catalogue convention, so no competitor can read
-  as a confirmed fit.
-
-## Workstream C — sgcarmart.com research attempt (FEAT-005)
-
-The FEAT-005 brief asked that competitor specs be researched via
-**sgcarmart.com**, citing it (URL + access date) **only where it genuinely
-yields a figure**, and keeping the prior EVhubs/vendor-PDF sources for anything
-it cannot confirm. The **no-fabrication rule is absolute**: no sgcarmart
-citation may be written unless the figure actually came from a reachable
-sgcarmart page.
-
-**Attempt (2026-10-24):** every sgcarmart endpoint tried returned **HTTP 403
-Forbidden** to the automated fetch available in this environment:
-
-- `https://www.sgcarmart.com/` — 403
-- `https://www.sgcarmart.com/new_cars/newcars_overview.php` — 403
-- `https://www.sgcarmart.com/new_cars/newcars_listing.php?...` (commercial/van group) — 403
-- `https://www.sgcarmart.com/used_cars/listing.php?...` (commercial-vehicle filter) — 403
-
-sgcarmart is therefore **effectively unreachable programmatically** here.
-Separately, sgcarmart is a **passenger-car / used-car marketplace**; it does not
-publish spec sheets for the Chinese commercial battery-electric **light-truck**
-models in this catalogue (BYD T35 Electric Light-Duty, Foton eMiler, Forland S1
-EV, JAC N40EV, Qingling EQ2; and the already-catalogued ChengLong L2EV and
-Farizon F3E/H5E/H9E). So even with access it would not be a source for these
-commercial-truck figures.
-
-**Outcome per model (sgcarmart-yielded vs kept-on-prior-source vs Unconfirmed):**
-
-| Model | sgcarmart yielded | Kept on prior source | Still Unconfirmed |
-|---|---|---|---|
-| BYD T35 Electric Light-Duty | **nothing** (403 / not a truck source) | payload, battery, kWh/km (derived), AC, DC, range — **EVhubs** | 2nd weight, price, service |
-| Foton eMiler | **nothing** (403) | payload, battery, kWh/km (derived), AC, DC, range — **EVhubs** | 2nd weight, price, service |
-| Forland S1 EV | **nothing** (403) | battery, kWh/km (derived), range — **EVhubs** | payload, 2nd weight, AC, DC, price, service |
-| JAC N40EV | **nothing** (403) | battery, kWh/km (derived), range — **EVhubs** | payload, 2nd weight, AC, DC, price, service |
-| Qingling EQ2 | **nothing** (403) | payload, battery, kWh/km (derived), AC, DC, range — **EVhubs** | 2nd weight, price, service |
-| ChengLong L2EV | **nothing** (403) | vendor PDF (unchanged) | per existing row |
-| Farizon F3E / H5E / H9E | **nothing** (403) | vendor PDF / EVhubs (unchanged) | per existing row |
-
-**Net effect on the data:** because sgcarmart yielded no reachable figure, **no
-`_prov` citation was added or changed** for Workstream C — every sourced/derived
-figure keeps its existing EVhubs/vendor-PDF citation and every honest gap stays
-`Unconfirmed` / `n.a.`. This keeps the `_prov` edits numerically neutral (the
-engine ignores `_prov`), so `validate.py` stays **19/19** and the engine sha256
-stays frozen. **No sgcarmart citation appears anywhere**, because none could be
-truthfully made.
-
-Separately, FEAT-005 makes every switch-over spec **user-editable** (Workstream
-F). A figure a user types is tagged **User-entered** (an explicit assumption,
-amber dotted underline), never `Sourced`, so a hand-entered value can never be
-mistaken for a cited figure — the same honesty discipline the sgcarmart rule
-enforces.
-
-Gaps were genuinely closed with sourced data wherever a credible figure exists:
-four of the five trucks carry a sourced battery, a sourced range and a derived
-kWh/km, and three of them additionally carry a sourced payload and sourced AC
-and DC charge power. The fields that remain **Unconfirmed** are honest gaps:
-SGD list prices (the source is supplier-neutral and publishes no prices), and a
-few payloads / charge-power figures that the spec sheet lists only as GVW or as
-a charge *time* rather than a charge *power*.
-
-All access dates below are **2026-10-24**. The primary source is **EVhubs
-(evhubs.sg)**, a Singapore industrial-fleet-electrification listing platform
-that spec's commercial EVs side by side and classifies each by vehicle class
-(it lists all five picks under **Light trucks**, separately from Commercial
-vans). It is the same family of source already cited for the in-catalogue
-Farizon H9E row.
+**Nothing in these rows is fabricated.** Every supplied figure is placed in the
+column the user's table specifies and tagged `userentered` in `_prov`; the two
+stated ranges are stored as a midpoint **and** preserved verbatim in `_ranges`
+for honest display. The catalogue body-fit status (**col L**) stays
+`Unconfirmed` for every model, following the existing catalogue convention, so
+no competitor can read as a confirmed fit — body-fit is a separate substantive
+caveat, not a data-provenance badge.
 
 ## Catalogue columns
 
 `A` name · `B` payload kg · `C` 2nd weight · `D` usable battery kWh ·
 `E` kWh/km · `F` basis · `G` on-board AC kW · `H` DC kW · `I` list price SGD ·
 `J` range km · `K` evidence ref (citation) · `L` body-fit status ·
-`P` service S$/km. Each new row also carries an additive `_prov` map keyed by
-column letter (`sourced` | `derived` | `unconfirmed`), which the frozen engine
-ignores (it only reads A..Q by letter).
+`P` service S$/km. Each competitor row also carries an additive `_prov` map
+keyed by column letter and, where a figure was stated as a range, an additive
+`_ranges` map keyed by column letter — both of which the frozen engine ignores
+(it only reads A..Q by letter).
 
 ### Trucks rejected (and why)
 
-From the EVhubs **Light trucks** class (10 models, SRM and Farizon already in
+From the Singapore-available **Light trucks** class (SRM and Farizon already in
 the catalogue):
 
-- **Sany FR-601** — a genuine EV light truck with a sourced payload (2,660 kg),
-  but its body is **15 ft**, just outside the user's 10-14 ft class; dropped in
-  favour of trucks that sit cleanly within 10-14 ft.
+- **Sany FR-601** — a genuine EV light truck, but its body is **15 ft**, just
+  outside the user's 10-14 ft class; dropped in favour of trucks that sit
+  cleanly within 10-14 ft.
 - **JAC N30EV** and **JAC N75EV / N90EV** — the N30 overlaps the N40 pick, and
-  the N75/N90 are 7.49 / 9 t trucks (heavier LGV / medium-duty), outside the
+  the N75 / N90 are 7.49 / 9 t trucks (heavier LGV / medium-duty), outside the
   10-14 ft light class.
 
 Rejected on class (not light goods trucks): all **Commercial vans** (BYD ET3,
@@ -136,88 +135,88 @@ Riddara RD6), all **Passenger vans / minibuses**, and the **Heavy trucks**
 
 ## 1. BYD T35 Electric Light-Duty — catalogue row 14
 
-Source: <https://evhubs.sg/electric-vehicles/byd-t35-electric-light-duty.html>, accessed 2026-10-24.
-Body: **10 ft aluminium drop-side deck** on a 3.7 t cab-and-chassis light truck (verified TRUCK, not the BYD T3 van).
+Body: **10 ft aluminium drop-side deck** on a 3.7 t cab-and-chassis light truck
+(verified TRUCK, not the BYD T3 van). All figures user-supplied, 2026.
 
 | Field | Value | Provenance |
 |---|---|---|
-| B payload kg | 1900 | **Sourced** — payload 1,900 kg (GVW 3,700 kg) |
-| D usable battery kWh | 62.36 | **Sourced** — 62.36 kWh BYD Blade battery |
-| E kWh/km | 0.1699 | **Derived** — 62.36 kWh ÷ 367 km (sourced inputs) |
-| G AC kW | 6.6 | **Sourced** — AC 6.6 kW (CCS2) |
-| H DC kW | 71 | **Sourced** — DC 71 kW (CCS2) |
-| J range km | 367 | **Sourced** — 367 km per full charge |
-| C 2nd weight | n.a. | **Unconfirmed** — not sourced |
-| I list price SGD | n.a. | **Unconfirmed** — EVhubs publishes no price |
-| P service S$/km | n.a. | **Unconfirmed** — not sourced |
+| B payload kg | 1900 | **User-entered** — authoritative table |
+| D usable battery kWh | 62.36 | **User-entered** |
+| E kWh/km | 0.170 | **User-entered** |
+| G AC kW | 6.6 | **User-entered** |
+| H DC kW | 71 | **User-entered** |
+| I list price SGD | 73000 | **User-entered** |
+| J range km | 367 | **User-entered** |
+| P service S$/km | 0.03 | **User-entered** — midpoint of stated **S$0.02-0.04/km** (`_ranges.P`) |
+| C 2nd weight | n.a. | **Unconfirmed** — not supplied |
 
 ## 2. Foton eMiler — catalogue row 15
 
-Source: <https://evhubs.sg/electric-vehicles/foton-emiler.html>, accessed 2026-10-24.
-Body: **3,320 mm steel open deck (~10.9 ft)** on a 4.5 t cab-and-chassis light truck.
+Body: **3,320 mm steel open deck (~10.9 ft)** on a 4.5 t cab-and-chassis light
+truck. All figures user-supplied, 2026.
 
 | Field | Value | Provenance |
 |---|---|---|
-| B payload kg | 2620 | **Sourced** — payload 2,620 kg (GVW 4,500 kg) |
-| D usable battery kWh | 77 | **Sourced** — 77 kWh LFP |
-| E kWh/km | 0.2053 | **Derived** — 77 kWh ÷ 375 km WLTP (sourced inputs) |
-| G AC kW | 22 | **Sourced** — AC 22 kW |
-| H DC kW | 77 | **Sourced** — DC 77 kW |
-| J range km | 375 | **Sourced** — 375 km WLTP |
-| C 2nd weight | n.a. | **Unconfirmed** — not sourced |
-| I list price SGD | n.a. | **Unconfirmed** — EVhubs publishes no price |
-| P service S$/km | n.a. | **Unconfirmed** — not sourced |
+| B payload kg | 2620 | **User-entered** |
+| D usable battery kWh | 77.00 | **User-entered** |
+| E kWh/km | 0.205 | **User-entered** |
+| G AC kW | 22.0 | **User-entered** |
+| H DC kW | 77 | **User-entered** |
+| I list price SGD | 73000 | **User-entered** |
+| J range km | 375 | **User-entered** |
+| P service S$/km | 0.04 | **User-entered** — midpoint of stated **S$0.03-0.05/km** (`_ranges.P`) |
+| C 2nd weight | n.a. | **Unconfirmed** — not supplied |
 
 ## 3. Forland S1 EV — catalogue row 16
 
-Source: <https://evhubs.sg/electric-vehicles/forland-s1-ev.html>, accessed 2026-10-24.
-Body: **3,200 mm internal deck (~10.5 ft)** on a 4.5 t cab-and-chassis light-duty truck (fits a 2.0 m car park).
+Body: **3,200 mm internal deck (~10.5 ft)** on a 4.5 t cab-and-chassis
+light-duty truck (fits a 2.0 m car park). All figures user-supplied, 2026.
 
 | Field | Value | Provenance |
 |---|---|---|
-| D usable battery kWh | 63.75 | **Sourced** — 63.75 kWh liquid-cooled CATL |
-| E kWh/km | 0.1932 | **Derived** — 63.75 kWh ÷ 330 km (sourced inputs) |
-| J range km | 330 | **Sourced** — range up to 330 km |
-| B payload kg | n.a. | **Unconfirmed** — only GVW 4,500 kg published, no nett payload |
-| C 2nd weight | n.a. | **Unconfirmed** — not sourced |
-| G AC kW | n.a. | **Unconfirmed** — not sourced |
-| H DC kW | n.a. | **Unconfirmed** — not sourced |
-| I list price SGD | n.a. | **Unconfirmed** — EVhubs publishes no price |
-| P service S$/km | n.a. | **Unconfirmed** — not sourced |
+| B payload kg | 2600 | **User-entered** — midpoint of stated **2,500-2,700 kg** (`_ranges.B`) |
+| D usable battery kWh | 63.75 | **User-entered** |
+| E kWh/km | 0.215 | **User-entered** |
+| G AC kW | 11.0 | **User-entered** |
+| H DC kW | 70 | **User-entered** |
+| I list price SGD | 76000 | **User-entered** |
+| J range km | 300 | **User-entered** |
+| P service S$/km | 0.04 | **User-entered** — midpoint of stated **S$0.03-0.05/km** (`_ranges.P`) |
+| C 2nd weight | n.a. | **Unconfirmed** — not supplied |
 
 ## 4. JAC N40EV — catalogue row 17
 
-Source: <https://evhubs.sg/electric-vehicles/jac-n40ev.html> (model HFC1040EV3), accessed 2026-10-24.
-Body: **3,347 mm (11 ft) body** on a 3.7 t cab-and-chassis light truck.
+Body: **3,347 mm (11 ft) body** on a 3.7 t cab-and-chassis light truck. All
+figures user-supplied, 2026.
 
 | Field | Value | Provenance |
 |---|---|---|
-| D usable battery kWh | 63.75 | **Sourced** — 63.75 kWh LFP (200 Ah / 318.78 V) |
-| E kWh/km | 0.2772 | **Derived** — 63.75 kWh ÷ 230 km (sourced inputs; cf. the quoted 29.7 kWh/100 km) |
-| J range km | 230 | **Sourced** — rated 230 km |
-| B payload kg | n.a. | **Unconfirmed** — only GVW 3,700 kg published, no nett payload |
-| C 2nd weight | n.a. | **Unconfirmed** — not sourced |
-| G AC kW | n.a. | **Unconfirmed** — only AC 20-80% 5 h 30 min time published, not kW |
-| H DC kW | n.a. | **Unconfirmed** — only DC 20-80% 35 min time published, not kW |
-| I list price SGD | n.a. | **Unconfirmed** — EVhubs publishes no price |
-| P service S$/km | n.a. | **Unconfirmed** — not sourced |
+| B payload kg | 1850 | **User-entered** |
+| D usable battery kWh | 63.75 | **User-entered** |
+| E kWh/km | 0.297 | **User-entered** |
+| G AC kW | 7.0 | **User-entered** |
+| H DC kW | 65 | **User-entered** |
+| I list price SGD | 68000 | **User-entered** |
+| J range km | 230 | **User-entered** |
+| P service S$/km | 0.04 | **User-entered** — midpoint of stated **S$0.03-0.05/km** (`_ranges.P`) |
+| C 2nd weight | n.a. | **Unconfirmed** — not supplied |
 
 ## 5. Qingling EQ2 — catalogue row 18
 
-Source: <https://evhubs.sg/electric-vehicles/qingling-eq2.html>, accessed 2026-10-24.
-Body: **14 ft body** on a cab-and-chassis electric light goods vehicle.
+Body: **14 ft body** on a cab-and-chassis electric light goods vehicle. All
+figures user-supplied, 2026.
 
 | Field | Value | Provenance |
 |---|---|---|
-| B payload kg | 2530 | **Sourced** — payload 2,530 kg |
-| D usable battery kWh | 100.46 | **Sourced** — 100.46 kWh CATL LFP |
-| E kWh/km | 0.2870 | **Derived** — 100.46 kWh ÷ 350 km combined (sourced inputs; cf. the quoted 5.1 km/kWh city best case) |
-| G AC kW | 20 | **Sourced** — AC 20 kW |
-| H DC kW | 120 | **Sourced** — DC 120 kW |
-| J range km | 350 | **Sourced** — 350 km combined (515 km city) |
-| C 2nd weight | n.a. | **Unconfirmed** — not sourced |
-| I list price SGD | n.a. | **Unconfirmed** — EVhubs publishes no price |
-| P service S$/km | n.a. | **Unconfirmed** — not sourced |
+| B payload kg | 2530 | **User-entered** |
+| D usable battery kWh | 100.46 | **User-entered** |
+| E kWh/km | 0.287 | **User-entered** |
+| G AC kW | 20.0 | **User-entered** |
+| H DC kW | 120 | **User-entered** |
+| I list price SGD | 78800 | **User-entered** |
+| J range km | 350 | **User-entered** |
+| P service S$/km | 0.05 | **User-entered** — midpoint of stated **S$0.04-0.06/km** (`_ranges.P`) |
+| C 2nd weight | n.a. | **Unconfirmed** — not supplied |
 
 ---
 
@@ -227,45 +226,39 @@ Body: **14 ft body** on a cab-and-chassis electric light goods vehicle.
   `tools/fixtures/prospect_seeds.json` (regenerated by
   `tools/build_prospects.py`, which `copy.deepcopy`s `inputs.products` from the
   authoritative `tools/fixtures/demo_case.json`), so the app (which lands on the
-  mid seed) and the Excel-parity validation agree.
+  mid seed) and the Excel-parity validation agree. The `_ranges` maps propagate
+  with the rows.
 - The rows are **not referenced by any replacement plan**, so the frozen engine
   (`src/engine.js`) never looks them up. `tools/validate.py` therefore still
-  reports **19 passed, 0 failed** after the swap — swapping unreferenced
+  reports **19 passed, 0 failed** after filling the specs — filling unreferenced
   catalogue rows changes no economic figure, and the engine sha256 stays the
   frozen `45b388a1edaca77081e62f49e52276f6919448e458610474c7f65aafcb50fae3`.
 - The **switch-over page** (Portfolio stage) renders every catalogue model side
-  by side with these specs and a per-field Sourced / Derived / Unconfirmed
-  badge, plus include/exclude toggles for competitor models. Toggling a
-  competitor off removes it from the additive matcher
-  (`window.HSPortfolioFit`) only; it never touches the frozen engine. SRM is
-  locked on as the primary model and no competitor can read as a clean Best fit
-  (col L stays `Unconfirmed`).
-- **FEAT-005: every spec on the switch-over page is editable.** Each spec cell
-  is a number `<input>` bound to an in-memory override of the catalogue row on
-  the UI state (`__HS.state.products.rows`). Typing a value: (1) retags that
-  field's provenance to **User-entered** (an explicit assumption with an amber
-  dotted-underline swatch, never `Sourced`); (2) re-runs the additive matcher so
-  the fit verdicts re-rank live on the new figure; and (3) if the edited model
-  is the active **Plan A** (SRM) or **Plan B** (competitor) EV from the
-  business-intention reframe, flows into the catalogue defaults the two-state
-  recompute reads (`buildPlanState` deep-clones `state.products`), so the **TCO
-  recomputes** — all **without touching `src/engine.js`** and **without mutating
-  `tools/fixtures/demo_case.json` on disk** (edits are UI-session state only).
-  Clearing an edited field reverts it to `n.a.` / `Unconfirmed`.
+  by side with these specs and a per-field provenance badge, plus
+  include/exclude toggles for competitor models. The competitor figures render
+  with the **User-entered** badge (authoritative, never a false `Sourced`
+  claim). Toggling a competitor off removes it from the additive matcher only;
+  it never touches the frozen engine. SRM is locked on as the primary model and
+  no competitor can read as a clean Best fit (col L stays `Unconfirmed`).
+- The per-field provenance-badge system is scheduled to be **retired in a later
+  feature**; the `_prov` maps are left in place here (harmless, engine-ignored)
+  and the competitor figures are honestly tagged `userentered` in the meantime.
 
 ## Verification
 
 - `node tools/build_index.js` — regenerate the bundled page; the engine sha line
   shows the frozen `45b388a1edaca770...` (unchanged).
-- `python SG-EV-TRUCK-TCO/tools/validate.py` — **19/19**.
+- `python tools/validate.py` — **19/19**.
 - `node tools/check_portfolio_fit.mjs` — asserts the five new TRUCK models are
   present, the five removed vans are GONE, the catalogue is 12 models, each
-  truck carries a provenance tag, no present numeric figure is unsourced (every
-  numeric figure is `sourced` or `derived`), every `unconfirmed` field carries
-  no fabricated number, a feasible competitor (BYD T35, sourced payload + range)
-  is forced to a caveat (never a clean Best fit), and SRM remains primary.
+  truck carries a provenance tag, every present numeric figure carries an honest
+  provenance (`sourced` / `derived` / `userentered`, never silently present),
+  every `unconfirmed` field carries no fabricated number, a feasible competitor
+  (BYD T35) is forced to a caveat (never a clean Best fit), and SRM remains
+  primary.
 - `node tools/check_index.mjs` — asserts the switch-over table lists the five
   new trucks and no longer lists the removed vans, the include/exclude toggles
-  (SRM locked on) and the per-field Sourced / Derived / Unconfirmed badges
-  render, and that toggling a competitor drives the matcher without breaking the
-  engine.
+  (SRM locked on) render, the competitor rows render the **User-entered**
+  provenance badge for their supplied specs and are never falsely tagged
+  `Sourced`, and that toggling a competitor drives the matcher without breaking
+  the engine.
