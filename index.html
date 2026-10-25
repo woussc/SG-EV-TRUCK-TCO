@@ -8723,6 +8723,21 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   function specByKey(k){ for (var i=0;i<SPECS.length;i++){ if (SPECS[i].key===k) return SPECS[i]; } return SPECS[0]; }
   function axisTitle(s){ return s.label + ' (' + s.unit + ')'; }
 
+  // Compact tick-ONLY label formatter. This is used solely for drawing the
+  // X-axis tick labels so adjacent ticks never crowd/overlap at any of the 8
+  // axis selections. It NEVER feeds the dot positions (cx/cy use the true
+  // value) nor the hover <title> tooltip (that keeps full precision via the
+  // spec's own fmt). The only abbreviation is for the List-price axis (unit
+  // 'SGD'), whose full labels like 'S$130,568' are the widest: those round to
+  // thousands as 'S$131k'. Service cost (sub-dollar S$/km) and every numeric
+  // spec are already short, so they fall through to the full fmt.
+  function tickLabel(s, v){
+    if (s.unit === 'SGD'){
+      return 'S$' + Math.round(v/1000).toLocaleString('en-SG') + 'k';
+    }
+    return s.fmt(v);
+  }
+
   // Default axis pair: X = list price, Y = range (a clear value-vs-reach read).
   var DEFAULT_X = 'I', DEFAULT_Y = 'J';
 
@@ -8815,21 +8830,29 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     svg += '<line x1="'+x0+'" y1="'+y1+'" x2="'+x0+'" y2="'+y0+'" stroke="'+C.line2+'" stroke-width="1"/>';
     svg += '<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="'+C.line2+'" stroke-width="1"/>';
 
-    // Ticks (5 per axis), gridlines, numeric labels.
-    var N = 5, i, t, gx, gy, val;
-    for (i=0;i<=N;i++){
-      t = i/N;
-      // X ticks
+    // Ticks + gridlines + numeric labels. The X axis uses FEWER ticks (NX=4 ->
+    // 5 labels) and the COMPACT tickLabel() so even the widest List-price
+    // labels have clear gaps; the Y axis keeps 5 intervals (6 labels). X labels
+    // keep extreme-tick inward anchoring (first=start at x0, last=end at x1) so
+    // nothing overflows the viewBox. Grid/tick GEOMETRY is unchanged; only the
+    // X label TEXT (compact) and the X tick COUNT changed.
+    var N = 5, NX = 4, i, t, gx, gy, val;
+    // X ticks (compact labels, NX intervals).
+    for (i=0;i<=NX;i++){
+      t = i/NX;
       gx = x0 + (x1-x0)*t;
       val = dx.lo + (dx.hi-dx.lo)*t;
       svg += '<line x1="'+gx.toFixed(1)+'" y1="'+y1+'" x2="'+gx.toFixed(1)+'" y2="'+y0+'" stroke="'+C.line+'" stroke-width="1"/>';
       svg += '<line x1="'+gx.toFixed(1)+'" y1="'+y0+'" x2="'+gx.toFixed(1)+'" y2="'+(y0+5)+'" stroke="'+C.line2+'" stroke-width="1"/>';
       // Extreme X ticks bend inward (first -> start-anchored at x0, last ->
-      // end-anchored at x1) so the widest labels (e.g. List price 'S$130,568')
+      // end-anchored at x1) so the widest labels (e.g. List price 'S$131k')
       // stay fully inside the viewBox; interior ticks stay centred on the tick.
-      var xAnchor = (i===0) ? 'start' : (i===N ? 'end' : 'middle');
-      svg += '<text x="'+gx.toFixed(1)+'" y="'+(y0+20)+'" text-anchor="'+xAnchor+'" fill="'+C.muted+'">'+esc(sx.fmt(val))+'</text>';
-      // Y ticks
+      var xAnchor = (i===0) ? 'start' : (i===NX ? 'end' : 'middle');
+      svg += '<text x="'+gx.toFixed(1)+'" y="'+(y0+20)+'" text-anchor="'+xAnchor+'" fill="'+C.muted+'">'+esc(tickLabel(sx, val))+'</text>';
+    }
+    // Y ticks (full labels, N intervals).
+    for (i=0;i<=N;i++){
+      t = i/N;
       gy = y0 + (y1-y0)*t;
       val = dy.lo + (dy.hi-dy.lo)*t;
       svg += '<line x1="'+x0+'" y1="'+gy.toFixed(1)+'" x2="'+x1+'" y2="'+gy.toFixed(1)+'" stroke="'+C.line+'" stroke-width="1"/>';

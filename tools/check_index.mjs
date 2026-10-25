@@ -2813,14 +2813,43 @@ checks.push(['scatter: axis tick/label SVG font-size base is >= 14 user-units',
 selScX.value = 'I'; selScX.fire('change');
 selScY.value = 'J'; selScY.fire('change');
 const scatterPriceHtml = byId['scatter-plot'].innerHTML;
-// The widest List-price label must be present (honesty: full value, not clipped text).
-checks.push(['scatter: List-price X axis shows the widest tick label in full',
-  /S\$130,568/.test(scatterPriceHtml)]);
+// FEAT-002: the List-price X tick labels are now the COMPACT abbreviated form
+// (round-to-thousands, e.g. 'S$131k') so adjacent labels never crowd/overlap.
+// Assert a compact 'S$<n>k' tick label is present AND that the full
+// un-abbreviated grouped-thousands form ('S$130,568') is NO LONGER emitted as
+// an X tick label (abbreviation is tick-label-only).
+checks.push(['scatter: List-price X axis tick labels use the compact S$<n>k form',
+  /text-anchor="[^"]*"[^>]*>S\$\d+k</.test(scatterPriceHtml)]);
+checks.push(['scatter: List-price X axis no longer emits the full grouped-thousands tick label',
+  !/text-anchor="[^"]*"[^>]*>S\$130,568</.test(scatterPriceHtml)]);
 // Extreme X tick labels must be anchored inward (start for the leftmost, end
 // for the rightmost) rather than middle, so neither can overflow the viewBox.
+// The rightmost (end-anchored) label must be the compact max ('S$131k').
 checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), never middle-overflowing',
-  /text-anchor="end"[^>]*>S\$130,568</.test(scatterPriceHtml) &&
+  /text-anchor="end"[^>]*>S\$\d+k</.test(scatterPriceHtml) &&
   /text-anchor="start"/.test(scatterPriceHtml)]);
+// FEAT-002 precision guard: abbreviation is tick-label-only. The hover <title>
+// tooltip for the dots MUST still carry the FULL-precision List price. The
+// true max List price (col I) is an ACTUAL catalogue value; it must appear,
+// grouped in full ('S$' + grouped thousands), inside a <title> element - and
+// NOT be rounded to the compact 'S$<n>k' tick form.
+{
+  const priceVals = scatRows
+    .map((rw) => rw.I)
+    .filter((v) => typeof v === 'number' && isFinite(v));
+  const maxPrice = Math.max.apply(null, priceVals);
+  const fullLabel = 'S$' + Math.round(maxPrice).toLocaleString('en-SG');
+  const fullLabelRe = new RegExp('<title>[^<]*' + fullLabel.replace(/[$.*+?^{}()|[\]\\]/g, '\\$&') + '[^<]*</title>');
+  checks.push(['scatter: hover <title> tooltip keeps full-precision List price (abbreviation is tick-only)',
+    priceVals.length > 0 && fullLabelRe.test(scatterPriceHtml)]);
+}
+// FEAT-002: the X axis now draws fewer, roomier ticks (NX=4 -> 5 labels) while
+// Y keeps 5 intervals (6 labels); lock the reduced X tick count in the source.
+{
+  const nxMatch = html.match(/\bNX\s*=\s*(\d+)/);
+  checks.push(['scatter: X axis tick count reduced to NX=4 intervals (5 labels) for roomier spacing',
+    !!nxMatch && parseInt(nxMatch[1], 10) === 4]);
+}
 // padR right margin must be generous enough to clear a wide label: the
 // rightmost X tick (end-anchored) sits at x1 = W - padR; assert x1 <= W - 56
 // (i.e. padR >= 56) by reading the geometry straight from the module source.
