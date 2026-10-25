@@ -41,6 +41,7 @@ const fixturePath = resolve(repoRoot, 'tools/fixtures/demo_case.json');
 const seedsPath = resolve(repoRoot, 'tools/fixtures/prospect_seeds.json');
 const chargingPath = resolve(repoRoot, 'tools/fixtures/charging_context.json');
 const chargingLocationsPath = resolve(repoRoot, 'tools/fixtures/charging_locations.json');
+const simBriefPath = resolve(repoRoot, 'docs/simulation-results-brief.md');
 const indexPath = resolve(repoRoot, 'index.html');
 
 const engineSrc = readFileSync(enginePath, 'utf8');
@@ -70,6 +71,15 @@ const charging = JSON.parse(chargingRaw);
 // network / map-API call. Re-generate with `node tools/build_charging_data.mjs`.
 const chargingLocationsRaw = readFileSync(chargingLocationsPath, 'utf8');
 const chargingLocations = JSON.parse(chargingLocationsRaw);
+
+// Planner-authored decision brief on the simulation results
+// (docs/simulation-results-brief.md). Read verbatim as a UTF-8 string and
+// bundled into the page as window.HSSimBrief.markdown so the topbar Download
+// button can produce a purely client-side Blob download under file:// with NO
+// runtime network / fetch. The content is authored upstream and embedded
+// byte-for-byte; do NOT rewrite it here. JSON.stringify below safely encodes
+// backticks, quotes and newlines as a JS string literal.
+const simBriefMarkdown = readFileSync(simBriefPath, 'utf8');
 
 // Simplified, fully-offline Singapore basemap (tools/fixtures/sg_basemap.json),
 // produced at build time by tools/build_basemap.mjs from the high-detail source
@@ -237,6 +247,11 @@ const chargingLocationsBlock =
   `<script>\nwindow.HSChargingLocations = ${JSON.stringify(chargingLocations)};\n</script>\n` +
   `<!-- CHARGING_LOCATIONS:END -->`;
 
+const simBriefBlock =
+  `<!-- SIMBRIEF:BEGIN  generated from docs/simulation-results-brief.md by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<script>\nwindow.HSSimBrief = { filename: 'ev-truck-tco-simulation-results.md', markdown: ${JSON.stringify(simBriefMarkdown)} };\n</script>\n` +
+  `<!-- SIMBRIEF:END -->`;
+
 const sgBasemapBlock =
   `<!-- SG_BASEMAP:BEGIN  generated from tools/fixtures/sg_basemap.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<script>\nwindow.HSBasemap = ${JSON.stringify(basemap)};\n</script>\n` +
@@ -336,6 +351,13 @@ html = replaceBlock(
 );
 html = replaceBlock(
   html,
+  /<!-- SIMBRIEF:BEGIN[\s\S]*?-->/,
+  /<!-- SIMBRIEF:END -->/,
+  'SIMBRIEF',
+  simBriefBlock,
+);
+html = replaceBlock(
+  html,
   /<!-- SG_BASEMAP:BEGIN[\s\S]*?-->/,
   /<!-- SG_BASEMAP:END -->/,
   'SG_BASEMAP',
@@ -377,6 +399,7 @@ console.log(`  charging: tools/fixtures/charging_context.json (${(Buffer.byteLen
 console.log(`  routing : src/routing_sim.js (${routingSrc.length} bytes, sha256 ${routingHash.slice(0, 16)}...)`);
 console.log(`  finance : src/finance.js (${financeSrc.length} bytes, sha256 ${financeHash.slice(0, 16)}...)`);
 console.log(`  locations: tools/fixtures/charging_locations.json (${(Buffer.byteLength(chargingLocationsRaw) / 1024).toFixed(2)} KB location subset) embedded`);
+console.log(`  simbrief: docs/simulation-results-brief.md (${Buffer.byteLength(simBriefMarkdown)} bytes markdown) embedded as window.HSSimBrief`);
 console.log(`  basemap : tools/fixtures/sg_basemap.json (${(Buffer.byteLength(basemapRaw) / 1024).toFixed(2)} KB, ${basemap.polygons.length} polygons) embedded as window.HSBasemap`);
 console.log(`  sg_map  : src/sg_map.js (${sgMapSrc.length} bytes, sha256 ${sgMapHash.slice(0, 16)}...)`);
 console.log(`  roads   : tools/fixtures/sg_roads.json (${(Buffer.byteLength(roadsRaw) / 1024).toFixed(2)} KB, ${roads.dlon.length} nodes / ${roads.edges.length} edges) embedded as window.HSRoads`);

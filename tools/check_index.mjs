@@ -102,6 +102,8 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   // overlay): top-chrome trigger + scrim + in-panel close button + dialog.
   'prospects-toggle','prospects-toggle-label','prospects-col',
   'prospects-scrim','prospects-overlay-close','inputs',
+  // FEAT-003 (Workstream C): offline download of the simulation-results brief.
+  'download-brief','download-brief-label',
   // FEAT-002: journey stepper (Customer stage removed -> 4 stages), stage
   // viewports + confidence badge hooks.
   'stepper','step-portfolio','step-tco','step-charging','step-proposal',
@@ -1298,9 +1300,18 @@ Object.keys(windowObj.__HS.state).forEach((k) => { delete windowObj.__HS.state[k
 Object.keys(stateSnapshot).forEach((k) => { windowObj.__HS.state[k] = stateSnapshot[k]; });
 if (windowObj.__HS.rebuildInputs) windowObj.__HS.rebuildInputs();
 windowObj.__HS.recompute();
-// No references to the removed evergreen case anywhere in the prospects markup.
-checks.push(['prospects markup has no evergreen reference',
-  html.toLowerCase().indexOf('evergreen') === -1]);
+// No references to the removed evergreen prospect CASE anywhere in the page
+// markup. The check is scoped to EXCLUDE the FEAT-003 SIMBRIEF data block: that
+// block embeds the planner-authored simulation-results brief verbatim, and the
+// brief legitimately documents the illustrative "Evergreen fleet" preset family
+// in prose (it is not the removed prospect seed, and it is bundled data, not
+// prospects markup). Stripping the SIMBRIEF block keeps the original assertion
+// at full strength for the prospects markup while not penalising the verbatim
+// embed. (The seed-id check at line ~302 and the rendered prospect-body check
+// at ~320 independently guarantee no 'evergreen' seed/customer remains.)
+const htmlWithoutSimBrief = html.replace(/<!-- SIMBRIEF:BEGIN[\s\S]*?<!-- SIMBRIEF:END -->/, '');
+checks.push(['prospects markup has no evergreen reference (SIMBRIEF embed excluded)',
+  htmlWithoutSimBrief.toLowerCase().indexOf('evergreen') === -1]);
 
 // ---- FEAT-002: journey stepper + stage viewports + confidence badge --------
 // FEAT-002 removed the standalone Customer stage (its profile + duty inputs
@@ -2813,14 +2824,43 @@ checks.push(['scatter: axis tick/label SVG font-size base is >= 14 user-units',
 selScX.value = 'I'; selScX.fire('change');
 selScY.value = 'J'; selScY.fire('change');
 const scatterPriceHtml = byId['scatter-plot'].innerHTML;
-// The widest List-price label must be present (honesty: full value, not clipped text).
-checks.push(['scatter: List-price X axis shows the widest tick label in full',
-  /S\$130,568/.test(scatterPriceHtml)]);
+// FEAT-002: the List-price X tick labels are now the COMPACT abbreviated form
+// (round-to-thousands, e.g. 'S$131k') so adjacent labels never crowd/overlap.
+// Assert a compact 'S$<n>k' tick label is present AND that the full
+// un-abbreviated grouped-thousands form ('S$130,568') is NO LONGER emitted as
+// an X tick label (abbreviation is tick-label-only).
+checks.push(['scatter: List-price X axis tick labels use the compact S$<n>k form',
+  /text-anchor="[^"]*"[^>]*>S\$\d+k</.test(scatterPriceHtml)]);
+checks.push(['scatter: List-price X axis no longer emits the full grouped-thousands tick label',
+  !/text-anchor="[^"]*"[^>]*>S\$130,568</.test(scatterPriceHtml)]);
 // Extreme X tick labels must be anchored inward (start for the leftmost, end
 // for the rightmost) rather than middle, so neither can overflow the viewBox.
+// The rightmost (end-anchored) label must be the compact max ('S$131k').
 checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), never middle-overflowing',
-  /text-anchor="end"[^>]*>S\$130,568</.test(scatterPriceHtml) &&
+  /text-anchor="end"[^>]*>S\$\d+k</.test(scatterPriceHtml) &&
   /text-anchor="start"/.test(scatterPriceHtml)]);
+// FEAT-002 precision guard: abbreviation is tick-label-only. The hover <title>
+// tooltip for the dots MUST still carry the FULL-precision List price. The
+// true max List price (col I) is an ACTUAL catalogue value; it must appear,
+// grouped in full ('S$' + grouped thousands), inside a <title> element - and
+// NOT be rounded to the compact 'S$<n>k' tick form.
+{
+  const priceVals = scatRows
+    .map((rw) => rw.I)
+    .filter((v) => typeof v === 'number' && isFinite(v));
+  const maxPrice = Math.max.apply(null, priceVals);
+  const fullLabel = 'S$' + Math.round(maxPrice).toLocaleString('en-SG');
+  const fullLabelRe = new RegExp('<title>[^<]*' + fullLabel.replace(/[$.*+?^{}()|[\]\\]/g, '\\$&') + '[^<]*</title>');
+  checks.push(['scatter: hover <title> tooltip keeps full-precision List price (abbreviation is tick-only)',
+    priceVals.length > 0 && fullLabelRe.test(scatterPriceHtml)]);
+}
+// FEAT-002: the X axis now draws fewer, roomier ticks (NX=4 -> 5 labels) while
+// Y keeps 5 intervals (6 labels); lock the reduced X tick count in the source.
+{
+  const nxMatch = html.match(/\bNX\s*=\s*(\d+)/);
+  checks.push(['scatter: X axis tick count reduced to NX=4 intervals (5 labels) for roomier spacing',
+    !!nxMatch && parseInt(nxMatch[1], 10) === 4]);
+}
 // padR right margin must be generous enough to clear a wide label: the
 // rightmost X tick (end-anchored) sits at x1 = W - padR; assert x1 <= W - 56
 // (i.e. padR >= 56) by reading the geometry straight from the module source.
@@ -2893,6 +2933,148 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
   checks.push(['switchover: spec input font-size stays >= 13px after the trim',
     /#portfolio-switchover-table input\.spec-input\{[^}]*font-size:13px/.test(swStyle)]);
 }
+
+// ---- FEAT-003 (Workstream C): offline simulation-brief download ------------
+// Two things must hold, additively and without any runtime network:
+//   (a) the Download affordance exists in the topbar as a real <button>, is
+//       keyboard-focusable, carries the noprint class and a label/aria-label;
+//   (b) the planner-authored brief is bundled verbatim as window.HSSimBrief
+//       (non-empty markdown + filename) and contains the four key section
+//       headings plus the two grounding figures;
+//   (c) the download handler is purely client-side: it reads
+//       window.HSSimBrief, builds a Blob + createObjectURL, and NEVER fetches.
+// (a) + part of (c) are asserted at the SOURCE level against the raw index.html
+// (the DOM shim synthesises generic <div> stand-ins for ids, so attribute-level
+// facts about the hand-written button markup are checked on the HTML string).
+(function(){
+  // (a) Download button markup: a real <button type="button"> with the id,
+  // the noprint class, and an aria-label.
+  const btnM = html.match(/<button\b[^>]*id="download-brief"[^>]*>[\s\S]*?<\/button>/);
+  const btnTag = btnM ? btnM[0] : '';
+  const btnOpen = btnM ? (btnTag.match(/<button\b[^>]*>/) || [''])[0] : '';
+  checks.push(['download: #download-brief is a <button>', !!btnM]);
+  checks.push(['download: button is type="button"', /type="button"/.test(btnOpen)]);
+  checks.push(['download: button carries the noprint class (never prints)',
+    /class="[^"]*\bnoprint\b[^"]*"/.test(btnOpen)]);
+  // Reuses the focusable topbar styling so it is keyboard-reachable.
+  checks.push(['download: button reuses .sidebar-toggle styling (keyboard-focusable)',
+    /class="[^"]*\bsidebar-toggle\b[^"]*"/.test(btnOpen)]);
+  // A clear label: an aria-label AND visible text.
+  checks.push(['download: button has a non-empty aria-label',
+    /aria-label="[^"]+"/.test(btnOpen)]);
+  checks.push(['download: button has a visible label (download-brief-label)',
+    /id="download-brief-label"[^>]*>[^<]+</.test(btnTag) ||
+    /id="download-brief-label"\s*>[^<]+</.test(btnTag) ||
+    /download-brief-label[^>]*>[\s\S]*?Download/.test(btnTag)]);
+  // The id exists in the DOM shim (affordance reachable via getElementById).
+  checks.push(['download: #download-brief resolvable in the DOM', !!byId['download-brief']]);
+
+  // (b) Embedded brief: window.HSSimBrief present, non-empty, with filename
+  // and all key anchors.
+  const brief = windowObj.HSSimBrief;
+  const md = brief && typeof brief.markdown === 'string' ? brief.markdown : '';
+  checks.push(['simbrief: window.HSSimBrief is present with a markdown string', !!brief && typeof md === 'string']);
+  checks.push(['simbrief: embedded markdown is non-empty', md.length > 0]);
+  checks.push(['simbrief: filename is the expected .md name',
+    !!brief && brief.filename === 'ev-truck-tco-simulation-results.md']);
+  const sections = [
+    'What the simulation actually computes',
+    'Which variables matter most',
+    'The threshold for a sensible ICE-to-EV conversion',
+    'Which client types realistically accept the quantitative case',
+  ];
+  sections.forEach((h) => {
+    checks.push(['simbrief: embedded brief contains section "' + h + '"', md.indexOf(h) !== -1]);
+  });
+  checks.push(['simbrief: embedded brief carries grounding figure S$1,047,412', md.indexOf('S$1,047,412') !== -1]);
+  checks.push(['simbrief: embedded brief carries grounding figure 29.52%', md.indexOf('29.52%') !== -1]);
+
+  // (c) The download path is a client-side Blob/object-URL, NOT a fetch. Scope
+  // the grep to the wireBriefDownload handler source so the assertion is
+  // precise and robust to unrelated code elsewhere.
+  const handlerM = html.match(/function wireBriefDownload\(\)\{[\s\S]*?\}\)\(\);/);
+  const handlerSrc = handlerM ? handlerM[0] : '';
+  checks.push(['download: handler wireBriefDownload present', !!handlerM]);
+  checks.push(['download: handler reads window.HSSimBrief (bundled string, not a request)',
+    /window\.HSSimBrief/.test(handlerSrc)]);
+  checks.push(['download: handler builds a Blob', /new Blob\(/.test(handlerSrc)]);
+  checks.push(['download: handler uses createObjectURL', /createObjectURL\(/.test(handlerSrc)]);
+  checks.push(['download: handler revokes the object URL', /revokeObjectURL\(/.test(handlerSrc)]);
+  checks.push(['download: handler sets <a download> to the bundled filename',
+    /\.download\s*=/.test(handlerSrc)]);
+  checks.push(['download: handler introduces NO fetch (offline)', !/\bfetch\s*\(/.test(handlerSrc)]);
+  checks.push(['download: handler introduces NO XMLHttpRequest (offline)',
+    !/XMLHttpRequest/.test(handlerSrc)]);
+})();
+
+// ---------------------------------------------------------------------------
+// FEAT-004 WORKSTREAM B: source-level mobile-width assertions.
+// A real browser is NOT available to the coder, so these are SOURCE-LEVEL
+// (string / regex) checks that the mobile layer and the inline-SVG text
+// legibility mechanism exist and stay media-query-scoped. They do NOT simulate
+// a viewport; the orchestrator runs the real-browser (Playwright) audit at
+// 1440px and ~390px. These are purely ADDITIVE - no existing assertion above
+// is touched or weakened.
+// ---------------------------------------------------------------------------
+(() => {
+  // (1) The phone breakpoints exist. The layer builds on the FEAT-007 <=700px
+  // sheets plus a tightest <=480px tier; both must be present.
+  const mq700 = /@media\s*\(\s*max-width\s*:\s*700px\s*\)/.test(html);
+  const mq480 = /@media\s*\(\s*max-width\s*:\s*480px\s*\)/.test(html);
+  checks.push(['mobile: @media (max-width:700px) phone-sheet breakpoint present', mq700]);
+  checks.push(['mobile: @media (max-width:480px) tightest phone breakpoint present', mq480]);
+
+  // (2) Scroll containers carry overflow-x:auto so wide surfaces scroll INSIDE
+  // their container rather than forcing horizontal page overflow at ~390px.
+  checks.push(['mobile: .stepper carries overflow-x:auto (scrollable chip row)',
+    /\.stepper\{[^}]*overflow-x:\s*auto/.test(html)]);
+  checks.push(['mobile: .table-wrap carries overflow-x:auto (wide tables scroll in place)',
+    /\.table-wrap\{[^}]*overflow-x:\s*auto/.test(html)]);
+
+  // (3) The topbar flex-wraps at phone width so the FEAT-003 #download-brief
+  // button wraps cleanly and stays reachable/tappable (never clipped off-screen).
+  checks.push(['mobile: .topbar flex-wraps at phone width (download button reachable)',
+    /\.topbar\{[^}]*flex-wrap:\s*wrap/.test(html)]);
+
+  // (4) THE HARD PART - inline-SVG <text> legibility floor. An explicit CSS
+  // font-size in px on the SVG <text>, scoped inside a max-width media query,
+  // overrides the user-unit font-size attribute and does NOT scale with the
+  // viewBox, so it pins a guaranteed on-screen size at ~390px. Assert the rule
+  // exists for BOTH the scatter and the route-sim map (the two SVG surfaces the
+  // feature calls out), plus the TCO charts, and that it is PX-based.
+  const scatterTextRule = html.match(/\.scatter-plot svg text\{font-size:\s*(\d+(?:\.\d+)?)px\}/);
+  const mapLabRule = html.match(/#rsim-map \.rsim-lab\{font-size:\s*(\d+(?:\.\d+)?)px\}/);
+  const tcoTextRule = html.match(/#chart-cumulative svg text,\s*#chart-breakdown svg text\{font-size:\s*(\d+(?:\.\d+)?)px\}/);
+  checks.push(['mobile-svg-text: scatter <text> pinned to a px font-size (legibility floor)',
+    !!scatterTextRule && parseFloat(scatterTextRule[1]) >= 12]);
+  checks.push(['mobile-svg-text: route-sim map .rsim-lab pinned to a px font-size (legibility floor)',
+    !!mapLabRule && parseFloat(mapLabRule[1]) >= 12]);
+  checks.push(['mobile-svg-text: TCO hero + breakdown <text> pinned to a px font-size (legibility floor)',
+    !!tcoTextRule && parseFloat(tcoTextRule[1]) >= 12]);
+
+  // (5) DESKTOP SAFETY - every one of the new SVG-text px rules must live INSIDE
+  // a max-width media query, so the 1440px desktop render (which keeps the
+  // original user-unit font sizes) is byte-for-byte unchanged. Verify the rules
+  // sit within the <=480px block, not at the top-level stylesheet.
+  const m480 = html.match(/@media\s*\(\s*max-width\s*:\s*480px\s*\)\s*\{([\s\S]*?)\n\}/);
+  const m480Body = m480 ? m480[1] : '';
+  checks.push(['mobile-svg-text: scatter px rule is scoped INSIDE the <=480px media query (desktop-safe)',
+    /\.scatter-plot svg text\{font-size:/.test(m480Body)]);
+  checks.push(['mobile-svg-text: map label px rule is scoped INSIDE the <=480px media query (desktop-safe)',
+    /#rsim-map \.rsim-lab\{font-size:/.test(m480Body)]);
+  checks.push(['mobile-svg-text: TCO chart px rule is scoped INSIDE the <=480px media query (desktop-safe)',
+    /#chart-cumulative svg text,\s*#chart-breakdown svg text\{font-size:/.test(m480Body)]);
+
+  // (6) The desktop scatter/chart font-size presentation attributes are STILL
+  // the original user-unit values (the mobile rule only overrides at render time
+  // via CSS; the source SVG attribute is unchanged), so desktop is untouched.
+  // The scatter renderer emits its font-size via a template (font-size="'+FS+'")
+  // where the desktop user-unit base FS is still 14 - the mobile rule only
+  // overrides the RENDERED size via CSS at <=480px, leaving the source SVG
+  // attribute (and thus the 1440px desktop render) untouched.
+  checks.push(['mobile-svg-text: scatter SVG still emits its desktop user-unit font-size base (FS=14, desktop untouched)',
+    /var FS\s*=\s*14\b/.test(html) && /font-size="'\+FS\+'"/.test(html)]);
+})();
 
 let ok = true;
 for (const [name, pass] of checks) {
