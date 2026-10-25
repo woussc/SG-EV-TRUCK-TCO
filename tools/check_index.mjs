@@ -116,9 +116,12 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'chart-cumulative','chart-breakdown',
   'results-table','day0-cards','tco-tooltip','tco-band',
   'portfolio-matched-models','portfolio-fleet-body','portfolio-config-text',
-  // FEAT-003 Part C: full-portfolio switch-over table + provenance legend.
+  // FEAT-003 Part C: full-portfolio switch-over table (provenance legend
+  // retired in FEAT-003 Workstream B).
   'portfolio-switchover','portfolio-switchover-table','portfolio-switchover-body',
-  'portfolio-provenance-legend',
+  // FEAT-004 Workstream D: vehicle distribution scatter (plot container, the
+  // two axis selectors, the not-plottable note).
+  'portfolio-scatter','scatter-plot','scatter-note','scatter-x','scatter-y',
   // FEAT-002: folded-in customer profile + consolidated per-truck Advanced.
   'customer-form','fleet-adv',
   // FEAT-002 (Workstream D): business-intention reframe + Plan A/B pickers.
@@ -1615,18 +1618,22 @@ checks.push(['Portfolio fleet summary re-renders live on recompute',
   fleetRowsAfter.length === demoMatches.length]);
 
 // ---- FEAT-003 Part C: full-portfolio switch-over table + toggles + provenance
-// The Portfolio stage carries a NEW switch-over section that lists EVERY
-// catalogue model side by side with key specs AND a per-field provenance badge,
-// plus competitor include/exclude toggles wired to the additive matcher (via
-// H.excludedModels). SRM is the primary model and is locked on. These walk the
-// built DOM nodes (real createElement/appendChild nodes), not an innerHTML blob.
+// The Portfolio stage carries the switch-over section that lists EVERY
+// catalogue model side by side with key specs, plus competitor include/exclude
+// toggles wired to the additive matcher (via H.excludedModels). SRM is the
+// primary model and is locked on. These walk the built DOM nodes (real
+// createElement/appendChild nodes), not an innerHTML blob.
 checks.push(['switch-over section present in markup',
   html.indexOf('id="portfolio-switchover"') !== -1 &&
   html.indexOf('id="portfolio-switchover-table"') !== -1]);
-checks.push(['switch-over provenance legend present (Sourced/Derived/Unconfirmed)',
-  html.indexOf('id="portfolio-provenance-legend"') !== -1 &&
-  /data-prov-legend="sourced"/.test(html) && /data-prov-legend="derived"/.test(html) &&
-  /data-prov-legend="unconfirmed"/.test(html)]);
+// FEAT-003 (Workstream B): the per-field provenance BADGE system is RETIRED on
+// the Portfolio page. Assert it is GONE from the markup - no provenance legend,
+// no .prov-* badge classes, no data-prov-legend swatches - so the switch-over
+// page no longer renders the Sourced/Derived/Unconfirmed/User-entered tags.
+checks.push(['switch-over: provenance legend + prov-badge system retired (no legend block)',
+  html.indexOf('id="portfolio-provenance-legend"') === -1 &&
+  html.indexOf('data-prov-legend') === -1 &&
+  html.indexOf('prov-badge') === -1]);
 const soBody = byId['portfolio-switchover-body'];
 const soRows = toArr(soBody.children).filter(
   (r) => r.attributes && r.attributes['data-switchover-model'] != null);
@@ -1653,29 +1660,30 @@ function soCollect(node, attr, acc) {
   toArr(node.children).forEach((c) => soCollect(c, attr, acc));
   return acc;
 }
-// Every row carries a provenance badge somewhere (the per-field indicator).
-const provBadges = soCollect(soBody, 'data-prov', []);
-checks.push(['switch-over renders per-field provenance badges',
-  provBadges.length >= soRows.length]);
-// New models carry at least one Unconfirmed badge (honest gaps) in their row.
 function rowOf(name) { return soRows.find((r) => r.attributes['data-switchover-model'] === name); }
-checks.push(['switch-over: new models show Unconfirmed provenance for unsourced fields',
-  SO_NEW.every((n) => {
-    const row = rowOf(n);
-    if (!row) return false;
-    const badges = soCollect(row, 'data-prov', []);
-    return badges.some((b) => b.attributes['data-prov'] === 'unconfirmed');
-  })]);
-// A sourced/derived field renders its badge too (BYD T35 battery is sourced,
-// kWh/km derived), so provenance is not uniformly 'unconfirmed'.
-checks.push(['switch-over: sourced/derived provenance badges render for sourced figures',
-  (() => {
-    const row = rowOf('BYD T35 Electric Light-Duty');
-    if (!row) return false;
-    const badges = soCollect(row, 'data-prov', []);
-    return badges.some((b) => b.attributes['data-prov'] === 'sourced') &&
-      badges.some((b) => b.attributes['data-prov'] === 'derived');
-  })()]);
+// FEAT-003 (Workstream B): the per-field provenance BADGE is RETIRED. Assert
+// the built switch-over body renders NO provenance badge node (no data-prov)
+// on any spec cell - the ragged per-cell tag is gone by design.
+const provBadges = soCollect(soBody, 'data-prov', []);
+checks.push(['switch-over: no per-field provenance badge renders (badge system retired)',
+  provBadges.length === 0]);
+// The table still renders a clean grid: every catalogue row carries the key
+// editable spec cells (one data-spec-input per key column), so retiring the
+// badge did not strip the switch-over table.
+const soSpecInputsGuard = soCollect(soBody, 'data-spec-input', []);
+checks.push(['switch-over: spec cells still render cleanly after badge removal',
+  soSpecInputsGuard.length >= soRows.length]);
+// FEAT-002 ranges (FEAT-003 surfacing): the stated RANGES are surfaced as a
+// tidy secondary line under the midpoint value (Forland payload 2500-2700 kg;
+// every competitor service S$/km band) via data-spec-range - an honest range
+// affordance, NOT a stray tag.
+const soRangeLines = soCollect(soBody, 'data-spec-range', []);
+checks.push(['switch-over: stated ranges surface as a secondary line (data-spec-range), not a stray tag',
+  soRangeLines.length >= SO_NEW.length]);
+const forlandRow = rowOf('Forland S1 EV');
+checks.push(['switch-over: Forland payload range (2500-2700) shows under the midpoint, not as a point value',
+  !!forlandRow && soCollect(forlandRow, 'data-spec-range', [])
+    .some((n) => n.attributes['data-spec-range'] === 'B' && /2500\D+2700/.test(n._text || ''))]);
 // Include/exclude toggles exist: one checkbox per model, SRM locked on.
 const soToggles = soCollect(soBody, 'data-switchover-include', []);
 checks.push(['switch-over renders an include/exclude toggle per model',
@@ -1783,18 +1791,26 @@ const scoreAfterEdit = FIT5.scoreModelFit(editDuty, editRow);
 checks.push(['FEAT-005: editing the payload changes the matcher verdict input (gate now fails)',
   scoreBeforeEdit.cells.payload === 'ok' && scoreAfterEdit.cells.payload === 'under' &&
   scoreAfterEdit.verdict === 'Does not fit']);
-// The re-rendered switch-over row shows the User-entered badge for that field,
-// visually distinct from a Sourced badge.
+// FEAT-003 (Workstream B): the provenance BADGE is retired, so a user edit is
+// no longer LABELLED. It stays visually distinct via the .spec-edited cue on
+// the input, and crucially renders NO provenance badge. Walk the re-rendered
+// payload cell and assert (a) the edited input carries .spec-edited, and (b)
+// there is no data-prov badge node anywhere in that cell.
 const editTrAfter = toArr(soBody.children).find(
   (r) => r.attributes && r.attributes['data-switchover-model'] === editName);
-const payloadCellBadges = editTrAfter
+const payloadCell = editTrAfter
   ? soCollect(editTrAfter, 'data-spec-col', [])
-      .filter((td) => td.attributes['data-spec-col'] === 'B')
-      .reduce((acc, td) => soCollect(td, 'data-prov', acc), [])
-  : [];
-checks.push(['FEAT-005: the edited cell renders a User-entered provenance badge (not Sourced)',
-  payloadCellBadges.some((b) => b.attributes['data-prov'] === 'userentered') &&
-  !payloadCellBadges.some((b) => b.attributes['data-prov'] === 'sourced')]);
+      .find((td) => td.attributes['data-spec-col'] === 'B')
+  : null;
+const payloadInputAfter = payloadCell
+  ? soCollect(payloadCell, 'data-spec-input', [])
+      .find((n) => n.attributes['data-spec-input'] === 'B')
+  : null;
+const payloadCellBadges = payloadCell ? soCollect(payloadCell, 'data-prov', []) : [];
+checks.push(['FEAT-003: an edited cell carries the .spec-edited cue but NO provenance badge',
+  !!payloadInputAfter &&
+  /(^|\s)spec-edited(\s|$)/.test(payloadInputAfter.className || '') &&
+  payloadCellBadges.length === 0]);
 
 // (d) FROZEN-ENGINE ISOLATION: the pristine demo fixture's computeFleet output
 //     is UNCHANGED by the UI edit (edits live only on __HS.state), and the
@@ -2703,6 +2719,90 @@ const svgBases = [];
 }
 checks.push(['typography floor: every inline-SVG chart font-size user-unit base is >= 14',
   svgBases.length >= 3 && svgBases.every(v => v >= 14)]);
+
+// ---- FEAT-004 Workstream D: vehicle distribution scatter ------------------
+// The Scatter module renders an inline-SVG scatter of every catalogue model
+// into #scatter-plot and writes a not-plottable note into #scatter-note. Two
+// <select>s (#scatter-x / #scatter-y) choose the plotted spec; the plot
+// re-renders on 'change'. These assertions prove: (1) one plotted point per
+// plottable catalogue model on the default axis pair; (2) switching an axis
+// changes the plotted field / coordinates; (3) SRM points carry the highlight
+// marker; (4) a model missing the chosen-axis value is omitted and named in the
+// note, never plotted at 0; (5) the axis tick/label SVG font-size respects the
+// >=14 user-unit floor. The headless harness drives the <select>s exactly like
+// the prospect-sort control above (set .value, fire 'change').
+const scatRows = windowObj.__HS.state.products.rows.filter((rw) => rw && rw.A != null);
+function countScatterPoints(htmlStr) {
+  return (htmlStr.match(/data-scatter-point=/g) || []).length;
+}
+function plottableCount(xKey, yKey) {
+  return scatRows.filter((rw) => typeof rw[xKey] === 'number' && isFinite(rw[xKey]) &&
+    typeof rw[yKey] === 'number' && isFinite(rw[yKey])).length;
+}
+const selScX = byId['scatter-x'];
+const selScY = byId['scatter-y'];
+checks.push(['scatter: axis selectors offer all eight numeric specs',
+  !!selScX && !!selScY && selScX.children.length === 8 && selScY.children.length === 8]);
+
+// (1) Default axis pair (X = list price I, Y = range J): one point per model
+// that has BOTH values. Every catalogue model has list price + range, so all
+// 12 render; the count must equal the computed plottable count, never 0.
+selScX.value = 'I'; selScX.fire('change');
+selScY.value = 'J'; selScY.fire('change');
+const scatterDefaultHtml = byId['scatter-plot'].innerHTML;
+const defaultPlottable = plottableCount('I', 'J');
+checks.push(['scatter: one plotted point per plottable model on the default (price vs range) axes',
+  defaultPlottable > 0 && countScatterPoints(scatterDefaultHtml) === defaultPlottable]);
+checks.push(['scatter: renders an inline <svg> (offline, no chart lib)',
+  /<svg[\s>]/.test(scatterDefaultHtml) && /viewBox=/.test(scatterDefaultHtml)]);
+
+// (2) Switching the X selector to a DIFFERENT spec re-renders with new point
+// coordinates (the plotted field changed). Switch X to battery kWh (D) and
+// assert the SVG markup differs from the default render.
+selScX.value = 'D'; selScX.fire('change');
+const scatterAfterXHtml = byId['scatter-plot'].innerHTML;
+checks.push(['scatter: switching the X axis re-renders with new coordinates',
+  scatterAfterXHtml !== scatterDefaultHtml && countScatterPoints(scatterAfterXHtml) > 0]);
+// Switching the Y selector likewise changes the render.
+selScY.value = 'B'; selScY.fire('change');
+const scatterAfterYHtml = byId['scatter-plot'].innerHTML;
+checks.push(['scatter: switching the Y axis re-renders with new coordinates',
+  scatterAfterYHtml !== scatterAfterXHtml && countScatterPoints(scatterAfterYHtml) > 0]);
+
+// (3) SRM point(s) carry the highlight marker (accent class + data flag). There
+// are two SRM models (SRM T3EV, SRM T3EV+) in the catalogue.
+const srmNames = scatRows.filter((rw) => String(rw.A).indexOf('SRM') === 0).map((rw) => rw.A);
+checks.push(['scatter: SRM point(s) carry the accent highlight marker',
+  srmNames.length >= 1 &&
+  (scatterAfterYHtml.match(/data-scatter-srm="1"/g) || []).length === srmNames.length &&
+  /class="scatter-point scatter-srm"/.test(scatterAfterYHtml)]);
+checks.push(['scatter: SRM points are named in the SVG (not anonymised)',
+  srmNames.every((n) => scatterAfterYHtml.indexOf(n) !== -1)]);
+
+// (4) Missing-value honesty: AC kW (col G) is null for the two Farizon H9E
+// rows, so with X = AC kW those models must be OMITTED from the plot AND named
+// in the not-plottable note - never plotted at 0. Point count must drop by the
+// number of rows missing AC kW.
+selScX.value = 'G'; selScX.fire('change');
+selScY.value = 'J'; selScY.fire('change');
+const scatterMissingHtml = byId['scatter-plot'].innerHTML;
+const noteHtml = byId['scatter-note'].innerHTML || byId['scatter-note'].textContent || '';
+const missingAcRows = scatRows.filter((rw) => !(typeof rw.G === 'number' && isFinite(rw.G)));
+checks.push(['scatter: AC kW axis has at least one model with a missing value (test precondition)',
+  missingAcRows.length >= 1]);
+checks.push(['scatter: a model missing the chosen-axis value is omitted, not plotted at 0',
+  countScatterPoints(scatterMissingHtml) === plottableCount('G', 'J') &&
+  missingAcRows.every((rw) => scatterMissingHtml.indexOf('data-scatter-point="' + rw.A + '"') === -1)]);
+checks.push(['scatter: omitted models are named in the not-plottable note',
+  /not plottable/i.test(noteHtml) &&
+  missingAcRows.every((rw) => noteHtml.indexOf(rw.A) !== -1)]);
+
+// (5) The scatter axis tick/label SVG font-size respects the >=14 user-unit
+// floor (same floor the chart-text guard enforces). The scatter SVG root sets a
+// single font-size base; assert it is present and >= 14.
+const scatFsMatch = scatterMissingHtml.match(/font-size="([0-9]+)"/);
+checks.push(['scatter: axis tick/label SVG font-size base is >= 14 user-units',
+  !!scatFsMatch && parseInt(scatFsMatch[1], 10) >= 14]);
 
 let ok = true;
 for (const [name, pass] of checks) {
