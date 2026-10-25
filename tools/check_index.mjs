@@ -2804,6 +2804,96 @@ const scatFsMatch = scatterMissingHtml.match(/font-size="([0-9]+)"/);
 checks.push(['scatter: axis tick/label SVG font-size base is >= 14 user-units',
   !!scatFsMatch && parseInt(scatFsMatch[1], 10) >= 14]);
 
+// (6) ADD-ONLY clip guard (FEAT-001 DEFECT B): the widest X tick label is the
+// List-price max ('S$130,568'); a middle-anchored label at the rightmost tick
+// would spill past the viewBox right edge. The fix widens padR AND end-anchors
+// the extreme X ticks so the labels bend inward. Render the List-price (I) X
+// axis and assert both the padR room and the extreme-tick anchoring, by
+// inspecting the emitted SVG source (no getBBox / real browser required).
+selScX.value = 'I'; selScX.fire('change');
+selScY.value = 'J'; selScY.fire('change');
+const scatterPriceHtml = byId['scatter-plot'].innerHTML;
+// The widest List-price label must be present (honesty: full value, not clipped text).
+checks.push(['scatter: List-price X axis shows the widest tick label in full',
+  /S\$130,568/.test(scatterPriceHtml)]);
+// Extreme X tick labels must be anchored inward (start for the leftmost, end
+// for the rightmost) rather than middle, so neither can overflow the viewBox.
+checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), never middle-overflowing',
+  /text-anchor="end"[^>]*>S\$130,568</.test(scatterPriceHtml) &&
+  /text-anchor="start"/.test(scatterPriceHtml)]);
+// padR right margin must be generous enough to clear a wide label: the
+// rightmost X tick (end-anchored) sits at x1 = W - padR; assert x1 <= W - 56
+// (i.e. padR >= 56) by reading the geometry straight from the module source.
+{
+  const padRMatch = html.match(/padL\s*=\s*\d+,\s*padR\s*=\s*(\d+)/);
+  checks.push(['scatter: padR right margin is >= 56 user-units (room for the widest X label)',
+    !!padRMatch && parseInt(padRMatch[1], 10) >= 56]);
+}
+
+// ---- FEAT-001 DEFECT A: full-portfolio switch-over table fit ---------------
+// The 12-column switch-over table must keep every column present (In play ..
+// Evidence) so the last Evidence column cannot be dropped, and its horizontal
+// footprint must stay trimmed (tight cell padding + compact spec inputs +
+// bounded Evidence width) so it fits inside its .table-wrap at 1440px. A true
+// pixel clip needs a real browser; these guards lock the correct-by-
+// construction CSS/markup so a later edit cannot silently reintroduce the clip.
+{
+  const swHead = (html.match(/<table id="portfolio-switchover-table"><thead>([\s\S]*?)<\/thead>/) || [,''])[1];
+  const swHeaders = (swHead.match(/<th[^>]*>([\s\S]*?)<\/th>/g) || []).map(s => s.replace(/<[^>]+>/g, '').trim());
+  checks.push(['switchover: all 12 header columns present including final Evidence',
+    swHeaders.length === 12 && swHeaders[0] === 'In play' &&
+    swHeaders[swHeaders.length - 1] === 'Evidence']);
+  // Every rendered row carries an evidence cell (data-evidence-ref) so the last
+  // column is always emitted (never silently dropped when the table is tight).
+  // renderSwitchover builds rows with createElement/appendChild, so walk the
+  // live DOM children (the shim's innerHTML getter does not serialise appended
+  // nodes) and read attributes / textContent straight off the built tree.
+  if (typeof windowObj.__HS.renderSwitchover === 'function') windowObj.__HS.renderSwitchover();
+  const swRows = toArr(byId['portfolio-switchover-body'].children);
+  function hasDescendant(el, pred) {
+    if (!el) return false;
+    if (pred(el)) return true;
+    return toArr(el.children).some((c) => hasDescendant(c, pred));
+  }
+  function collectText(el) {
+    if (!el) return '';
+    let t = el.textContent || '';
+    toArr(el.children).forEach((c) => { t += ' ' + collectText(c); });
+    return t;
+  }
+  const swRowCount = swRows.filter((r) => r && r.getAttribute &&
+    r.getAttribute('data-switchover-model') != null).length;
+  const swEvidenceCount = swRows.filter((r) =>
+    hasDescendant(r, (e) => e.getAttribute && e.getAttribute('data-evidence-ref') != null)).length;
+  checks.push(['switchover: every rendered row has an Evidence cell (last column never dropped)',
+    swRowCount > 0 && swEvidenceCount === swRowCount]);
+  // Honesty words preserved in the tightened table.
+  const swText = swRows.map((r) => collectText(r)).join(' ');
+  // Body-fit stays 'Unconfirmed' for every catalogue model (none verified for
+  // the duty) - assert it survives in the rendered output. 'Not cited' is the
+  // evidence fallback when a row has no source; the bundled catalogue is fully
+  // cited, so assert the fallback literal is still present in the renderer
+  // source (honesty path intact) rather than requiring it in the output.
+  const renderSwSource = (html.match(/function renderSwitchover\(\)\{[\s\S]*?H\.renderSwitchover = renderSwitchover;/) || [,''])[0];
+  checks.push(['switchover: Body-fit "Unconfirmed" + Evidence "Not cited" honesty signals preserved',
+    /Unconfirmed/.test(swText) && /'Not cited'/.test(renderSwSource) && /Unconfirmed/.test(renderSwSource)]);
+  // Footprint guards (correct-by-construction fit): tight cell padding,
+  // compact spec inputs (still >=13px), bounded Evidence width.
+  const swStyle = styleBlock;
+  const padMatch = swStyle.match(/#portfolio-switchover-table td,#portfolio-switchover-table th\{vertical-align:top;padding:7px (\d+)px\}/);
+  checks.push(['switchover: cell horizontal padding is tightened to <= 6px',
+    !!padMatch && parseInt(padMatch[1], 10) <= 6]);
+  const inputWidthMatch = swStyle.match(/#portfolio-switchover-table input\.spec-input\{width:([0-9.]+)em/);
+  checks.push(['switchover: spec input width trimmed to <= 5.8em (compact but legible)',
+    !!inputWidthMatch && parseFloat(inputWidthMatch[1]) <= 5.8]);
+  const evWidthMatch = swStyle.match(/#portfolio-switchover-table \.switchover-evidence\{max-width:(\d+)px/);
+  checks.push(['switchover: Evidence column max-width bounded to <= 180px',
+    !!evWidthMatch && parseInt(evWidthMatch[1], 10) <= 180]);
+  // Spec input font-size must stay at the >=13px floor despite the trim.
+  checks.push(['switchover: spec input font-size stays >= 13px after the trim',
+    /#portfolio-switchover-table input\.spec-input\{[^}]*font-size:13px/.test(swStyle)]);
+}
+
 let ok = true;
 for (const [name, pass] of checks) {
   console.log((pass ? 'PASS  ' : 'FAIL  ') + name);

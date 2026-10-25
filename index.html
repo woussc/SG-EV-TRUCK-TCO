@@ -465,7 +465,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  * tidy stated-range second line under any midpoint value. */
 #portfolio-switchover{margin:var(--gutter) 0 0}
 /* Top-aligned cells + a steady vertical rhythm so rows read as a grid. */
-#portfolio-switchover-table td,#portfolio-switchover-table th{vertical-align:top;padding:7px 10px}
+#portfolio-switchover-table td,#portfolio-switchover-table th{vertical-align:top;padding:7px 6px}
 #portfolio-switchover-table th{font-weight:600;color:var(--muted);white-space:nowrap}
 #portfolio-switchover-table th.num,#portfolio-switchover-table td.num{text-align:right}
 #portfolio-switchover-table td.spec-cell{white-space:nowrap;text-align:right}
@@ -481,7 +481,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 /* Editable spec inputs: legible (>=13px), compact, right-aligned to read as a
    number. A user-edited input carries the .spec-edited amber ring + dotted
    underline so a typed value is visually distinct from a bundled default. */
-#portfolio-switchover-table input.spec-input{width:7em;max-width:100%;font-size:13px;font-family:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:2px 5px;border:1px solid var(--line2);border-radius:4px;background:var(--paper);color:inherit}
+#portfolio-switchover-table input.spec-input{width:5.4em;max-width:100%;font-size:13px;font-family:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:2px 4px;border:1px solid var(--line2);border-radius:4px;background:var(--paper);color:inherit}
 #portfolio-switchover-table input.spec-input:focus{outline:2px solid #c9922f;outline-offset:1px}
 #portfolio-switchover-table input.spec-input.spec-edited{border-color:#e4c488;background:#fff8ec;text-decoration:underline dotted #c9922f;font-weight:600}
 /* Stated-range second line under a midpoint value (Forland payload; service
@@ -492,7 +492,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 #portfolio-switchover-table .fit-status.fit-ok{color:var(--green);font-weight:600}
 #portfolio-switchover-table tr.row-excluded{opacity:.5}
 #portfolio-switchover-table tr.row-excluded td strong{text-decoration:line-through}
-#portfolio-switchover-table .switchover-evidence{max-width:240px;overflow-wrap:anywhere;color:var(--muted);text-align:left}
+#portfolio-switchover-table .switchover-evidence{max-width:170px;overflow-wrap:anywhere;color:var(--muted);text-align:left}
 .tag.primary{background:var(--green-tint);border-color:var(--green-line)}
 
 /* ---- FEAT-004 Workstream D: vehicle distribution scatter ------------- *
@@ -8788,7 +8788,11 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     // check_index.mjs chart-text floor (>=14).
     var FS = 14;
     var W = 560, Hh = 380;
-    var padL = 92, padR = 26, padT = 20, padB = 70;
+    // padR widened from 26 -> 60 so the rightmost X tick label (widest being
+    // the List-price 'S$130,568') has room; the extreme X ticks are also
+    // end/start-anchored below so a middle-anchored label can never overflow
+    // the viewBox at any axis selection.
+    var padL = 92, padR = 60, padT = 20, padB = 70;
     var x0 = padL, x1 = W - padR, y0 = Hh - padB, y1 = padT;
 
     // Axis domains from the plottable points (deterministic min/max). A 4%
@@ -8820,7 +8824,11 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       val = dx.lo + (dx.hi-dx.lo)*t;
       svg += '<line x1="'+gx.toFixed(1)+'" y1="'+y1+'" x2="'+gx.toFixed(1)+'" y2="'+y0+'" stroke="'+C.line+'" stroke-width="1"/>';
       svg += '<line x1="'+gx.toFixed(1)+'" y1="'+y0+'" x2="'+gx.toFixed(1)+'" y2="'+(y0+5)+'" stroke="'+C.line2+'" stroke-width="1"/>';
-      svg += '<text x="'+gx.toFixed(1)+'" y="'+(y0+20)+'" text-anchor="middle" fill="'+C.muted+'">'+esc(sx.fmt(val))+'</text>';
+      // Extreme X ticks bend inward (first -> start-anchored at x0, last ->
+      // end-anchored at x1) so the widest labels (e.g. List price 'S$130,568')
+      // stay fully inside the viewBox; interior ticks stay centred on the tick.
+      var xAnchor = (i===0) ? 'start' : (i===N ? 'end' : 'middle');
+      svg += '<text x="'+gx.toFixed(1)+'" y="'+(y0+20)+'" text-anchor="'+xAnchor+'" fill="'+C.muted+'">'+esc(sx.fmt(val))+'</text>';
       // Y ticks
       gy = y0 + (y1-y0)*t;
       val = dy.lo + (dy.hi-dy.lo)*t;
