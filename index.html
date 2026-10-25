@@ -629,6 +629,11 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 @media(max-width:1023px){.workspace{grid-template-columns:1fr}}
 @media(max-width:860px){.grid,.formgrid{grid-template-columns:1fr}.grid4{grid-template-columns:1fr}}
 @media(max-width:700px){h1{font-size:24px}main{padding:18px 16px 8px}.topbar{flex-wrap:wrap;padding:10px 16px}.topbar .caveat{margin-left:0;flex-basis:100%;order:3}section{padding:16px}table{font-size:13px}th,td{padding:7px}
+ /* FEAT-004 WORKSTREAM B: the topbar already flex-wraps, so the Inputs /
+    Prospects / Download-analysis buttons drop to their own line(s) on a phone.
+    Give each a comfortable tap target (>=~40px tall) so the Download button
+    (FEAT-003, #download-brief) is easy to hit and never clipped off-screen. */
+ .sidebar-toggle{padding:10px 14px;font-size:14px}
  /* FEAT-007 Phone sheets: the two edge overlays become FULL-SCREEN SHEETS.
     Hover/edge-reveal does not exist on touch, so at phone width each overlay is
     a full-viewport fixed sheet (still over its dismissable scrim, so the content
@@ -691,6 +696,22 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  .rsim-legend{font-size:13px}
  /* Day-0 / charge read cards already one column at <=860px; keep tap padding. */
  .day0-card,.charge-read{padding:12px 14px}
+ /* FEAT-004 WORKSTREAM B - inline-SVG TEXT legibility floor at phone width.
+    An inline-SVG <text> sized in viewBox USER UNITS scales with the SVG's
+    rendered width, so at ~390px a 14-18 user-unit label downscales well below
+    the ~13px screen floor (scatter viewBox 560 -> ~0.6x -> ~8px; hero 920 ->
+    ~0.4x -> ~6px; breakdown 520 -> ~0.6x). Approach (iii): an explicit CSS
+    font-size in PX on the SVG <text> OVERRIDES the user-unit font-size
+    presentation attribute AND does NOT scale with the viewBox, so it pins a
+    guaranteed on-screen size regardless of how far the SVG shrinks. Scoped to
+    this max-width query only, so the 1440px desktop render (which inherits the
+    original user-unit sizes) is byte-for-byte unchanged. The scatter text has
+    no class, so target .scatter-plot svg text; the two TCO charts are targeted
+    by their chart-box ids; the map marker labels (.rsim-lab) are already a px
+    size (9px) that does not scale - bumped here to clear the floor on a phone. */
+ .scatter-plot svg text{font-size:13px}
+ #chart-cumulative svg text,#chart-breakdown svg text{font-size:13px}
+ #rsim-map .rsim-lab{font-size:13px}
 }
 @media print{
  body{background:white;font-size:10pt}

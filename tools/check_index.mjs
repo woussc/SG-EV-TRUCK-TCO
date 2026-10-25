@@ -3007,6 +3007,75 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
     !/XMLHttpRequest/.test(handlerSrc)]);
 })();
 
+// ---------------------------------------------------------------------------
+// FEAT-004 WORKSTREAM B: source-level mobile-width assertions.
+// A real browser is NOT available to the coder, so these are SOURCE-LEVEL
+// (string / regex) checks that the mobile layer and the inline-SVG text
+// legibility mechanism exist and stay media-query-scoped. They do NOT simulate
+// a viewport; the orchestrator runs the real-browser (Playwright) audit at
+// 1440px and ~390px. These are purely ADDITIVE - no existing assertion above
+// is touched or weakened.
+// ---------------------------------------------------------------------------
+(() => {
+  // (1) The phone breakpoints exist. The layer builds on the FEAT-007 <=700px
+  // sheets plus a tightest <=480px tier; both must be present.
+  const mq700 = /@media\s*\(\s*max-width\s*:\s*700px\s*\)/.test(html);
+  const mq480 = /@media\s*\(\s*max-width\s*:\s*480px\s*\)/.test(html);
+  checks.push(['mobile: @media (max-width:700px) phone-sheet breakpoint present', mq700]);
+  checks.push(['mobile: @media (max-width:480px) tightest phone breakpoint present', mq480]);
+
+  // (2) Scroll containers carry overflow-x:auto so wide surfaces scroll INSIDE
+  // their container rather than forcing horizontal page overflow at ~390px.
+  checks.push(['mobile: .stepper carries overflow-x:auto (scrollable chip row)',
+    /\.stepper\{[^}]*overflow-x:\s*auto/.test(html)]);
+  checks.push(['mobile: .table-wrap carries overflow-x:auto (wide tables scroll in place)',
+    /\.table-wrap\{[^}]*overflow-x:\s*auto/.test(html)]);
+
+  // (3) The topbar flex-wraps at phone width so the FEAT-003 #download-brief
+  // button wraps cleanly and stays reachable/tappable (never clipped off-screen).
+  checks.push(['mobile: .topbar flex-wraps at phone width (download button reachable)',
+    /\.topbar\{[^}]*flex-wrap:\s*wrap/.test(html)]);
+
+  // (4) THE HARD PART - inline-SVG <text> legibility floor. An explicit CSS
+  // font-size in px on the SVG <text>, scoped inside a max-width media query,
+  // overrides the user-unit font-size attribute and does NOT scale with the
+  // viewBox, so it pins a guaranteed on-screen size at ~390px. Assert the rule
+  // exists for BOTH the scatter and the route-sim map (the two SVG surfaces the
+  // feature calls out), plus the TCO charts, and that it is PX-based.
+  const scatterTextRule = html.match(/\.scatter-plot svg text\{font-size:\s*(\d+(?:\.\d+)?)px\}/);
+  const mapLabRule = html.match(/#rsim-map \.rsim-lab\{font-size:\s*(\d+(?:\.\d+)?)px\}/);
+  const tcoTextRule = html.match(/#chart-cumulative svg text,\s*#chart-breakdown svg text\{font-size:\s*(\d+(?:\.\d+)?)px\}/);
+  checks.push(['mobile-svg-text: scatter <text> pinned to a px font-size (legibility floor)',
+    !!scatterTextRule && parseFloat(scatterTextRule[1]) >= 12]);
+  checks.push(['mobile-svg-text: route-sim map .rsim-lab pinned to a px font-size (legibility floor)',
+    !!mapLabRule && parseFloat(mapLabRule[1]) >= 12]);
+  checks.push(['mobile-svg-text: TCO hero + breakdown <text> pinned to a px font-size (legibility floor)',
+    !!tcoTextRule && parseFloat(tcoTextRule[1]) >= 12]);
+
+  // (5) DESKTOP SAFETY - every one of the new SVG-text px rules must live INSIDE
+  // a max-width media query, so the 1440px desktop render (which keeps the
+  // original user-unit font sizes) is byte-for-byte unchanged. Verify the rules
+  // sit within the <=480px block, not at the top-level stylesheet.
+  const m480 = html.match(/@media\s*\(\s*max-width\s*:\s*480px\s*\)\s*\{([\s\S]*?)\n\}/);
+  const m480Body = m480 ? m480[1] : '';
+  checks.push(['mobile-svg-text: scatter px rule is scoped INSIDE the <=480px media query (desktop-safe)',
+    /\.scatter-plot svg text\{font-size:/.test(m480Body)]);
+  checks.push(['mobile-svg-text: map label px rule is scoped INSIDE the <=480px media query (desktop-safe)',
+    /#rsim-map \.rsim-lab\{font-size:/.test(m480Body)]);
+  checks.push(['mobile-svg-text: TCO chart px rule is scoped INSIDE the <=480px media query (desktop-safe)',
+    /#chart-cumulative svg text,\s*#chart-breakdown svg text\{font-size:/.test(m480Body)]);
+
+  // (6) The desktop scatter/chart font-size presentation attributes are STILL
+  // the original user-unit values (the mobile rule only overrides at render time
+  // via CSS; the source SVG attribute is unchanged), so desktop is untouched.
+  // The scatter renderer emits its font-size via a template (font-size="'+FS+'")
+  // where the desktop user-unit base FS is still 14 - the mobile rule only
+  // overrides the RENDERED size via CSS at <=480px, leaving the source SVG
+  // attribute (and thus the 1440px desktop render) untouched.
+  checks.push(['mobile-svg-text: scatter SVG still emits its desktop user-unit font-size base (FS=14, desktop untouched)',
+    /var FS\s*=\s*14\b/.test(html) && /font-size="'\+FS\+'"/.test(html)]);
+})();
+
 let ok = true;
 for (const [name, pass] of checks) {
   console.log((pass ? 'PASS  ' : 'FAIL  ') + name);
