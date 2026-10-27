@@ -126,8 +126,10 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'portfolio-scatter','scatter-plot','scatter-note','scatter-x','scatter-y',
   // FEAT-002: folded-in customer profile + consolidated per-truck Advanced.
   'customer-form','fleet-adv',
-  // FEAT-002 (Workstream D): business-intention reframe + Plan A/B pickers.
-  'decision-framing','decision-framing-form','decision-framing-note',
+  // FEAT-002 (Area 2): the verbose decision-framing block was REMOVED; its Plan
+  // A/B pickers moved onto the truck cards and only a compact business-intention
+  // control survives (#business-intention-row / #business-intention-fld).
+  'business-intention-row','business-intention-fld',
   'decision-cards',
   'results-th-keep_ice','results-th-all_new_ice','results-th-plan_a','results-th-plan_b',
   // FEAT-002 (Part C): Stage-4 charging assessment panels.
@@ -711,21 +713,24 @@ checks.push(['comparison charts update live on input change',
   totalBefore !== totalAfter && totalAfter.indexOf('<svg') !== -1]);
 
 // ---- real-DOM-safe iteration of live children (regression guard) ----------
-// The controller's refreshComparisons() iterates `cards.children`, which in a
-// real browser is a LIVE HTMLCollection with NO Array iteration methods. A
-// prior regression used `(cards.children || []).forEach(...)` and crashed on
-// load with `TypeError: ...forEach is not a function`; the old shim masked it
-// because `children` was a plain Array. This block is a two-part guard that is
-// STRICTLY stronger than the existing assertions:
+// RE-POINTED (FEAT-002): the per-card ICE-vs-EV compare refresh
+// (refreshComparisons) was removed, so this guard now targets buildFleet's
+// stampCardIndices() pass, which walks the LIVE `fleet-cards.children`
+// HTMLCollection by numeric index to stamp a positional data-card-index onto
+// each card. In a real browser `element.children` is a LIVE HTMLCollection with
+// NO Array iteration methods (`.forEach` is undefined and THROWS); a prior
+// regression used `(cards.children || []).forEach(...)` and crashed on load,
+// and the old shim masked it because `children` was a plain Array. This block
+// is a two-part guard that is STRICTLY stronger than the existing assertions:
 //
 //   (1) The shim's element.children must be HTMLCollection-like: it exposes
 //       numeric index + .length + item(i) but must NOT expose .forEach (calling
 //       it THROWS). If the shim is ever loosened back to a plain Array, this
 //       fails -> so a loosened shim can no longer hide an Array-method misuse.
-//   (2) recompute() runs the renderFleetComparisons -> refreshComparisons path
-//       over that strict children view WITHOUT throwing, and every rendered
-//       truck card still carries its per-truck .tc-compare node (refreshed in
-//       place). If index.html reverts to `.forEach` on children, refreshComparisons
+//   (2) A rebuild (rebuildInputs -> buildFleet -> stampCardIndices) runs over
+//       that strict children view WITHOUT throwing, and every rendered truck
+//       card ends up carrying a stamped data-card-index equal to its live
+//       position. If index.html reverts to `.forEach` on children, buildFleet
 //       throws here and this assertion fails.
 (() => {
   // (1) The children contract itself: no Array iteration method leaks through.
@@ -738,19 +743,24 @@ checks.push(['comparison charts update live on input change',
   let threwOnForEach = false;
   try { probe.children.forEach(() => {}); } catch (e) { threwOnForEach = true; }
 
-  // (2) Exercise the recompute -> refreshComparisons path and confirm it neither
-  // throws nor drops the per-truck comparison nodes.
+  // (2) Exercise the build path (buildFleet -> stampCardIndices over the live
+  // children) and confirm it neither throws nor drops the positional stamp.
+  let buildThrew = false;
+  try { windowObj.__HS.rebuildInputs(); } catch (e) { buildThrew = true; }
   let recomputeThrew = false;
   try { windowObj.__HS.recompute(); } catch (e) { recomputeThrew = true; }
-  const cards = toArr(byId['fleet-cards'].children)
-    .filter((c) => c.attributes && c.attributes['data-truck-id'] != null);
-  const everyCardRefreshed = cards.length > 0 && cards.every((card) => {
-    const kids = toArr(card.children);
-    return kids.some((k) => /(^|\s)tc-compare(\s|$)/.test(k.className || ''));
-  });
+  const liveChildren = byId['fleet-cards'].children;
+  // Walk the live children BY INDEX (exactly as the controller must) and check
+  // each truck card's stamped index matches its live position.
+  let everyCardStamped = liveChildren.length > 0;
+  for (let i = 0; i < liveChildren.length; i++) {
+    const card = liveChildren.item(i);
+    if (!card || !card.attributes || card.attributes['data-truck-id'] == null) continue;
+    if (String(card.attributes['data-card-index']) !== String(i)) { everyCardStamped = false; break; }
+  }
 
-  checks.push(['refreshComparisons iterates live children without Array.forEach (real-DOM-safe)',
-    childrenHasNoForEach && threwOnForEach && !recomputeThrew && everyCardRefreshed]);
+  checks.push(['buildFleet iterates live children without Array.forEach (real-DOM-safe)',
+    childrenHasNoForEach && threwOnForEach && !buildThrew && !recomputeThrew && everyCardStamped]);
 })();
 
 // ---- FEAT-002 (A): live update fires on 'input', NOT 'change' --------------
@@ -876,15 +886,34 @@ function collectLabels(node, acc) {
 }
 const card0 = truckCards()[0];
 const primaryLabels = collectLabels(card0, []);
-// FEAT-002: the card now captures the CURRENT ICE duty front-and-centre (work
-// km/day, days/year, peak jobs, peak cargo, demanding-day route, COE months,
-// market value), plus the matched-EV controls (model select, override quote,
-// plan actions). These feed fleet_register / replacement_plan EXACTLY as before.
+// FEAT-002 (Area 1+3): the card captures the CURRENT ICE duty front-and-centre
+// (work km/day, days/year, peak jobs, peak cargo, demanding-day route, COE
+// months, market value), the EV model select (specs), New ICE quote, the two
+// plan actions, and the PER-CARD Plan A (SRM) / Plan B (competitor) pickers.
+// The dead 'EV quote SGD (override)' input was REMOVED: col D is now driven
+// only by the per-plan slider via buildPlanState (one acquisition number/plan).
 const criticalLabels = ['Work km/day', 'Days/year', 'Peak jobs/day', 'Peak cargo kg',
   'Demanding-day route km', 'COE months left', 'Market value SGD',
-  'EV model', 'New ICE quote SGD', 'EV quote SGD (override)', 'Plan A action', 'Plan B action'];
-checks.push(['truck card surfaces the ICE-duty + matched-EV primary fields',
+  'EV model', 'New ICE quote SGD', 'Plan A action', 'Plan B action',
+  'Plan A - SRM variant', 'Plan B - competitor EV'];
+checks.push(['truck card surfaces the ICE-duty + EV-model + per-plan picker fields',
   criticalLabels.every((l) => primaryLabels.indexOf(l) !== -1)]);
+// The dead override input is GONE from every truck card.
+checks.push(['EV quote override input removed from the truck card',
+  primaryLabels.indexOf('EV quote SGD (override)') === -1]);
+// The two read-only per-plan EV-quote displays render (data-plan-quote nodes),
+// each carrying a numeric value and the slider note. NOT amber/editable.
+function collectPlanQuotes(node, acc) {
+  if (!node || typeof node !== 'object') return acc;
+  if (node.attributes && node.attributes['data-plan-quote'] != null) acc.push(node);
+  toArr(node.children).forEach((c) => collectPlanQuotes(c, acc));
+  return acc;
+}
+const planQuotes = collectPlanQuotes(card0, []);
+checks.push(['truck card shows two read-only per-plan EV-quote displays',
+  planQuotes.length === 2 &&
+  planQuotes.some((q) => q.attributes['data-plan-quote'] === 'Plan A') &&
+  planQuotes.some((q) => q.attributes['data-plan-quote'] === 'Plan B')]);
 // FEAT-002: there is NO per-card Advanced <details> any more (the per-truck
 // low-impact fields moved into the single global Advanced area #fleet-adv).
 function hasTruckAdvDetails(node) {
@@ -1003,16 +1032,15 @@ checks.push(['card surfaces payload/body-fit status with Unconfirmed caveat',
   !!fitTag && (fitTag.textContent || '').indexOf('Unconfirmed') !== -1 &&
   /(^|\s)unknown(\s|$)/.test(fitTag.className || '')]);
 
-// ---- FEAT-002 (Fix 2): side-by-side ICE-vs-matched-EV + vehicle/COE split ---
-// Each truck card renders a live side-by-side comparison (.tc-compare) once the
-// duty is started. The EV column must split the VEHICLE PRICE (catalogue
-// prod.I) from the COE PRICE (oc[57]) as DISTINCT line items and show the
-// combined default EV quote = prod.I + oc[57] (the engine's blank-fallback).
-// The matcher (window.HSPortfolioFit) drives the recommended model; it stays
-// user-overridable. None of this writes a number back, so figures are unchanged.
+// ---- FEAT-002 (Area 1+2+3): input-box compare REMOVED, per-card plan quotes --
+// The per-card input-box ICE-vs-EV side-by-side (.tc-compare / buildCompare /
+// refreshComparisons / matchForRow) was removed. Assert the compare machinery
+// is ABSENT from every truck card, and that each card instead shows the two
+// read-only per-plan EV-quote displays equal to prod.I + oc[57] for the selected
+// Plan A (SRM) / Plan B (competitor) models. None of this writes an engine
+// number, so figures are unchanged and validate.py stays 19/19.
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
 windowObj.__HS.loadDemoFixture();            // restore the clean demo cards
-const compareCard = truckCards()[0];
 function textOfNode(node) {
   if (!node || typeof node !== 'object') return '';
   let t = (node._text || '');
@@ -1026,53 +1054,63 @@ function findByClass(node, cls) {
   for (const c of kids) { const hit = findByClass(c, cls); if (hit) return hit; }
   return null;
 }
-const compareEl = findByClass(compareCard, 'tc-compare');
-checks.push(['truck card renders a side-by-side ICE-vs-EV comparison (duty started)',
-  !!compareEl]);
-const evCol = compareEl ? findByClass(compareEl, 'tc-col-ev') : null;
-const iceCol = compareEl ? findByClass(compareEl, 'tc-col-ice') : null;
-checks.push(['comparison has both an ICE column and a matched-EV column',
-  !!evCol && !!iceCol]);
-const evColText = textOfNode(evCol);
-checks.push(['EV column splits Vehicle price and COE price as distinct line items',
-  evColText.indexOf('Vehicle price') !== -1 && evColText.indexOf('COE price') !== -1]);
-checks.push(['EV column shows the combined default EV quote line',
-  evColText.indexOf('Default EV quote') !== -1]);
-// The displayed split sums to the engine's blank-fallback: pick the recommended
-// (or shown) model and confirm vehicle price (prod.I) + COE (oc[57]) is what the
-// matcher-driven default shows, and that it equals prod.I + oc[57].
-const fitMod = windowObj.HSPortfolioFit;
+// No .tc-compare / .tc-compare-empty node renders in ANY truck card (gone).
+const noCompareAnywhere = truckCards().every((card) =>
+  !findByClass(card, 'tc-compare') && !findByClass(card, 'tc-compare-empty'));
+checks.push(['input-box ICE-vs-EV compare is absent from every truck card',
+  noCompareAnywhere]);
+// The removed machinery is not even defined on the input namespace.
+checks.push(['refreshComparisons renderer hook removed',
+  typeof windowObj.__HS.refreshComparisons === 'undefined' &&
+  typeof windowObj.__HS.setFleetComparisonRenderer === 'undefined']);
+// Per-plan read-only quotes equal prod.I + oc[57] for the selected models.
 const oc57c = windowObj.__HS.state.operating_costs.rows.find((r) => r._row === 57);
 const acqAdderC = (oc57c && typeof oc57c.values.B === 'number') ? oc57c.values.B : 0;
-const demoRow0 = windowObj.__HS.includedFleet()[0];
-const dutyC = fitMod.truckDutyFromRow(demoRow0, {
-  energyPricePerKwh: (windowObj.__HS.ecRow(10) || { values: {} }).values.B,
-  chargeWindowH: (windowObj.__HS.ecRow(51) || { values: {} }).values.B,
-});
-const matchC = fitMod.matchBestModel(dutyC, windowObj.__HS.state.products.rows);
-const shownModelName = (() => {
-  const rp0 = windowObj.__HS.replByIdMap()[demoRow0.A];
-  return (rp0 && rp0.B != null && String(rp0.B) !== '') ? String(rp0.B)
-    : (matchC && matchC.best ? matchC.best.name : null);
-})();
-const shownProd = windowObj.__HS.state.products.rows.find((p) => p.A === shownModelName);
-checks.push(['side-by-side vehicle+COE split equals engine blank-fallback (prod.I + oc[57])',
-  !!shownProd && typeof shownProd.I === 'number' &&
-  (compareEl ? textOfNode(compareEl).indexOf(String(Math.round(shownProd.I + acqAdderC).toLocaleString('en-SG'))) !== -1 : false)]);
-// The matcher is the SAME additive module FEAT-001 exposed, used as a per-truck
-// recommendation that stays overridable via the EV model select.
-checks.push(['card uses the additive matcher for the EV recommendation',
-  typeof fitMod.matchBestModel === 'function' && !!matchC]);
-// The comparison reveals progressively: a card whose duty is BLANK shows the
-// empty prompt, not a fabricated comparison.
-const stProbe = windowObj.__HS.state;
-const savedE = demoRow0.E;
-demoRow0.E = null;
-windowObj.__HS.recompute();
-const blankDutyCard = truckCards()[0];
-checks.push(['comparison is hidden until the duty is entered (progressive reveal)',
-  !findByClass(blankDutyCard, 'tc-compare') && !!findByClass(blankDutyCard, 'tc-compare-empty')]);
-demoRow0.E = savedE;
+const rf0 = windowObj.__HS.reframe();
+function findPlanQuote(card, plan) {
+  function walk(node) {
+    if (!node || typeof node !== 'object') return null;
+    if (node.attributes && node.attributes['data-plan-quote'] === plan) return node;
+    const kids = toArr(node.children);
+    for (const c of kids) { const hit = walk(c); if (hit) return hit; }
+    return null;
+  }
+  return walk(card);
+}
+function planQuoteValueNode(box) {
+  return box ? findByClassAttr(box, 'data-plan-quote-value') : null;
+}
+function findByClassAttr(node, attr) {
+  if (!node || typeof node !== 'object') return null;
+  if (node.attributes && attr in node.attributes) return node;
+  const kids = toArr(node.children);
+  for (const c of kids) { const hit = findByClassAttr(c, attr); if (hit) return hit; }
+  return null;
+}
+const quoteCard = truckCards()[0];
+const quoteId = quoteCard.attributes['data-truck-id'];
+const aModel = (rf0.planA[quoteId] != null && rf0.planA[quoteId] !== '') ? rf0.planA[quoteId] : rf0.planAModel;
+const bModel = (rf0.planB[quoteId] != null && rf0.planB[quoteId] !== '') ? rf0.planB[quoteId] : rf0.planBModel;
+const aProd = windowObj.__HS.state.products.rows.find((p) => p.A === aModel);
+const bProd = windowObj.__HS.state.products.rows.find((p) => p.A === bModel);
+const aBoxVal = planQuoteValueNode(findPlanQuote(quoteCard, 'Plan A'));
+const bBoxVal = planQuoteValueNode(findPlanQuote(quoteCard, 'Plan B'));
+checks.push(['Plan A read-only quote = prod.I + oc[57] for the selected SRM model',
+  !!aProd && typeof aProd.I === 'number' && !!aBoxVal &&
+  Number(aBoxVal.attributes['data-plan-quote-value']) === Math.round(aProd.I + acqAdderC)]);
+checks.push(['Plan B read-only quote = prod.I + oc[57] for the selected competitor model',
+  !!bProd && typeof bProd.I === 'number' && !!bBoxVal &&
+  Number(bBoxVal.attributes['data-plan-quote-value']) === Math.round(bProd.I + acqAdderC)]);
+// Each quote box carries the one-line note that the plan's slider varies it.
+const aBox = findPlanQuote(quoteCard, 'Plan A');
+checks.push(['per-plan quote notes that the slider varies the price',
+  !!aBox && /slider varies this price/i.test(textOfNode(aBox))]);
+// The Portfolio-stage matcher is the SAME additive module FEAT-001 exposed and
+// is UNTOUCHED (a different feature): it still exposes the matcher functions.
+const fitMod = windowObj.HSPortfolioFit;
+checks.push(['Portfolio matcher untouched (matchBestModel still exposed)',
+  typeof fitMod.matchBestModel === 'function' &&
+  typeof fitMod.truckDutyFromRow === 'function']);
 windowObj.__HS.loadDemoFixture();
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
 
@@ -1954,31 +1992,60 @@ checks.push(['breakdown bar renders a matching saving-target tick',
     !/discount/i.test(joined)]);
 })();
 
-// FEAT-002 (Workstream D): the decision-framing controls exist -- a business
-// intention <select> (Add / Replace) + a Plan A SRM picker + a Plan B
-// competitor picker -- and the reframe API is exposed on __HS.
+// FEAT-002 (Area 2): the verbose #decision-framing block was REMOVED and its
+// engine-driving wiring relocated -- the Plan A SRM / Plan B competitor pickers
+// moved onto each truck card, and ONLY a single compact business-intention
+// (Add / Replace) <select> survives as a shared control. The reframe two-state
+// API stays exposed on __HS.
 (() => {
-  const selects = toArr(byId['decision-framing-form'].children)
-    .map((f) => toArr(f.children).find((c) => c.tagName === 'select'))
-    .filter(Boolean);
-  checks.push(['decision-framing offers 3 pickers (intention + Plan A + Plan B)',
-    selects.length >= 3]);
-  const allOpts = selects.map((s) => toArr(s.children)
-    .map((o) => (o.textContent || '') + '|' + (o.attributes && o.attributes.value != null ? o.attributes.value : '')).join(' '));
-  const framingText = allOpts.join(' || ');
+  // The removed block leaves no #decision-framing* DOM ids in the hand-authored
+  // markup (search the raw page source, not the auto-vivifying mock getElementById).
+  const chromeOnly = html.slice(0, html.indexOf('<!-- ENGINE:BEGIN') === -1 ? html.length : html.indexOf('<!-- ENGINE:BEGIN'));
+  checks.push(['#decision-framing block removed from the page source',
+    chromeOnly.indexOf('id="decision-framing"') === -1 &&
+    chromeOnly.indexOf('id="decision-framing-form"') === -1 &&
+    chromeOnly.indexOf('id="decision-framing-note"') === -1]);
+  // The compact business-intention control renders a single <select> offering
+  // Add new vehicle + Replace ICE, wired on 'input'.
+  const intFld = byId['business-intention-fld'];
+  function firstSelect(node) {
+    if (!node || typeof node !== 'object') return null;
+    if ((node.tagName || '') === 'select') return node;
+    const kids = toArr(node.children);
+    for (const c of kids) { const hit = firstSelect(c); if (hit) return hit; }
+    return null;
+  }
+  const intSel = firstSelect(intFld);
+  const intOptNodes = intSel ? toArr(intSel.children) : [];
+  const intOpts = intOptNodes.map((o) => (o.textContent || '') + '|' + (o.value != null ? o.value : '')).join(' ');
+  checks.push(['compact business-intention control exists (single select)',
+    !!intSel && Array.isArray(intSel.listeners.input) && intSel.listeners.input.length > 0]);
   checks.push(['business-intention picker offers Add new vehicle + Replace ICE',
-    /add new vehicle/i.test(framingText) && /replace ice/i.test(framingText)]);
-  checks.push(['Plan A picker offers an SRM variant; Plan B picker offers a competitor',
-    /SRM/i.test(framingText) && /(ChengLong|Farizon|BYD|Foton|Forland|JAC|Qingling)/i.test(framingText)]);
-  // The add-vs-replace limitation is surfaced honestly in the framing note.
-  const note = byId['decision-framing-note'].innerHTML || '';
-  checks.push(['decision-framing note surfaces the add-vs-replace model limitation',
-    /net-added|out of model scope|approximated/i.test(note)]);
+    /add a new vehicle/i.test(intOpts) && /replace an ice/i.test(intOpts) &&
+    intOptNodes.some((o) => o.value === 'add') && intOptNodes.some((o) => o.value === 'replace')]);
+  // The Plan A / Plan B model pickers were RELOCATED to the truck cards: the
+  // first card carries a 'Plan A - SRM variant' and a 'Plan B - competitor EV'
+  // select offering an SRM variant and a competitor respectively.
+  function collectSelectLabels(node, acc) {
+    if (!node || typeof node !== 'object') return acc;
+    if ((node.tagName || '') === 'select') {
+      acc.push(toArr(node.children).map((o) => o.textContent || '').join(' '));
+    }
+    toArr(node.children).forEach((c) => collectSelectLabels(c, acc));
+    return acc;
+  }
+  const cardSelectsOpts = collectSelectLabels(truckCards()[0], []).join(' || ');
+  checks.push(['Plan A/B model pickers relocated to the truck card (SRM + competitor options)',
+    /SRM/i.test(cardSelectsOpts) && /(ChengLong|Farizon|BYD|Foton|Forland|JAC|Qingling)/i.test(cardSelectsOpts)]);
   // The reframe two-state API is exposed for the live recompute.
   checks.push(['__HS exposes the reframe + two-state recompute API',
     typeof windowObj.__HS.reframe === 'function' &&
     typeof windowObj.__HS.computeReframed === 'function' &&
     typeof windowObj.__HS.catalogueModels === 'function']);
+  // The reframe blob carries the per-truck Plan A / Plan B model maps (Area 3).
+  const rfApi = windowObj.__HS.reframe();
+  checks.push(['reframe blob carries per-truck Plan A / Plan B model maps',
+    !!rfApi && typeof rfApi.planA === 'object' && typeof rfApi.planB === 'object']);
 })();
 
 // FEAT-002: the TCO + Decision surfaces carry the decision framing labels
