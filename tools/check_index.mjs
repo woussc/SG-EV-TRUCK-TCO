@@ -104,8 +104,10 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'prospects-scrim','prospects-overlay-close','inputs',
   // FEAT-003 (Workstream C): offline download of the simulation-results brief.
   'download-brief','download-brief-label',
-  // Top-right driving-truck scene (inline-SVG) + its motion on/off toggle.
-  'truck-scene','truck-motion-toggle','truck-motion-icon','truck-motion-label',
+  // Driving-truck scene (inline-SVG, beside the title) + its motion toggle.
+  // (The old #truck-motion-label text span was removed when the toggle became a
+  // discreet icon-only square button.)
+  'truck-scene','truck-motion-toggle','truck-motion-icon',
   // FEAT-002: journey stepper (Customer stage removed -> 4 stages), stage
   // viewports + confidence badge hooks.
   'stepper','step-portfolio','step-tco','step-charging','step-proposal',
@@ -3234,15 +3236,19 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
 // covering every new UI surface in the headless harness.
 const chromeEndTruck = html.indexOf('<!-- ENGINE:BEGIN');
 const chromeTruck = chromeEndTruck === -1 ? html : html.slice(0, chromeEndTruck);
-// (1) Markup: the scene + toggle live in the top chrome (topbar, before <main>).
-checks.push(['truck scene present in top chrome (before <main>)',
+// (1) Markup: the scene + toggle now live in the TITLE ROW beside the page
+// title -- inside the .titlewrap, after <main>, and still ahead of the
+// generated ENGINE block (so they remain hand-written top chrome).
+checks.push(['truck scene present in the title row (inside .titlewrap, after <main>)',
   html.indexOf('id="truck-scene"') !== -1 &&
-  html.indexOf('id="truck-scene"') > html.indexOf('class="topbar"') &&
-  html.indexOf('id="truck-scene"') < html.indexOf('<main>')]);
-checks.push(['truck motion toggle present in top chrome (before <main>)',
+  html.indexOf('class="titlewrap"') !== -1 &&
+  html.indexOf('id="truck-scene"') > html.indexOf('class="titlewrap"') &&
+  html.indexOf('id="truck-scene"') > html.indexOf('<main>') &&
+  html.indexOf('id="truck-scene"') < html.indexOf('<!-- ENGINE:BEGIN')]);
+checks.push(['truck motion toggle present in the title row (after <main>)',
   html.indexOf('id="truck-motion-toggle"') !== -1 &&
-  html.indexOf('id="truck-motion-toggle"') > html.indexOf('class="topbar"') &&
-  html.indexOf('id="truck-motion-toggle"') < html.indexOf('<main>')]);
+  html.indexOf('id="truck-motion-toggle"') > html.indexOf('<main>') &&
+  html.indexOf('id="truck-motion-toggle"') < html.indexOf('<!-- ENGINE:BEGIN')]);
 // (2) Offline discipline: the scene is inline SVG (no 3D lib, no external asset
 // reference anywhere in the chrome for the truck block).
 checks.push(['truck scene is inline SVG (no 3D library)',
@@ -3256,6 +3262,30 @@ checks.push(['truck scene names both SRM T3EV+ and Farizon',
 checks.push(['truck motion toggle uses aria-pressed + native button styling',
   /id="truck-motion-toggle"[^>]*aria-pressed=/.test(html) &&
   /id="truck-motion-toggle"[^>]*class="[^"]*sidebar-toggle/.test(html)]);
+// (4b) The toggle is now DISCREET: a small, square, ICON-ONLY button. The old
+// visible "Motion" text label (#truck-motion-label) is gone, but the control
+// keeps a descriptive aria-label/title for accessibility, and the CSS sizes it
+// as a small fixed square.
+checks.push(['truck motion toggle is icon-only (no #truck-motion-label text span)',
+  html.indexOf('id="truck-motion-label"') === -1]);
+checks.push(['truck motion toggle keeps a descriptive aria-label + title',
+  /id="truck-motion-toggle"[^>]*aria-label="[^"]+"/.test(html) &&
+  /id="truck-motion-toggle"[^>]*title="[^"]+"/.test(html)]);
+checks.push(['truck motion toggle is a small square button (discreet CSS)',
+  /#truck-motion-toggle\{[^}]*width:\s*26px[^}]*height:\s*26px/.test(chromeTruck)]);
+// (4c) Only ONE truck is visible at a time: the two trucks ALTERNATE across the
+// stage via their own crossing keyframes (ts-cross-srm / ts-cross-farizon), and
+// the Farizon is parked OFF-STAGE by default so a single truck shows at rest.
+checks.push(['only one truck shown at a time (alternating crossing keyframes)',
+  chromeTruck.indexOf('@keyframes ts-cross-srm') !== -1 &&
+  chromeTruck.indexOf('@keyframes ts-cross-farizon') !== -1 &&
+  /\.ts-farizon\{transform:translateX\(260px\)\}/.test(chromeTruck)]);
+// (4d) The wheels rotate about their OWN centre so they stay bolted to the truck
+// and sit on the road: the per-wheel groups use transform-box:fill-box +
+// transform-origin:center, and the whole-group spin on .ts-wheels is GONE.
+checks.push(['wheels spin about their own centre (per-wheel fill-box groups), not the SVG origin',
+  /\.ts-wheel-grp\{transform-box:fill-box;transform-origin:center\}/.test(chromeTruck) &&
+  chromeTruck.indexOf('.ts-wheels{animation:ts-spin') === -1]);
 // (5) prefers-reduced-motion is honoured: the scene's animation is disabled
 // under the reduce media query in the CSS.
 checks.push(['truck scene animation disabled under prefers-reduced-motion',
