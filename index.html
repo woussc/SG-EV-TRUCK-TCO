@@ -25,6 +25,57 @@ a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
 .brand{font-weight:600;font-size:15px}
 .scope{color:var(--muted);font-size:13px;border-left:1px solid var(--line2);padding-left:12px}
 .topbar .caveat{margin-left:auto;font-size:13px;color:var(--muted)}
+/* TOP-RIGHT DRIVING-TRUCK SCENE (top-bar chrome).
+   A small, FLAT inline-SVG graphic of the two EV trucks (SRM T3EV+ + Farizon)
+   driving on a scrolling road. Pure CSS animation, no external assets, no 3D
+   library -- keeps the page fully offline/emailable. It uses the existing
+   design tokens so it matches the calm flat system (no shadow/gradient). The
+   `.caveat` above it still takes margin-left:auto, so the scene + motion toggle
+   sit at the FAR RIGHT of the bar after it. The scene flex-wraps gracefully on
+   narrow bars (see the max-width:700px rule). */
+.truck-scene{display:flex;flex-direction:column;align-items:center;gap:2px;flex:0 0 auto}
+.truck-stage{display:block;width:150px;height:auto;overflow:hidden}
+.truck-stage .ts-road{fill:var(--soft)}
+.truck-stage .ts-lane rect{fill:var(--line2)}
+.truck-stage .ts-truck .ts-body{fill:var(--accent)}
+.truck-stage .ts-truck .ts-cab{fill:var(--accent-hover)}
+.truck-stage .ts-truck .ts-window{fill:var(--paper);opacity:.85}
+.truck-stage .ts-truck .ts-wheel{fill:var(--ink)}
+/* Farizon reads as the neutral competitor so the two are distinguishable. */
+.truck-stage .ts-farizon .ts-body{fill:var(--muted)}
+.truck-stage .ts-farizon .ts-cab{fill:var(--ink)}
+.truck-stage .ts-farizon .ts-window{fill:var(--paper);opacity:.85}
+/* Captions so viewers can tell which truck is which. */
+.ts-labels{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;font-size:13px;line-height:1.1;color:var(--muted);font-weight:600}
+.ts-tag{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.ts-tag::before{content:"";width:8px;height:8px;border-radius:2px;display:inline-block}
+.ts-tag-srm::before{background:var(--accent)}
+.ts-tag-farizon::before{background:var(--muted)}
+/* Motion: the lane markings scroll left (road moving under the trucks) and the
+   wheels spin, so the trucks read as "driving" while staying in place. A gentle
+   bob adds life without being busy. Animation only runs while the scene is in
+   the 'on' motion state; [data-motion="off"] parks everything. */
+@keyframes ts-laneScroll{from{transform:translateX(0)}to{transform:translateX(-32px)}}
+@keyframes ts-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes ts-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
+.truck-scene[data-motion="on"] .ts-lane{animation:ts-laneScroll .6s linear infinite}
+.truck-scene[data-motion="on"] .ts-wheels{animation:ts-spin .7s linear infinite;transform-origin:center}
+.truck-scene[data-motion="on"] .ts-srm .ts-wheels{transform-box:fill-box}
+.truck-scene[data-motion="on"] .ts-farizon .ts-wheels{transform-box:fill-box}
+.truck-scene[data-motion="on"] .ts-srm{animation:ts-bob 1.1s ease-in-out infinite}
+.truck-scene[data-motion="on"] .ts-farizon{animation:ts-bob 1.3s ease-in-out infinite}
+/* Spin each wheel about its own centre. */
+.truck-stage .ts-wheel{transform-box:fill-box;transform-origin:center}
+.truck-scene[data-motion="on"] .ts-wheel{animation:ts-spin .7s linear infinite}
+/* Reduced motion: never animate, regardless of the toggle state. The JS also
+   defaults the toggle to OFF under this preference. */
+@media(prefers-reduced-motion:reduce){
+ .truck-scene[data-motion="on"] .ts-lane,
+ .truck-scene[data-motion="on"] .ts-wheels,
+ .truck-scene[data-motion="on"] .ts-wheel,
+ .truck-scene[data-motion="on"] .ts-srm,
+ .truck-scene[data-motion="on"] .ts-farizon{animation:none}
+}
 /* Canvas */
 main{padding:28px var(--margin) 8px}
 .titlerow{margin:0 0 20px}
@@ -629,6 +680,11 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 @media(max-width:1023px){.workspace{grid-template-columns:1fr}}
 @media(max-width:860px){.grid,.formgrid{grid-template-columns:1fr}.grid4{grid-template-columns:1fr}}
 @media(max-width:700px){h1{font-size:24px}main{padding:18px 16px 8px}.topbar{flex-wrap:wrap;padding:10px 16px}.topbar .caveat{margin-left:0;flex-basis:100%;order:3}section{padding:16px}table{font-size:13px}th,td{padding:7px}
+ /* On a phone the top bar wraps; let the truck scene drop onto its own line
+    after the caveat and the motion toggle sit beside it, so neither crowds the
+    brand/buttons row. */
+ .truck-scene{order:4}
+ #truck-motion-toggle{order:4}
  /* FEAT-004 WORKSTREAM B: the topbar already flex-wraps, so the Inputs /
     Prospects / Download-analysis buttons drop to their own line(s) on a phone.
     Give each a comfortable tap target (>=~40px tall) so the Download button
@@ -762,6 +818,52 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <button type="button" id="prospects-toggle" class="sidebar-toggle noprint" aria-expanded="false" aria-controls="prospects-col"><span class="tgl-icon" aria-hidden="true">&#9783;</span><span id="prospects-toggle-label">Prospects</span></button>
 <button type="button" id="download-brief" class="sidebar-toggle noprint" aria-label="Download the simulation results analysis as a Markdown file"><span class="tgl-icon" aria-hidden="true">&#8681;</span><span id="download-brief-label">Download analysis</span></button>
 <div class="caveat">Illustrative / diagnostic figures, not a customer quote.</div>
+<!-- TRUCK SCENE (top-bar chrome, hand-written -- lives OUTSIDE the generated
+     ENGINE/DEMO/PROSPECTS/SIMBRIEF marker blocks so `node tools/build_index.js`
+     never overwrites it). A small, FLAT, inline-SVG depiction of the two EV
+     light trucks (SRM T3EV+ and Farizon) "driving" on a scrolling road. It is
+     100% offline: inline SVG + CSS animation only, no external assets, no 3D
+     library. Motion is paused by default under prefers-reduced-motion (handled
+     by the CSS media query) and can be toggled on/off by the user. -->
+<div class="truck-scene noprint" id="truck-scene" data-motion="on" aria-hidden="true">
+<svg class="truck-stage" viewBox="0 0 220 72" role="img" width="220" height="72" aria-label="Animated SRM T3EV+ and Farizon electric trucks driving on a road">
+ <!-- road -->
+ <rect class="ts-road" x="0" y="56" width="220" height="12"></rect>
+ <!-- dashed lane markings that scroll to fake forward motion -->
+ <g class="ts-lane">
+  <rect x="0" y="61" width="16" height="2"></rect>
+  <rect x="32" y="61" width="16" height="2"></rect>
+  <rect x="64" y="61" width="16" height="2"></rect>
+  <rect x="96" y="61" width="16" height="2"></rect>
+  <rect x="128" y="61" width="16" height="2"></rect>
+  <rect x="160" y="61" width="16" height="2"></rect>
+  <rect x="192" y="61" width="16" height="2"></rect>
+  <rect x="224" y="61" width="16" height="2"></rect>
+ </g>
+ <!-- SRM T3EV+ : the primary recommended EV (accent-coloured box truck) -->
+ <g class="ts-truck ts-srm">
+  <rect class="ts-body" x="6" y="22" width="44" height="26" rx="2"></rect>
+  <rect class="ts-cab" x="50" y="30" width="16" height="18" rx="2"></rect>
+  <rect class="ts-window" x="52" y="32" width="11" height="8" rx="1"></rect>
+  <g class="ts-wheels">
+   <circle class="ts-wheel" cx="18" cy="52" r="5"></circle>
+   <circle class="ts-wheel" cx="56" cy="52" r="5"></circle>
+  </g>
+ </g>
+ <!-- Farizon small model : a competitor EV van (neutral-coloured) -->
+ <g class="ts-truck ts-farizon">
+  <rect class="ts-body" x="118" y="28" width="34" height="20" rx="2"></rect>
+  <rect class="ts-cab" x="152" y="33" width="13" height="15" rx="2"></rect>
+  <rect class="ts-window" x="154" y="35" width="9" height="7" rx="1"></rect>
+  <g class="ts-wheels">
+   <circle class="ts-wheel" cx="128" cy="52" r="4.5"></circle>
+   <circle class="ts-wheel" cx="158" cy="52" r="4.5"></circle>
+  </g>
+ </g>
+</svg>
+<div class="ts-labels" aria-hidden="true"><span class="ts-tag ts-tag-srm">SRM T3EV+</span><span class="ts-tag ts-tag-farizon">Farizon</span></div>
+</div>
+<button type="button" id="truck-motion-toggle" class="sidebar-toggle noprint" aria-pressed="true" aria-label="Pause the driving-truck animation" title="Toggle the driving-truck animation"><span class="tgl-icon" id="truck-motion-icon" aria-hidden="true">&#10073;&#10073;</span><span id="truck-motion-label">Motion</span></button>
 </div>
 <main>
 
@@ -8975,6 +9077,65 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   H.renderScatter = render;
 
   render();
+})();
+</script>
+
+<script>
+/* ================================================================== *
+ * Top-right driving-truck scene toggle (top-bar chrome).
+ * Self-contained, offline: wires the Motion on/off button (#truck-motion-
+ * toggle) to the inline-SVG truck scene (#truck-scene). The scene's CSS keys
+ * all animation off the data-motion="on"/"off" attribute, so this controller
+ * only flips that attribute and keeps the button's aria-pressed / label in
+ * sync. No fetch, no 3D library, no external assets.
+ *
+ * Default state RESPECTS prefers-reduced-motion: if the user asks for reduced
+ * motion the scene starts PAUSED (and the CSS media query also neutralises any
+ * animation as a belt-and-braces guard). The chosen state persists best-effort
+ * in localStorage (try/catch so file:// works).
+ * ================================================================== */
+(function(){
+  "use strict";
+  var scene = document.getElementById('truck-scene');
+  var btn = document.getElementById('truck-motion-toggle');
+  if (!scene || !btn) return;
+  var icon = document.getElementById('truck-motion-icon');
+  var MOTION_KEY = 'hs_truck_motion_v1';
+  var PAUSE = '\u23F8';   // pause glyph (two bars)
+  var PLAY = '\u25B6';    // play triangle
+
+  function prefersReducedMotion(){
+    try {
+      return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    } catch(e){ return false; }
+  }
+  function readStored(){
+    try { if (window.localStorage){ var v = window.localStorage.getItem(MOTION_KEY); if (v==='on') return true; if (v==='off') return false; } } catch(e){}
+    return null;
+  }
+  function store(on){
+    try { if (window.localStorage) window.localStorage.setItem(MOTION_KEY, on?'on':'off'); } catch(e){}
+  }
+  function apply(on){
+    scene.setAttribute('data-motion', on ? 'on' : 'off');
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    // When motion is ON the button offers to PAUSE it (and vice versa).
+    btn.setAttribute('aria-label', on ? 'Pause the driving-truck animation' : 'Play the driving-truck animation');
+    btn.setAttribute('title', on ? 'Pause the driving-truck animation' : 'Play the driving-truck animation');
+    if (icon) icon.innerHTML = on ? (PAUSE + PAUSE) : PLAY;
+  }
+
+  // Default: honour a stored choice; otherwise start OFF under reduced-motion,
+  // ON by default.
+  var stored = readStored();
+  var initial = (stored === null) ? !prefersReducedMotion() : stored;
+  apply(initial);
+
+  btn.addEventListener('click', function(){
+    var on = scene.getAttribute('data-motion') !== 'on';
+    apply(on);
+    store(on);
+  });
 })();
 </script>
 </body></html>
