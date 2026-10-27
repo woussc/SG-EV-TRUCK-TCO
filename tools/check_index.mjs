@@ -104,6 +104,8 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'prospects-scrim','prospects-overlay-close','inputs',
   // FEAT-003 (Workstream C): offline download of the simulation-results brief.
   'download-brief','download-brief-label',
+  // Top-right driving-truck scene (inline-SVG) + its motion on/off toggle.
+  'truck-scene','truck-motion-toggle','truck-motion-icon','truck-motion-label',
   // FEAT-002: journey stepper (Customer stage removed -> 4 stages), stage
   // viewports + confidence badge hooks.
   'stepper','step-portfolio','step-tco','step-charging','step-proposal',
@@ -3221,6 +3223,67 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
   checks.push(['mobile-svg-text: scatter SVG still emits its desktop user-unit font-size base (FS=14, desktop untouched)',
     /var FS\s*=\s*14\b/.test(html) && /font-size="'\+FS\+'"/.test(html)]);
 })();
+
+// ---- Top-right driving-truck scene + its motion toggle ---------------------
+// A small, FLAT inline-SVG graphic of the two EV trucks (SRM T3EV+ + Farizon)
+// "driving" on a scrolling road, with a visible Motion on/off button, lives in
+// the top-bar chrome. It is 100% offline: inline SVG + CSS animation only, no
+// 3D library and no external asset references. The toggle flips the scene's
+// data-motion attribute (the CSS keys all animation off it) and keeps its
+// aria-pressed state in sync. These assertions follow the project convention of
+// covering every new UI surface in the headless harness.
+const chromeEndTruck = html.indexOf('<!-- ENGINE:BEGIN');
+const chromeTruck = chromeEndTruck === -1 ? html : html.slice(0, chromeEndTruck);
+// (1) Markup: the scene + toggle live in the top chrome (topbar, before <main>).
+checks.push(['truck scene present in top chrome (before <main>)',
+  html.indexOf('id="truck-scene"') !== -1 &&
+  html.indexOf('id="truck-scene"') > html.indexOf('class="topbar"') &&
+  html.indexOf('id="truck-scene"') < html.indexOf('<main>')]);
+checks.push(['truck motion toggle present in top chrome (before <main>)',
+  html.indexOf('id="truck-motion-toggle"') !== -1 &&
+  html.indexOf('id="truck-motion-toggle"') > html.indexOf('class="topbar"') &&
+  html.indexOf('id="truck-motion-toggle"') < html.indexOf('<main>')]);
+// (2) Offline discipline: the scene is inline SVG (no 3D lib, no external asset
+// reference anywhere in the chrome for the truck block).
+checks.push(['truck scene is inline SVG (no 3D library)',
+  /id="truck-scene"[\s\S]*?<svg/.test(chromeTruck) &&
+  chromeTruck.indexOf('three.js') === -1 && chromeTruck.indexOf('three.min') === -1 &&
+  !/<canvas[^>]*webgl/i.test(chromeTruck)]);
+// (3) Both trucks are identifiable (captioned SRM T3EV+ and Farizon).
+checks.push(['truck scene names both SRM T3EV+ and Farizon',
+  chromeTruck.indexOf('SRM T3EV+') !== -1 && chromeTruck.indexOf('Farizon') !== -1]);
+// (4) The toggle is a proper on/off control (aria-pressed), styled native.
+checks.push(['truck motion toggle uses aria-pressed + native button styling',
+  /id="truck-motion-toggle"[^>]*aria-pressed=/.test(html) &&
+  /id="truck-motion-toggle"[^>]*class="[^"]*sidebar-toggle/.test(html)]);
+// (5) prefers-reduced-motion is honoured: the scene's animation is disabled
+// under the reduce media query in the CSS.
+checks.push(['truck scene animation disabled under prefers-reduced-motion',
+  /@media\(prefers-reduced-motion:reduce\)\{[\s\S]*?\.truck-scene[\s\S]*?animation:\s*none/.test(chromeTruck)]);
+// (6) Behaviour: the controller ran and set the scene/button to a valid default
+// state, and clicking the toggle FLIPS that state (data-motion + aria-pressed).
+const truckScene = byId['truck-scene'];
+const truckToggle = byId['truck-motion-toggle'];
+checks.push(['truck toggle registered a click listener',
+  Array.isArray(truckToggle.listeners.click) && truckToggle.listeners.click.length > 0]);
+const motionBefore = truckScene.getAttribute('data-motion');
+const pressedBefore = truckToggle.getAttribute('aria-pressed');
+checks.push(['truck scene starts in a valid motion state (on|off)',
+  (motionBefore === 'on' || motionBefore === 'off') &&
+  (pressedBefore === 'true' || pressedBefore === 'false') &&
+  ((motionBefore === 'on') === (pressedBefore === 'true'))]);
+truckToggle.fire('click');
+const motionAfter = truckScene.getAttribute('data-motion');
+const pressedAfter = truckToggle.getAttribute('aria-pressed');
+checks.push(['clicking the truck motion toggle flips the motion state',
+  motionAfter !== motionBefore &&
+  (motionAfter === 'on' || motionAfter === 'off') &&
+  ((motionAfter === 'on') === (pressedAfter === 'true'))]);
+// Clicking again flips it back (true toggle).
+truckToggle.fire('click');
+checks.push(['clicking the truck motion toggle again restores the state',
+  truckScene.getAttribute('data-motion') === motionBefore &&
+  truckToggle.getAttribute('aria-pressed') === pressedBefore]);
 
 let ok = true;
 for (const [name, pass] of checks) {
