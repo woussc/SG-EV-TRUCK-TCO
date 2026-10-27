@@ -25,57 +25,99 @@ a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
 .brand{font-weight:600;font-size:15px}
 .scope{color:var(--muted);font-size:13px;border-left:1px solid var(--line2);padding-left:12px}
 .topbar .caveat{margin-left:auto;font-size:13px;color:var(--muted)}
-/* TOP-RIGHT DRIVING-TRUCK SCENE (top-bar chrome).
-   A small, FLAT inline-SVG graphic of the two EV trucks (SRM T3EV+ + Farizon)
-   driving on a scrolling road. Pure CSS animation, no external assets, no 3D
-   library -- keeps the page fully offline/emailable. It uses the existing
-   design tokens so it matches the calm flat system (no shadow/gradient). The
-   `.caveat` above it still takes margin-left:auto, so the scene + motion toggle
-   sit at the FAR RIGHT of the bar after it. The scene flex-wraps gracefully on
-   narrow bars (see the max-width:700px rule). */
-.truck-scene{display:flex;flex-direction:column;align-items:center;gap:2px;flex:0 0 auto}
-.truck-stage{display:block;width:150px;height:auto;overflow:hidden}
+/* DRIVING-TRUCK SCENE (top chrome, beside the page title).
+   A FLAT inline-SVG graphic of the EV trucks (SRM T3EV+ + Farizon) "driving"
+   on a scrolling road. Pure CSS animation, no external assets, no 3D library
+   -- keeps the page fully offline/emailable. It uses the existing design
+   tokens so it matches the calm flat system (no shadow/gradient).
+
+   Only ONE truck is ever visible at a time: the two trucks ALTERNATE, each
+   driving in from the right, across, and off to the left, while the other
+   waits off-stage, so the scene reads as a single truck on the road that
+   cycles SRM -> Farizon -> SRM. The wheels are children of their own truck
+   group and rotate about their OWN centre (fill-box), so they stay bolted to
+   the truck and sit on the road. */
+.truck-scene{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto;position:relative}
+.truck-stage{display:block;width:320px;max-width:100%;height:auto;overflow:hidden}
 .truck-stage .ts-road{fill:var(--soft)}
 .truck-stage .ts-lane rect{fill:var(--line2)}
 .truck-stage .ts-truck .ts-body{fill:var(--accent)}
 .truck-stage .ts-truck .ts-cab{fill:var(--accent-hover)}
 .truck-stage .ts-truck .ts-window{fill:var(--paper);opacity:.85}
 .truck-stage .ts-truck .ts-wheel{fill:var(--ink)}
+.truck-stage .ts-truck .ts-hub{fill:var(--paper);opacity:.9}
+.truck-stage .ts-truck .ts-spoke{stroke:var(--paper);stroke-width:1.4;opacity:.85}
 /* Farizon reads as the neutral competitor so the two are distinguishable. */
 .truck-stage .ts-farizon .ts-body{fill:var(--muted)}
 .truck-stage .ts-farizon .ts-cab{fill:var(--ink)}
 .truck-stage .ts-farizon .ts-window{fill:var(--paper);opacity:.85}
-/* Captions so viewers can tell which truck is which. */
-.ts-labels{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;font-size:13px;line-height:1.1;color:var(--muted);font-weight:600}
+/* Only one truck is shown at once: both trucks start parked off-stage to the
+   right and only move while motion is ON (otherwise the SRM rests on stage and
+   the Farizon stays hidden off-stage, so a single truck is always visible). */
+.truck-stage .ts-truck{transform-box:fill-box}
+.truck-stage .ts-srm{transform:translateX(0)}
+.truck-stage .ts-farizon{transform:translateX(260px)}
+/* Captions so viewers can tell which truck is which: both models are named and
+   the accent-coloured dot distinguishes the SRM (primary) from the Farizon
+   (neutral competitor). Which one is on stage is clear from the graphic itself,
+   since only one truck is ever visible at a time. */
+.ts-labels{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 12px;font-size:13px;line-height:1.1;color:var(--muted);font-weight:600}
 .ts-tag{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .ts-tag::before{content:"";width:8px;height:8px;border-radius:2px;display:inline-block}
 .ts-tag-srm::before{background:var(--accent)}
 .ts-tag-farizon::before{background:var(--muted)}
-/* Motion: the lane markings scroll left (road moving under the trucks) and the
-   wheels spin, so the trucks read as "driving" while staying in place. A gentle
-   bob adds life without being busy. Animation only runs while the scene is in
-   the 'on' motion state; [data-motion="off"] parks everything. */
+/* Motion: the lane markings scroll left (road moving under the truck) and the
+   wheels spin, so the on-stage truck reads as "driving". The two trucks share
+   one 8s cycle: SRM drives across and off (first half) while Farizon waits
+   off-stage, then Farizon drives across and off (second half) while SRM waits
+   off-stage -- so exactly one truck is on the road at any instant. Animation
+   only runs while the scene is in the 'on' motion state; [data-motion="off"]
+   parks the SRM on stage and keeps everything still. */
 @keyframes ts-laneScroll{from{transform:translateX(0)}to{transform:translateX(-32px)}}
 @keyframes ts-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-@keyframes ts-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
+/* Each truck enters from the right, crosses, and exits left during its half of
+   the cycle, and stays parked off-stage (right) during the other half. */
+@keyframes ts-cross-srm{
+ 0%{transform:translateX(300px)}
+ 6%{transform:translateX(0)}
+ 44%{transform:translateX(0)}
+ 50%{transform:translateX(-300px)}
+ 100%{transform:translateX(-300px)}
+}
+@keyframes ts-cross-farizon{
+ 0%,50%{transform:translateX(300px)}
+ 56%{transform:translateX(0)}
+ 94%{transform:translateX(0)}
+ 100%{transform:translateX(-300px)}
+}
 .truck-scene[data-motion="on"] .ts-lane{animation:ts-laneScroll .6s linear infinite}
-.truck-scene[data-motion="on"] .ts-wheels{animation:ts-spin .7s linear infinite;transform-origin:center}
-.truck-scene[data-motion="on"] .ts-srm .ts-wheels{transform-box:fill-box}
-.truck-scene[data-motion="on"] .ts-farizon .ts-wheels{transform-box:fill-box}
-.truck-scene[data-motion="on"] .ts-srm{animation:ts-bob 1.1s ease-in-out infinite}
-.truck-scene[data-motion="on"] .ts-farizon{animation:ts-bob 1.3s ease-in-out infinite}
-/* Spin each wheel about its own centre. */
-.truck-stage .ts-wheel{transform-box:fill-box;transform-origin:center}
-.truck-scene[data-motion="on"] .ts-wheel{animation:ts-spin .7s linear infinite}
-/* Reduced motion: never animate, regardless of the toggle state. The JS also
-   defaults the toggle to OFF under this preference. */
+.truck-scene[data-motion="on"] .ts-srm{animation:ts-cross-srm 8s linear infinite}
+.truck-scene[data-motion="on"] .ts-farizon{animation:ts-cross-farizon 8s linear infinite}
+/* Spin each wheel about its OWN centre so it stays bolted to the truck and on
+   the road. For an SVG shape, transform-box:fill-box makes `center` resolve to
+   the element's own bounding-box centre; we animate ONLY the individual wheel
+   groups (never the whole truck), so the wheels never orbit the SVG origin. */
+.truck-stage .ts-wheel-grp{transform-box:fill-box;transform-origin:center}
+.truck-scene[data-motion="on"] .ts-wheel-grp{animation:ts-spin .7s linear infinite}
+/* Reduced motion: never animate, regardless of the toggle state (the JS also
+   defaults the toggle to OFF under this preference). The SRM rests on stage. */
 @media(prefers-reduced-motion:reduce){
  .truck-scene[data-motion="on"] .ts-lane,
- .truck-scene[data-motion="on"] .ts-wheels,
- .truck-scene[data-motion="on"] .ts-wheel,
+ .truck-scene[data-motion="on"] .ts-wheel-grp,
  .truck-scene[data-motion="on"] .ts-srm,
  .truck-scene[data-motion="on"] .ts-farizon{animation:none}
+ .truck-stage .ts-farizon{transform:translateX(260px)}
 }
+/* DISCREET MOTION TOGGLE: a small square icon-only button tucked into the
+   top-right corner of the scene. Keeps the accessible on/off semantics
+   (aria-pressed + descriptive aria-label/title) with no visible text. */
+#truck-motion-toggle{position:absolute;top:0;right:0;width:26px;height:26px;min-width:0;padding:0;display:inline-flex;align-items:center;justify-content:center;gap:0;line-height:1;z-index:2}
+#truck-motion-toggle .tgl-icon{font-size:13px}
+/* TITLE ROW: the truck scene sits to the RIGHT of the title text, vertically
+   centred, and collapses below the title on narrow screens. */
+.titlewrap{display:flex;align-items:center;gap:24px;margin:0 0 20px}
+.titlewrap .titlerow{margin:0;flex:1 1 auto;min-width:0}
+.titlewrap .truck-scene{flex:0 0 auto}
 /* Canvas */
 main{padding:28px var(--margin) 8px}
 .titlerow{margin:0 0 20px}
@@ -680,11 +722,10 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 @media(max-width:1023px){.workspace{grid-template-columns:1fr}}
 @media(max-width:860px){.grid,.formgrid{grid-template-columns:1fr}.grid4{grid-template-columns:1fr}}
 @media(max-width:700px){h1{font-size:24px}main{padding:18px 16px 8px}.topbar{flex-wrap:wrap;padding:10px 16px}.topbar .caveat{margin-left:0;flex-basis:100%;order:3}section{padding:16px}table{font-size:13px}th,td{padding:7px}
- /* On a phone the top bar wraps; let the truck scene drop onto its own line
-    after the caveat and the motion toggle sit beside it, so neither crowds the
-    brand/buttons row. */
- .truck-scene{order:4}
- #truck-motion-toggle{order:4}
+ /* On a phone the title row stacks: title on top, the driving-truck scene
+    below it, centred, so neither crowds the other. */
+ .titlewrap{flex-direction:column;align-items:flex-start;gap:12px}
+ .titlewrap .truck-scene{align-self:center}
  /* FEAT-004 WORKSTREAM B: the topbar already flex-wraps, so the Inputs /
     Prospects / Download-analysis buttons drop to their own line(s) on a phone.
     Give each a comfortable tap target (>=~40px tall) so the Download button
@@ -818,58 +859,90 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <button type="button" id="prospects-toggle" class="sidebar-toggle noprint" aria-expanded="false" aria-controls="prospects-col"><span class="tgl-icon" aria-hidden="true">&#9783;</span><span id="prospects-toggle-label">Prospects</span></button>
 <button type="button" id="download-brief" class="sidebar-toggle noprint" aria-label="Download the simulation results analysis as a Markdown file"><span class="tgl-icon" aria-hidden="true">&#8681;</span><span id="download-brief-label">Download analysis</span></button>
 <div class="caveat">Illustrative / diagnostic figures, not a customer quote.</div>
-<!-- TRUCK SCENE (top-bar chrome, hand-written -- lives OUTSIDE the generated
-     ENGINE/DEMO/PROSPECTS/SIMBRIEF marker blocks so `node tools/build_index.js`
-     never overwrites it). A small, FLAT, inline-SVG depiction of the two EV
-     light trucks (SRM T3EV+ and Farizon) "driving" on a scrolling road. It is
-     100% offline: inline SVG + CSS animation only, no external assets, no 3D
-     library. Motion is paused by default under prefers-reduced-motion (handled
-     by the CSS media query) and can be toggled on/off by the user. -->
+</div>
+<main>
+
+<!-- TITLE ROW + DRIVING-TRUCK SCENE.
+     The hand-written truck scene sits to the RIGHT of the page title. It lives
+     OUTSIDE the generated ENGINE/DEMO/PROSPECTS/SIMBRIEF marker blocks so
+     `node tools/build_index.js` never overwrites it. The scene is a FLAT,
+     inline-SVG depiction of the EV light trucks (SRM T3EV+ and Farizon)
+     "driving" on a scrolling road. It is 100% offline: inline SVG + CSS
+     animation only, no external assets, no 3D library. Only ONE truck is
+     visible at a time -- the two ALTERNATE across the road. Motion is paused by
+     default under prefers-reduced-motion (handled by the CSS media query) and
+     can be toggled on/off by the user via the small square corner button. -->
+<div class="titlewrap">
+<div class="titlerow">
+<h1>Which ownership path is cheapest over 10 years, and by how much?</h1>
+<p class="sub">A deterministic, bottom-up simulation comparing four paths per fleet &mdash; Keep ICE, all-new ICE now, Plan A and Plan B. Edit the inputs on the left; results and figures recompute live on the right.</p>
+</div>
 <div class="truck-scene noprint" id="truck-scene" data-motion="on" aria-hidden="true">
-<svg class="truck-stage" viewBox="0 0 220 72" role="img" width="220" height="72" aria-label="Animated SRM T3EV+ and Farizon electric trucks driving on a road">
+<svg class="truck-stage" viewBox="0 0 300 80" role="img" width="300" height="80" aria-label="Animated SRM T3EV+ and Farizon electric trucks driving on a road, one at a time">
  <!-- road -->
- <rect class="ts-road" x="0" y="56" width="220" height="12"></rect>
+ <rect class="ts-road" x="0" y="62" width="300" height="14"></rect>
  <!-- dashed lane markings that scroll to fake forward motion -->
  <g class="ts-lane">
-  <rect x="0" y="61" width="16" height="2"></rect>
-  <rect x="32" y="61" width="16" height="2"></rect>
-  <rect x="64" y="61" width="16" height="2"></rect>
-  <rect x="96" y="61" width="16" height="2"></rect>
-  <rect x="128" y="61" width="16" height="2"></rect>
-  <rect x="160" y="61" width="16" height="2"></rect>
-  <rect x="192" y="61" width="16" height="2"></rect>
-  <rect x="224" y="61" width="16" height="2"></rect>
+  <rect x="0" y="68" width="18" height="2.4"></rect>
+  <rect x="32" y="68" width="18" height="2.4"></rect>
+  <rect x="64" y="68" width="18" height="2.4"></rect>
+  <rect x="96" y="68" width="18" height="2.4"></rect>
+  <rect x="128" y="68" width="18" height="2.4"></rect>
+  <rect x="160" y="68" width="18" height="2.4"></rect>
+  <rect x="192" y="68" width="18" height="2.4"></rect>
+  <rect x="224" y="68" width="18" height="2.4"></rect>
+  <rect x="256" y="68" width="18" height="2.4"></rect>
+  <rect x="288" y="68" width="18" height="2.4"></rect>
  </g>
- <!-- SRM T3EV+ : the primary recommended EV (accent-coloured box truck) -->
+ <!-- SRM T3EV+ : the primary recommended EV (accent-coloured cab-over box truck).
+      Centred near the middle of the stage; the animation drives it in/out. -->
  <g class="ts-truck ts-srm">
-  <rect class="ts-body" x="6" y="22" width="44" height="26" rx="2"></rect>
-  <rect class="ts-cab" x="50" y="30" width="16" height="18" rx="2"></rect>
-  <rect class="ts-window" x="52" y="32" width="11" height="8" rx="1"></rect>
-  <g class="ts-wheels">
-   <circle class="ts-wheel" cx="18" cy="52" r="5"></circle>
-   <circle class="ts-wheel" cx="56" cy="52" r="5"></circle>
+  <!-- box body -->
+  <rect class="ts-body" x="96" y="20" width="62" height="34" rx="2.5"></rect>
+  <!-- short cab-over nose -->
+  <rect class="ts-cab" x="158" y="30" width="22" height="24" rx="2.5"></rect>
+  <!-- windscreen -->
+  <rect class="ts-window" x="161" y="33" width="15" height="11" rx="1.5"></rect>
+  <!-- wheels: each wheel is its OWN group drawn at its absolute centre with no
+       translate attribute, so the CSS spin (transform-box:fill-box;
+       transform-origin:center) rotates it about its own centre. The wheel stays
+       bolted to the truck at (cx,58) on the road line. -->
+  <g class="ts-wheel-grp">
+   <circle class="ts-wheel" cx="112" cy="58" r="7"></circle>
+   <circle class="ts-hub" cx="112" cy="58" r="2.4"></circle>
+   <line class="ts-spoke" x1="106" y1="58" x2="118" y2="58"></line>
+   <line class="ts-spoke" x1="112" y1="52" x2="112" y2="64"></line>
+  </g>
+  <g class="ts-wheel-grp">
+   <circle class="ts-wheel" cx="166" cy="58" r="7"></circle>
+   <circle class="ts-hub" cx="166" cy="58" r="2.4"></circle>
+   <line class="ts-spoke" x1="160" y1="58" x2="172" y2="58"></line>
+   <line class="ts-spoke" x1="166" y1="52" x2="166" y2="64"></line>
   </g>
  </g>
- <!-- Farizon small model : a competitor EV van (neutral-coloured) -->
+ <!-- Farizon : a competitor EV light truck (neutral-coloured). Starts parked
+      off-stage to the right; alternates on-stage with the SRM. -->
  <g class="ts-truck ts-farizon">
-  <rect class="ts-body" x="118" y="28" width="34" height="20" rx="2"></rect>
-  <rect class="ts-cab" x="152" y="33" width="13" height="15" rx="2"></rect>
-  <rect class="ts-window" x="154" y="35" width="9" height="7" rx="1"></rect>
-  <g class="ts-wheels">
-   <circle class="ts-wheel" cx="128" cy="52" r="4.5"></circle>
-   <circle class="ts-wheel" cx="158" cy="52" r="4.5"></circle>
+  <rect class="ts-body" x="100" y="26" width="50" height="28" rx="2.5"></rect>
+  <rect class="ts-cab" x="150" y="34" width="18" height="20" rx="2.5"></rect>
+  <rect class="ts-window" x="152" y="37" width="13" height="9" rx="1.5"></rect>
+  <g class="ts-wheel-grp">
+   <circle class="ts-wheel" cx="114" cy="58" r="6.5"></circle>
+   <circle class="ts-hub" cx="114" cy="58" r="2.2"></circle>
+   <line class="ts-spoke" x1="108.5" y1="58" x2="119.5" y2="58"></line>
+   <line class="ts-spoke" x1="114" y1="52.5" x2="114" y2="63.5"></line>
+  </g>
+  <g class="ts-wheel-grp">
+   <circle class="ts-wheel" cx="156" cy="58" r="6.5"></circle>
+   <circle class="ts-hub" cx="156" cy="58" r="2.2"></circle>
+   <line class="ts-spoke" x1="150.5" y1="58" x2="161.5" y2="58"></line>
+   <line class="ts-spoke" x1="156" y1="52.5" x2="156" y2="63.5"></line>
   </g>
  </g>
 </svg>
 <div class="ts-labels" aria-hidden="true"><span class="ts-tag ts-tag-srm">SRM T3EV+</span><span class="ts-tag ts-tag-farizon">Farizon</span></div>
+<button type="button" id="truck-motion-toggle" class="sidebar-toggle noprint" aria-pressed="true" aria-label="Pause the driving-truck animation" title="Toggle the driving-truck animation"><span class="tgl-icon" id="truck-motion-icon" aria-hidden="true">&#10073;&#10073;</span></button>
 </div>
-<button type="button" id="truck-motion-toggle" class="sidebar-toggle noprint" aria-pressed="true" aria-label="Pause the driving-truck animation" title="Toggle the driving-truck animation"><span class="tgl-icon" id="truck-motion-icon" aria-hidden="true">&#10073;&#10073;</span><span id="truck-motion-label">Motion</span></button>
-</div>
-<main>
-
-<div class="titlerow">
-<h1>Which ownership path is cheapest over 10 years, and by how much?</h1>
-<p class="sub">A deterministic, bottom-up simulation comparing four paths per fleet &mdash; Keep ICE, all-new ICE now, Plan A and Plan B. Edit the inputs on the left; results and figures recompute live on the right.</p>
 </div>
 
 <div class="banner" id="demo-banner">ILLUSTRATIVE SRM scenario. Not a customer savings claim.</div>
