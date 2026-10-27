@@ -226,6 +226,22 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .field{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0;border-bottom:1px dotted var(--line)}
 .field label{font-size:13px}
 .field .u{font-size:13px;color:var(--muted);min-width:88px;text-align:right}
+/* A4: advanced operating-cost rows re-laid as aligned, theme-sectioned cards.
+   Each section is a soft-neutral card with an uppercase section heading and a
+   two-column .formgrid of .field rows. Inside an advanced card every .field is
+   a 3-track grid (label | amber input | unit) so the label / input / unit
+   columns line up across every row and every card -- no ragged or stray
+   fields. Reuses the existing design-system tokens; binds nothing new. */
+.oc-adv-sections{display:flex;flex-direction:column;gap:14px}
+.oc-adv-card{border:1px solid var(--line2);border-radius:10px;padding:14px 16px;background:var(--soft);min-width:0}
+.oc-adv-sec-head{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.oc-adv-grid{gap:6px 24px}
+.oc-adv-grid .field{display:grid;grid-template-columns:minmax(0,1fr) 112px 92px;align-items:center;column-gap:10px;min-width:0}
+.oc-adv-grid .field label{min-width:0;overflow-wrap:anywhere}
+.oc-adv-grid .field input{width:100%;min-width:0;max-width:100%;box-sizing:border-box;justify-self:stretch}
+.oc-adv-grid .field .u{min-width:0}
+/* The relocated discount-rate note spans the whole row under its field. */
+.oc-adv-grid .field[data-oc-discount] p{grid-column:1 / -1}
 .rowctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .btn{padding:8px 14px;cursor:pointer;background:var(--accent);color:#fff;border:0;border-radius:5px;font:13px -apple-system,'Segoe UI',Arial;font-weight:600;transition:background .15s ease,transform .08s ease}
 .btn:hover{background:var(--accent-hover)}
@@ -667,6 +683,10 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  input[type=number]{width:auto;min-width:0;max-width:100%;flex:1 1 auto}
  .field{flex-wrap:wrap}
  .field .u{min-width:0}
+ /* A4 phone: stack the advanced OC card rows (label over input + unit) so the
+    fixed input/unit tracks never force horizontal overflow at phone width. */
+ .oc-adv-grid .field{grid-template-columns:1fr auto;align-items:baseline}
+ .oc-adv-grid .field label{grid-column:1 / -1}
  .finance-controls{grid-template-columns:1fr}
  .finance-ctl input,.finance-ctl select{font-size:13px}
  /* FEAT-007 Phone map: stack the route-sim controls so the named-area select and
@@ -869,7 +889,8 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="adv-help">The low-impact fields for each truck, grouped by Truck ID.</p>
 <div id="fleet-adv" class="truck-cards"></div>
 <h4>Operating costs &mdash; advanced <span class="tag assumption">Assumption</span></h4>
-<div class="formgrid" id="oc-form-adv"></div>
+<p class="adv-help">Every rarely-changed operating-cost input, grouped into themed cards at its demonstration default. Each row still feeds the engine exactly as before, so opening or grouping them changes no computed number.</p>
+<div class="oc-adv-sections" id="oc-form-adv"></div>
 <h4>Energy and charging &mdash; advanced <span class="tag assumption">Assumption</span></h4>
 <div class="table-wrap editwrap"><table id="ec-table-adv"><thead><tr><th>Input</th><th>Plan A</th><th>Plan B</th><th>Unit</th><th>Meaning / cell reference</th></tr></thead><tbody id="ec-body-adv"></tbody></table></div>
 </div>
@@ -6848,15 +6869,81 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     }
     return div;
   }
+  // A4: thematic sectioning of the advanced operating-cost rows. Each demoted
+  // oc row (everything NOT in PRIMARY_OC) is mapped to ONE section by _row. The
+  // grouping is derived from the row labels / meaning and is purely a display
+  // concern: every row still renders through the same ocField() (same
+  // r.values.B object + liveRecompute binding), so sectioning changes NO
+  // computed number. Section order is the client-reading order; any _row not
+  // listed falls into 'Other advanced' so no row is ever silently dropped.
+  var OC_ADV_SECTIONS = [
+    { title:'Running energy & consumption',
+      rows:[8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23] },
+    { title:'Maintenance & tyres',
+      rows:[24,25,26,27,28] },
+    { title:'Fixed recurring (insurance, road tax, inspection, other)',
+      rows:[31,32,33,34,35,36] },
+    { title:'Contract & availability / backup',
+      rows:[37,38,39,40,41,42,43] },
+    { title:'Battery reserve & efficiency',
+      rows:[44,45,46,47,48,49] },
+    { title:'Finance rates (price-growth / discount)',
+      rows:[50,51,52,53,54] },
+    { title:'Terminal values & repair timing',
+      rows:[55,56,57,64,65,66,67] },
+    { title:'Data-mode / quote-basis flags',
+      rows:[58,59,60,61,62,63,68] }
+  ];
+  function ocAdvSectionFor(rowNum){
+    for (var i=0;i<OC_ADV_SECTIONS.length;i++){
+      if (OC_ADV_SECTIONS[i].rows.indexOf(rowNum) !== -1) return i;
+    }
+    return -1; // routed to the trailing 'Other advanced' catch-all
+  }
   function buildOperating(){
     var form = H.el('oc-form'); form.innerHTML='';
     var adv = H.el('oc-form-adv'); if (adv) adv.innerHTML='';
     var rows = H.state.operating_costs.rows;
+    // Primary rows keep the simple always-visible formgrid.
     rows.forEach(function(r){
       if (r.values==null) return;
-      var dest = PRIMARY_OC[r._row] ? form : (adv || form);
-      dest.appendChild(ocField(r));
+      if (PRIMARY_OC[r._row]) form.appendChild(ocField(r));
     });
+    if (!adv){
+      // No advanced container: fall back to the flat render (keeps engine wiring).
+      rows.forEach(function(r){
+        if (r.values==null || PRIMARY_OC[r._row]) return;
+        form.appendChild(ocField(r));
+      });
+      return;
+    }
+    // Advanced rows: route each into its theme section, preserving row order
+    // within a section. Build one aligned CARD per non-empty section with a
+    // section heading and a .formgrid of .field rows (the SAME grid the primary
+    // form uses, so label / input / unit columns align across every card).
+    var buckets = [];
+    for (var s=0;s<OC_ADV_SECTIONS.length;s++) buckets.push([]);
+    var other = [];
+    rows.forEach(function(r){
+      if (r.values==null || PRIMARY_OC[r._row]) return;
+      var idx = ocAdvSectionFor(r._row);
+      if (idx === -1) other.push(r); else buckets[idx].push(r);
+    });
+    function renderSection(title, list){
+      if (!list.length) return;
+      var card = document.createElement('div'); card.className='oc-adv-card';
+      var head = document.createElement('h5'); head.className='oc-adv-sec-head';
+      head.textContent = title;
+      card.appendChild(head);
+      var grid = document.createElement('div'); grid.className='formgrid oc-adv-grid';
+      list.forEach(function(r){ grid.appendChild(ocField(r)); });
+      card.appendChild(grid);
+      adv.appendChild(card);
+    }
+    for (var k=0;k<OC_ADV_SECTIONS.length;k++){
+      renderSection(OC_ADV_SECTIONS[k].title, buckets[k]);
+    }
+    renderSection('Other advanced', other);
   }
 
   // ---- Energy and charging table (Plan A col B, Plan B col C) ----

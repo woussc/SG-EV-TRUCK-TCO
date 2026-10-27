@@ -839,8 +839,87 @@ checks.push(['advanced op-cost form populated', byId['oc-form-adv'].children.len
 checks.push(['primary energy table populated', byId['ec-body'].children.length > 0]);
 checks.push(['advanced energy table populated', byId['ec-body-adv'].children.length > 0]);
 // The advanced set holds strictly more rows than the small primary set.
+// (FEAT-003: #oc-form-adv now holds section CARDS, not bare .field rows, so its
+// direct children are the >=2 theme sections -- still strictly more than the
+// 3-row primary form, and the row-level binding is asserted below.)
 checks.push(['advanced op-cost holds more rows than primary',
   byId['oc-form-adv'].children.length > byId['oc-form'].children.length]);
+
+// ---- FEAT-003 (Area 4): advanced OC rows as aligned, sectioned cards -------
+// The flat advanced op-cost formgrid is re-laid into theme-SECTIONED cards:
+// each direct child of #oc-form-adv is a .oc-adv-card carrying a
+// .oc-adv-sec-head section heading and a .formgrid.oc-adv-grid of .field rows.
+// This is display-only: every advanced oc row still renders through ocField()
+// (same r.values.B object + liveRecompute), so sectioning changes NO number.
+(() => {
+  function collectByClass(node, cls, acc) {
+    if (!node || typeof node !== 'object') return acc;
+    if (new RegExp('(^|\\s)' + cls + '(\\s|$)').test(node.className || '')) acc.push(node);
+    toArr(node.children).forEach((c) => collectByClass(c, cls, acc));
+    return acc;
+  }
+  const advRoot = byId['oc-form-adv'];
+  const sectionCards = toArr(advRoot.children).filter(
+    (c) => /(^|\s)oc-adv-card(\s|$)/.test(c.className || ''));
+  // (1) Multiple theme sections render as cards (not a single flat grid).
+  checks.push(['Advanced OC renders multiple theme-sectioned cards (>=2)',
+    sectionCards.length >= 2]);
+  // (2) Each card has a section heading with non-empty text.
+  const headings = collectByClass(advRoot, 'oc-adv-sec-head', []);
+  checks.push(['Every advanced OC card has a non-empty section heading',
+    headings.length >= 2 &&
+    headings.length === sectionCards.length &&
+    headings.every((h) => String(textOf(h)).trim().length > 0)]);
+  // (3) Each card wraps its rows in the aligned .oc-adv-grid formgrid.
+  checks.push(['Every advanced OC card uses the aligned .oc-adv-grid formgrid',
+    sectionCards.every((card) => collectByClass(card, 'oc-adv-grid', []).length === 1)]);
+
+  // (4) Every advanced OC state row still BINDS to a rendered input: for each
+  // demoted numeric oc row (not in PRIMARY_OC={7,29,30}), there is an input
+  // under #oc-form-adv whose current value reflects r.values.B. This proves the
+  // sectioning preserved the state binding for every row (no value changed, no
+  // row dropped).
+  const PRIMARY_OC = { 7: true, 29: true, 30: true };
+  function collectInputs(node, acc) {
+    if (!node || typeof node !== 'object') return acc;
+    if ((node.tagName || '') === 'input') acc.push(node);
+    toArr(node.children).forEach((c) => collectInputs(c, acc));
+    return acc;
+  }
+  const advInputs = collectInputs(advRoot, []);
+  const advRows = windowObj.__HS.state.operating_costs.rows.filter(
+    (r) => r && r.values != null && !PRIMARY_OC[r._row]);
+  const renderedValues = advInputs.map((i) => String(i.value == null ? '' : i.value));
+  const everyRowBound = advRows.every((r) => {
+    const want = String(r.values.B == null ? '' : r.values.B);
+    return renderedValues.indexOf(want) !== -1;
+  });
+  checks.push(['Every advanced OC state row binds to a rendered input (value preserved)',
+    advRows.length > 0 && everyRowBound &&
+    advInputs.length >= advRows.length]);
+
+  // (5) Live binding proof: find the input bound to a known demoted row (row 27,
+  // ICE tyres = 600), fire an 'input' event with a new value, and confirm the
+  // SAME state row object updates (the ocField listener writes r.values.B). Then
+  // restore so no later assertion sees a mutated figure.
+  if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
+  const tyreRow = windowObj.__HS.state.operating_costs.rows.find((r) => r._row === 27);
+  const tyreInput = advInputs.find((i) => String(i.value) === String(tyreRow.values.B));
+  if (tyreInput) {
+    const before = tyreRow.values.B;
+    tyreInput.value = '777';
+    tyreInput.fire('input');
+    checks.push(['Advanced OC input is live-bound to its state row (writes r.values.B)',
+      tyreRow.values.B === 777]);
+    // restore
+    tyreInput.value = String(before);
+    tyreInput.fire('input');
+    checks.push(['Advanced OC row restored to its demonstration default after probe',
+      tyreRow.values.B === before]);
+  } else {
+    checks.push(['Advanced OC input is live-bound to its state row (writes r.values.B)', false]);
+  }
+})();
 
 // ---- FEAT-002 (redesign): de-cluttered primary input surface ---------------
 // The primary energy-and-charging table must NOT carry the verbose 'Meaning /
