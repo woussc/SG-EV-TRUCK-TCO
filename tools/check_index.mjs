@@ -3227,8 +3227,8 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
 })();
 
 // ---- Top-right driving-truck scene + its motion toggle ---------------------
-// A small, FLAT inline-SVG graphic of the two EV trucks (SRM T3EV+ + Farizon)
-// "driving" on a scrolling road, with a visible Motion on/off button, lives in
+// A small, FLAT inline-SVG graphic of a single, generic EV truck "driving in
+// place" on a scrolling road, with a visible Motion on/off button, lives in
 // the top-bar chrome. It is 100% offline: inline SVG + CSS animation only, no
 // 3D library and no external asset references. The toggle flips the scene's
 // data-motion attribute (the CSS keys all animation off it) and keeps its
@@ -3255,9 +3255,21 @@ checks.push(['truck scene is inline SVG (no 3D library)',
   /id="truck-scene"[\s\S]*?<svg/.test(chromeTruck) &&
   chromeTruck.indexOf('three.js') === -1 && chromeTruck.indexOf('three.min') === -1 &&
   !/<canvas[^>]*webgl/i.test(chromeTruck)]);
-// (3) Both trucks are identifiable (captioned SRM T3EV+ and Farizon).
-checks.push(['truck scene names both SRM T3EV+ and Farizon',
-  chromeTruck.indexOf('SRM T3EV+') !== -1 && chromeTruck.indexOf('Farizon') !== -1]);
+// (3) The scene shows a SINGLE, generic EV truck: exactly one .ts-truck group,
+// NOT labelled with any specific model (no model-name caption pills), and it
+// carries an EV cue (a battery/bolt glyph) so it clearly reads as electric.
+const tsTruckGroups = (chromeTruck.match(/class="ts-truck\b/g) || []).length;
+checks.push(['truck scene shows a single truck (one .ts-truck group, no alternation)',
+  tsTruckGroups === 1 &&
+  chromeTruck.indexOf('@keyframes ts-cross-srm') === -1 &&
+  chromeTruck.indexOf('@keyframes ts-cross-farizon') === -1 &&
+  chromeTruck.indexOf('class="ts-farizon"') === -1 && chromeTruck.indexOf('ts-truck ts-farizon') === -1]);
+checks.push(['truck is a plain/generic EV truck (no specific model name or caption pills)',
+  chromeTruck.indexOf('SRM T3EV+') === -1 &&
+  chromeTruck.indexOf('ts-labels') === -1 && chromeTruck.indexOf('ts-tag') === -1]);
+checks.push(['truck scene carries an EV cue (battery/bolt glyph)',
+  chromeTruck.indexOf('ts-ev-mark') !== -1 &&
+  (chromeTruck.indexOf('ts-ev-batt') !== -1 || chromeTruck.indexOf('ts-ev-bolt') !== -1)]);
 // (4) The toggle is a proper on/off control (aria-pressed), styled native.
 checks.push(['truck motion toggle uses aria-pressed + native button styling',
   /id="truck-motion-toggle"[^>]*aria-pressed=/.test(html) &&
@@ -3273,13 +3285,13 @@ checks.push(['truck motion toggle keeps a descriptive aria-label + title',
   /id="truck-motion-toggle"[^>]*title="[^"]+"/.test(html)]);
 checks.push(['truck motion toggle is a small square button (discreet CSS)',
   /#truck-motion-toggle\{[^}]*width:\s*26px[^}]*height:\s*26px/.test(chromeTruck)]);
-// (4c) Only ONE truck is visible at a time: the two trucks ALTERNATE across the
-// stage via their own crossing keyframes (ts-cross-srm / ts-cross-farizon), and
-// the Farizon is parked OFF-STAGE by default so a single truck shows at rest.
-checks.push(['only one truck shown at a time (alternating crossing keyframes)',
-  chromeTruck.indexOf('@keyframes ts-cross-srm') !== -1 &&
-  chromeTruck.indexOf('@keyframes ts-cross-farizon') !== -1 &&
-  /\.ts-farizon\{transform:translateX\(260px\)\}/.test(chromeTruck)]);
+// (4c) The single truck "drives in place": the road dashes scroll
+// (ts-laneScroll) while the truck stays centred (no crossing keyframes). The
+// lane-scroll animation is gated on the 'on' motion state.
+checks.push(['single truck drives in place (lane scroll, no crossing keyframes)',
+  chromeTruck.indexOf('@keyframes ts-laneScroll') !== -1 &&
+  /\.truck-scene\[data-motion="on"\]\s*\.ts-lane\{animation:ts-laneScroll/.test(chromeTruck) &&
+  chromeTruck.indexOf('ts-cross') === -1]);
 // (4d) The wheels rotate about their OWN centre so they stay bolted to the truck
 // and sit on the road: the per-wheel groups use transform-box:fill-box +
 // transform-origin:center, and the whole-group spin on .ts-wheels is GONE.
