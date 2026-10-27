@@ -226,6 +226,22 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .field{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0;border-bottom:1px dotted var(--line)}
 .field label{font-size:13px}
 .field .u{font-size:13px;color:var(--muted);min-width:88px;text-align:right}
+/* A4: advanced operating-cost rows re-laid as aligned, theme-sectioned cards.
+   Each section is a soft-neutral card with an uppercase section heading and a
+   two-column .formgrid of .field rows. Inside an advanced card every .field is
+   a 3-track grid (label | amber input | unit) so the label / input / unit
+   columns line up across every row and every card -- no ragged or stray
+   fields. Reuses the existing design-system tokens; binds nothing new. */
+.oc-adv-sections{display:flex;flex-direction:column;gap:14px}
+.oc-adv-card{border:1px solid var(--line2);border-radius:10px;padding:14px 16px;background:var(--soft);min-width:0}
+.oc-adv-sec-head{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.oc-adv-grid{gap:6px 24px}
+.oc-adv-grid .field{display:grid;grid-template-columns:minmax(0,1fr) 112px 92px;align-items:center;column-gap:10px;min-width:0}
+.oc-adv-grid .field label{min-width:0;overflow-wrap:anywhere}
+.oc-adv-grid .field input{width:100%;min-width:0;max-width:100%;box-sizing:border-box;justify-self:stretch}
+.oc-adv-grid .field .u{min-width:0}
+/* The relocated discount-rate note spans the whole row under its field. */
+.oc-adv-grid .field[data-oc-discount] p{grid-column:1 / -1}
 .rowctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .btn{padding:8px 14px;cursor:pointer;background:var(--accent);color:#fff;border:0;border-radius:5px;font:13px -apple-system,'Segoe UI',Arial;font-weight:600;transition:background .15s ease,transform .08s ease}
 .btn:hover{background:var(--accent-hover)}
@@ -290,6 +306,16 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .tc-match-head .tc-rec{font-size:13px;color:var(--muted)}
 .tc-match-note{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.4}
 .tc-compare-empty{font-size:13px;color:var(--muted);font-style:italic;margin:12px 0 0;padding-top:12px;border-top:1px dotted var(--line)}
+/* FEAT-002: compact shared business-intention control + per-card read-only
+   per-plan EV-quote displays (reference-styled, NOT amber/editable). */
+.intention-row{margin:0 0 16px}
+.intention-row .fld{min-width:0;max-width:420px}
+.intention-row .fld label{display:block;font-size:13px;color:var(--muted);font-weight:600;margin:0 0 4px}
+.intention-row .fld select{width:100%;box-sizing:border-box}
+.truck-card .tc-planquote{min-width:0;border:1px solid var(--green-line);border-radius:8px;padding:10px 12px;background:var(--green-soft);display:flex;flex-direction:column;gap:3px}
+.truck-card .tc-pq-lab{font-size:13px;color:var(--muted);font-weight:600}
+.truck-card .tc-pq-val{font-size:16px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums}
+.truck-card .tc-pq-note{font-size:13px;color:var(--muted);line-height:1.4}
 @media(max-width:620px){.truck-card .tc-grid,.truck-card .tc-grid.three,.tc-compare{grid-template-columns:1fr}}
 /* Customer / company profile header folded into the top of the input panel. */
 .customer-head{border:1px solid var(--line2);border-radius:10px;padding:16px;background:var(--soft);margin:0 0 16px}
@@ -657,6 +683,10 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  input[type=number]{width:auto;min-width:0;max-width:100%;flex:1 1 auto}
  .field{flex-wrap:wrap}
  .field .u{min-width:0}
+ /* A4 phone: stack the advanced OC card rows (label over input + unit) so the
+    fixed input/unit tracks never force horizontal overflow at phone width. */
+ .oc-adv-grid .field{grid-template-columns:1fr auto;align-items:baseline}
+ .oc-adv-grid .field label{grid-column:1 / -1}
  .finance-controls{grid-template-columns:1fr}
  .finance-ctl input,.finance-ctl select{font-size:13px}
  /* FEAT-007 Phone map: stack the route-sim controls so the named-area select and
@@ -818,23 +848,20 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <div class="formgrid" id="customer-form"></div>
 </div>
 
-<!-- DECISION FRAMING (FEAT-002).
-     Reframes the whole comparison around the customer's BUSINESS INTENTION and
-     makes the two plans explicit: Plan A = buy SRM, Plan B = buy a competitor
-     EV. The pickers choose WHICH SRM variant is Plan A and WHICH competitor is
-     Plan B; the TCO/Decision/charts relabel live to 'Plan A - SRM <variant>'
-     and 'Plan B - <competitor>'. These controls feed only the DERIVED
-     two-state recompute (buildPlanState), never the canonical validation
-     state. -->
-<div class="customer-head" id="decision-framing">
-<h3>Decision framing <span class="tag assumption">Assumption</span></h3>
-<p class="small">Set the customer&rsquo;s intention, then pick the two EVs being compared. <strong>Plan A = buy SRM</strong> vs <strong>Plan B = buy a competitor EV</strong>, for the same fleet duty. The results, decision cards and charts relabel to the chosen models live.</p>
-<div class="formgrid" id="decision-framing-form"></div>
-<p class="small" id="decision-framing-note"></p>
+<!-- BUSINESS INTENTION (FEAT-002).
+     The verbose decision-framing block was removed. Its engine-driving parts
+     survive: the business-intention control (replace / add) still feeds the
+     derived two-state recompute (buildPlanState: 'add' pulls the replacement
+     month to 0), and the Plan A (SRM) / Plan B (competitor) model pickers moved
+     ONTO each truck card. This compact select writes only the non-engine
+     __reframe blob (rf.intention); it never mutates the canonical validation
+     state and the engine ignores __reframe entirely. -->
+<div class="intention-row" id="business-intention-row">
+<div class="fld" id="business-intention-fld"></div>
 </div>
 
-<h3>Current ICE fleet &rarr; matched EV <span class="tag assumption">Assumption</span></h3>
-<p class="small">One card per <strong>current ICE truck</strong>: enter its duty (work km/day, days/year, peak jobs and cargo, demanding-day route) and the most cost-effective catalogue EV is matched live, side by side. The matched EV is a <em>recommendation</em> and stays editable.</p>
+<h3>Fleet trucks &amp; plan vehicles <span class="tag assumption">Assumption</span></h3>
+<p class="small">One card per <strong>current ICE truck</strong>: enter its duty (work km/day, days/year, peak jobs and cargo, demanding-day route), then pick each truck&rsquo;s <strong>Plan A SRM variant</strong> and <strong>Plan B competitor EV</strong>. Each plan&rsquo;s EV quote is shown read-only (catalogue price + COE); the per-plan EV-cost slider is the single control that varies it.</p>
 <div id="fleet-cards" class="truck-cards"></div>
 <p class="noprint"><button type="button" id="add-truck-btn" class="btn">+ Add truck</button></p>
 
@@ -862,7 +889,8 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 <p class="adv-help">The low-impact fields for each truck, grouped by Truck ID.</p>
 <div id="fleet-adv" class="truck-cards"></div>
 <h4>Operating costs &mdash; advanced <span class="tag assumption">Assumption</span></h4>
-<div class="formgrid" id="oc-form-adv"></div>
+<p class="adv-help">Every rarely-changed operating-cost input, grouped into themed cards at its demonstration default. Each row still feeds the engine exactly as before, so opening or grouping them changes no computed number.</p>
+<div class="oc-adv-sections" id="oc-form-adv"></div>
 <h4>Energy and charging &mdash; advanced <span class="tag assumption">Assumption</span></h4>
 <div class="table-wrap editwrap"><table id="ec-table-adv"><thead><tr><th>Input</th><th>Plan A</th><th>Plan B</th><th>Unit</th><th>Meaning / cell reference</th></tr></thead><tbody id="ec-body-adv"></tbody></table></div>
 </div>
@@ -6071,7 +6099,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   var SRM_VARIANTS = ['SRM T3EV','SRM T3EV+','SRM T3'];
   var REFRAME_DEFAULTS = {
     intention: 'replace',            // 'replace' | 'add'
-    planAModel: 'SRM T3EV+',         // current MID landing SRM variant
+    planAModel: 'SRM T3EV+',         // current MID landing SRM variant (global default)
     planBModel: 'ChengLong L2EV',    // sensible competitor default (in catalogue)
     evPriceA: 234000,                // current MID landing SRM EV quote (col D)
     evPriceB: 171800                 // ChengLong L2EV catalogue fallback (78800 + 93000 COE)
@@ -6082,7 +6110,25 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     for (var k in REFRAME_DEFAULTS){
       if (!Object.prototype.hasOwnProperty.call(rf, k) || rf[k]==null) rf[k]=REFRAME_DEFAULTS[k];
     }
+    // FEAT-002 (Area 3): per-truck Plan A / Plan B model choices, keyed by truck
+    // id (col A). These live ONLY on the non-engine __reframe blob (never on the
+    // canonical state the engine/validate.py read). Absent keys fall back to the
+    // global planAModel / planBModel, so existing behaviour is preserved.
+    if (!rf.planA || typeof rf.planA !== 'object') rf.planA = {};
+    if (!rf.planB || typeof rf.planB !== 'object') rf.planB = {};
     return rf;
+  }
+  // The per-truck Plan A (SRM) model for a truck id, falling back to the global
+  // planAModel default. Pure read of the __reframe blob.
+  function planAModelFor(id){
+    var rf = reframe();
+    var v = (id!=null) ? rf.planA[id] : null;
+    return (v!=null && v!=='') ? v : rf.planAModel;
+  }
+  function planBModelFor(id){
+    var rf = reframe();
+    var v = (id!=null) ? rf.planB[id] : null;
+    return (v!=null && v!=='') ? v : rf.planBModel;
   }
   // Catalogue model names that are SRM (Plan A candidates) vs competitor EV
   // (Plan B candidates). Reads the LIVE catalogue so preset swaps are reflected.
@@ -6117,7 +6163,11 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       // Only trucks that were going EV on this slot participate in the EV
       // comparison; keep the rest exactly as the user set them.
       if (rp[slot]!=='EV') return;
-      rp.B = modelName;
+      // FEAT-002 (Area 3): prefer the per-truck Plan A / Plan B model stored on
+      // the __reframe blob (set by the per-card pickers), falling back to the
+      // passed global modelName when this truck has no per-truck override.
+      var perTruck = (slot==='O') ? planAModelFor(rp.A) : planBModelFor(rp.A);
+      rp.B = (perTruck!=null && perTruck!=='') ? perTruck : modelName;
       rp[slot] = 'EV';
       if (isNum(evPrice)) rp.D = evPrice;
       if (intention==='add') rp[monthCol] = 0;   // buy-now approximation
@@ -6193,7 +6243,6 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     renderConfidence(out);
     renderProposal(out);
     renderPortfolio(out);
-    renderFleetComparisons(out);
   };
 
   /* ---- INPUT UI rendering ---------------------------------------- */
@@ -6271,12 +6320,11 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   var renderPortfolio = function(){};
   window.__HS.setPortfolioRenderer = function(fn){ renderPortfolio = fn; };
 
-  // renderFleetComparisons re-renders the per-truck ICE-vs-EV side-by-side in
-  // place on every recompute so it progresses as the duty fields fill, without
-  // rebuilding the whole card (which would steal input focus). Defined by the
-  // input-UI script below; it writes no number, so figures are unchanged.
-  var renderFleetComparisons = function(){};
-  window.__HS.setFleetComparisonRenderer = function(fn){ renderFleetComparisons = fn; };
+  // FEAT-002 (Area 2): the per-truck input-box ICE-vs-EV side-by-side comparison
+  // (buildCompare / refreshComparisons / renderFleetComparisons) was removed.
+  // Plan A (SRM) vs Plan B (competitor) selection now lives on each truck card
+  // with read-only per-plan quotes; the engine-driving two-state recompute
+  // (computeReframed / buildPlanState) is unchanged. No renderer hook remains.
 
 })();
 </script>
@@ -6416,115 +6464,15 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     return p;
   }
 
-  // Shared energy context for the cost matcher: depot electricity price (ec row
-  // 10) + charging window (ec row 51), Plan A column B, for the comparison only.
-  function matchEnergyContext(){
-    var e=H.ecRow(10), w=H.ecRow(51);
-    return {
-      energyPricePerKwh: (e && H.isNum(e.values.B)) ? e.values.B : null,
-      chargeWindowH: (w && H.isNum(w.values.B)) ? w.values.B : null,
-    };
-  }
-
-  // Run the FEAT-001 cost-effectiveness matcher for one ICE fleet row. Returns
-  // the matcher result ({best, shortlist, feasibleCount, note}) or null when the
-  // additive fit module is unavailable. Pure/cheap; safe to call per card on the
-  // live recompute path. It NEVER touches computeFleet or changes a number.
-  function matchForRow(row){
-    var FIT = window.HSPortfolioFit;
-    if(!FIT || typeof FIT.truckDutyFromRow!=='function') return null;
-    var duty=FIT.truckDutyFromRow(row, matchEnergyContext());
-    // Pass only the ACTIVE catalogue rows (competitors toggled out in the
-    // switch-over page are removed). SRM is always kept. Matcher-only filter;
-    // no engine number changes.
-    var rows = (typeof H.activeProductRows==='function') ? H.activeProductRows() : H.state.products.rows;
-    return FIT.matchBestModel(duty, rows);
-  }
-
-  // Money formatter for the side-by-side (S$ with no cents, '-' when blank).
-  function money0(v){ return H.isNum(v) ? ('S$'+Math.round(v).toLocaleString('en-SG')) : '\u2014'; }
-
-  // A single ICE-vs-EV comparison line (label + value on the right).
-  function compLine(label, value, opts){
-    opts=opts||{};
-    var row=document.createElement('div'); row.className='tc-line'+(opts.total?' tc-total':'');
-    var lab=document.createElement('span'); lab.className='tc-lab'; lab.textContent=label;
-    if(opts.title) lab.setAttribute('title', opts.title);
-    var val=document.createElement('span'); val.className='tc-val'; val.textContent=value;
-    row.appendChild(lab); row.appendChild(val);
-    return row;
-  }
-
-  // SIDE-BY-SIDE ICE vs matched/selected EV panel (Fix 2). Reveals as the duty
-  // fills in. The EV column splits the VEHICLE PRICE (catalogue prod.I) from the
-  // COE PRICE (oc[57] acquisition adder) as DISTINCT line items, and shows the
-  // combined default EV quote = prod.I + oc[57] -- EXACTLY the value the frozen
-  // engine uses as its blank-fallback when the EV quote override (rp.D) is
-  // blank. When the user has entered an override rp.D it is shown and flagged as
-  // replacing the split default. Nothing here writes a number back to state, so
-  // no computed figure changes.
-  function buildCompare(row, rp){
-    var wrap=document.createElement('div');
-    // The duty is 'started' once work km/day (col E) is entered -- the minimum
-    // the matcher needs to compare running cost.
-    var hasDuty = H.isNum(row.E);
-    if(!hasDuty){
-      wrap.className='tc-compare-empty';
-      wrap.textContent='Enter the current ICE duty (work km/day) to see the matched EV comparison.';
-      return wrap;
-    }
-    wrap.className='tc-compare';
-
-    // Which EV model to show: an explicitly chosen rp.B, else the matcher's
-    // most cost-effective feasible recommendation.
-    var match=matchForRow(row);
-    var chosen = (rp && rp.B!=null && String(rp.B)!=='') ? String(rp.B) : null;
-    var recName = (match && match.best) ? match.best.name : null;
-    var showName = chosen || recName;
-    var prod = showName ? productByName(showName) : null;
-
-    // ---- ICE column ----
-    var ice=document.createElement('div'); ice.className='tc-col tc-col-ice';
-    var iceH=document.createElement('h5'); iceH.textContent='Current ICE'; ice.appendChild(iceH);
-    ice.appendChild(compLine('New-ICE quote', money0(rp?rp.C:null), {title:'Replacement-plan new-ICE quote (col C).'}));
-    ice.appendChild(compLine('Market value now', money0(row.K)));
-    ice.appendChild(compLine('Work km/day', H.isNum(row.E)?row.E.toLocaleString('en-SG'):'\u2014'));
-    wrap.appendChild(ice);
-
-    // ---- EV column ----
-    var ev=document.createElement('div'); ev.className='tc-col tc-col-ev';
-    var evH=document.createElement('h5'); evH.textContent='Matched EV'; ev.appendChild(evH);
-    if(!prod){
-      ev.appendChild(compLine('Recommendation', 'No catalogue EV fits this duty'));
-      var noteN=document.createElement('p'); noteN.className='tc-match-note';
-      noteN.textContent=(match&&match.note)?match.note:'No feasible EV on the entered figures (honest no-fit, not an error).';
-      ev.appendChild(noteN);
-      wrap.appendChild(ev);
-      return wrap;
-    }
-    var vehPrice = H.isNum(prod.I) ? prod.I : null;
-    var coePrice = evAcqAdder();
-    var combined = (vehPrice!=null) ? (vehPrice + coePrice) : null;
-    var override = (rp && H.isNum(rp.D)) ? rp.D : null;
-    ev.appendChild(compLine('Vehicle price', money0(vehPrice), {title:'Catalogue list price (products col I).'}));
-    ev.appendChild(compLine('COE price', money0(coePrice), {title:'Acquisition / COE adder (operating costs row 57).'}));
-    ev.appendChild(compLine('Default EV quote', money0(combined), {total:true, title:'Vehicle price + COE price = the value the engine uses when no EV-quote override is entered.'}));
-    if(override!=null && Math.abs(override-(combined||0))>0.5){
-      ev.appendChild(compLine('Your EV quote (override)', money0(override), {title:'Entered override (col D) replaces the split default.'}));
-    }
-    wrap.appendChild(ev);
-
-    // ---- match note (recommendation vs user choice + honesty) ----
-    var note=document.createElement('p'); note.className='tc-match-note';
-    note.setAttribute('data-match-note','1');
-    if(chosen){
-      note.textContent='Showing your selected EV ('+chosen+'). '+(recName&&recName!==chosen?('Most cost-effective match: '+recName+'. '):'')+'Recommendation is a catalogue comparison, not an engine TCO; body fit is Unconfirmed until verified.';
-    } else {
-      note.textContent='Recommended as the most cost-effective feasible EV for this duty ('+recName+', '+((match&&match.feasibleCount)||0)+' feasible). A recommendation, not an engine TCO; body fit is Unconfirmed until verified.';
-    }
-    wrap.appendChild(note);
-    return wrap;
-  }
+  // FEAT-002 (Area 2): the input-box cost-effectiveness matcher that drove the
+  // per-card ICE-vs-EV side-by-side (matchEnergyContext / matchForRow / money0 /
+  // compLine / buildCompare) was REMOVED. The confusing "two competing numbers"
+  // presentation (split default EV quote vs the override, while the engine used
+  // the slider value) is gone with it. Plan A / Plan B model selection now lives
+  // on each truck card (buildTruckCard) with read-only per-plan quotes equal to
+  // prod.I + oc[57]. The Portfolio-stage matcher (window.HSPortfolioFit,
+  // renderPortfolio, the scatter + switch-over table) is a DIFFERENT feature and
+  // is untouched.
 
   function buildFleet(){
     var cards = H.el('fleet-cards');
@@ -6540,47 +6488,25 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       cards.appendChild(buildTruckCard(row, rp, prods));
       if(adv) adv.appendChild(buildTruckAdvGroup(row, rp, prods));
     });
+    stampCardIndices(cards);
   }
 
-  // LIVE SIDE-BY-SIDE REFRESH. The per-truck ICE-vs-EV comparison must update as
-  // the duty fields fill in, but WITHOUT rebuilding the whole card (that would
-  // steal input focus mid-type). So on every recompute we replace just the
-  // comparison node inside each card in place. Called from the recompute path
-  // via H.setFleetComparisonRefresher. Pure display; writes no number.
-  function refreshComparisons(){
-    var cards = H.el('fleet-cards');
+  // Stamp a positional index onto each rendered truck card by walking the LIVE
+  // `cards.children` HTMLCollection. In a real browser `element.children` is a
+  // live HTMLCollection with NO Array iteration methods (`.forEach` is
+  // undefined and throws), so this MUST iterate by numeric index + `.length`,
+  // matching the file's ES5-safe style. This is the live-children index loop the
+  // check_index.mjs real-DOM-safe guard is re-pointed at after the per-card
+  // compare refresh was removed; reverting it to `cards.children.forEach(...)`
+  // would crash on load. Pure display stamp; writes no engine number.
+  function stampCardIndices(cards){
     if(!cards || !cards.children) return;
-    var map = H.replByIdMap();
-    // cards.children is a LIVE HTMLCollection in real browsers (no .forEach) -
-    // iterate by index, matching the ES5-safe style used by the kids loop below.
     var cs = cards.children;
     for(var ci=0; ci<cs.length; ci++){
       var card = cs[ci];
-      if(!card || !card.getAttribute) continue;
-      var id = card.getAttribute('data-truck-id');
-      if(id==null || id==='') continue;
-      var row = null, fr = H.state.fleet_register.rows;
-      for(var i=0;i<fr.length;i++){ if(String(fr[i].A)===String(id)){ row=fr[i]; break; } }
-      if(!row) continue;
-      var rp = map[row.A];
-      if(!rp) continue;
-      var fresh = buildCompare(row, rp);
-      // Find the existing comparison node (.tc-compare or .tc-compare-empty) and
-      // swap it; if none exists yet (older card), append the fresh one.
-      var kids = card.children || [];
-      var replaced = false;
-      for(var j=0;j<kids.length;j++){
-        var cn = (kids[j].className||'');
-        if(/(^|\s)tc-compare(\s|$)/.test(cn) || /(^|\s)tc-compare-empty(\s|$)/.test(cn)){
-          if(card.replaceChild) card.replaceChild(fresh, kids[j]);
-          replaced = true; break;
-        }
-      }
-      if(!replaced && card.appendChild) card.appendChild(fresh);
+      if(card && card.setAttribute) card.setAttribute('data-card-index', String(ci));
     }
   }
-  H.refreshComparisons = refreshComparisons;
-  if (typeof H.setFleetComparisonRenderer === 'function') H.setFleetComparisonRenderer(refreshComparisons);
 
   function buildTruckCard(row, rp, prods){
     var card=document.createElement('div'); card.className='truck-card';
@@ -6632,20 +6558,22 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     card.appendChild(grid);
 
     if(rp){
-      // ---- MATCHED EV (recommendation, user-overridable) ----
-      var evSec=document.createElement('p'); evSec.className='tc-section'; evSec.textContent='Matched EV (recommended, editable)';
+      // ---- EV MODEL (specs feed the energy fields + the Unconfirmed strip) ----
+      var evSec=document.createElement('p'); evSec.className='tc-section'; evSec.textContent='EV specs';
       card.appendChild(evSec);
 
-      // EV model select (loads catalogue specs on pick) + spec strip.
+      // EV model select (loads catalogue specs on pick) + spec strip. This
+      // model drives the spec-derived energy fields (rp.E / rp.F) and the
+      // Unconfirmed payload/body-fit strip; the PER-PLAN acquisition models are
+      // chosen in the 'Plan vehicles' section below.
       var modelGrid=document.createElement('div'); modelGrid.className='tc-grid one';
       var specHolder=document.createElement('div');
       var specStrip=productSpecStrip(rp.B);
       specHolder.appendChild(specStrip);
       var modelSel=cardSelect('EV model', rp, 'B', prods, function(name){
         loadProductSpecs(rp, name);
-        // Refresh the whole card + its advanced group so the loaded EV quote /
-        // battery / kWh-km defaults, the Unconfirmed spec strip and the
-        // side-by-side all re-render.
+        // Refresh the whole card + its advanced group so the loaded battery /
+        // kWh-km defaults and the Unconfirmed spec strip re-render.
         var fresh=buildTruckCard(row, rp, prods);
         if(card.parentNode) card.parentNode.replaceChild(fresh, card);
       });
@@ -6653,18 +6581,129 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       modelGrid.appendChild(specHolder);
       card.appendChild(modelGrid);
 
+      // Quote + per-plan actions. The EV-quote OVERRIDE field (col D) was REMOVED
+      // (FEAT-002 Area 1): the engine's col D is now driven exclusively by the
+      // per-plan EV-cost slider via buildPlanState, so there is ONE authoritative
+      // acquisition number per plan. The read-only per-plan quotes below show the
+      // catalogue-derived figure (prod.I + oc[57]) the slider starts from.
       var qGrid=document.createElement('div'); qGrid.className='tc-grid';
       qGrid.appendChild(cardField('New ICE quote SGD', rp, 'C', 'num'));
-      qGrid.appendChild(cardField('EV quote SGD (override)', rp, 'D', 'num'));
       qGrid.appendChild(cardSelect('Plan A action', rp, 'O', ACTIONS));
       qGrid.appendChild(cardSelect('Plan B action', rp, 'R', ACTIONS));
       card.appendChild(qGrid);
 
-      // ---- SIDE-BY-SIDE ICE vs EV with the vehicle/COE price split ----
-      card.appendChild(buildCompare(row, rp));
+      // ---- PLAN VEHICLES (Area 3): per-card Plan A (SRM) / Plan B (competitor)
+      // pickers + read-only per-plan EV quotes. NO override input. ----
+      card.appendChild(buildPlanVehicles(row, rp, card, prods));
     }
 
     return card;
+  }
+
+  // Read-only per-plan EV-quote display: a reference-styled (non-amber) value
+  // card showing S$ (prod.I + oc[57]) for a chosen model, with a note that the
+  // plan's EV-cost slider varies it. Writes no number to state.
+  function planQuoteBox(title, modelName, planLabel){
+    var box=document.createElement('div'); box.className='tc-planquote';
+    box.setAttribute('data-plan-quote', planLabel);
+    var lab=document.createElement('span'); lab.className='tc-pq-lab'; lab.textContent=title;
+    var val=document.createElement('span'); val.className='tc-pq-val';
+    var prod=productByName(modelName);
+    var q=(prod && H.isNum(prod.I)) ? (prod.I + evAcqAdder()) : null;
+    val.textContent = (q!=null) ? ('S$'+Math.round(q).toLocaleString('en-SG')) : '\u2014';
+    val.setAttribute('data-plan-quote-value', (q!=null)?String(Math.round(q)):'');
+    var note=document.createElement('span'); note.className='tc-pq-note';
+    note.textContent='The '+planLabel+' EV-cost slider varies this price.';
+    box.appendChild(lab); box.appendChild(val); box.appendChild(note);
+    return box;
+  }
+
+  // PLAN VEHICLES section: Plan A (SRM) picker + Plan B (competitor) picker, each
+  // with a read-only prod.I + oc[57] quote. The pickers write the PER-TRUCK plan
+  // model onto the non-engine __reframe blob (rf.planA[id] / rf.planB[id]); the
+  // two-state recompute (buildPlanState) reads them. On a pick we also sync the
+  // plan's EV-cost slider baseline to the chosen model's derived quote so the
+  // shown quote and the slider agree at rest. No override input.
+  function buildPlanVehicles(row, rp, card, prods){
+    var wrap=document.createElement('div');
+    var sec=document.createElement('p'); sec.className='tc-section'; sec.textContent='Plan vehicles';
+    wrap.appendChild(sec);
+
+    var rf=H.reframe();
+    var cat=(typeof H.catalogueModels==='function')?H.catalogueModels():{srm:[],comp:[]};
+    var id=row.A;
+    var srmOpts=(cat.srm && cat.srm.length)?cat.srm:[planAModelForUI(id)];
+    var compOpts=(cat.comp && cat.comp.length)?cat.comp:[planBModelForUI(id)];
+    var curA=planAModelForUI(id); if(srmOpts.indexOf(curA)<0) curA=srmOpts[0];
+    var curB=planBModelForUI(id); if(compOpts.indexOf(curB)<0) curB=compOpts[0];
+
+    var grid=document.createElement('div'); grid.className='tc-grid';
+
+    // Plan A - SRM variant.
+    var aSel=makePlanSelect('Plan A - SRM variant', srmOpts, curA, function(v){
+      if(id!=null) rf.planA[id]=v;
+      syncPlanSlider('a', v);
+      var fresh=buildTruckCard(row, rp, prods);
+      if(card.parentNode) card.parentNode.replaceChild(fresh, card);
+      H.recompute();
+    });
+    grid.appendChild(aSel);
+
+    // Plan B - competitor EV.
+    var bSel=makePlanSelect('Plan B - competitor EV', compOpts, curB, function(v){
+      if(id!=null) rf.planB[id]=v;
+      syncPlanSlider('b', v);
+      var fresh=buildTruckCard(row, rp, prods);
+      if(card.parentNode) card.parentNode.replaceChild(fresh, card);
+      H.recompute();
+    });
+    grid.appendChild(bSel);
+    wrap.appendChild(grid);
+
+    var quotes=document.createElement('div'); quotes.className='tc-grid';
+    quotes.appendChild(planQuoteBox('Plan A EV quote', curA, 'Plan A'));
+    quotes.appendChild(planQuoteBox('Plan B EV quote', curB, 'Plan B'));
+    wrap.appendChild(quotes);
+    return wrap;
+  }
+
+  // Per-card plan model fallbacks (read the per-truck __reframe value, else the
+  // global default). Mirrors the controller's planAModelFor / planBModelFor.
+  function planAModelForUI(id){
+    var rf=H.reframe(); var v=(id!=null)?rf.planA[id]:null;
+    return (v!=null && v!=='')?v:rf.planAModel;
+  }
+  function planBModelForUI(id){
+    var rf=H.reframe(); var v=(id!=null)?rf.planB[id]:null;
+    return (v!=null && v!=='')?v:rf.planBModel;
+  }
+
+  // A labelled <select> that fires onPick with the chosen value (no state bind;
+  // the caller writes the per-truck plan model + reacts).
+  function makePlanSelect(label, opts, cur, onPick){
+    var wrap=document.createElement('div'); wrap.className='fld';
+    var lab=document.createElement('label'); lab.textContent=label;
+    var sel=document.createElement('select'); sel.className='amber';
+    opts.forEach(function(o){
+      var op=document.createElement('option'); op.value=o; op.textContent=o;
+      if(o===cur) op.selected=true; sel.appendChild(op);
+    });
+    sel.addEventListener('input',function(){ onPick(sel.value); });
+    wrap.appendChild(lab); wrap.appendChild(sel);
+    return wrap;
+  }
+
+  // On a plan model pick, move the plan's EV-cost slider baseline to the chosen
+  // model's prod.I + oc[57] so the read-only quote and the slider agree at rest.
+  // The slider still fans one plan-wide value to col D for every EV-action truck
+  // in that plan's derived state. Clamp into the slider range (120000-300000).
+  function syncPlanSlider(plan, modelName){
+    var prod=productByName(modelName);
+    if(!prod || !H.isNum(prod.I)) return;
+    var q=prod.I + evAcqAdder();
+    if(q<120000) q=120000; if(q>300000) q=300000;
+    if(plan==='a') setEvPriceA(q); else setEvPriceB(q);
+    if(typeof syncSensControls==='function') syncSensControls();
   }
 
   // CONSOLIDATED PER-TRUCK ADVANCED (Fix 3). The low-impact per-truck fields no
@@ -6830,15 +6869,81 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     }
     return div;
   }
+  // A4: thematic sectioning of the advanced operating-cost rows. Each demoted
+  // oc row (everything NOT in PRIMARY_OC) is mapped to ONE section by _row. The
+  // grouping is derived from the row labels / meaning and is purely a display
+  // concern: every row still renders through the same ocField() (same
+  // r.values.B object + liveRecompute binding), so sectioning changes NO
+  // computed number. Section order is the client-reading order; any _row not
+  // listed falls into 'Other advanced' so no row is ever silently dropped.
+  var OC_ADV_SECTIONS = [
+    { title:'Running energy & consumption',
+      rows:[8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23] },
+    { title:'Maintenance & tyres',
+      rows:[24,25,26,27,28] },
+    { title:'Fixed recurring (insurance, road tax, inspection, other)',
+      rows:[31,32,33,34,35,36] },
+    { title:'Contract & availability / backup',
+      rows:[37,38,39,40,41,42,43] },
+    { title:'Battery reserve & efficiency',
+      rows:[44,45,46,47,48,49] },
+    { title:'Finance rates (price-growth / discount)',
+      rows:[50,51,52,53,54] },
+    { title:'Terminal values & repair timing',
+      rows:[55,56,57,64,65,66,67] },
+    { title:'Data-mode / quote-basis flags',
+      rows:[58,59,60,61,62,63,68] }
+  ];
+  function ocAdvSectionFor(rowNum){
+    for (var i=0;i<OC_ADV_SECTIONS.length;i++){
+      if (OC_ADV_SECTIONS[i].rows.indexOf(rowNum) !== -1) return i;
+    }
+    return -1; // routed to the trailing 'Other advanced' catch-all
+  }
   function buildOperating(){
     var form = H.el('oc-form'); form.innerHTML='';
     var adv = H.el('oc-form-adv'); if (adv) adv.innerHTML='';
     var rows = H.state.operating_costs.rows;
+    // Primary rows keep the simple always-visible formgrid.
     rows.forEach(function(r){
       if (r.values==null) return;
-      var dest = PRIMARY_OC[r._row] ? form : (adv || form);
-      dest.appendChild(ocField(r));
+      if (PRIMARY_OC[r._row]) form.appendChild(ocField(r));
     });
+    if (!adv){
+      // No advanced container: fall back to the flat render (keeps engine wiring).
+      rows.forEach(function(r){
+        if (r.values==null || PRIMARY_OC[r._row]) return;
+        form.appendChild(ocField(r));
+      });
+      return;
+    }
+    // Advanced rows: route each into its theme section, preserving row order
+    // within a section. Build one aligned CARD per non-empty section with a
+    // section heading and a .formgrid of .field rows (the SAME grid the primary
+    // form uses, so label / input / unit columns align across every card).
+    var buckets = [];
+    for (var s=0;s<OC_ADV_SECTIONS.length;s++) buckets.push([]);
+    var other = [];
+    rows.forEach(function(r){
+      if (r.values==null || PRIMARY_OC[r._row]) return;
+      var idx = ocAdvSectionFor(r._row);
+      if (idx === -1) other.push(r); else buckets[idx].push(r);
+    });
+    function renderSection(title, list){
+      if (!list.length) return;
+      var card = document.createElement('div'); card.className='oc-adv-card';
+      var head = document.createElement('h5'); head.className='oc-adv-sec-head';
+      head.textContent = title;
+      card.appendChild(head);
+      var grid = document.createElement('div'); grid.className='formgrid oc-adv-grid';
+      list.forEach(function(r){ grid.appendChild(ocField(r)); });
+      card.appendChild(grid);
+      adv.appendChild(card);
+    }
+    for (var k=0;k<OC_ADV_SECTIONS.length;k++){
+      renderSection(OC_ADV_SECTIONS[k].title, buckets[k]);
+    }
+    renderSection('Other advanced', other);
   }
 
   // ---- Energy and charging table (Plan A col B, Plan B col C) ----
@@ -7218,73 +7323,30 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   }
 
   // ---- Decision framing controls (FEAT-002) --------------------------------
-  // Business intention + Plan A (SRM) picker + Plan B (competitor) picker. These
-  // write the non-engine H.state.__reframe blob that the two-state recompute
-  // (computeReframed/buildPlanState) reads; they never mutate the canonical
-  // validation/prospects state, and the engine ignores __reframe entirely.
-  function buildDecisionFraming(){
-    var form=H.el('decision-framing-form');
-    if(!form || typeof H.reframe!=='function') return;
-    form.innerHTML='';
+  // BUSINESS INTENTION (FEAT-002). The verbose decision-framing block was
+  // removed; its Plan A / Plan B model pickers moved onto each truck card. This
+  // is the single compact business-intention control that survives, because
+  // buildPlanState still needs it ('add' pulls the replacement month to 0 as the
+  // buy-now approximation). It writes only the non-engine H.state.__reframe blob
+  // (rf.intention) and never mutates the canonical validation/prospects state.
+  function buildBusinessIntention(){
+    var fld=H.el('business-intention-fld');
+    if(!fld || typeof H.reframe!=='function') return;
+    fld.innerHTML='';
     var rf=H.reframe();
-    var cat=(typeof H.catalogueModels==='function')?H.catalogueModels():{srm:[],comp:[]};
-
-    function fld(labelText, node){
-      var div=document.createElement('div'); div.className='field';
-      var lab=document.createElement('label'); lab.textContent=labelText;
-      div.appendChild(lab); div.appendChild(node); return div;
-    }
-    function selectFor(opts, cur, onPick){
-      var sel=document.createElement('select'); sel.className='amber';
-      opts.forEach(function(o){
-        var op=document.createElement('option'); op.value=o; op.textContent=o;
-        if(o===cur) op.selected=true; sel.appendChild(op);
-      });
-      sel.addEventListener('input',function(){ onPick(sel.value); H.recompute(); });
-      return sel;
-    }
-
-    // Business intention.
+    var lab=document.createElement('label'); lab.textContent='Business intention';
     var intSel=document.createElement('select'); intSel.className='amber';
-    [['replace','Replace ICE vehicle in the fleet'],['add','Add new vehicle to the fleet']].forEach(function(o){
+    intSel.id='business-intention';
+    [['replace','Replace an ICE vehicle in the fleet'],['add','Add a new vehicle to the fleet']].forEach(function(o){
       var op=document.createElement('option'); op.value=o[0]; op.textContent=o[1];
       if(o[0]===rf.intention) op.selected=true; intSel.appendChild(op);
     });
-    intSel.addEventListener('input',function(){ rf.intention=intSel.value; updateNote(); H.recompute(); });
-    form.appendChild(fld('Business intention', intSel));
-
-    // Plan A SRM variant picker (SRM catalogue models only).
-    var srmOpts = cat.srm.length ? cat.srm : [rf.planAModel];
-    if (srmOpts.indexOf(rf.planAModel)<0) rf.planAModel = srmOpts[0];
-    form.appendChild(fld('Plan A - SRM variant', selectFor(srmOpts, rf.planAModel, function(v){ rf.planAModel=v; })));
-
-    // Plan B competitor picker (non-SRM catalogue models only).
-    var compOpts = cat.comp.length ? cat.comp : [rf.planBModel];
-    if (compOpts.indexOf(rf.planBModel)<0) rf.planBModel = compOpts[0];
-    form.appendChild(fld('Plan B - competitor EV', selectFor(compOpts, rf.planBModel, function(v){ rf.planBModel=v; })));
-
-    function updateNote(){
-      var note=H.el('decision-framing-note');
-      if(!note) return;
-      var common = 'Plan A and Plan B are computed by running the frozen engine twice ' +
-        '(once with every EV-plan truck set to the chosen SRM variant, once with the chosen competitor), ' +
-        'because the engine binds a single EV model per truck. Keep ICE stays the shared baseline. ' +
-        '<em>Model limitation:</em> a truly <strong>net-added</strong> unit (growing the fleet count) is ' +
-        'out of model scope, so &ldquo;Add new vehicle&rdquo; is approximated within the existing per-truck replacement inputs.';
-      if(rf.intention==='add'){
-        note.innerHTML = '<strong>Add new vehicle:</strong> the engine has no net-added-unit input &mdash; ' +
-          'every path acts on an existing fleet row &mdash; so this is approximated as <strong>buying the EV now (month 0)</strong> ' +
-          'in place of the current vehicle. A true fleet-count increase is out of model scope. ' + common;
-      } else {
-        note.innerHTML = '<strong>Replace ICE vehicle:</strong> the EV is bought at the vehicle&rsquo;s ' +
-          'replacement / COE month exactly as the engine models a replacement. ' + common;
-      }
-    }
-    updateNote();
+    intSel.addEventListener('input',function(){ rf.intention=intSel.value; H.recompute(); });
+    fld.appendChild(lab); fld.appendChild(intSel);
   }
 
   function buildAll(){
-    buildCustomer(); buildDecisionFraming(); buildFleet(); buildOperating(); buildEnergy(); buildSensitivity();
+    buildCustomer(); buildBusinessIntention(); buildFleet(); buildOperating(); buildEnergy(); buildSensitivity();
   }
 
   // Expose the input-table rebuilder so other controllers (Prospects) can
