@@ -37,27 +37,51 @@ function isNum(v) { return typeof v === 'number' && isFinite(v); }
 const baseline = seeds.cases.find(c => c.id === 'best');
 const SCENARIO = { id: 'best', label: 'Best case (fully specified, gates pass)', inputs: baseline.inputs };
 
-/* ---- Output extractor: pick best EV plan like scoreProspect -------------- */
-function bestEvPlan(out) {
-  const r = out.results;
-  let best = null, bestSave = -Infinity;
-  for (const k of ['plan_b', 'plan_a']) {
-    const t = r.totalEconomicTco[k];
-    if (isNum(t)) {
-      const s = isNum(r.savingVsKeep[k]) ? r.savingVsKeep[k] : -Infinity;
-      if (s > bestSave) { bestSave = s; best = k; }
-    }
+/* ---- Output extractor: the SRM (Plan A) scenario ------------------------- *
+ * FEAT-003: the 'best' preset demonstrates the SRM T3EV+ on PLAN A (the SRM
+ * plan) and an honest competitor on Plan B. The frozen engine binds ONE col-B
+ * model per truck row, so a raw computeFleet on the preset would evaluate SRM on
+ * BOTH slots and could report the Plan B SRM-on-both-slots artifact as "best".
+ * This sweep is about the SRM business case, so it baselines on the SRM scenario
+ * EXACTLY as the live tool does: the two-state Plan A run (slot O keeps the
+ * preset col B = SRM + col D = SRM quote). That keeps the sensitivity baseline
+ * identical to the headline SRM figure quoted in docs/preset-profiles.md and the
+ * brief (Total ~S$1,047,412, Saving ~29.52%). No engine change; input wiring
+ * only. */
+// Included-truck rule: an inclusive "row is in play" heuristic (B===1 OR any
+// data in cols C-M). Mirrors index.html's syncReframeFromPreset; it is NOT
+// byte-identical to buildPlanState / effectivePlanModel (cols C-Q, no B check),
+// but both select the same rows for the shipped presets. Keep in sync.
+function includedIds(inputs) {
+  const inc = {};
+  const COLS = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+  for (const r of inputs.fleet_register.rows) {
+    if (r.A == null) continue;
+    let has = r.B === 1;
+    if (!has) for (const c of COLS) { if (r[c] != null && r[c] !== '') { has = true; break; } }
+    if (has) inc[r.A] = true;
   }
-  return best || 'plan_b';
+  return inc;
+}
+// Mirror of index.html buildPlanState for the SRM Plan A slot (slot 'O' keeps
+// the preset's col B / col D, i.e. the SRM model + SRM quote).
+function planAState(inputs) {
+  const s = clone(inputs);
+  const inc = includedIds(inputs);
+  for (const rp of s.replacement_plan.rows) {
+    if (!rp || rp.A == null || !inc[rp.A]) continue;
+    // slot O (Plan A): keep SRM col B + SRM col D exactly as authored.
+  }
+  return s;
 }
 function outputs(inputs) {
-  const out = computeFleet(inputs);
-  const plan = bestEvPlan(out);
+  const out = computeFleet(planAState(inputs));
+  const r = out.results;
   return {
-    plan,
-    totalTco: out.results.totalEconomicTco[plan],
-    savingPct: out.results.savingPct[plan],
-    keepTotal: out.results.totalEconomicTco.keep_ice,
+    plan: 'plan_a',
+    totalTco: r.totalEconomicTco.plan_a,
+    savingPct: r.savingPct.plan_a,
+    keepTotal: r.totalEconomicTco.keep_ice,
   };
 }
 

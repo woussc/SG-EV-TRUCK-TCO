@@ -129,7 +129,7 @@ Verify (the full loop; run from the repo root):
 sha256sum src/engine.js            # MUST equal the frozen sha above
 . /projects/sandbox/.venv/bin/activate && python tools/validate.py   # 19 passed, 0 failed
 for h in check_index check_presets check_portfolio_fit check_charging_data \
-         check_routing check_roadrouter check_finance check_sgmap; do
+         check_routing check_roadrouter check_finance check_sgmap check_simbrief; do
   node tools/$h.mjs || exit 1
 done
 node tools/sensitivity.mjs
@@ -145,6 +145,14 @@ node tools/sensitivity.mjs
   weaken this guard; re-point it if the code it watches is removed.
 - `tools/sensitivity.mjs` - Plan A/B slider sanity checks; it also regenerates
   `docs/input-sensitivity-findings.md`.
+- `tools/check_simbrief.mjs` - drift-guard for the all-models 5-year / 10-year
+  Total economic TCO table in `docs/simulation-results-brief.md` (section 6). It
+  recomputes every model's `cumulative[5]` / `cumulative[10]` from the frozen
+  engine on the held-constant "best" scenario and asserts the printed figures
+  (and the copy embedded in `index.html` via the SIMBRIEF marker) match. The
+  table itself is (re)generated deterministically by
+  `node tools/build_simbrief_models.mjs`, which rewrites the region between the
+  `SIMBRIEF-MODELS` markers in place; re-embed with `node tools/build_index.js`.
 
 ### 2.5 Offline / static invariant
 

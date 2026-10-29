@@ -14,15 +14,17 @@ Cases:
   1. best          - ILLUSTRATIVE best case: a fully-specified, gate-passing
                      input set (strong positive saving). It is a GENERIC
                      illustrative confirmed-win demonstrator, NOT a named
-                     customer. Engine-verified best EV plan PLAN_B.
+                     customer. PLAN A carries the SRM scenario and is the
+                     stronger buy; engine-verified headline PLAN A (SRM).
   2. mid           - ILLUSTRATIVE mid case: the same input set with the
-                     high-impact drivers tuned (higher EV quote, lower diesel
-                     price, lighter utilisation) so the best-EV-plan saving is
+                     high-impact drivers tuned (higher SRM quote, lower diesel
+                     price, lighter utilisation) so the SRM (Plan A) saving is
                      marginal but still > 0, all gates still passing. This is
                      also the DEFAULT LANDING case the app opens on.
-  3. bad           - ILLUSTRATIVE bad case: tuned further (EV quote high,
-                     diesel low) so the EV does NOT beat Keep ICE: a negative
-                     saving. Still scores via the gate (honest "not a fit").
+  3. bad           - ILLUSTRATIVE bad case: tuned further (SRM quote high,
+                     diesel low) so SRM (Plan A) does NOT beat Keep ICE: a
+                     negative saving. Still scores via the gate (honest "not a
+                     fit").
   4. blank         - ILLUSTRATIVE blank profile: a starting template with a
                      shared truck-ID set and Include toggles present. Common
                      Singapore-market SHARED assumptions (energy prices, ICE
@@ -37,16 +39,26 @@ Singapore-market illustration. The illustrative EV model is the SRM T3EV+
 (products row 11: payload 1660 kg, battery 53.58 kWh, 0.1786 kWh/km, 11 kW AC /
 55 kW DC, catalogue base quote S$66,800, range 300 km) - the nimble SRM variant
 whose 11 kW AC / 55 kW DC charge power matches the majority of the Singapore
-public-charging network. The best/mid/bad numbers are engine-verified by
-tools/check_presets.mjs on the SRM-based inputs: best EV plan PLAN_B, Total
-economic TCO S$1,047,412, Saving 29.52%, Keep ICE total S$1,486,117. The EV
-all-in quote overrides are re-based to the SRM catalogue the usual way: the
-best case uses S$193,000 (catalogue base col I 66,800 + the fallback EV COE
-acquisition component oc row 57 = 93,000 + ~S$33,200 body/registration), and
-mid/bad raise that quote RELATIVE to the SRM base. The high-impact drivers tuned
-for mid/bad are, in rank order, the EV purchase quote (rank 1, ~14% lever), the
-commercial diesel price (rank 4) and the duty intensity (work km/day +
-days/year, ranks 6-7).
+public-charging network. FEAT-003: the best/mid/bad presets put the SRM on
+PLAN A (the SRM plan) and an honest like-for-like competitor, the ChengLong
+L2EV, on PLAN B for a real SRM-vs-competitor side-by-side. The numbers are
+engine-verified by tools/check_presets.mjs via the two-state projection (SRM on
+slot O, ChengLong on slot R, exactly as the live UI does): in the BEST case SRM
+(Plan A) is the stronger buy with Total economic TCO S$1,047,412, Saving
+29.52% vs Keep ICE S$1,486,117, beating the ChengLong (Plan B) at S$1,137,729 /
+23.44%, so the headline reads PLAN A (SRM). The SRM all-in quote overrides are
+re-based to the SRM catalogue the usual way: the best case uses S$193,000
+(catalogue base col I 66,800 + the fallback EV COE acquisition component oc row
+57 = 93,000 + ~S$33,200 body/registration). The ChengLong quote uses the SAME
+COE + body build-up on ITS catalogue base (78,800 + 93,000 + 33,200 =
+S$205,000), so the comparison is like-for-like and SRM wins the best case purely
+on its lower catalogue base, NOT because any number was rigged. mid/bad raise
+only the SRM (Plan A) quote RELATIVE to the SRM base (the ChengLong quote is
+held), so the engine honestly shows the competitor ahead in those tuned cases;
+the SRM best>mid>bad story is carried by Plan A's own saving (+29.52% ->
++10.71% -> -5.02%). The high-impact drivers tuned for mid/bad are, in rank
+order, the EV purchase quote (rank 1, ~14% lever), the commercial diesel price
+(rank 4) and the duty intensity (work km/day + days/year, ranks 6-7).
 
 tools/html_scenarios.py is still used by tools/validate.py to reconstruct the
 Yong Wen / Venus reference-HTML parity figures INDEPENDENTLY of this file; it is
@@ -102,6 +114,52 @@ def load_demo():
 # evidence toggles), savingClaimStatus (Customer data mode + confirmed prices).
 
 ILLUS_MODEL = "SRM T3EV+"  # Products row 11: AC 11 kW, DC 55 kW, 53.58 kWh.
+# ---------------------------------------------------------------------------
+# PLAN A (SRM) vs PLAN B (competitor) framing - FEAT-003 (INTEGRITY)
+# ---------------------------------------------------------------------------
+# The best/mid/bad presets demonstrate the SRM T3EV+ on PLAN A (the SRM plan).
+# PLAN B carries a representative honest COMPETITOR EV so the side-by-side is a
+# real SRM-vs-competitor comparison, not SRM-vs-SRM. The competitor is the
+# ChengLong L2EV - the current UI default competitor and a catalogue model
+# (products row 9: AC 22 kW, DC 120 kW, 86.55 kWh battery, 0.2704 kWh/km,
+# catalogue base col I = S$78,800). Its honest all-in EV quote re-bases to the
+# catalogue EXACTLY like the SRM quote, so the comparison is like-for-like: the
+# SRM best quote S$193,000 = catalogue base 66,800 + fallback EV COE
+# (operating_costs row 57 = 93,000) + ~S$33,200 body/registration. The
+# competitor quote re-uses the SAME COE and the SAME body/registration
+# component on top of ITS OWN catalogue base: 78,800 + 93,000 + 33,200 =
+# S$205,000 (COMP_PRICE below). Using the identical COE + body build-up on both
+# is what makes it an honest apples-to-apples vehicle comparison: the SRM wins
+# the best case purely because its catalogue base (66,800) is S$12,000 below the
+# ChengLong's (78,800), NOT because any number was rigged. (Omitting the body
+# component from the competitor - e.g. a bare 171,800 - would have flattered the
+# competitor by comparing an unbodied truck against a bodied SRM, so we do NOT
+# do that.)
+#
+# THE FROZEN-ENGINE CONSTRAINT AND HOW BOTH PATHS STAY HONEST:
+#   The engine binds ONE col-B model (and ONE col-D quote) per truck row, used
+#   for BOTH Plan A (col O) and Plan B (col R). A raw computeFleet(inputs) on a
+#   single row therefore cannot run SRM on Plan A and a different competitor on
+#   Plan B at the same time. The app's live comparison already solves this with
+#   the TWO-STATE projection (index.html buildPlanState/computeReframed): it
+#   deep-clones the state and runs the engine twice - once with col B = the Plan
+#   A model + col D = the Plan A quote (slot O), once with col B = the Plan B
+#   model + col D = the Plan B quote (slot R) - then reads plan_a from the first
+#   run and plan_b from the second. To keep the standalone harness
+#   (check_presets.mjs) and the live UI consistent AND honest, the preset
+#   therefore stores BOTH models explicitly:
+#     * col B = SRM T3EV+ and col D = the SRM quote  -> the Plan A (slot O) run.
+#     * non-engine fields _planB_model / _planB_price -> the competitor and its
+#       own honest quote for the Plan B (slot R) run.
+#   The engine never reads the underscore fields (they are not Excel columns),
+#   so validate.py and the frozen sha are untouched; the UI's FEAT-002 preset
+#   load-sync and check_presets.mjs BOTH read them to run the competitor on
+#   Plan B. No number is rigged: each plan is the frozen engine's real result
+#   for its own real model and quote.
+COMP_MODEL = "ChengLong L2EV"   # Plan B competitor (catalogue products row 9).
+COMP_PRICE = 205000             # 78,800 base + 93,000 COE + 33,200 body/reg
+                                # (same COE + body build-up as the SRM quote).
+
 # SRM variant fit (why SRM T3EV+ over SRM T3EV):
 #   * Payload: col C = 1660 kg >= the preset peak cargo of 1200 kg, giving
 #     100 kg more headroom than the SRM T3EV (1560 kg). The nimble SRM class
@@ -245,6 +303,12 @@ def _illus_repl_rows():
         rr = i + 7
         if i < len(ILLUS_TRUCKS):
             tid, coe, gross, scrap, straight, keep_y10, ev_y10 = ILLUS_TRUCKS[i]
+            # Plan B competitor (ChengLong L2EV) year-10 EV terminal. The
+            # competitor's all-in quote (COMP_PRICE = 205,000) is ~S$12k ABOVE
+            # the SRM quote (193,000), so its residual is scaled UP by the same
+            # ratio (~6.2%) off the SRM EV terminal (an honest higher residual
+            # for a dearer vehicle). Rounded to the nearest S$100.
+            comp_y10 = int(round(ev_y10 * (COMP_PRICE / 193000.0) / 100.0)) * 100
             rows.append({
                 "_row": rr, "A": tid, "B": ILLUS_MODEL,
                 "C": 150000,           # new ICE all-in quote
@@ -257,12 +321,24 @@ def _illus_repl_rows():
                 #   (11 kW AC to match the SRM T3EV+ onboard charger G=11kW)
                 "M": "",               # keep retire override (default COE expiry)
                 "N": keep_y10,         # keep terminal at year 10
-                "O": "EV", "P": "", "Q": keep_y10,   # Plan A = EV at COE expiry
-                "R": "EV", "S": "", "T": ev_y10,     # Plan B = EV at COE expiry
+                # FEAT-003: Plan A (col O = EV) carries the SRM scenario; its
+                # year-10 EV terminal (col Q) is the SRM EV value. Plan B
+                # (col R = EV) carries the competitor; its year-10 EV terminal
+                # (col T) is the competitor's own value. The raw engine binds
+                # col B/col D (SRM) to BOTH slots, so check_presets.mjs and the
+                # live UI run the competitor on Plan B via the two-state
+                # projection using the non-engine _planB_* fields below.
+                "O": "EV", "P": "", "Q": ev_y10,     # Plan A = SRM EV, SRM terminal
+                "R": "EV", "S": "", "T": comp_y10,   # Plan B = competitor EV, comp terminal
                 "U": "", "V": "",
                 "W": 0, "X": 0, "Y": 0, "Z": 0,
                 "AA": 0, "AB": "Yes", "AC": 120, "AD": 120,
                 "AE": "Verified", "AF": tid,
+                # Non-engine Plan B competitor binding (read by the UI's
+                # FEAT-002 preset load-sync and by check_presets.mjs two-state
+                # projection; ignored by the frozen engine / validate.py).
+                "_planB_model": COMP_MODEL,
+                "_planB_price": COMP_PRICE,
             })
         else:
             rows.append({"_row": rr, "A": f"X{str(i + 1).zfill(3)}", "B": ILLUS_MODEL,
@@ -293,16 +369,20 @@ def build_illustrative(demo_inputs):
 # ---------------------------------------------------------------------------
 # Illustrative best / mid / bad / blank presets
 # ---------------------------------------------------------------------------
-# best = a deep copy of the fully-specified illustrative input set (EV model =
-#   SRM T3EV+). Its best EV plan is PLAN_B with a strong positive saving (Total
-#   ~S$1,047,412, Saving ~29.52% vs Keep ICE ~S$1,486,117).
+# best = a deep copy of the fully-specified illustrative input set. PLAN A =
+#   SRM T3EV+; PLAN B = ChengLong L2EV competitor. SRM (Plan A) is the stronger
+#   buy (Total ~S$1,047,412, Saving ~29.52% vs Keep ICE ~S$1,486,117) and beats
+#   the ChengLong (Plan B, ~S$1,137,729 / ~23.44%), so the headline is PLAN A.
 #
 # mid / bad are the SAME input set with the high-impact drivers tuned (ranked by
-# docs/input-sensitivity-findings.md): EV purchase quote (rank 1), commercial
-# diesel price (rank 4) and duty intensity (work km/day + days/year, ranks 6-7).
-# The magnitudes below are engine-verified by tools/check_presets.mjs:
-#   mid -> best EV plan PLAN_B, Total ~S$1,195,664, Saving ~+10.71% (marginal).
-#   bad -> best EV plan PLAN_B, Total ~S$1,411,412, Saving ~-5.02% (not a fit).
+# docs/input-sensitivity-findings.md): the SRM (Plan A) purchase quote (rank 1),
+# commercial diesel price (rank 4) and duty intensity (work km/day + days/year,
+# ranks 6-7). The ChengLong (Plan B) quote is HELD at S$205,000. The magnitudes
+# below are engine-verified by tools/check_presets.mjs (two-state projection):
+#   mid -> SRM (Plan A) Total ~S$1,195,664, Saving ~+10.71% (marginal);
+#          ChengLong (Plan B) ~S$1,114,482 / ~16.77% (honestly ahead here).
+#   bad -> SRM (Plan A) Total ~S$1,411,412, Saving ~-5.02% (not a fit);
+#          ChengLong (Plan B) ~S$1,137,729 / ~15.35% (honestly positive).
 
 # (ev_quote, diesel_price_sgd_l, km_factor, days_factor)
 MID_TUNE = {"ev_quote": 234000, "diesel": 2.10, "km_factor": 0.9, "days_factor": 0.95}
@@ -517,14 +597,19 @@ def main():
             "Singapore-market figures: vehicle service/evidence 'Within entered "
             "limits', charging-site 'Complete' with an itemised depot quote, "
             "'Within entered site limits', a numeric Total economic TCO and a "
-            "positive Saving vs Keep ICE. The illustrative EV model is the SRM "
-            "T3EV+ (nimble SRM variant, 11 kW AC / 55 kW DC, 53.58 kWh battery, "
-            "0.1786 kWh/km, catalogue base S$66,800). Its best EV plan is PLAN_B "
-            "with a strong positive saving: Total economic TCO ~S$1,047,412, "
-            "Saving ~29.52% vs Keep ICE ~S$1,486,117. "
-            "This is what a confirmed win looks like once the charging-site "
-            "quote and verification evidence are supplied, in contrast to the "
-            "illustrative mid/bad/blank presets."
+            "positive Saving vs Keep ICE. PLAN A carries the SRM scenario: the "
+            "SRM T3EV+ (nimble SRM variant, 11 kW AC / 55 kW DC, 53.58 kWh "
+            "battery, 0.1786 kWh/km, catalogue base S$66,800, all-in quote "
+            "S$193,000). PLAN B carries an honest like-for-like competitor, the "
+            "ChengLong L2EV (catalogue base S$78,800, same COE + body build-up "
+            "-> all-in quote S$205,000). The frozen engine computes both: SRM "
+            "(Plan A) is the STRONGER buy here - Total economic TCO "
+            "~S$1,047,412, Saving ~29.52% vs Keep ICE ~S$1,486,117, beating the "
+            "ChengLong (Plan B) at ~S$1,137,729 / ~23.44% - so scoreProspect's "
+            "headline reads PLAN A (SRM). No number was rigged: SRM simply has "
+            "the lower catalogue base (66,800 vs 78,800) on an identical COE + "
+            "body build-up. This is what a confirmed SRM win looks like once "
+            "the charging-site quote and verification evidence are supplied."
         ),
         "inputs": copy.deepcopy(illustrative),
     })
@@ -536,14 +621,21 @@ def main():
         "name": "Mid case (illustrative, marginal saving)",
         "evidence": "illustrative",
         "note": (
-            "ILLUSTRATIVE preset, NOT a real customer. The best-case SRM T3EV+ "
-            "input set with the high-impact drivers tuned per docs/input-"
-            "sensitivity-findings.md: EV purchase quote raised to S$234,000 "
+            "ILLUSTRATIVE preset, NOT a real customer. The best-case set with "
+            "the high-impact drivers tuned per docs/input-sensitivity-"
+            "findings.md: the SRM (PLAN A) purchase quote raised to S$234,000 "
             "(rank 1), commercial diesel price lowered to S$2.10/L (rank 4) and "
             "duty intensity trimmed (work km/day -10%, days/year -5%, ranks "
-            "6-7). All gates still pass; the best EV plan (PLAN_B) keeps a "
-            "numeric Total economic TCO ~S$1,195,664 but the Saving narrows to "
-            "~+10.71% - still worth it, but marginal."
+            "6-7). PLAN A still carries the SRM T3EV+; PLAN B still carries the "
+            "honest ChengLong L2EV competitor at its fixed S$205,000 quote. All "
+            "gates pass; SRM (Plan A) keeps a numeric Total economic TCO "
+            "~S$1,195,664 but its Saving narrows to a MARGINAL ~+10.71% vs Keep "
+            "ICE ~S$1,339,103 - still worth it, but marginal. Because the SRM "
+            "quote is tuned up while the competitor quote is held, the frozen "
+            "engine honestly shows the ChengLong (Plan B, ~S$1,114,482 / "
+            "~16.77%) ahead in THIS tuned case; that is surfaced, not hidden. "
+            "The SRM best>mid>bad story is told by Plan A's own saving "
+            "(+29.52% -> +10.71% -> -5.02%)."
         ),
         "inputs": tune_illustrative(illustrative, MID_TUNE),
     })
@@ -554,13 +646,17 @@ def main():
         "name": "Bad case (illustrative, EV not a fit)",
         "evidence": "illustrative",
         "note": (
-            "ILLUSTRATIVE preset, NOT a real customer. The same SRM T3EV+ input "
-            "set tuned further against the EV: EV purchase quote pushed to "
-            "S$284,000 and commercial diesel price dropped to S$1.80/L. The "
-            "gates still pass (the figures are honest and complete) but the best "
-            "EV plan (PLAN_B) now costs MORE than Keep ICE: Total economic TCO "
-            "~S$1,411,412, a Saving of ~-5.02% - an honest 'EV is not a fit "
-            "right now' outcome, not a crash and not a hidden failure."
+            "ILLUSTRATIVE preset, NOT a real customer. The same set tuned "
+            "further against the SRM: the SRM (PLAN A) purchase quote pushed to "
+            "S$284,000 and commercial diesel price dropped to S$1.80/L. PLAN A "
+            "still carries the SRM T3EV+; PLAN B still carries the honest "
+            "ChengLong L2EV competitor at its fixed S$205,000 quote. The gates "
+            "still pass (the figures are honest and complete) but SRM (Plan A) "
+            "now costs MORE than Keep ICE: Total economic TCO ~S$1,411,412, a "
+            "Saving of ~-5.02% vs Keep ICE ~S$1,343,994 - an honest 'SRM is not "
+            "a fit right now' outcome, not a crash and not a hidden failure. "
+            "The frozen engine honestly still shows the ChengLong (Plan B, "
+            "~S$1,137,729 / ~15.35%) positive here; surfaced, not hidden."
         ),
         "inputs": tune_illustrative(illustrative, BAD_TUNE),
     })

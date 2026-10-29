@@ -680,18 +680,20 @@ checks.push(['moving target moves the cumulative saving-target marker (25%)',
 // The 'Meets/Below entered X% target' claim label is conditional (never an
 // adoption probability) and only renders for a gate-passing case. Prove the
 // label reflects the committed target through the engine on the gate-passing
-// Best-case seed (the fully-specified set the removed 'evergreen' seed used):
-// at the default 0.15 it reads 'Meets entered 15% target'; at a higher 0.30
-// target the SAME case flips to 'Below entered 30% target'.
+// Best-case seed: at the default 0.15 it reads 'Meets entered 15% target'; at a
+// higher 0.35 target the SAME case flips to 'Below entered 35% target'. (The
+// high target is 0.35 - clearly above the best-case saving, which after FEAT-003
+// sits in the ~30% band - so the conditional-label property is proved robustly
+// regardless of the exact best-case figure.)
 const everAtDefault = windowObj.HSEngine.scoreProspect(
   windowObj.HSEngine.computeFleet(seeds.cases.find((c) => c.id === 'best').inputs));
 const everInputsHi = JSON.parse(JSON.stringify(seeds.cases.find((c) => c.id === 'best').inputs));
-everInputsHi.savingTarget = 0.30;
+everInputsHi.savingTarget = 0.35;
 const everAtHi = windowObj.HSEngine.scoreProspect(windowObj.HSEngine.computeFleet(everInputsHi));
 checks.push(['claim label reflects committed target (default 15% met)',
   everAtDefault.fifteenTargetMet === 'Meets entered 15% target']);
-checks.push(['claim label reflects committed target (30% below, conditional)',
-  everAtHi.fifteenTargetMet === 'Below entered 30% target']);
+checks.push(['claim label reflects committed target (35% below, conditional)',
+  everAtHi.fifteenTargetMet === 'Below entered 35% target']);
 // n.a. propagation preserved at the extreme: driving the target does not turn
 // an n.a. headroom into a fake zero (the demo plan_a/plan_b totals are n.a.).
 checks.push(['target move keeps n.a. (no fake zero)',
@@ -2146,6 +2148,119 @@ checks.push(['breakdown bar renders a matching saving-target tick',
   const dec = byId['decision-cards'].innerHTML || '';
   checks.push(['decision cards carry the Plan A - SRM / Plan B - competitor framing',
     /Plan A - SRM/i.test(dec) && /Plan B - /i.test(dec)]);
+})();
+
+// FEAT-002 (Item 1): the plan-naming labels update LIVE when a per-card Plan A
+// (SRM) / Plan B (competitor) model is picked. The per-card pickers write the
+// per-truck rf.planA[id]/rf.planB[id] map and recompute; the label refreshers
+// (refreshPlanLabels / refreshChartLabels) must read the EFFECTIVE per-truck
+// model the engine used, so the results-table TH, the decision-card titles and
+// the chart series end-label all re-name to the picked model (or an honest
+// 'Mixed' marker when included EV trucks resolve to different models). This
+// drives the SAME rf map + recompute the picker callback drives.
+(() => {
+  // Operate on the mid (SRM) landing: it has 4 included EV-action trucks.
+  windowObj.__HS.loadCase('mid');
+  // loadCase replaces H.state wholesale, so the reframe blob is a NEW object:
+  // fetch it AFTER the load (a reference taken before would be stale).
+  const rf = windowObj.__HS.reframe();
+  const st = windowObj.__HS.state;
+  const FD = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+  const hasData = (r) => !!r && (r.B === 1 || FD.some((c) => r[c] != null && r[c] !== ''));
+  const inc = {};
+  st.fleet_register.rows.forEach((r) => { if (r.A != null && hasData(r)) inc[r.A] = true; });
+  const evA = st.replacement_plan.rows.filter((rp) => rp && rp.A != null && inc[rp.A] && rp.O === 'EV');
+  const evB = st.replacement_plan.rows.filter((rp) => rp && rp.A != null && inc[rp.A] && rp.R === 'EV');
+  // Pick a DIFFERENT SRM variant than the preset's shared model on EVERY
+  // included EV-action truck (simulate the per-card picker on each card).
+  const cat = windowObj.__HS.catalogueModels();
+  const curA = windowObj.__HS.effectivePlanAModel();
+  const newA = (cat.srm || []).find((m) => m !== curA) || curA;
+  evA.forEach((rp) => { rf.planA[rp.A] = newA; });
+  windowObj.__HS.recompute();
+  const effA1 = windowObj.__HS.effectivePlanAModel();
+  const thA1 = byId['results-th-plan_a'].textContent || '';
+  const chartA1 = byId['chart-cumulative'].innerHTML || '';
+  const decA1 = byId['decision-cards'].innerHTML || '';
+  // Use EXACT label matches ('Plan A - <model>'): curA/newA are both SRM
+  // variants that share a prefix ('SRM T3EV' vs 'SRM T3EV+'), so a bare
+  // indexOf(newA) could match the stale '+' label too. The exact 'Plan A -
+  // SRM T3EV ' boundary (trailing delimiter) proves the label actually moved.
+  const wantA = 'Plan A - ' + newA;
+  const staleA = 'Plan A - ' + curA;
+  const labelHit = (s) => s.indexOf(wantA) !== -1 && (newA === curA || s.indexOf(staleA) === -1);
+  checks.push(['per-card Plan A pick updates effective model + results TH + chart + decision card (live)',
+    newA !== curA && effA1 === newA &&
+    thA1 === wantA && labelHit(chartA1) && labelHit(decA1)]);
+  // Honest 'Mixed' marker when included EV trucks resolve to different models:
+  // leave one truck on the new model, flip another back to the original.
+  if (evA.length >= 2) {
+    rf.planA[evA[0].A] = curA;        // one truck differs from the rest
+    windowObj.__HS.recompute();
+    const effMixed = windowObj.__HS.effectivePlanAModel();
+    const thMixed = byId['results-th-plan_a'].textContent || '';
+    checks.push(['mixed per-card Plan A picks surface an honest "Mixed" marker (not a single-model claim)',
+      /Mixed/i.test(effMixed) && /Mixed/i.test(thMixed)]);
+  } else {
+    checks.push(['mixed per-card Plan A picks surface an honest "Mixed" marker (not a single-model claim)',
+      true]);
+  }
+  // Clear the per-truck picks so later blocks see a clean shared model.
+  rf.planA = {}; rf.planB = {};
+  windowObj.__HS.recompute();
+})();
+
+// FEAT-002 (Item 3): loading a prospect preset coherently resets the reframe
+// globals (plan models + EV-cost sliders) from THAT preset, not the hard
+// REFRAME_DEFAULTS (SRM T3EV+ / ChengLong L2EV / 234000 / 171800). loadCase
+// drops __reframe when it wholesale-replaces the state, so syncReframeFromPreset
+// must re-derive planAModel/planBModel from the preset's col-O/col-R EV rows and
+// evPriceA/evPriceB from the representative col-D quotes, clearing stale
+// per-truck picks. The labels/sliders then match the loaded preset.
+(() => {
+  const isNum = (v) => typeof v === 'number' && isFinite(v);
+  // FEAT-003: 'best' puts the SRM scenario on Plan A (col B SRM T3EV+ + col D
+  // quote 193000) and a NON-SRM competitor on Plan B (ChengLong L2EV via the
+  // preset's _planB_model, quote 205000 via _planB_price). loadCase must derive
+  // planAModel = SRM, planBModel = the competitor (NOT SRM), evPriceA = 193000
+  // (preset col D) and evPriceB = 205000 (preset _planB_price), none of them the
+  // REFRAME_DEFAULTS (SRM T3EV+ / ChengLong L2EV / 234000 / 171800).
+  windowObj.__HS.loadCase('best');
+  const rfBest = windowObj.__HS.reframe();
+  checks.push(['loadCase(best) sets reframe plan models from the preset (SRM on Plan A, competitor on Plan B)',
+    /SRM/i.test(rfBest.planAModel) &&
+    typeof rfBest.planBModel === 'string' && rfBest.planBModel !== '' &&
+    rfBest.planBModel.indexOf('SRM') !== 0]);
+  checks.push(['loadCase(best) sets EV-cost sliders from the preset (Plan A col-D 193000, Plan B competitor 205000)',
+    isNum(rfBest.evPriceA) && rfBest.evPriceA === 193000 &&
+    isNum(rfBest.evPriceB) && rfBest.evPriceB === 205000 &&
+    rfBest.evPriceA !== 234000 && rfBest.evPriceB !== 171800]);
+  checks.push(['loadCase(best) clears stale per-truck Plan A/B picks',
+    rfBest.planA && Object.keys(rfBest.planA).length === 0 &&
+    rfBest.planB && Object.keys(rfBest.planB).length === 0]);
+  // The slider getters read the loaded reframe values (clamped to 120000-300000).
+  checks.push(['EV-cost slider getters reflect the loaded preset quote',
+    rfBest.evPriceA >= 120000 && rfBest.evPriceA <= 300000]);
+  // The rendered labels match the loaded preset model.
+  const thBestA = byId['results-th-plan_a'].textContent || '';
+  checks.push(['loadCase(best) relabels the results header to the preset Plan A model',
+    thBestA.indexOf(rfBest.planAModel) !== -1]);
+  // 'bad' derives a different quote (284000): the sliders track the preset.
+  windowObj.__HS.loadCase('bad');
+  const rfBad = windowObj.__HS.reframe();
+  checks.push(['loadCase(bad) moves the EV-cost sliders to the bad-preset quote',
+    isNum(rfBad.evPriceA) && rfBad.evPriceA === 284000 && rfBad.evPriceA !== rfBest.evPriceA]);
+  // 'blank' has no EV-action truck: keeps a sensible default, renders n.a.
+  // without crashing.
+  let blankThrew = false;
+  try { windowObj.__HS.loadCase('blank'); } catch (e) { blankThrew = true; }
+  const rfBlank = windowObj.__HS.reframe();
+  checks.push(['loadCase(blank) does not crash and keeps a sensible plan-model default',
+    !blankThrew && typeof rfBlank.planAModel === 'string' && rfBlank.planAModel !== '']);
+  checks.push(['loadCase(blank) renders n.a. (not zero) without crashing',
+    (byId['results-body'].innerHTML || '').indexOf('n.a.') !== -1]);
+  // Restore the demonstration fixture for any later demo-specific assertions.
+  windowObj.__HS.loadDemoFixture();
 })();
 
 // FEAT-002: live per-plan isolation through the actual page API. Moving the

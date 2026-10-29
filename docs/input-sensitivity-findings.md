@@ -9,7 +9,7 @@ A one-at-a-time (tornado) sweep against the fully-specified illustrative scenari
 1. **Total economic TCO** of the best EV plan (the account-size / headline number).
 2. **Saving % vs Keep ICE** of the best EV plan (the adoption-case number).
 
-**Baseline:** best EV plan **PLAN_B**, Total economic TCO **S$1,047,412**, Saving % **29.52%**, Keep ICE total **S$1,486,117**.
+**Baseline:** best EV plan **PLAN_A**, Total economic TCO **S$1,047,412**, Saving % **29.52%**, Keep ICE total **S$1,486,117**.
 
 ## Impact ranking (highest mover first)
 
