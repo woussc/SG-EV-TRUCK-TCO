@@ -8,7 +8,7 @@
       "id": "best",
       "name": "Best case (illustrative, fully specified, gates pass)",
       "evidence": "illustrative",
-      "note": "ILLUSTRATIVE confirmed-win demonstrator, NOT a real customer. A fully-specified, gate-passing scenario built from realistic Singapore-market figures: vehicle service/evidence 'Within entered limits', charging-site 'Complete' with an itemised depot quote, 'Within entered site limits', a numeric Total economic TCO and a positive Saving vs Keep ICE. The illustrative EV model is the SRM T3EV+ (nimble SRM variant, 11 kW AC / 55 kW DC, 53.58 kWh battery, 0.1786 kWh/km, catalogue base S$66,800). Its best EV plan is PLAN_B with a strong positive saving: Total economic TCO ~S$1,047,412, Saving ~29.52% vs Keep ICE ~S$1,486,117. This is what a confirmed win looks like once the charging-site quote and verification evidence are supplied, in contrast to the illustrative mid/bad/blank presets.",
+      "note": "ILLUSTRATIVE confirmed-win demonstrator, NOT a real customer. A fully-specified, gate-passing scenario built from realistic Singapore-market figures: vehicle service/evidence 'Within entered limits', charging-site 'Complete' with an itemised depot quote, 'Within entered site limits', a numeric Total economic TCO and a positive Saving vs Keep ICE. PLAN A carries the SRM scenario: the SRM T3EV+ (nimble SRM variant, 11 kW AC / 55 kW DC, 53.58 kWh battery, 0.1786 kWh/km, catalogue base S$66,800, all-in quote S$193,000). PLAN B carries an honest like-for-like competitor, the ChengLong L2EV (catalogue base S$78,800, same COE + body build-up -> all-in quote S$205,000). The frozen engine computes both: SRM (Plan A) is the STRONGER buy here - Total economic TCO ~S$1,047,412, Saving ~29.52% vs Keep ICE ~S$1,486,117, beating the ChengLong (Plan B) at ~S$1,137,729 / ~23.44% - so scoreProspect's headline reads PLAN A (SRM). No number was rigged: SRM simply has the lower catalogue base (66,800 vs 78,800) on an identical COE + body build-up. This is what a confirmed SRM win looks like once the charging-site quote and verification evidence are supplied.",
       "inputs": {
         "fleet_register": {
           "range": "A7:S106",
@@ -604,10 +604,10 @@
               "N": 22000,
               "O": "EV",
               "P": "",
-              "Q": 22000,
+              "Q": 24000,
               "R": "EV",
               "S": "",
-              "T": 24000,
+              "T": 25500,
               "U": "",
               "V": "",
               "W": 0,
@@ -619,7 +619,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-01"
+              "AF": "EL-01",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 8,
@@ -639,10 +641,10 @@
               "N": 30000,
               "O": "EV",
               "P": "",
-              "Q": 30000,
+              "Q": 33000,
               "R": "EV",
               "S": "",
-              "T": 33000,
+              "T": 35100,
               "U": "",
               "V": "",
               "W": 0,
@@ -654,7 +656,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-02"
+              "AF": "EL-02",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 9,
@@ -674,10 +678,10 @@
               "N": 38000,
               "O": "EV",
               "P": "",
-              "Q": 38000,
+              "Q": 42000,
               "R": "EV",
               "S": "",
-              "T": 42000,
+              "T": 44600,
               "U": "",
               "V": "",
               "W": 0,
@@ -689,7 +693,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-03"
+              "AF": "EL-03",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 10,
@@ -709,10 +715,10 @@
               "N": 46000,
               "O": "EV",
               "P": "",
-              "Q": 46000,
+              "Q": 51000,
               "R": "EV",
               "S": "",
-              "T": 51000,
+              "T": 54200,
               "U": "",
               "V": "",
               "W": 0,
@@ -724,7 +730,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-04"
+              "AF": "EL-04",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 11,
@@ -3533,7 +3541,7 @@
       "id": "mid",
       "name": "Mid case (illustrative, marginal saving)",
       "evidence": "illustrative",
-      "note": "ILLUSTRATIVE preset, NOT a real customer. The best-case SRM T3EV+ input set with the high-impact drivers tuned per docs/input-sensitivity-findings.md: EV purchase quote raised to S$234,000 (rank 1), commercial diesel price lowered to S$2.10/L (rank 4) and duty intensity trimmed (work km/day -10%, days/year -5%, ranks 6-7). All gates still pass; the best EV plan (PLAN_B) keeps a numeric Total economic TCO ~S$1,195,664 but the Saving narrows to ~+10.71% - still worth it, but marginal.",
+      "note": "ILLUSTRATIVE preset, NOT a real customer. The best-case set with the high-impact drivers tuned per docs/input-sensitivity-findings.md: the SRM (PLAN A) purchase quote raised to S$234,000 (rank 1), commercial diesel price lowered to S$2.10/L (rank 4) and duty intensity trimmed (work km/day -10%, days/year -5%, ranks 6-7). PLAN A still carries the SRM T3EV+; PLAN B still carries the honest ChengLong L2EV competitor at its fixed S$205,000 quote. All gates pass; SRM (Plan A) keeps a numeric Total economic TCO ~S$1,195,664 but its Saving narrows to a MARGINAL ~+10.71% vs Keep ICE ~S$1,339,103 - still worth it, but marginal. Because the SRM quote is tuned up while the competitor quote is held, the frozen engine honestly shows the ChengLong (Plan B, ~S$1,114,482 / ~16.77%) ahead in THIS tuned case; that is surfaced, not hidden. The SRM best>mid>bad story is told by Plan A's own saving (+29.52% -> +10.71% -> -5.02%).",
       "inputs": {
         "fleet_register": {
           "range": "A7:S106",
@@ -4129,10 +4137,10 @@
               "N": 22000,
               "O": "EV",
               "P": "",
-              "Q": 22000,
+              "Q": 24000,
               "R": "EV",
               "S": "",
-              "T": 24000,
+              "T": 25500,
               "U": "",
               "V": "",
               "W": 0,
@@ -4144,7 +4152,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-01"
+              "AF": "EL-01",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 8,
@@ -4164,10 +4174,10 @@
               "N": 30000,
               "O": "EV",
               "P": "",
-              "Q": 30000,
+              "Q": 33000,
               "R": "EV",
               "S": "",
-              "T": 33000,
+              "T": 35100,
               "U": "",
               "V": "",
               "W": 0,
@@ -4179,7 +4189,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-02"
+              "AF": "EL-02",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 9,
@@ -4199,10 +4211,10 @@
               "N": 38000,
               "O": "EV",
               "P": "",
-              "Q": 38000,
+              "Q": 42000,
               "R": "EV",
               "S": "",
-              "T": 42000,
+              "T": 44600,
               "U": "",
               "V": "",
               "W": 0,
@@ -4214,7 +4226,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-03"
+              "AF": "EL-03",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 10,
@@ -4234,10 +4248,10 @@
               "N": 46000,
               "O": "EV",
               "P": "",
-              "Q": 46000,
+              "Q": 51000,
               "R": "EV",
               "S": "",
-              "T": 51000,
+              "T": 54200,
               "U": "",
               "V": "",
               "W": 0,
@@ -4249,7 +4263,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-04"
+              "AF": "EL-04",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 11,
@@ -7058,7 +7074,7 @@
       "id": "bad",
       "name": "Bad case (illustrative, EV not a fit)",
       "evidence": "illustrative",
-      "note": "ILLUSTRATIVE preset, NOT a real customer. The same SRM T3EV+ input set tuned further against the EV: EV purchase quote pushed to S$284,000 and commercial diesel price dropped to S$1.80/L. The gates still pass (the figures are honest and complete) but the best EV plan (PLAN_B) now costs MORE than Keep ICE: Total economic TCO ~S$1,411,412, a Saving of ~-5.02% - an honest 'EV is not a fit right now' outcome, not a crash and not a hidden failure.",
+      "note": "ILLUSTRATIVE preset, NOT a real customer. The same set tuned further against the SRM: the SRM (PLAN A) purchase quote pushed to S$284,000 and commercial diesel price dropped to S$1.80/L. PLAN A still carries the SRM T3EV+; PLAN B still carries the honest ChengLong L2EV competitor at its fixed S$205,000 quote. The gates still pass (the figures are honest and complete) but SRM (Plan A) now costs MORE than Keep ICE: Total economic TCO ~S$1,411,412, a Saving of ~-5.02% vs Keep ICE ~S$1,343,994 - an honest 'SRM is not a fit right now' outcome, not a crash and not a hidden failure. The frozen engine honestly still shows the ChengLong (Plan B, ~S$1,137,729 / ~15.35%) positive here; surfaced, not hidden.",
       "inputs": {
         "fleet_register": {
           "range": "A7:S106",
@@ -7654,10 +7670,10 @@
               "N": 22000,
               "O": "EV",
               "P": "",
-              "Q": 22000,
+              "Q": 24000,
               "R": "EV",
               "S": "",
-              "T": 24000,
+              "T": 25500,
               "U": "",
               "V": "",
               "W": 0,
@@ -7669,7 +7685,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-01"
+              "AF": "EL-01",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 8,
@@ -7689,10 +7707,10 @@
               "N": 30000,
               "O": "EV",
               "P": "",
-              "Q": 30000,
+              "Q": 33000,
               "R": "EV",
               "S": "",
-              "T": 33000,
+              "T": 35100,
               "U": "",
               "V": "",
               "W": 0,
@@ -7704,7 +7722,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-02"
+              "AF": "EL-02",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 9,
@@ -7724,10 +7744,10 @@
               "N": 38000,
               "O": "EV",
               "P": "",
-              "Q": 38000,
+              "Q": 42000,
               "R": "EV",
               "S": "",
-              "T": 42000,
+              "T": 44600,
               "U": "",
               "V": "",
               "W": 0,
@@ -7739,7 +7759,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-03"
+              "AF": "EL-03",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 10,
@@ -7759,10 +7781,10 @@
               "N": 46000,
               "O": "EV",
               "P": "",
-              "Q": 46000,
+              "Q": 51000,
               "R": "EV",
               "S": "",
-              "T": 51000,
+              "T": 54200,
               "U": "",
               "V": "",
               "W": 0,
@@ -7774,7 +7796,9 @@
               "AC": 120,
               "AD": 120,
               "AE": "Verified",
-              "AF": "EL-04"
+              "AF": "EL-04",
+              "_planB_model": "ChengLong L2EV",
+              "_planB_price": 205000
             },
             {
               "_row": 11,
