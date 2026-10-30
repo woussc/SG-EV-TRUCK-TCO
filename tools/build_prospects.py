@@ -174,16 +174,26 @@ COMP_PRICE = 205000             # 78,800 base + 93,000 COE + 33,200 body/reg
 #     from the catalogue (replacement cols E/F left blank -> product default),
 #     so the engine computes from SRM-consistent inputs (no hardcoded energy).
 
-# Per-truck register (id, coe_months_left, market_value_now, scrap,
-#   straight_line_per_month, keep_year10_value, ev_year10_value).
-# Four trucks staged across COE expiries so EVs are deployed by year 10.
-ILLUS_TRUCKS = [
-    ("EL-01", 18, 28000, 3000, 500, 22000, 24000),
-    ("EL-02", 30, 34000, 3000, 500, 30000, 33000),
-    ("EL-03", 42, 40000, 3000, 500, 38000, 42000),
-    ("EL-04", 54, 46000, 3000, 500, 46000, 51000),
+# Per-truck register template values (shared across every generated truck).
+# Trucks are staged across COE expiries (18/30/42/54 months, cycling) so EVs
+# deploy within the 10-year horizon. Market/terminal values cycle through the
+# same four-step ladder the original 4-truck illustrative baseline used, so an
+# N-truck fleet reuses honest per-truck figures without inventing new ones.
+#   (coe_months_left, market_value_now, scrap,
+#    straight_line_per_month, keep_year10_value, ev_year10_value)
+ILLUS_TRUCK_LADDER = [
+    (18, 28000, 3000, 500, 22000, 24000),
+    (30, 34000, 3000, 500, 30000, 33000),
+    (42, 40000, 3000, 500, 38000, 42000),
+    (54, 46000, 3000, 500, 46000, 51000),
 ]
-ILLUS_WORKLOAD = {"km_year": 36000, "days": 300, "peak_route_km": 150, "peak_load_kg": 1200}
+
+
+def _illus_truck(i):
+    """Return (id, coe, gross, scrap, straight, keep_y10, ev_y10) for the i-th
+    EV-action truck, cycling the honest 4-step ladder for larger fleets."""
+    coe, gross, scrap, straight, keep_y10, ev_y10 = ILLUS_TRUCK_LADDER[i % len(ILLUS_TRUCK_LADDER)]
+    return (f"EL-{str(i + 1).zfill(2)}", coe, gross, scrap, straight, keep_y10, ev_y10)
 
 # Operating-cost overrides: flip every verification toggle the engine checks
 # ("Customer" mode, confirmed prices/trial/backup) and use realistic SG values.
@@ -218,8 +228,9 @@ ILLUS_EC = {
     12: 0,        # public electricity share -> depot-only
     13: "Existing depot",
     15: "AC11",   # charger type label (informational) - 11kW AC to match SRM
-    16: 4,        # installed chargers (units)
-    17: 4,        # usable truck plugs
+    16: 4,        # installed chargers (units) - SCALED to n_trucks in
+                  #   _illus_ec_rows (one charger per EV-action truck)
+    17: 4,        # usable truck plugs - SCALED to n_trucks (one plug per truck)
     18: 8000,     # charger equipment price SGD/charger
     19: 1200,     # local EV distribution board SGD/charger
     20: 800,      # licensed electrical worker SGD/charger
@@ -249,7 +260,8 @@ ILLUS_EC = {
     45: 12,       # grant receipt month
     46: "No",     # award checked (no grant, so not required)
     47: 0,        # approved funded chargers (no grant)
-    50: 60,       # net site power kW
+    50: 60,       # net site power kW - SCALED to chargers x 11 kW in
+                  #   _illus_ec_rows so a larger fleet charges within the window
     51: 10,       # charging window hours
     52: "Yes",    # site permission and access
     53: "Yes",    # shared schedule confirmed
@@ -267,28 +279,50 @@ def _illus_oc_rows(demo_rows):
     return rows
 
 
-def _illus_ec_rows(demo_rows):
+def _illus_ec_rows(demo_rows, n_trucks):
+    """Apply the honest illustrative energy-and-charging template, with the
+    depot charging-site build-up SCALED to the fleet size.
+
+    The old fixed 4-charger / 4-plug / 60 kW site could not charge a large
+    fleet within the window, so the engine's capacity gate (siteAccessCheck:
+    peakDepotEnergy <= min(net_site_power, chargers x rated_kW) x window_hours,
+    chargingHours <= plugs x window_hours) FAILED for the 30-truck wins case and
+    the whole profile was gated out. The honest fix is to provision the depot in
+    proportion to the fleet: one AC11 charger and one usable plug PER EV-action
+    truck, and net site power = chargers x per-charger rated kW (row 56 = 11 kW).
+    The per-charger itemised costs (rows 18-22, 32) are already per-charger, so
+    total site cost scales automatically with the charger count - no number is
+    invented, the build-up is just sized for the fleet it has to serve. Vehicle
+    prices are untouched; only the site hardware scales."""
+    chargers = max(1, int(n_trucks))
+    rated_kw = ILLUS_EC[56]                     # per-charger rated input kW (AC11 = 11)
+    scaled = dict(ILLUS_EC)
+    scaled[16] = chargers                       # installed chargers (one per truck)
+    scaled[17] = chargers                       # usable truck plugs (one per truck)
+    scaled[50] = chargers * rated_kw            # net site power kW = chargers x rated kW
     rows = copy.deepcopy(demo_rows)
     for r in rows:
-        if r["_row"] in ILLUS_EC:
-            r["values"]["B"] = ILLUS_EC[r["_row"]]
-            r["values"]["C"] = ILLUS_EC[r["_row"]]
+        if r["_row"] in scaled:
+            r["values"]["B"] = scaled[r["_row"]]
+            r["values"]["C"] = scaled[r["_row"]]
     return rows
 
 
-def _illus_fleet_rows():
-    wl = ILLUS_WORKLOAD
-    work_km_day = round(wl["km_year"] / wl["days"], 6)
+def _illus_fleet_rows(n_trucks, km_day, days_year, peak_route_km=150, peak_load_kg=1200):
+    """Emit N included EV-action trucks at the given operational intensity
+    (km/day x days/year), with the fleet tail set to Include=0 / Keep ICE. Every
+    other field is copied from the honest illustrative template; only fleet size
+    and intensity change between archetypes - never the vehicle price."""
     rows = []
     for i in range(100):
         rr = i + 7
-        if i < len(ILLUS_TRUCKS):
-            tid, coe, gross, scrap, straight, keep_y10, ev_y10 = ILLUS_TRUCKS[i]
+        if i < n_trucks:
+            tid, coe, gross, scrap, straight, keep_y10, ev_y10 = _illus_truck(i)
             rows.append({
                 "_row": rr, "A": tid, "B": 1,
                 "C": "Illustrative", "D": "Box",
-                "E": work_km_day, "F": wl["days"], "G": wl["peak_route_km"],
-                "H": wl["peak_load_kg"], "I": 20, "J": coe, "K": gross,
+                "E": km_day, "F": days_year, "G": peak_route_km,
+                "H": peak_load_kg, "I": 20, "J": coe, "K": gross,
                 "L": scrap, "M": straight, "N": 120, "O": 0, "P": 0,
                 "Q": "ILLUS", "R": 9, "S": None,
             })
@@ -297,12 +331,12 @@ def _illus_fleet_rows():
     return rows
 
 
-def _illus_repl_rows():
+def _illus_repl_rows(n_trucks):
     rows = []
     for i in range(100):
         rr = i + 7
-        if i < len(ILLUS_TRUCKS):
-            tid, coe, gross, scrap, straight, keep_y10, ev_y10 = ILLUS_TRUCKS[i]
+        if i < n_trucks:
+            tid, coe, gross, scrap, straight, keep_y10, ev_y10 = _illus_truck(i)
             # Plan B competitor (ChengLong L2EV) year-10 EV terminal. The
             # competitor's all-in quote (COMP_PRICE = 205,000) is ~S$12k ABOVE
             # the SRM quote (193,000), so its residual is scaled UP by the same
@@ -347,17 +381,18 @@ def _illus_repl_rows():
     return rows
 
 
-def build_illustrative(demo_inputs):
+def build_illustrative(demo_inputs, n_trucks, km_day, days_year):
     return {
-        "fleet_register": {"range": "A7:S106", "rows": _illus_fleet_rows()},
-        "replacement_plan": {"range": "A7:AI106", "rows": _illus_repl_rows()},
+        "fleet_register": {"range": "A7:S106",
+                           "rows": _illus_fleet_rows(n_trucks, km_day, days_year)},
+        "replacement_plan": {"range": "A7:AI106", "rows": _illus_repl_rows(n_trucks)},
         "operating_costs": {
             "range": "A7:D68",
             "rows": _illus_oc_rows(demo_inputs["operating_costs"]["rows"]),
         },
         "energy_and_charging": {
             "range": "A7:E56",
-            "rows": _illus_ec_rows(demo_inputs["energy_and_charging"]["rows"]),
+            "rows": _illus_ec_rows(demo_inputs["energy_and_charging"]["rows"], n_trucks),
             "computed_range": demo_inputs["energy_and_charging"].get("computed_range"),
             "computed_rows": demo_inputs["energy_and_charging"].get("computed_rows"),
         },
@@ -367,26 +402,48 @@ def build_illustrative(demo_inputs):
 
 
 # ---------------------------------------------------------------------------
-# Illustrative best / mid / bad / blank presets
+# Illustrative wins / breakeven / loses / blank archetypes (HONEST FIXED PRICE)
 # ---------------------------------------------------------------------------
-# best = a deep copy of the fully-specified illustrative input set. PLAN A =
-#   SRM T3EV+; PLAN B = ChengLong L2EV competitor. SRM (Plan A) is the stronger
-#   buy (Total ~S$1,047,412, Saving ~29.52% vs Keep ICE ~S$1,486,117) and beats
-#   the ChengLong (Plan B, ~S$1,137,729 / ~23.44%), so the headline is PLAN A.
+# The three archetypes hold the vehicle prices FIXED and HONEST in every profile
+# (SRM T3EV+ col-D all-in S$193,000 on Plan A, ChengLong L2EV S$205,000 on
+# Plan B) and vary ONLY fleet size (number of EV-action trucks) and operational
+# intensity (km/day x days/year). They map the real break-even frontier: which
+# operational intensity and how many vehicles a company needs for a genuine
+# saving to occur. NO per-case price tuning exists - the old MID_TUNE/BAD_TUNE
+# levers that raised the SRM col-D quote (234,000 / 284,000) are removed, so a
+# loaded profile can never show a model cost above the vehicle's own input price.
 #
-# mid / bad are the SAME input set with the high-impact drivers tuned (ranked by
-# docs/input-sensitivity-findings.md): the SRM (Plan A) purchase quote (rank 1),
-# commercial diesel price (rank 4) and duty intensity (work km/day + days/year,
-# ranks 6-7). The ChengLong (Plan B) quote is HELD at S$205,000. The magnitudes
-# below are engine-verified by tools/check_presets.mjs (two-state projection):
-#   mid -> SRM (Plan A) Total ~S$1,195,664, Saving ~+10.71% (marginal);
-#          ChengLong (Plan B) ~S$1,114,482 / ~16.77% (honestly ahead here).
-#   bad -> SRM (Plan A) Total ~S$1,411,412, Saving ~-5.02% (not a fit);
-#          ChengLong (Plan B) ~S$1,137,729 / ~15.35% (honestly positive).
-
-# (ev_quote, diesel_price_sgd_l, km_factor, days_factor)
-MID_TUNE = {"ev_quote": 234000, "diesel": 2.10, "km_factor": 0.9, "days_factor": 0.95}
-BAD_TUNE = {"ev_quote": 284000, "diesel": 1.80, "km_factor": 1.0, "days_factor": 1.0}
+# Engine-verified by tools/check_presets.mjs (two-state projection, honest
+# S$193k SRM quote, diesel S$2.50/L):
+# The depot charging-site build-up SCALES with fleet size (one AC11 charger +
+# usable plug per EV-action truck, net site power = chargers x 11 kW), so the
+# engine's capacity gate passes honestly for every fleet size and the per-charger
+# itemised site cost is sized to the fleet it serves. Because the site now scales
+# with the fleet (rather than a fixed 4-charger depot), the small/lightly-used
+# "loses" case is a SINGLE barely-used truck, not a 2-truck fleet: with the site
+# right-sized, only a genuinely tiny duty cycle fails to pay back the EV premium.
+#
+# Engine-verified by tools/check_presets.mjs (two-state projection, honest
+# S$193k SRM quote, diesel S$2.50/L):
+#   wins      -> 30 EV trucks @ 120 km/day x 300 days -> SRM saving ~+29.43%.
+#   breakeven -> 4 EV trucks @ 60 km/day x 200 days  -> SRM saving ~+13.83%
+#                (below the 15% target, the marginal "is it worth it for us?"
+#                 default landing archetype).
+#   loses     -> 1 EV truck @ 20 km/day x 100 days   -> SRM saving ~-0.65%
+#                (single, barely-used truck: the EV premium does not pay back).
+#
+# NOTE (open user decision): the exact bands are chosen to land win / marginal /
+# lose cleanly on the win / below-15% / negative side of the 15% target at HONEST
+# fixed prices WITH the fleet-scaled charging site passing the engine gate. They
+# can be nudged to a preferred Singapore operator profile; see
+# docs/preset-redesign-plan.md "Open human decisions".
+#
+# (id, fleet_size, km_day, days_year)
+ARCHETYPES = [
+    ("wins", 30, 120, 300),
+    ("breakeven", 4, 60, 200),
+    ("loses", 1, 20, 100),
+]
 
 BLANK_TRUCKS = ["NEW-1", "NEW-2", "NEW-3", "NEW-4"]
 
@@ -448,40 +505,6 @@ BLANK_EC = {
     46: "No",     # award checked: No (no grant claimed by default)
     47: 0,        # approved funded chargers: 0 (no grant claimed by default)
 }
-
-
-def _ec_row(rows, n):
-    for r in rows:
-        if r["_row"] == n:
-            return r
-    return None
-
-
-def tune_illustrative(inputs, tune):
-    """Return a deep copy of an illustrative input set with the high-impact
-    drivers overridden. Only the ranked levers are touched so the case stays an
-    honest variation of the fully-specified baseline (all gates still cleared)."""
-    out = copy.deepcopy(inputs)
-    # Rank 1: EV purchase quote (replacement_plan col D) across every EV truck.
-    for r in out["replacement_plan"]["rows"]:
-        if r.get("A") is not None and isinstance(r.get("D"), (int, float)):
-            r["D"] = tune["ev_quote"]
-    # Rank 4: commercial diesel price (energy_and_charging row 7, Plan A col B
-    # and Plan B col C mirror).
-    ec7 = _ec_row(out["energy_and_charging"]["rows"], 7)
-    if ec7 is not None and "values" in ec7:
-        ec7["values"]["B"] = tune["diesel"]
-        ec7["values"]["C"] = tune["diesel"]
-    # Ranks 6-7: duty intensity (work km/day col E, days/year col F) across the
-    # included trucks.
-    if tune["km_factor"] != 1.0 or tune["days_factor"] != 1.0:
-        for r in out["fleet_register"]["rows"]:
-            if r.get("B") == 1:
-                if isinstance(r.get("E"), (int, float)):
-                    r["E"] = round(r["E"] * tune["km_factor"], 6)
-                if isinstance(r.get("F"), (int, float)):
-                    r["F"] = int(round(r["F"] * tune["days_factor"]))
-    return out
 
 
 def _blank_fleet_rows():
@@ -576,89 +599,97 @@ def main():
 
     cases = []
 
-    illustrative = build_illustrative(demo_inputs)
-
     # NOTE: the workbook DEMONSTRATION 6-truck case is NOT emitted as a
     # user-facing prospect any more. It lives on only as the untouched
     # validate.py Excel-parity fixture (tools/fixtures/demo_case.json); the
-    # user-facing seed set is now exactly best/mid/bad/blank, with the SRM mid
-    # case serving as the default landing scenario. Every seed still carries the
-    # full product catalogue under inputs.products.rows, so the catalogue still
-    # reaches the app.
+    # user-facing seed set is now exactly wins/breakeven/loses/blank, with the
+    # BREAKEVEN case serving as the default landing scenario. Every seed still
+    # carries the full product catalogue under inputs.products.rows, so the
+    # catalogue still reaches the app.
+    #
+    # HONEST FIXED-PRICE CONTRACT: all three archetypes share the IDENTICAL
+    # vehicle prices (SRM T3EV+ col-D = S$193,000 on Plan A, ChengLong L2EV
+    # _planB_price = S$205,000 on Plan B). The outcome difference is driven
+    # ENTIRELY by fleet size and operational intensity, never by moving a
+    # vehicle price. The shared depot charging-site cost is counted once per
+    # fleet, so larger fleets amortise it.
 
-    # Case 1: BEST - the fully-specified illustrative confirmed-win set.
+    FIXED_SRM = 193000      # SRM T3EV+ col-D all-in quote, HELD FIXED (Plan A).
+    # COMP_PRICE (205000) is the ChengLong L2EV all-in quote, HELD FIXED (Plan B).
+
+    # Case 1: WINS - high-utilisation, large depot-charged urban fleet.
+    wins_inputs = build_illustrative(demo_inputs, 30, 120, 300)
     cases.append({
-        "id": "best",
-        "name": "Best case (illustrative, fully specified, gates pass)",
+        "id": "wins",
+        "name": "EV wins (illustrative, high-utilisation large fleet)",
         "evidence": "illustrative",
         "note": (
-            "ILLUSTRATIVE confirmed-win demonstrator, NOT a real customer. A "
-            "fully-specified, gate-passing scenario built from realistic "
-            "Singapore-market figures: vehicle service/evidence 'Within entered "
-            "limits', charging-site 'Complete' with an itemised depot quote, "
-            "'Within entered site limits', a numeric Total economic TCO and a "
-            "positive Saving vs Keep ICE. PLAN A carries the SRM scenario: the "
-            "SRM T3EV+ (nimble SRM variant, 11 kW AC / 55 kW DC, 53.58 kWh "
-            "battery, 0.1786 kWh/km, catalogue base S$66,800, all-in quote "
-            "S$193,000). PLAN B carries an honest like-for-like competitor, the "
-            "ChengLong L2EV (catalogue base S$78,800, same COE + body build-up "
-            "-> all-in quote S$205,000). The frozen engine computes both: SRM "
-            "(Plan A) is the STRONGER buy here - Total economic TCO "
-            "~S$1,047,412, Saving ~29.52% vs Keep ICE ~S$1,486,117, beating the "
-            "ChengLong (Plan B) at ~S$1,137,729 / ~23.44% - so scoreProspect's "
-            "headline reads PLAN A (SRM). No number was rigged: SRM simply has "
-            "the lower catalogue base (66,800 vs 78,800) on an identical COE + "
-            "body build-up. This is what a confirmed SRM win looks like once "
-            "the charging-site quote and verification evidence are supplied."
+            "ILLUSTRATIVE operator archetype, NOT a real customer. The EV GENUINELY "
+            "WINS here: a large, high-utilisation depot-charged urban fleet of 30 "
+            "EV-action trucks (one AC11 depot charger + plug per truck), each "
+            "running 120 km/day x 300 days/year. PLAN A "
+            "carries the SRM T3EV+ (nimble SRM variant, 11 kW AC / 55 kW DC, 53.58 "
+            "kWh battery, 0.1786 kWh/km) at its HONEST all-in quote S$193,000. "
+            "PLAN B carries the honest like-for-like ChengLong L2EV competitor at "
+            "its HONEST all-in quote S$205,000. These prices are HELD FIXED and "
+            "IDENTICAL across all three archetypes - the outcome is driven by "
+            "FLEET SIZE (30 trucks) and OPERATIONAL INTENSITY (120 km/day x 300 "
+            "days), NOT by moving any vehicle price. The frozen engine computes a "
+            "strong SRM (Plan A) saving ~+29.43% vs Keep ICE (Total economic TCO "
+            "S$7.87m vs Keep ICE S$11.15m): a large, hard-working fleet runs "
+            "enough energy-saving km that the EV premium pays back comfortably. "
+            "This is what an operator who should electrify looks like."
         ),
-        "inputs": copy.deepcopy(illustrative),
+        "inputs": wins_inputs,
     })
 
-    # Case 2: MID - high-impact drivers tuned so the saving is marginal but > 0.
-    #   This is also the DEFAULT LANDING scenario (window.HSLandingCase).
+    # Case 2: BREAKEVEN - mid fleet, moderate utilisation (DEFAULT LANDING).
+    breakeven_inputs = build_illustrative(demo_inputs, 4, 60, 200)
     cases.append({
-        "id": "mid",
-        "name": "Mid case (illustrative, marginal saving)",
+        "id": "breakeven",
+        "name": "Break-even (illustrative, marginal - is it worth it for us?)",
         "evidence": "illustrative",
         "note": (
-            "ILLUSTRATIVE preset, NOT a real customer. The best-case set with "
-            "the high-impact drivers tuned per docs/input-sensitivity-"
-            "findings.md: the SRM (PLAN A) purchase quote raised to S$234,000 "
-            "(rank 1), commercial diesel price lowered to S$2.10/L (rank 4) and "
-            "duty intensity trimmed (work km/day -10%, days/year -5%, ranks "
-            "6-7). PLAN A still carries the SRM T3EV+; PLAN B still carries the "
-            "honest ChengLong L2EV competitor at its fixed S$205,000 quote. All "
-            "gates pass; SRM (Plan A) keeps a numeric Total economic TCO "
-            "~S$1,195,664 but its Saving narrows to a MARGINAL ~+10.71% vs Keep "
-            "ICE ~S$1,339,103 - still worth it, but marginal. Because the SRM "
-            "quote is tuned up while the competitor quote is held, the frozen "
-            "engine honestly shows the ChengLong (Plan B, ~S$1,114,482 / "
-            "~16.77%) ahead in THIS tuned case; that is surfaced, not hidden. "
-            "The SRM best>mid>bad story is told by Plan A's own saving "
-            "(+29.52% -> +10.71% -> -5.02%)."
+            "ILLUSTRATIVE operator archetype, NOT a real customer. This is the "
+            "MARGINAL 'is it worth it for us?' archetype and the DEFAULT LANDING "
+            "scenario: a mid-sized fleet of 4 EV-action trucks at moderate "
+            "utilisation, 60 km/day x 200 days/year. PLAN A carries the SRM T3EV+ "
+            "at its HONEST all-in quote S$193,000; PLAN B carries the honest "
+            "ChengLong L2EV competitor at its HONEST all-in quote S$205,000. The "
+            "prices are HELD FIXED and IDENTICAL to the wins/loses archetypes - "
+            "only the FLEET SIZE (4 trucks) and OPERATIONAL INTENSITY (60 km/day x "
+            "200 days) differ. The frozen engine computes an SRM (Plan A) saving "
+            "~+13.83% vs Keep ICE (Total economic TCO S$972.9k vs Keep ICE "
+            "S$1.13m): positive, but sitting just BELOW the 15% target - the real "
+            "break-even frontier, where whether to electrify is a genuine "
+            "conversation. The answer is driven by operations and fleet size, not "
+            "by any price adjustment."
         ),
-        "inputs": tune_illustrative(illustrative, MID_TUNE),
+        "inputs": breakeven_inputs,
     })
 
-    # Case 3: BAD - tuned further so EV does NOT beat Keep ICE (negative saving).
+    # Case 3: LOSES - small, lightly-used fleet; EV premium does not pay back.
+    loses_inputs = build_illustrative(demo_inputs, 1, 20, 100)
     cases.append({
-        "id": "bad",
-        "name": "Bad case (illustrative, EV not a fit)",
+        "id": "loses",
+        "name": "EV not a fit (illustrative, small lightly-used fleet)",
         "evidence": "illustrative",
         "note": (
-            "ILLUSTRATIVE preset, NOT a real customer. The same set tuned "
-            "further against the SRM: the SRM (PLAN A) purchase quote pushed to "
-            "S$284,000 and commercial diesel price dropped to S$1.80/L. PLAN A "
-            "still carries the SRM T3EV+; PLAN B still carries the honest "
-            "ChengLong L2EV competitor at its fixed S$205,000 quote. The gates "
-            "still pass (the figures are honest and complete) but SRM (Plan A) "
-            "now costs MORE than Keep ICE: Total economic TCO ~S$1,411,412, a "
-            "Saving of ~-5.02% vs Keep ICE ~S$1,343,994 - an honest 'SRM is not "
-            "a fit right now' outcome, not a crash and not a hidden failure. "
-            "The frozen engine honestly still shows the ChengLong (Plan B, "
-            "~S$1,137,729 / ~15.35%) positive here; surfaced, not hidden."
+            "ILLUSTRATIVE operator archetype, NOT a real customer. The EV is NOT "
+            "A FIT here: a single, lightly-used truck (1 EV-action truck) running "
+            "only 20 km/day x 100 days/year. PLAN A carries the SRM T3EV+ at its "
+            "HONEST all-in quote S$193,000; PLAN B carries the honest ChengLong "
+            "L2EV competitor at its HONEST all-in quote S$205,000. The prices are "
+            "HELD FIXED and IDENTICAL to the wins/breakeven archetypes - only the "
+            "FLEET SIZE (1 truck) and OPERATIONAL INTENSITY (20 km/day x 100 "
+            "days) differ. The frozen engine computes an SRM (Plan A) saving "
+            "~-0.65% vs Keep ICE (Total economic TCO S$248.8k vs Keep ICE "
+            "S$247.1k): slightly NEGATIVE, an honest 'EV does not pay back yet' "
+            "outcome. A single, barely-used truck runs too few energy-saving km "
+            "to recover the EV premium over its depot charger - driven by "
+            "operations and fleet size, NOT by any price adjustment."
         ),
-        "inputs": tune_illustrative(illustrative, BAD_TUNE),
+        "inputs": loses_inputs,
     })
 
     # Case 4: BLANK - a clean-slate starting template (honest blanks, not zeros).
@@ -682,12 +713,20 @@ def main():
         "_meta": {
             "description": (
                 "Seed customer cases for the Prospects view. Each case is a full "
-                "engine input set. best/mid/bad/blank are ILLUSTRATIVE presets "
-                "(not real customers); demo is the workbook demonstration case. "
-                "best/mid/bad are derived from the illustrative fully-specified "
-                "sensitivity baseline; blank is a prefilled starting template "
-                "(common SG shared assumptions filled, customer-specific values "
-                "left as honest blanks)."
+                "engine input set. wins/breakeven/loses/blank are ILLUSTRATIVE "
+                "presets (not real customers); the workbook demonstration case "
+                "survives only as the untouched validate.py Excel-parity fixture. "
+                "wins/breakeven/loses are honest operational-break-even "
+                "archetypes built from one illustrative fully-specified baseline "
+                "at FIXED honest vehicle prices (SRM T3EV+ col-D S$193,000 on "
+                "Plan A, ChengLong L2EV S$205,000 on Plan B, identical across all "
+                "three); they differ ONLY in fleet size (30 / 4 / 1 EV-action "
+                "trucks) and operational intensity (120x300, 60x200, 20x100 "
+                "km/day x days/year), never in price. The depot charging site "
+                "scales with the fleet (one AC11 charger + plug per truck). blank "
+                "is a prefilled "
+                "starting template (common SG shared assumptions filled, "
+                "customer-specific values left as honest blanks)."
             ),
             "generated_by": "tools/build_prospects.py",
         },

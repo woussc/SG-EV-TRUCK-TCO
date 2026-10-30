@@ -27,7 +27,7 @@
  *
  * THE HELD-CONSTANT SCENARIO (apples-to-apples base)
  * --------------------------------------------------
- * The generator reuses the shipped 'best' illustrative preset from
+ * The generator reuses the shipped 'wins' illustrative preset from
  * tools/fixtures/prospect_seeds.json as the single fixed base and holds it
  * IDENTICAL across all 12 models: same fleet size and composition, same duty
  * (work km/day, days/year), same energy prices (diesel + depot electricity),
@@ -93,7 +93,7 @@ function money(v) { return isNum(v) ? 'S$' + Math.round(v).toLocaleString('en-US
 
 /* Build the held-constant EV-plan state with `model` bound as the EV on every
  * EV-action Plan A truck (slot O === 'EV'). Everything else (fleet, duty,
- * energy, site, EV quote col D) is left exactly as the 'best' preset authored
+ * energy, site, EV quote col D) is left exactly as the 'wins' preset authored
  * it, so the scenario is identical across all 12 models. This mirrors the
  * engine's Plan A (slot O) projection: the engine reads col B as the bound
  * model for that truck's EV path. */
@@ -116,10 +116,10 @@ export function modelTco(baseInputs, model) {
   return { y5: isNum(c5) ? c5 : null, y10: isNum(c10) ? c10 : null };
 }
 
-/* Compute the full 12-model result set against the 'best' held-constant base. */
+/* Compute the full 12-model result set against the 'wins' held-constant base. */
 export function computeModelTable(seeds) {
-  const base = seeds.cases.find((c) => c.id === 'best');
-  if (!base) throw new Error('prospect_seeds.json has no "best" case to use as the held-constant base');
+  const base = seeds.cases.find((c) => c.id === 'wins');
+  if (!base) throw new Error('prospect_seeds.json has no "wins" case to use as the held-constant base');
   // Guard: the 12-model list must match the preset's product catalogue exactly.
   const cat = (base.inputs.products.rows || []).map((r) => r.A);
   for (const m of CATALOGUE_MODELS) {
@@ -142,9 +142,9 @@ export function renderSection(rows) {
   md += '**5-year** and the **10-year** Total economic TCO, computed by the frozen engine\n';
   md += '(`src/engine.js`, `computeFleet`) under ONE held-constant scenario so the\n';
   md += 'per-model comparison is apples-to-apples.\n\n';
-  md += '**Held-constant scenario.** The shipped **Best** illustrative preset is used as the\n';
+  md += '**Held-constant scenario.** The shipped **Wins** illustrative preset is used as the\n';
   md += 'single fixed base and is held identical across all 12 models: the same fleet size\n';
-  md += 'and composition (4 EV-action trucks within a 100-truck register), the same duty\n';
+  md += 'and composition (30 EV-action trucks within a 100-truck register), the same duty\n';
   md += '(work km/day and days/year), the same energy prices (commercial diesel and depot\n';
   md += 'electricity), the same depot charging-site build-up, and the same EV purchase quote\n';
   md += '(col D). The **only** input that changes between rows is which catalogue model is\n';
@@ -170,7 +170,7 @@ export function renderSection(rows) {
   md += 'competitor models are shown on the same held-constant duty for a like-for-like\n';
   md += 'comparison. Catalogue **body-fit / payload status is Unconfirmed** for every model,\n';
   md += 'so no row reads as a clean "best fit" until that status is confirmed with a real\n';
-  md += 'quote. All preset figures are **illustrative** (the Best preset is an\n';
+  md += 'quote. All preset figures are **illustrative** (the Wins preset is an\n';
   md += 'engine-verified demonstration, not a real customer). Regenerate this table\n';
   md += 'deterministically with `node tools/build_simbrief_models.mjs` and re-embed it with\n';
   md += '`node tools/build_index.js`.\n';
@@ -200,7 +200,7 @@ if (invokedDirectly) {
   writeFileSync(briefPath, next, 'utf8');
 
   console.log('Regenerated the 12-model 5yr/10yr Total economic TCO table in');
-  console.log('docs/simulation-results-brief.md (held-constant = "best" preset).\n');
+  console.log('docs/simulation-results-brief.md (held-constant = "wins" preset).\n');
   console.log('Model'.padEnd(30) + '5-year'.padStart(16) + '10-year'.padStart(16));
   for (const r of rows) {
     console.log(r.model.padEnd(30) + money(r.y5).padStart(16) + money(r.y10).padStart(16));
