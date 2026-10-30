@@ -30,23 +30,25 @@ function clone(x) { return JSON.parse(JSON.stringify(x)); }
 function isNum(v) { return typeof v === 'number' && isFinite(v); }
 
 /* ---- Scenario: the fully-specified illustrative case that clears gates --- *
- * The 'best' case is the fully-specified illustrative confirmed-win set: its
+ * The 'wins' case is the fully-specified illustrative confirmed-win set: its
  * Total economic TCO and Saving % are numeric and respond to inputs, which is
- * exactly what a sensitivity sweep needs. (The former 'evergreen' seed was
- * removed as a misleading named customer; 'best' is the same input set.) */
-const baseline = seeds.cases.find(c => c.id === 'best');
-const SCENARIO = { id: 'best', label: 'Best case (fully specified, gates pass)', inputs: baseline.inputs };
+ * exactly what a sensitivity sweep needs. (It is the honest operational
+ * break-even archetype that replaced the old price-tuned 'best' preset; it is
+ * the same fully-specified gate-passing input set, now at honest fixed prices
+ * and a 30-truck high-utilisation fleet.) */
+const baseline = seeds.cases.find(c => c.id === 'wins');
+const SCENARIO = { id: 'wins', label: 'Wins case (fully specified, gates pass)', inputs: baseline.inputs };
 
 /* ---- Output extractor: the SRM (Plan A) scenario ------------------------- *
- * FEAT-003: the 'best' preset demonstrates the SRM T3EV+ on PLAN A (the SRM
+ * FEAT-003: the 'wins' preset demonstrates the SRM T3EV+ on PLAN A (the SRM
  * plan) and an honest competitor on Plan B. The frozen engine binds ONE col-B
  * model per truck row, so a raw computeFleet on the preset would evaluate SRM on
- * BOTH slots and could report the Plan B SRM-on-both-slots artifact as "best".
+ * BOTH slots and could report the Plan B SRM-on-both-slots artifact as "wins".
  * This sweep is about the SRM business case, so it baselines on the SRM scenario
  * EXACTLY as the live tool does: the two-state Plan A run (slot O keeps the
  * preset col B = SRM + col D = SRM quote). That keeps the sensitivity baseline
  * identical to the headline SRM figure quoted in docs/preset-profiles.md and the
- * brief (Total ~S$1,047,412, Saving ~29.52%). No engine change; input wiring
+ * brief (Total ~S$7,867,090, Saving ~29.43%). No engine change; input wiring
  * only. */
 // Included-truck rule: an inclusive "row is in play" heuristic (B===1 OR any
 // data in cols C-M). Mirrors index.html's syncReframeFromPreset; it is NOT

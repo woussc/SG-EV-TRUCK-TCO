@@ -203,19 +203,20 @@ const prospectsBlock =
   `<script>\nwindow.HSProspectSeeds = ${JSON.stringify(seeds)};\n</script>\n` +
   `<!-- PROSPECTS:END -->`;
 
-// DEFAULT LANDING = the MID (SRM) illustrative case. The page controller reads
-// window.HSLandingCase.inputs via freshInputs() as the initial landing state,
-// so the app opens on an SRM scenario (TCO dashboard, routing sim active EV =
-// SRM, and proposal all render from mid on first load). This is a deep copy of
-// the mid seed's inputs, carrying the full product catalogue under
-// inputs.products.rows. If the mid seed is ever missing, fail loudly at build
-// time rather than silently ship the wrong landing case.
-const landingCase = seeds.cases.find((c) => c.id === 'mid');
+// DEFAULT LANDING = the BREAKEVEN (SRM) illustrative archetype. The page
+// controller reads window.HSLandingCase.inputs via freshInputs() as the initial
+// landing state, so the app opens on the marginal "is it worth it for us?" SRM
+// scenario (TCO dashboard, routing sim active EV = SRM, and proposal all render
+// from breakeven on first load). This is a deep copy of the breakeven seed's
+// inputs, carrying the full product catalogue under inputs.products.rows. If
+// the breakeven seed is ever missing, fail loudly at build time rather than
+// silently ship the wrong landing case.
+const landingCase = seeds.cases.find((c) => c.id === 'breakeven');
 if (!landingCase) {
-  throw new Error('prospect_seeds.json has no "mid" case to use as default landing');
+  throw new Error('prospect_seeds.json has no "breakeven" case to use as default landing');
 }
 const landingBlock =
-  `<!-- LANDING:BEGIN  generated (mid case) from tools/fixtures/prospect_seeds.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<!-- LANDING:BEGIN  generated (breakeven case) from tools/fixtures/prospect_seeds.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<script>\nwindow.HSLandingCase = ${JSON.stringify({ id: landingCase.id, name: landingCase.name, inputs: landingCase.inputs })};\n</script>\n` +
   `<!-- LANDING:END -->`;
 
