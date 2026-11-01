@@ -9071,6 +9071,23 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     });
   })();
 
+  // Test hook (FEAT-002 review follow-up): expose the PURE live-report
+  // generator so the DOM-shim harness can INVOKE it against the current live
+  // state + the live engine result and assert on the produced markdown (table
+  // rows, n.a. propagation, Reference append). Display/test-only: it reads the
+  // same window.__HS.state + computeReframed() the click handler reads and
+  // changes no behaviour; the click handler keeps calling the generator
+  // directly and does NOT use this hook.
+  try {
+    if (window.__HS) {
+      window.__HS.__buildLiveAnalysisMarkdown = function(){
+        var H = window.__HS;
+        if (!(H && typeof H.computeReframed === 'function' && H.state)) return '';
+        return buildLiveAnalysisMarkdown(H.state, H.computeReframed());
+      };
+    }
+  } catch (e) {}
+
   render();
 })();
 </script>

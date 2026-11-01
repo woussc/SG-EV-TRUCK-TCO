@@ -3625,6 +3625,78 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
   checks.push(['live-report: generator introduces NO fetch (offline)', !/\bfetch\s*\(/.test(liveGenSrc)]);
   checks.push(['live-report: generator introduces NO XMLHttpRequest (offline)',
     !/XMLHttpRequest/.test(liveGenSrc)]);
+
+  // (e) FEAT-002 LIVE REPORT - INVOCATION coverage (review v1 issue #1). The
+  // static greps above prove the generator EXISTS and references the right
+  // globals, but they would NOT fail if the body emitted wrong figures or if the
+  // live-result wiring were reverted. Here we INVOKE the generator via the
+  // display/test-only hook (window.__HS.__buildLiveAnalysisMarkdown) against the
+  // CURRENT live state the harness already drove (the sg-01 landing was loaded
+  // then the demo fixture via __HS.loadDemoFixture at the top of this file), and
+  // assert on the PRODUCED markdown so a regression in the report body fails.
+  checks.push(['live-report: __buildLiveAnalysisMarkdown test hook is exposed on window.__HS',
+    typeof windowObj.__HS.__buildLiveAnalysisMarkdown === 'function']);
+  const liveMd = (typeof windowObj.__HS.__buildLiveAnalysisMarkdown === 'function')
+    ? windowObj.__HS.__buildLiveAnalysisMarkdown() : '';
+  checks.push(['live-report: invoked generator returns a non-empty string', typeof liveMd === 'string' && liveMd.length > 0]);
+  // The key section headings the generator emits (in order) must all appear.
+  [ 'Current fleet & duty',
+    'Replacement plan',
+    'Energy & operating-cost inputs',
+    'Total cost of ownership (all four paths)',
+    'Decision',
+  ].forEach((h) => {
+    checks.push(['live-report: produced markdown contains the "' + h + '" section', liveMd.indexOf(h) !== -1]);
+  });
+  // The diagnostic / not-a-quotation caveat is present in the produced body.
+  checks.push(['live-report: produced markdown carries the diagnostic / not-a-quotation caveat',
+    /not a quotation/i.test(liveMd)]);
+  // LIVE-RESULT WIRING PROOF: the demo state the harness loaded produces a Keep
+  // ICE vehicle economic TCO that formats to S$2,081,781 (asserted on the engine
+  // + the on-screen results-body above). It MUST appear in the produced TCO
+  // table - this assertion FAILS if the generator emits wrong figures or if the
+  // live-result wiring (computeReframed -> out.results) were reverted to a static
+  // dump.
+  checks.push(['live-report: produced TCO table reflects the LIVE engine figure (Keep ICE S$2,081,781)',
+    liveMd.indexOf('S$2,081,781') !== -1]);
+  // HONEST n.a. PROPAGATION: the demo has n.a. Plan A/B Total economic TCO
+  // (netSiteCost.plan_a === NA upstream), so the produced report MUST print the
+  // literal n.a. - proving the report is built from the live result and never
+  // substitutes a fabricated zero.
+  checks.push(['live-report: produced markdown propagates n.a. (never a fabricated zero) from the live result',
+    liveMd.indexOf('n.a.') !== -1]);
+  // The Reference section (bundled all-models 5yr/10yr brief) is appended, and
+  // real brief content rides along (a grounding figure unique to the brief).
+  checks.push(['live-report: produced markdown appends the Reference all-models 5yr/10yr section',
+    /Reference: all-models 5yr\/10yr TCO & methodology/.test(liveMd)]);
+  checks.push(['live-report: appended Reference includes bundled brief content (grounding figure S$2,798,199)',
+    liveMd.indexOf('S$2,798,199') !== -1]);
+
+  // (f) Review v1 issue #2 (guard, generator behaviour unchanged): the report
+  // reads a few energy/operating-cost inputs POSITIONALLY - diesel = ecRow(7),
+  // electricity = ecRow(10), ICE fuel = ocRow(7), insurance = ocRow(29/30). Those
+  // indices are correct today but unlabelled; assert the live state's rows at
+  // those indices still carry the expected label (col A) so a future row-shift is
+  // caught here rather than silently mislabelling the report. Rows expose a label
+  // in col A; skip an individual guard only if that row/label is absent (so the
+  // check never becomes a false red on a legitimately trimmed state).
+  (function(){
+    const ecRows = (windowObj.__HS.state.energy_and_charging && windowObj.__HS.state.energy_and_charging.rows) || [];
+    const ocRows = (windowObj.__HS.state.operating_costs && windowObj.__HS.state.operating_costs.rows) || [];
+    const ecAt = (n) => ecRows.find((row) => row && row._row === n);
+    const ocAt = (n) => ocRows.find((row) => row && row._row === n);
+    const lab = (row) => String((row && (row.label != null ? row.label : row.A)) || '');
+    const diesel = ecAt(7), elec = ecAt(10), iceFuel = ocAt(7), iceIns = ocAt(29), evIns = ocAt(30);
+    checks.push(['live-report guard: ecRow(7) is the commercial diesel price (label mentions diesel/fuel)',
+      !diesel || /diesel|fuel/i.test(lab(diesel))]);
+    checks.push(['live-report guard: ecRow(10) is the depot electricity price (label mentions electricity/grid/kWh)',
+      !elec || /electric|grid|kwh/i.test(lab(elec))]);
+    checks.push(['live-report guard: ocRow(7) is the ICE fuel consumption (label mentions fuel/consumption/L/km)',
+      !iceFuel || /fuel|consumption|l\/km|litre/i.test(lab(iceFuel))]);
+    checks.push(['live-report guard: ocRow(29/30) are the insurance rows (label mentions insurance)',
+      (!iceIns || /insurance/i.test(lab(iceIns))) &&
+      (!evIns || /insurance/i.test(lab(evIns)))]);
+  })();
 })();
 
 // ---------------------------------------------------------------------------
