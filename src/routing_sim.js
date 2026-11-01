@@ -368,8 +368,9 @@ export function simulateChargingDetour(params) {
       const charger = pickCharger(a.lat, a.lon);
       if (!charger || !isNum(charger.powerKw) || charger.powerKw <= 0) {
         // No reachable charger (or none with usable power and no fallback): the
-        // corridor cannot be served by public charging. Flag it honestly and
-        // let the remaining legs run so the SoC breach is visible downstream.
+        // corridor cannot be served by public charging. Flag it honestly; the
+        // outer loop halts after this leg (its `&& !infeasible` guard) and the
+        // breach is surfaced via reserveBreached + minSocFraction, not hidden.
         infeasible = true;
         infeasibleReason = charger
           ? 'nearest charger on this corridor has no usable power (and no fallback)'

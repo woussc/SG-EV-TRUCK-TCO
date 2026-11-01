@@ -3705,7 +3705,7 @@ window.HSChargingContext = {"schemaVersion":1,"provenance":{"source":"lta-datama
 <!-- CHARGING:END -->
 
 <!-- ROUTING:BEGIN  generated from src/routing_sim.js by tools/build_index.js  DO NOT EDIT BY HAND -->
-<!-- src/routing_sim.js SHA-256: d305a55ed19478d7cdc56719657ab7145ae93d4b3f266dbbb2c1479c5e7122bb -->
+<!-- src/routing_sim.js SHA-256: 6af241d2edd0ed7a24169fb2493d1d8e511029f8bffd06ef8fcff80581589825 -->
 <script>
 /*
  * Public-charging routing simulator module (Stage 3 / Charging)
@@ -4077,8 +4077,9 @@ function simulateChargingDetour(params) {
       const charger = pickCharger(a.lat, a.lon);
       if (!charger || !isNum(charger.powerKw) || charger.powerKw <= 0) {
         // No reachable charger (or none with usable power and no fallback): the
-        // corridor cannot be served by public charging. Flag it honestly and
-        // let the remaining legs run so the SoC breach is visible downstream.
+        // corridor cannot be served by public charging. Flag it honestly; the
+        // outer loop halts after this leg (its `&& !infeasible` guard) and the
+        // breach is surfaced via reserveBreached + minSocFraction, not hidden.
         infeasible = true;
         infeasibleReason = charger
           ? 'nearest charger on this corridor has no usable power (and no fallback)'
