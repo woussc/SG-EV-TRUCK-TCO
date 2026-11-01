@@ -657,6 +657,18 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .charge-band .cb-fill{height:100%;background:var(--accent);border-radius:4px}
 .charge-band .cb-val{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .charge-attrib{font-size:13px;color:var(--muted);border-left:3px solid var(--line2);padding:8px 12px;background:var(--soft);margin:12px 0 0;border-radius:0 6px 6px 0}
+/* FEAT-002 live cost counter: a compact readout band (running S$ cost, total
+   charge time, charge-stop count) updated on every route change from the SAME
+   deterministic simulateChargingDetour result that draws the detour line, so the
+   number and the map always agree. Diagnostic-not-a-quotation caveat stays visible. */
+.rsim-cost{margin:10px 0 0;border:1px solid var(--line);border-radius:10px;background:var(--soft);padding:12px 14px}
+.rsim-cost .rc-metrics{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:flex-end}
+.rsim-cost .rc-metric{display:flex;flex-direction:column;gap:2px;min-width:0}
+.rsim-cost .rc-metric .rc-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.rsim-cost .rc-metric .rc-val.na{font-size:15px;font-style:italic;color:var(--muted)}
+.rsim-cost .rc-metric .rc-lab{font-size:13px;color:var(--muted)}
+.rsim-cost .rc-caveat{font-size:13px;color:var(--muted);margin:8px 0 0}
+.rsim-cost .rc-incomplete{color:var(--warn);font-weight:600}
 /* Routing simulator (Panel 4): controls row + REAL geographic offline inline-
    SVG Singapore map. The outline is drawn from the bundled, build-time
    simplified basemap (window.HSBasemap); chargers plot by lat/lon; depot/start
@@ -697,6 +709,13 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
    against both land and the faint road context. Rounded joins. */
 #rsim-map .rsim-route-casing{stroke:#fff;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0.9}
 #rsim-map .rsim-route{stroke:#0f5bd6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+/* FEAT-002 charging-detour line: the SECOND coloured line, a clearly DIFFERENT
+   colour from the blue on-road route (a distinct green), dashed so it reads as a
+   detour off the main corridor. Routes point-on-route -> nearest charger -> back. */
+#rsim-map .rsim-detour{stroke:#0a8f3c;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0.95}
+/* FEAT-002 charging-stop pin: a distinct diamond-ish marker (green fill, white
+   ring) set apart from the depot (amber), route stops (blue) and reachable dots. */
+#rsim-map .rsim-charge-pin{fill:#0a8f3c;stroke:#fff}
 /* Honest fallback: a leg with NO on-road path is drawn as a distinct dashed
    straight line so the degrade is visible, never disguised as a road route. */
 #rsim-map .rsim-leg{stroke:var(--warn);fill:none;opacity:0.9}
@@ -708,6 +727,8 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 .rsim-legend .rl-dot{display:inline-block;width:10px;height:10px;border-radius:999px;flex:0 0 10px}
 .rsim-legend .rl-line{display:inline-block;width:16px;height:0;flex:0 0 16px;border-top-width:3px;border-top-style:solid}
 .rsim-legend .rl-route{border-top-color:#0f5bd6}
+.rsim-legend .rl-detour{border-top-style:dashed;border-top-color:#0a8f3c}
+.rsim-legend .rl-charge{background:#0a8f3c}
 .rsim-legend .rl-fallback{border-top-style:dashed;border-top-color:var(--warn)}
 .rsim-legend .rl-origin{background:var(--warn)}
 .rsim-legend .rl-stop{background:#2a6df5}
@@ -770,6 +791,10 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  .rsim-maptools{flex-direction:column;align-items:flex-start;gap:10px}
  .rsim-zoom{align-self:flex-end}
  .rsim-zoom .rsim-btn-sm{padding:8px 12px;min-width:40px;font-size:14px}
+ /* FEAT-002 Phone cost counter: let the metric tiles wrap to two columns so the
+    running cost, charge time and stop count stay legible at ~390px. */
+ .rsim-cost .rc-metrics{gap:10px 18px}
+ .rsim-cost .rc-metric{flex:1 1 40%}
  /* FEAT-007 Phone proposal/finance: the per-plan grids already stack at 860px;
     keep the per-plan finance block padding tidy at phone width. */
  .finance-plan-col{padding:12px 14px}
@@ -1249,9 +1274,11 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
 </div>
 <div id="rsim-map" role="group" aria-label="Interactive offline Singapore route-simulation map"></div>
 <div class="rsim-maptools noprint" aria-hidden="true">
-  <span class="rsim-legend"><span class="rl-item"><span class="rl-dot rl-origin"></span>Depot / start</span><span class="rl-item"><span class="rl-dot rl-stop"></span>Route stop</span><span class="rl-item"><span class="rl-line rl-route"></span>On-road route</span><span class="rl-item"><span class="rl-line rl-fallback"></span>Straight-line fallback</span><span class="rl-item"><span class="rl-dot rl-dc"></span>DC reachable</span><span class="rl-item"><span class="rl-dot rl-ac"></span>AC reachable</span><span class="rl-item"><span class="rl-dot rl-far"></span>Out of range</span></span>
+  <span class="rsim-legend"><span class="rl-item"><span class="rl-dot rl-origin"></span>Depot / start</span><span class="rl-item"><span class="rl-dot rl-stop"></span>Route stop</span><span class="rl-item"><span class="rl-line rl-route"></span>On-road route</span><span class="rl-item"><span class="rl-line rl-detour"></span>Charging detour</span><span class="rl-item"><span class="rl-dot rl-charge"></span>Charging stop</span><span class="rl-item"><span class="rl-line rl-fallback"></span>Straight-line fallback</span><span class="rl-item"><span class="rl-dot rl-dc"></span>DC reachable</span><span class="rl-item"><span class="rl-dot rl-ac"></span>AC reachable</span><span class="rl-item"><span class="rl-dot rl-far"></span>Out of range</span></span>
   <span class="rsim-zoom"><button type="button" class="rsim-btn rsim-btn-sm" id="rsim-zoom-in" aria-label="Zoom in">+</button><button type="button" class="rsim-btn rsim-btn-sm" id="rsim-zoom-out" aria-label="Zoom out">&minus;</button><button type="button" class="rsim-btn rsim-btn-sm" id="rsim-zoom-reset" aria-label="Reset view">Reset</button></span>
 </div>
+<p class="sub-title" style="margin-top:14px"><strong>Live charging-detour cost counter</strong> &mdash; the SRM tops up at the nearest public charger before the battery would hit the reserve floor</p>
+<div class="rsim-cost" id="rsim-cost-counter" aria-live="polite"></div>
 <p class="sub-title" style="margin-top:14px"><strong>Depot charging vs public charging</strong> for the active SRM EV on this route</p>
 <div class="charge-readgrid" id="rsim-summary"></div>
 <p class="sub-title" style="margin-top:14px"><strong>Reachable public chargers</strong> (within reach of the route; ranked by approximate great-circle distance to the route)</p>
@@ -3678,7 +3705,7 @@ window.HSChargingContext = {"schemaVersion":1,"provenance":{"source":"lta-datama
 <!-- CHARGING:END -->
 
 <!-- ROUTING:BEGIN  generated from src/routing_sim.js by tools/build_index.js  DO NOT EDIT BY HAND -->
-<!-- src/routing_sim.js SHA-256: c2f6fedbf5fdbc86e35b562e034156277227afb2e452b091f5881fb0b49ffe62 -->
+<!-- src/routing_sim.js SHA-256: c8af2669328d9baee416e3588ea05d6952aca220728605d32a4e3213b34f3d45 -->
 <script>
 /*
  * Public-charging routing simulator module (Stage 3 / Charging)
@@ -3902,6 +3929,189 @@ function chargeTimeHours(params) {
 }
 
 /*
+ * simulateChargingDetour(params) -> deterministic charging-detour plan.
+ * ---------------------------------------------------------------------
+ * The dual-line "fleet-manager" simulation that sits NEXT TO the on-road route:
+ * walk the on-road route polyline vertex by vertex, deplete the SRM battery at
+ * spec.kwhPerKm * legKm, and BEFORE the state-of-charge would fall below the
+ * reserve floor on the NEXT segment, route to the NEAREST bundled charger,
+ * charge there (duration/energy via chargeTimeHours at that charger's power),
+ * and resume. It answers, honestly: WHERE would the SRM stop, HOW LONG would
+ * each stop take, and what would the running S$ cost be.
+ *
+ * This function is PURE, DETERMINISTIC and DOM/network-free. It does NOT import,
+ * call, or feed back into the frozen fleet-compute engine; it only reads the
+ * bundled charger subset passed in `locations`.
+ *
+ * params = {
+ *   routePolyline : [{lat,lon}, ...]  the on-road route vertex list (from
+ *                   road_router.routeOnRoadSequence().polyline) OR the straight
+ *                   stop list when no road path exists. >= 2 vertices.
+ *   locations     : array of compact charger records (window.HSChargingLocations
+ *                   .locations shape: {lat,lon,operator,region,hasDc,plug}).
+ *   spec          : { batteryKwh, kwhPerKm, chargerKwFallback? } - the active SRM
+ *                   spec (batteryKwh = prod.D, kwhPerKm = prod.E). chargerKwFallback
+ *                   (optional) is used only when a picked charger publishes no power.
+ *   startSocFraction   : starting state of charge (0..1], default 1.0 (full).
+ *   reserveFraction    : usable-battery reserve kept in hand (default SIM_DEFAULTS
+ *                        .RESERVE_FRACTION). SoC must never drop below this.
+ *   chargeLossFraction : grid-to-battery loss (default SIM_DEFAULTS.CHARGE_LOSS_FRACTION).
+ *   maxDetourKm?       : radius cap for the nearest-charger search (default
+ *                        SIM_DEFAULTS.MAX_RADIUS_KM; pass null to disable).
+ * }
+ *
+ * METHOD (units: km / kWh / kW / hours; SoC as a 0..1 fraction of batteryKwh):
+ *   usableFloorKwh = batteryKwh * reserveFraction          (never dip below this)
+ *   Starting from socKwh = batteryKwh * startSocFraction, for each polyline leg:
+ *     legEnergy = legKm * kwhPerKm
+ *     if (socKwh - legEnergy < usableFloorKwh):   // would breach reserve
+ *       pick nearest charger to the CURRENT vertex (nearestChargers limit:1)
+ *       refillKwh = batteryKwh*(1-reserveFraction) - (socKwh - usableFloorKwh)
+ *                 = capacity back up to full usable, measured into the pack
+ *       ct = chargeTimeHours({battery,kwhPerKm,distanceKm,chargerKw}) sized so
+ *            deliverKwh == refillKwh (we pass distanceKm = refillKwh/kwhPerKm)
+ *       socKwh += ct.deliverKwh ; accumulate duration, energy, cost, detour
+ *     socKwh -= legEnergy
+ *
+ * Returns:
+ *   { ok:true,
+ *     events: [ { atKm, lat, lon, operator, powerKw, pricePerKwh|null,
+ *                 energyKwh, gridKwh, durationHours, arrivalSocFraction,
+ *                 detourKm, costIsPriced } ],
+ *     totalChargeHours, chargeStopCount, energyKwh (battery kWh delivered),
+ *     gridKwh (incl. loss), totalCost|null, costIsComplete, detourKm, routeKm }
+ * Honest degrade: { ok:false, reason } when spec / polyline / locations are
+ * missing or non-positive. A charger with NO published price still contributes
+ * energy + time (so the schedule is honest) but its cost is EXCLUDED from
+ * totalCost and costIsComplete is set false (a price is NEVER fabricated).
+ * Deterministic: the nearest-charger tie-break is nearestChargers' (distance,
+ * operator, lat, lon), so the same inputs always yield the same plan.
+ */
+function simulateChargingDetour(params) {
+  params = params || {};
+  const poly = params.routePolyline;
+  const locations = params.locations;
+  const spec = params.spec || {};
+  const batteryKwh = spec.batteryKwh;
+  const kwhPerKm = spec.kwhPerKm;
+  const chargerKwFallback = isNum(spec.chargerKwFallback) ? spec.chargerKwFallback : null;
+  const startSocFraction = isNum(params.startSocFraction) ? params.startSocFraction : 1.0;
+  const reserveFraction = isNum(params.reserveFraction) ? params.reserveFraction : SIM_DEFAULTS.RESERVE_FRACTION;
+  const chargeLossFraction = isNum(params.chargeLossFraction) ? params.chargeLossFraction : SIM_DEFAULTS.CHARGE_LOSS_FRACTION;
+  const maxDetourKm = ('maxDetourKm' in params) ? params.maxDetourKm : SIM_DEFAULTS.MAX_RADIUS_KM;
+
+  // Honest degrade on missing / invalid inputs (never a fabricated plan).
+  if (!Array.isArray(poly) || poly.length < 2) return { ok: false, reason: 'route polyline missing or too short' };
+  if (!Array.isArray(locations) || locations.length === 0) return { ok: false, reason: 'charger locations missing' };
+  if (!isNum(batteryKwh) || batteryKwh <= 0) return { ok: false, reason: 'active EV battery kWh missing' };
+  if (!isNum(kwhPerKm) || kwhPerKm <= 0) return { ok: false, reason: 'active EV kWh/km missing' };
+  if (!(reserveFraction >= 0 && reserveFraction < 1)) return { ok: false, reason: 'invalid reserve fraction' };
+  if (!(chargeLossFraction >= 0 && chargeLossFraction < 1)) return { ok: false, reason: 'invalid charge-loss fraction' };
+  if (!(startSocFraction > 0 && startSocFraction <= 1)) return { ok: false, reason: 'invalid start SoC fraction' };
+
+  const floorKwh = batteryKwh * reserveFraction;          // never dip below this
+  const usableKwh = batteryKwh * (1 - reserveFraction);   // deliverable per full top-up
+  let socKwh = batteryKwh * startSocFraction;             // current battery energy
+
+  const events = [];
+  let totalChargeHours = 0;
+  let energyKwh = 0;            // battery kWh actually delivered across stops
+  let gridKwh = 0;             // grid kWh incl. loss across stops
+  let totalCost = 0;           // S$ summed over PRICED events only
+  let costIsComplete = true;   // false once any used charger has no price
+  let detourKm = 0;            // great-circle out-and-back distance to chargers
+  let routeKm = 0;             // cumulative on-route distance walked
+
+  // Pick the nearest charger to a point and resolve its headline power/price.
+  function pickCharger(lat, lon) {
+    const list = nearestChargers({ lat: lat, lon: lon }, locations, { limit: 1, maxRadiusKm: maxDetourKm });
+    if (!list.length) return null;
+    const c = list[0];
+    let powerKw = isNum(c.powerKw) ? c.powerKw : (isNum(c.maxPowerKw) ? c.maxPowerKw : null);
+    if (!isNum(powerKw) || powerKw <= 0) powerKw = chargerKwFallback;
+    return {
+      lat: c.lat, lon: c.lon, operator: c.operator,
+      powerKw: (isNum(powerKw) && powerKw > 0) ? powerKw : null,
+      pricePerKwh: isNum(c.pricePerKwh) ? c.pricePerKwh : null,
+      distanceKm: c.distanceKm,
+    };
+  }
+
+  for (let i = 1; i < poly.length; i++) {
+    const a = poly[i - 1], b = poly[i];
+    if (!a || !b || !isNum(a.lat) || !isNum(a.lon) || !isNum(b.lat) || !isNum(b.lon)) continue;
+    const legKm = haversineKm(a.lat, a.lon, b.lat, b.lon);
+    if (legKm == null) continue;
+    const legEnergy = legKm * kwhPerKm;
+
+    // BEFORE the leg: would completing it drop SoC below the reserve floor?
+    if (socKwh - legEnergy < floorKwh - 1e-9) {
+      // Refill, from the CURRENT point, back up to the usable ceiling.
+      const refillKwh = usableKwh - (socKwh - floorKwh);
+      if (refillKwh > 1e-9) {
+        const charger = pickCharger(a.lat, a.lon);
+        if (charger && isNum(charger.powerKw) && charger.powerKw > 0) {
+          // Size chargeTimeHours so deliverKwh == refillKwh (distance proxy).
+          const distanceProxyKm = refillKwh / kwhPerKm;
+          const ct = chargeTimeHours({
+            batteryKwh: batteryKwh, kwhPerKm: kwhPerKm,
+            distanceKm: distanceProxyKm, chargerKw: charger.powerKw,
+            reserveFraction: reserveFraction, chargeLossFraction: chargeLossFraction,
+          });
+          if (ct && ct.hours > 0 && ct.deliverKwh > 0) {
+            const legDetourKm = isNum(charger.distanceKm) ? (charger.distanceKm * 2) : 0; // out + back
+            const priced = isNum(charger.pricePerKwh);
+            const eventCost = priced ? (ct.gridKwh * charger.pricePerKwh) : null;
+            socKwh += ct.deliverKwh;
+            totalChargeHours += ct.hours;
+            energyKwh += ct.deliverKwh;
+            gridKwh += ct.gridKwh;
+            detourKm += legDetourKm;
+            if (priced) totalCost += eventCost; else costIsComplete = false;
+            events.push({
+              atKm: Math.round(routeKm * 100) / 100,
+              lat: charger.lat, lon: charger.lon,
+              operator: charger.operator,
+              powerKw: charger.powerKw,
+              pricePerKwh: priced ? charger.pricePerKwh : null,
+              energyKwh: ct.deliverKwh,
+              gridKwh: ct.gridKwh,
+              durationHours: ct.hours,
+              arrivalSocFraction: socKwh / batteryKwh,
+              detourKm: legDetourKm,
+              costIsPriced: priced,
+            });
+          }
+        }
+        // If no charger is reachable (or none has usable power), we cannot top
+        // up here; the walk simply continues and SoC may dip below reserve. The
+        // schedule stays honest (no fabricated stop); the UI shows the reserve
+        // breach via the depot-feasibility panel.
+      }
+    }
+
+    socKwh -= legEnergy;
+    routeKm += legKm;
+  }
+
+  return {
+    ok: true,
+    events: events,
+    totalChargeHours: totalChargeHours,
+    chargeStopCount: events.length,
+    energyKwh: energyKwh,
+    gridKwh: gridKwh,
+    // totalCost is ALWAYS the hand-summable sum over PRICED events (S$); an
+    // unpriced charger's energy/time is counted but its cost is excluded and
+    // costIsComplete is false (never fabricated). Zero events -> 0, complete.
+    totalCost: totalCost,
+    costIsComplete: costIsComplete,
+    detourKm: Math.round(detourKm * 100) / 100,
+    routeKm: Math.round(routeKm * 100) / 100,
+  };
+}
+
+/*
  * validateLocationsDoc(doc) -> { ok, reasons, count } well-formedness check.
  * --------------------------------------------------------------------------
  * A defensive shape check for the bundled window.HSChargingLocations document.
@@ -3931,7 +4141,7 @@ function validateLocationsDoc(doc) {
   return { ok: reasons.length === 0, reasons, count: doc.locations.length };
 }
 
-window.HSRoutingSim = { haversineKm: haversineKm, nearestChargers: nearestChargers, chargeTimeHours: chargeTimeHours, headlinePlug: headlinePlug, validateLocationsDoc: validateLocationsDoc, EARTH_RADIUS_KM: EARTH_RADIUS_KM, SIM_DEFAULTS: SIM_DEFAULTS };
+window.HSRoutingSim = { haversineKm: haversineKm, nearestChargers: nearestChargers, chargeTimeHours: chargeTimeHours, headlinePlug: headlinePlug, validateLocationsDoc: validateLocationsDoc, simulateChargingDetour: simulateChargingDetour, EARTH_RADIUS_KM: EARTH_RADIUS_KM, SIM_DEFAULTS: SIM_DEFAULTS };
 </script>
 <!-- ROUTING:END -->
 
@@ -5429,7 +5639,12 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   // which distance the panels should quote.
   var rsimLast = {
     reach: { reachable: [], outOfRange: [] }, prod: null,
-    route: null, routeKm: null, routeIsOnRoad: false
+    route: null, routeKm: null, routeIsOnRoad: false,
+    // FEAT-002: the deterministic charging-detour + running-cost plan
+    // (window.HSRoutingSim.simulateChargingDetour result, or null). The map
+    // draws the detour line + charge pins from this, and the cost counter reads
+    // the SAME object, so the number and the map always agree.
+    detour: null
   };
 
   // Decode the bundled offline road graph ONCE and cache it (the graph has
@@ -5642,6 +5857,74 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
         '" stroke-width="' + SW_LEG + '" stroke-dasharray="' + scStr(5) + ' ' + scStr(4) + '"><title>straight-line fallback (no road path found)</title></line>');
     }
 
+    // FEAT-002 CHARGING-DETOUR line (the SECOND coloured line) + charging-stop
+    // pins. For each charge event in the deterministic simulateChargingDetour
+    // plan (rsimLast.detour), draw a detour path from the point-on-route (the
+    // route vertex nearest the event's atKm) out to the charger and back, using
+    // the on-road router where a path exists and an honest dashed great-circle
+    // fallback otherwise. The detour stroke is a clearly different colour (green)
+    // from the blue on-road route, and gets the SAME zoom-scaling (SW_DETOUR via
+    // k). A .rsim-charge-pin marks each charger with a tooltip saying operator,
+    // power, charge minutes, energy added and price.
+    var detour = rsimLast.detour;
+    var SW_DETOUR = scStr(2.2), R_CHARGE = scStr(6);
+    if (detour && detour.ok && Array.isArray(detour.events) && detour.events.length){
+      var rr2 = window.HSRoadRouter, dgraph = rsimRoadGraph();
+      // Find the route vertex nearest a given cumulative atKm along the polyline,
+      // so the detour visibly branches off the corridor at roughly the right spot.
+      var polyForDetour = (route && Array.isArray(route.polyline) && route.polyline.length >= 2)
+        ? route.polyline
+        : stops.map(function(s){ return { lat: s.lat, lon: s.lon }; });
+      function routePointAtKm(atKm){
+        if (!polyForDetour || polyForDetour.length < 2) return polyForDetour && polyForDetour[0];
+        var acc = 0, hv = (sim && sim.haversineKm) ? sim.haversineKm : null;
+        for (var i = 1; i < polyForDetour.length; i++){
+          var a = polyForDetour[i - 1], b = polyForDetour[i];
+          var seg = hv ? hv(a.lat, a.lon, b.lat, b.lon) : 0;
+          if (atKm <= acc + (seg || 0)) return a;
+          acc += (seg || 0);
+        }
+        return polyForDetour[polyForDetour.length - 1];
+      }
+      detour.events.forEach(function(ev){
+        var anchor = routePointAtKm(ev.atKm) || polyForDetour[0];
+        var charger = { lat: ev.lat, lon: ev.lon };
+        // Try an on-road out-and-back; fall back to a dashed straight line.
+        var legOut = (rr2 && dgraph && typeof rr2.routeOnRoad === 'function')
+          ? rr2.routeOnRoad(dgraph, anchor, charger) : null;
+        var dd = '';
+        if (legOut && Array.isArray(legOut.polyline) && legOut.polyline.length >= 2){
+          // out then back along the same road polyline (there-and-back).
+          var fwd = legOut.polyline, rev = fwd.slice().reverse();
+          fwd.concat(rev.slice(1)).forEach(function(pt, i){
+            var pr = P(pt.lat, pt.lon); if (!pr) return;
+            dd += (i === 0 ? 'M' : 'L') + pr.x.toFixed(1) + ' ' + pr.y.toFixed(1);
+          });
+          if (dd) parts.push('<path class="rsim-detour" d="' + dd + '" stroke-width="' + SW_DETOUR + '"><title>Charging detour to ' + esc(ev.operator) + ' (on-road)</title></path>');
+        } else {
+          var pa = P(anchor.lat, anchor.lon), pc = P(charger.lat, charger.lon);
+          if (pa && pc){
+            parts.push('<path class="rsim-detour" d="M' + pa.x.toFixed(1) + ' ' + pa.y.toFixed(1) + 'L' + pc.x.toFixed(1) + ' ' + pc.y.toFixed(1) +
+              '" stroke-width="' + SW_DETOUR + '" stroke-dasharray="' + scStr(5) + ' ' + scStr(4) + '"><title>Charging detour to ' + esc(ev.operator) + ' (straight-line fallback, no road path)</title></path>');
+          }
+        }
+      });
+      // Charging-stop pins drawn on top of the detour lines, with a where+how-long tooltip.
+      detour.events.forEach(function(ev, i){
+        var pr = P(ev.lat, ev.lon); if (!pr) return;
+        var mins = Math.round((isNum(ev.durationHours) ? ev.durationHours : 0) * 60);
+        var hh = Math.floor(mins / 60), mm = mins % 60;
+        var dur = (hh > 0 ? (hh + ' h ') : '') + mm + ' min';
+        var price = isNum(ev.pricePerKwh) ? ('S$' + ev.pricePerKwh.toFixed(2) + '/kWh') : 'price n.a.';
+        var kwh = isNum(ev.gridKwh) ? (Math.round(ev.gridKwh * 10) / 10) : (isNum(ev.energyKwh) ? Math.round(ev.energyKwh * 10) / 10 : 0);
+        var tip = 'Charging stop ' + (i + 1) + ' \u2014 ' + esc(ev.operator) +
+          ' \u00b7 ' + (isNum(ev.powerKw) ? (ev.powerKw + ' kW') : 'power n.a.') +
+          ' \u00b7 charge ~' + dur + ' \u00b7 +' + kwh + ' kWh \u00b7 ' + price;
+        parts.push('<circle class="rsim-charge-pin" cx="' + pr.x.toFixed(1) + '" cy="' + pr.y.toFixed(1) + '" r="' + R_CHARGE + '" stroke-width="' + SW_PIN + '"><title>' + tip + '</title></circle>');
+        parts.push('<text class="rsim-lab" x="' + pr.x.toFixed(1) + '" y="' + pr.y.toFixed(1) + '" style="font-size:' + LAB_FONT + 'px">\u26a1</text>');
+      });
+    }
+
     // Depot/start + route-stop markers: a clear NUMBERED sequence. The depot is
     // visually distinct (larger warn marker labelled 'D'); stops are numbered
     // 1..n. Each carries a hover tooltip.
@@ -5749,6 +6032,66 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     }
   }
 
+  // FEAT-002 live cost counter. Renders the running S$ cost, total charge time
+  // (h/min), and charge-stop count from the deterministic simulateChargingDetour
+  // result (`detour`). Honesty: when the sim is not ok (missing spec / route) OR
+  // the tally is incomplete (a used charger had no published price) the cost is
+  // shown as n.a. with the reason, never a fabricated number. The
+  // diagnostic-not-a-quotation + sector-approximate caveats stay visible.
+  function renderRsimCostCounter(detour, prod, stops, routeIsOnRoad){
+    var box = el('rsim-cost-counter');
+    if (!box) return;
+
+    function hhmm(hours){
+      var mins = Math.round((isNum(hours) ? hours : 0) * 60);
+      var hh = Math.floor(mins / 60), mm = mins % 60;
+      return (hh > 0 ? (hh + ' h ') : '') + mm + ' min';
+    }
+
+    var caveat = 'Diagnostic, <strong>not a quotation</strong>. Running cost, charge time and stops are a ' +
+      '<strong>sector-level approximate</strong> client-side simulation: the SRM tops up at the nearest public charger ' +
+      'before the battery would hit the reserve floor (10% reserve, 10% charging loss). Detour chargers come from the ' +
+      '<strong>dated snapshot</strong> (not live availability); great-circle detour distances; charge times are at rated ' +
+      'power and ignore tapering / queueing. It does <strong>not</strong> feed the TCO engine.';
+
+    // Honest n.a. states (no fabricated zero): sim not run / not ok.
+    if (!detour || !detour.ok){
+      var why = !prod ? 'no EV plan selected (active SRM model unresolved)'
+        : (!stops || stops.length < 2 ? 'place a depot/start and at least one route stop'
+          : (detour && detour.reason ? detour.reason : 'route or charger data unavailable'));
+      box.innerHTML = '<div class="rc-metrics">' +
+        '<div class="rc-metric"><span class="rc-val na">n.a.</span><span class="rc-lab">Running charging cost (S$)</span></div>' +
+        '<div class="rc-metric"><span class="rc-val na">n.a.</span><span class="rc-lab">Total charge time</span></div>' +
+        '<div class="rc-metric"><span class="rc-val na">n.a.</span><span class="rc-lab">Charging stops</span></div>' +
+        '</div><p class="rc-caveat">n.a. (' + esc(why) + '). ' + caveat + '</p>';
+      return;
+    }
+
+    var stopCount = detour.chargeStopCount;
+    // Cost cell: S$ 2dp when complete; n.a. (with reason) when a used charger
+    // had no published price (never fabricated). Zero stops -> S$0.00 complete.
+    var costCell;
+    if (stopCount === 0){
+      costCell = '<span class="rc-val">S$0.00</span><span class="rc-lab">Running charging cost (no top-up needed)</span>';
+    } else if (detour.costIsComplete && isNum(detour.totalCost)){
+      costCell = '<span class="rc-val">S$' + detour.totalCost.toFixed(2) + '</span><span class="rc-lab">Running charging cost (' + stopCount + ' stop' + (stopCount === 1 ? '' : 's') + ')</span>';
+    } else {
+      // Incomplete: show the partial priced sum but flag it n.a.-incomplete.
+      var partial = isNum(detour.totalCost) ? (' (S$' + detour.totalCost.toFixed(2) + ' from priced stops only)') : '';
+      costCell = '<span class="rc-val na">n.a.</span><span class="rc-lab"><span class="rc-incomplete">cost incomplete</span>' +
+        ' \u2014 a charger on this route has no published price' + esc(partial) + '</span>';
+    }
+
+    var energyLab = isNum(detour.gridKwh) && detour.gridKwh > 0
+      ? ('\u00b7 ~' + (Math.round(detour.gridKwh * 10) / 10) + ' kWh incl. loss') : '';
+    box.innerHTML = '<div class="rc-metrics">' +
+      '<div class="rc-metric">' + costCell + '</div>' +
+      '<div class="rc-metric"><span class="rc-val">' + hhmm(detour.totalChargeHours) + '</span><span class="rc-lab">Total charge time ' + energyLab + '</span></div>' +
+      '<div class="rc-metric"><span class="rc-val">' + stopCount + '</span><span class="rc-lab">Charging stop' + (stopCount === 1 ? '' : 's') +
+        (isNum(detour.detourKm) && detour.detourKm > 0 ? (' \u00b7 ~' + detour.detourKm.toFixed(1) + ' km detour') : '') + '</span></div>' +
+      '</div><p class="rc-caveat">' + caveat + '</p>';
+  }
+
   function renderRoutingSim(out){
     var summaryBox = el('rsim-summary');
     var tableBody = el('rsim-charger-body');
@@ -5771,6 +6114,8 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       if (mapBox) mapBox.innerHTML = '';
       if (caveatEl) caveatEl.textContent = '';
       if (attribEl) attribEl.textContent = '';
+      var ccBox = el('rsim-cost-counter');
+      if (ccBox) ccBox.innerHTML = '<p class="rc-caveat">n.a. (map / routing data not available in this build).</p>';
       return;
     }
 
@@ -5828,8 +6173,39 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     rsimLast.reach = reach;
     rsimLast.prod = prod;
 
+    // ---- FEAT-002: charging-detour + live cost simulation ------------------
+    // From a realistic fleet-manager POV, walk the SRM along the on-road route
+    // (or the straight stops when no road path) and, BEFORE the battery would
+    // fall below the reserve floor, route it to the NEAREST bundled charger,
+    // charge it, and resume. The pure window.HSRoutingSim.simulateChargingDetour
+    // returns a deterministic plan (per-event location + duration + energy +
+    // price, a running S$ tally flagged incomplete when a charger has no price,
+    // total charge time + detour distance). This is a SEPARATE simulation: it
+    // never calls or feeds back into the frozen engine. Needs the active SRM
+    // spec (battery + kWh/km) and >=2 route vertices. Degrades honestly to null.
+    var detourPoly = (routeIsOnRoad && rc.route && Array.isArray(rc.route.polyline) && rc.route.polyline.length >= 2)
+      ? rc.route.polyline
+      : (stops.length >= 2 ? stops.map(function(s){ return { lat: s.lat, lon: s.lon }; }) : null);
+    var detour = null;
+    if (detourPoly && prod && isNum(prod.D) && isNum(prod.E) && sim.simulateChargingDetour){
+      detour = sim.simulateChargingDetour({
+        routePolyline: detourPoly,
+        locations: doc.locations,
+        spec: { batteryKwh: prod.D, kwhPerKm: prod.E },
+        startSocFraction: 1.0
+      });
+    }
+    rsimLast.detour = (detour && detour.ok) ? detour : null;
+
     // Draw the geographic map from the current classification + route.
     renderRsimMap();
+
+    // Live cost counter: populate from the SAME detour result used to draw the
+    // map. Zoom does NOT change this (zoom calls renderRsimMap only); every
+    // route change (add stop, postal drop, drag-end, return-to-depot, DC-only
+    // toggle) runs recompute() -> renderRoutingSim() -> here, so the readout
+    // stays in lock-step with the drawn detour.
+    renderRsimCostCounter(detour, prod, stops, routeIsOnRoad);
 
     // Origin note reflects the placed depot/start.
     if (originNote){

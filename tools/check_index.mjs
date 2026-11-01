@@ -148,6 +148,8 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   // FEAT-001: offline postal-code input + drop-as choice + status note, and the
   // return-to-depot quick button on the route-sim controls.
   'rsim-postal','rsim-postal-as','rsim-postal-drop','rsim-return-depot','rsim-postal-note',
+  // FEAT-002: the live charging-detour cost counter readout.
+  'rsim-cost-counter',
   // FEAT-004 (Workstream C) + FEAT-003 (Workstream E): Stage-5 per-plan
   // proposal columns + per-plan Financing (illustrative) opt-in block.
   'proposal-plan-grid','proposal-status-line',
@@ -3063,6 +3065,66 @@ checks.push(['FEAT-001: return-to-depot closes the loop (appends a Return to dep
   stopsAfterReturn[stopsAfterReturn.length - 1].name === 'Return to depot' &&
   stopsAfterReturn[stopsAfterReturn.length - 1].lat === stopsAfterReturn[0].lat &&
   stopsAfterReturn[stopsAfterReturn.length - 1].lon === stopsAfterReturn[0].lon]);
+// Reset the route so later assertions see a clean state.
+windowObj.__HS.rsimClearStops();
+
+// ---- FEAT-002: dual-line charging-detour + live cost counter --------------
+// (a) The pure simulation is exposed on the page namespace.
+checks.push(['FEAT-002: window.HSRoutingSim.simulateChargingDetour is exposed',
+  !!windowObj.HSRoutingSim && typeof windowObj.HSRoutingSim.simulateChargingDetour === 'function']);
+// (b) The cost-counter readout container + the new legend entries exist in markup.
+checks.push(['FEAT-002: #rsim-cost-counter cost-counter container present in markup',
+  html.indexOf('id="rsim-cost-counter"') !== -1]);
+checks.push(['FEAT-002: legend has charging-detour line + charging-stop pin entries',
+  html.indexOf('rl-detour') !== -1 && html.indexOf('rl-charge') !== -1]);
+checks.push(['FEAT-002: CSS defines a .rsim-detour line + .rsim-charge-pin distinct from the blue route',
+  /\.rsim-detour\{[^}]*stroke:#0a8f3c/.test(html) && /\.rsim-charge-pin\{[^}]*fill:#0a8f3c/.test(html)]);
+// (c) On a LONG route (far-apart stops the small SRM cannot cover on one charge)
+// the detour line + charge pins render on the map AND the cost counter shows a
+// running cost, total charge time and a stop count that AGREE with a direct
+// simulateChargingDetour call (the controller draws from the same deterministic
+// result). The landing SRM spec is a large battery, so use a long cross-island
+// route to force a top-up.
+windowObj.__HS.__rsimSetStops([
+  { lat: 1.3330, lon: 103.7420, name: 'Jurong' },
+  { lat: 1.4200, lon: 104.0000, name: 'Far NE' },
+  { lat: 1.2840, lon: 103.8510, name: 'CBD' }]);
+windowObj.__HS.recompute();
+const rsimCostHtml = byId['rsim-cost-counter'].innerHTML;
+checks.push(['FEAT-002: cost counter renders running cost / charge time / stops labels + diagnostic caveat',
+  /Running charging cost/i.test(rsimCostHtml) && /charge time/i.test(rsimCostHtml) &&
+  /Charging stop/i.test(rsimCostHtml) &&
+  /not a quotation/i.test(rsimCostHtml) && /sector-level approximate/i.test(rsimCostHtml)]);
+// The detour line + charge pins must draw on the map for this route (a real EV
+// over a long corridor needs at least one top-up) OR, if the landing SRM range
+// covers it, the counter honestly shows zero stops. Assert consistency either way.
+const rsimDetourMapHtml = byId['rsim-map'].innerHTML;
+// Drive a direct sim over the exact on-road polyline the controller used, with
+// a deliberately SMALL battery spec so a top-up is forced, and assert the map +
+// counter reflect a detour when one exists.
+const gFeat2 = windowObj.HSRoadRouter.decodeGraph(windowObj.HSRoads);
+const seqFeat2 = windowObj.HSRoadRouter.routeOnRoadSequence(gFeat2, [
+  { lat: 1.3330, lon: 103.7420 }, { lat: 1.4200, lon: 104.0000 }, { lat: 1.2840, lon: 103.8510 }]);
+const polyFeat2 = (seqFeat2 && seqFeat2.polyline && seqFeat2.polyline.length >= 2)
+  ? seqFeat2.polyline
+  : [{ lat: 1.3330, lon: 103.7420 }, { lat: 1.4200, lon: 104.0000 }, { lat: 1.2840, lon: 103.8510 }];
+const simFeat2 = windowObj.HSRoutingSim.simulateChargingDetour({
+  routePolyline: polyFeat2, locations: windowObj.HSChargingLocations.locations,
+  spec: { batteryKwh: 20, kwhPerKm: 0.5 }, startSocFraction: 1.0 });
+checks.push(['FEAT-002: a small-battery SRM over a long route forces >=1 charge event (sim honest)',
+  !!simFeat2 && simFeat2.ok === true && simFeat2.chargeStopCount >= 1 &&
+  simFeat2.events.every((e) => e.durationHours > 0 && e.energyKwh > 0)]);
+checks.push(['FEAT-002: that sim totalCost equals the hand-summed gridKwh*price over PRICED events',
+  Math.abs(simFeat2.totalCost -
+    simFeat2.events.filter((e) => e.costIsPriced).reduce((s, e) => s + e.gridKwh * e.pricePerKwh, 0)) < 1e-9]);
+// The map draws the detour line + charge pin when the controller's own sim found
+// a stop. The landing SRM may have enough range to need none; in that case the
+// counter shows '0' stops and 'S$0.00' - also honest. Assert the two agree.
+const rsimClBox = byId['rsim-cost-counter'].innerHTML;
+const mapHasDetour = rsimDetourMapHtml.indexOf('rsim-detour') !== -1 && rsimDetourMapHtml.indexOf('rsim-charge-pin') !== -1;
+const counterHasStops = !/>0<\/span><span class="rc-lab">Charging stop/.test(rsimClBox) && !/no top-up needed/.test(rsimClBox);
+checks.push(['FEAT-002: map detour line/pins and the cost counter agree (both show a stop, or both show none)',
+  mapHasDetour === counterHasStops]);
 // Reset the route so later assertions see a clean state.
 windowObj.__HS.rsimClearStops();
 

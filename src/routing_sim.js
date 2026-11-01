@@ -220,6 +220,189 @@ export function chargeTimeHours(params) {
 }
 
 /*
+ * simulateChargingDetour(params) -> deterministic charging-detour plan.
+ * ---------------------------------------------------------------------
+ * The dual-line "fleet-manager" simulation that sits NEXT TO the on-road route:
+ * walk the on-road route polyline vertex by vertex, deplete the SRM battery at
+ * spec.kwhPerKm * legKm, and BEFORE the state-of-charge would fall below the
+ * reserve floor on the NEXT segment, route to the NEAREST bundled charger,
+ * charge there (duration/energy via chargeTimeHours at that charger's power),
+ * and resume. It answers, honestly: WHERE would the SRM stop, HOW LONG would
+ * each stop take, and what would the running S$ cost be.
+ *
+ * This function is PURE, DETERMINISTIC and DOM/network-free. It does NOT import,
+ * call, or feed back into the frozen fleet-compute engine; it only reads the
+ * bundled charger subset passed in `locations`.
+ *
+ * params = {
+ *   routePolyline : [{lat,lon}, ...]  the on-road route vertex list (from
+ *                   road_router.routeOnRoadSequence().polyline) OR the straight
+ *                   stop list when no road path exists. >= 2 vertices.
+ *   locations     : array of compact charger records (window.HSChargingLocations
+ *                   .locations shape: {lat,lon,operator,region,hasDc,plug}).
+ *   spec          : { batteryKwh, kwhPerKm, chargerKwFallback? } - the active SRM
+ *                   spec (batteryKwh = prod.D, kwhPerKm = prod.E). chargerKwFallback
+ *                   (optional) is used only when a picked charger publishes no power.
+ *   startSocFraction   : starting state of charge (0..1], default 1.0 (full).
+ *   reserveFraction    : usable-battery reserve kept in hand (default SIM_DEFAULTS
+ *                        .RESERVE_FRACTION). SoC must never drop below this.
+ *   chargeLossFraction : grid-to-battery loss (default SIM_DEFAULTS.CHARGE_LOSS_FRACTION).
+ *   maxDetourKm?       : radius cap for the nearest-charger search (default
+ *                        SIM_DEFAULTS.MAX_RADIUS_KM; pass null to disable).
+ * }
+ *
+ * METHOD (units: km / kWh / kW / hours; SoC as a 0..1 fraction of batteryKwh):
+ *   usableFloorKwh = batteryKwh * reserveFraction          (never dip below this)
+ *   Starting from socKwh = batteryKwh * startSocFraction, for each polyline leg:
+ *     legEnergy = legKm * kwhPerKm
+ *     if (socKwh - legEnergy < usableFloorKwh):   // would breach reserve
+ *       pick nearest charger to the CURRENT vertex (nearestChargers limit:1)
+ *       refillKwh = batteryKwh*(1-reserveFraction) - (socKwh - usableFloorKwh)
+ *                 = capacity back up to full usable, measured into the pack
+ *       ct = chargeTimeHours({battery,kwhPerKm,distanceKm,chargerKw}) sized so
+ *            deliverKwh == refillKwh (we pass distanceKm = refillKwh/kwhPerKm)
+ *       socKwh += ct.deliverKwh ; accumulate duration, energy, cost, detour
+ *     socKwh -= legEnergy
+ *
+ * Returns:
+ *   { ok:true,
+ *     events: [ { atKm, lat, lon, operator, powerKw, pricePerKwh|null,
+ *                 energyKwh, gridKwh, durationHours, arrivalSocFraction,
+ *                 detourKm, costIsPriced } ],
+ *     totalChargeHours, chargeStopCount, energyKwh (battery kWh delivered),
+ *     gridKwh (incl. loss), totalCost|null, costIsComplete, detourKm, routeKm }
+ * Honest degrade: { ok:false, reason } when spec / polyline / locations are
+ * missing or non-positive. A charger with NO published price still contributes
+ * energy + time (so the schedule is honest) but its cost is EXCLUDED from
+ * totalCost and costIsComplete is set false (a price is NEVER fabricated).
+ * Deterministic: the nearest-charger tie-break is nearestChargers' (distance,
+ * operator, lat, lon), so the same inputs always yield the same plan.
+ */
+export function simulateChargingDetour(params) {
+  params = params || {};
+  const poly = params.routePolyline;
+  const locations = params.locations;
+  const spec = params.spec || {};
+  const batteryKwh = spec.batteryKwh;
+  const kwhPerKm = spec.kwhPerKm;
+  const chargerKwFallback = isNum(spec.chargerKwFallback) ? spec.chargerKwFallback : null;
+  const startSocFraction = isNum(params.startSocFraction) ? params.startSocFraction : 1.0;
+  const reserveFraction = isNum(params.reserveFraction) ? params.reserveFraction : SIM_DEFAULTS.RESERVE_FRACTION;
+  const chargeLossFraction = isNum(params.chargeLossFraction) ? params.chargeLossFraction : SIM_DEFAULTS.CHARGE_LOSS_FRACTION;
+  const maxDetourKm = ('maxDetourKm' in params) ? params.maxDetourKm : SIM_DEFAULTS.MAX_RADIUS_KM;
+
+  // Honest degrade on missing / invalid inputs (never a fabricated plan).
+  if (!Array.isArray(poly) || poly.length < 2) return { ok: false, reason: 'route polyline missing or too short' };
+  if (!Array.isArray(locations) || locations.length === 0) return { ok: false, reason: 'charger locations missing' };
+  if (!isNum(batteryKwh) || batteryKwh <= 0) return { ok: false, reason: 'active EV battery kWh missing' };
+  if (!isNum(kwhPerKm) || kwhPerKm <= 0) return { ok: false, reason: 'active EV kWh/km missing' };
+  if (!(reserveFraction >= 0 && reserveFraction < 1)) return { ok: false, reason: 'invalid reserve fraction' };
+  if (!(chargeLossFraction >= 0 && chargeLossFraction < 1)) return { ok: false, reason: 'invalid charge-loss fraction' };
+  if (!(startSocFraction > 0 && startSocFraction <= 1)) return { ok: false, reason: 'invalid start SoC fraction' };
+
+  const floorKwh = batteryKwh * reserveFraction;          // never dip below this
+  const usableKwh = batteryKwh * (1 - reserveFraction);   // deliverable per full top-up
+  let socKwh = batteryKwh * startSocFraction;             // current battery energy
+
+  const events = [];
+  let totalChargeHours = 0;
+  let energyKwh = 0;            // battery kWh actually delivered across stops
+  let gridKwh = 0;             // grid kWh incl. loss across stops
+  let totalCost = 0;           // S$ summed over PRICED events only
+  let costIsComplete = true;   // false once any used charger has no price
+  let detourKm = 0;            // great-circle out-and-back distance to chargers
+  let routeKm = 0;             // cumulative on-route distance walked
+
+  // Pick the nearest charger to a point and resolve its headline power/price.
+  function pickCharger(lat, lon) {
+    const list = nearestChargers({ lat: lat, lon: lon }, locations, { limit: 1, maxRadiusKm: maxDetourKm });
+    if (!list.length) return null;
+    const c = list[0];
+    let powerKw = isNum(c.powerKw) ? c.powerKw : (isNum(c.maxPowerKw) ? c.maxPowerKw : null);
+    if (!isNum(powerKw) || powerKw <= 0) powerKw = chargerKwFallback;
+    return {
+      lat: c.lat, lon: c.lon, operator: c.operator,
+      powerKw: (isNum(powerKw) && powerKw > 0) ? powerKw : null,
+      pricePerKwh: isNum(c.pricePerKwh) ? c.pricePerKwh : null,
+      distanceKm: c.distanceKm,
+    };
+  }
+
+  for (let i = 1; i < poly.length; i++) {
+    const a = poly[i - 1], b = poly[i];
+    if (!a || !b || !isNum(a.lat) || !isNum(a.lon) || !isNum(b.lat) || !isNum(b.lon)) continue;
+    const legKm = haversineKm(a.lat, a.lon, b.lat, b.lon);
+    if (legKm == null) continue;
+    const legEnergy = legKm * kwhPerKm;
+
+    // BEFORE the leg: would completing it drop SoC below the reserve floor?
+    if (socKwh - legEnergy < floorKwh - 1e-9) {
+      // Refill, from the CURRENT point, back up to the usable ceiling.
+      const refillKwh = usableKwh - (socKwh - floorKwh);
+      if (refillKwh > 1e-9) {
+        const charger = pickCharger(a.lat, a.lon);
+        if (charger && isNum(charger.powerKw) && charger.powerKw > 0) {
+          // Size chargeTimeHours so deliverKwh == refillKwh (distance proxy).
+          const distanceProxyKm = refillKwh / kwhPerKm;
+          const ct = chargeTimeHours({
+            batteryKwh: batteryKwh, kwhPerKm: kwhPerKm,
+            distanceKm: distanceProxyKm, chargerKw: charger.powerKw,
+            reserveFraction: reserveFraction, chargeLossFraction: chargeLossFraction,
+          });
+          if (ct && ct.hours > 0 && ct.deliverKwh > 0) {
+            const legDetourKm = isNum(charger.distanceKm) ? (charger.distanceKm * 2) : 0; // out + back
+            const priced = isNum(charger.pricePerKwh);
+            const eventCost = priced ? (ct.gridKwh * charger.pricePerKwh) : null;
+            socKwh += ct.deliverKwh;
+            totalChargeHours += ct.hours;
+            energyKwh += ct.deliverKwh;
+            gridKwh += ct.gridKwh;
+            detourKm += legDetourKm;
+            if (priced) totalCost += eventCost; else costIsComplete = false;
+            events.push({
+              atKm: Math.round(routeKm * 100) / 100,
+              lat: charger.lat, lon: charger.lon,
+              operator: charger.operator,
+              powerKw: charger.powerKw,
+              pricePerKwh: priced ? charger.pricePerKwh : null,
+              energyKwh: ct.deliverKwh,
+              gridKwh: ct.gridKwh,
+              durationHours: ct.hours,
+              arrivalSocFraction: socKwh / batteryKwh,
+              detourKm: legDetourKm,
+              costIsPriced: priced,
+            });
+          }
+        }
+        // If no charger is reachable (or none has usable power), we cannot top
+        // up here; the walk simply continues and SoC may dip below reserve. The
+        // schedule stays honest (no fabricated stop); the UI shows the reserve
+        // breach via the depot-feasibility panel.
+      }
+    }
+
+    socKwh -= legEnergy;
+    routeKm += legKm;
+  }
+
+  return {
+    ok: true,
+    events: events,
+    totalChargeHours: totalChargeHours,
+    chargeStopCount: events.length,
+    energyKwh: energyKwh,
+    gridKwh: gridKwh,
+    // totalCost is ALWAYS the hand-summable sum over PRICED events (S$); an
+    // unpriced charger's energy/time is counted but its cost is excluded and
+    // costIsComplete is false (never fabricated). Zero events -> 0, complete.
+    totalCost: totalCost,
+    costIsComplete: costIsComplete,
+    detourKm: Math.round(detourKm * 100) / 100,
+    routeKm: Math.round(routeKm * 100) / 100,
+  };
+}
+
+/*
  * validateLocationsDoc(doc) -> { ok, reasons, count } well-formedness check.
  * --------------------------------------------------------------------------
  * A defensive shape check for the bundled window.HSChargingLocations document.

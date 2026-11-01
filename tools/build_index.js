@@ -151,6 +151,8 @@ inlineRouting += '\nwindow.HSRoutingSim = { ' +
   'haversineKm: haversineKm, nearestChargers: nearestChargers, ' +
   'chargeTimeHours: chargeTimeHours, headlinePlug: headlinePlug, ' +
   'validateLocationsDoc: validateLocationsDoc, ' +
+  // FEAT-002: the pure dual-line charging-detour + running-cost simulation.
+  'simulateChargingDetour: simulateChargingDetour, ' +
   'EARTH_RADIUS_KM: EARTH_RADIUS_KM, SIM_DEFAULTS: SIM_DEFAULTS };\n';
 
 // Strip ES-module syntax from the ADDITIVE, OPT-IN finance / amortisation

@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import {
   haversineKm, nearestChargers, chargeTimeHours, headlinePlug,
-  validateLocationsDoc, EARTH_RADIUS_KM, SIM_DEFAULTS,
+  validateLocationsDoc, simulateChargingDetour, EARTH_RADIUS_KM, SIM_DEFAULTS,
 } from '../src/routing_sim.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -111,6 +111,71 @@ check('validateLocationsDoc flags a missing document', validateLocationsDoc(null
 check('validateLocationsDoc accepts a well-formed subset',
   validateLocationsDoc({ attribution: 'x', bounds: { latMin: 1, latMax: 2, lonMin: 103, lonMax: 104 },
     locations: [{ lat: 1.3, lon: 103.8, plug: { dc: { powerKw: 60 } } }] }).ok === true);
+
+// ---- (3b) simulateChargingDetour: the dual-line charging-detour + cost sim ---
+// A small deterministic charger fixture at known coordinates. OP A and OP B are
+// PRICED; OP NOPRICE publishes energy/power but NO per-kWh price (so its event
+// must be excluded from the cost tally and flag costIsComplete=false, never
+// fabricated). All DC so power is always usable.
+const simLocs = [
+  { lat: 1.3100, lon: 103.8100, region: 'Central', operator: 'OP A', hasDc: true,
+    plug: { dc: { powerKw: 60, maxPowerKw: 60, pricePerKwh: 0.80 } } },
+  { lat: 1.3400, lon: 103.8400, region: 'Central', operator: 'OP B', hasDc: true,
+    plug: { dc: { powerKw: 60, maxPowerKw: 60, pricePerKwh: 0.50 } } },
+  { lat: 1.3700, lon: 103.8700, region: 'Central', operator: 'OP NOPRICE', hasDc: true,
+    plug: { dc: { powerKw: 50, maxPowerKw: 50, pricePerKwh: null } } },
+];
+// SRM-ish spec: small usable battery so a long route forces multiple top-ups.
+const simSpec = { batteryKwh: 20, kwhPerKm: 0.5 }; // usable @10% reserve = 18 kWh -> 36 km/charge
+// A LONG route polyline of densely spaced vertices spanning ~1.0 deg lon (~111 km)
+// so one usable SRM charge (36 km) cannot cover it -> >=1 charge event required.
+const longPoly = [];
+for (let i = 0; i <= 20; i++) longPoly.push({ lat: 1.3500, lon: 103.6000 + i * 0.05 });
+const sim = simulateChargingDetour({ routePolyline: longPoly, locations: simLocs, spec: simSpec });
+check('simulateChargingDetour ok on a valid long route', !!sim && sim.ok === true);
+check('simulateChargingDetour inserts >=1 charge event on a long route', sim.ok && sim.chargeStopCount >= 1);
+check('simulateChargingDetour chargeStopCount matches events length', sim.ok && sim.events.length === sim.chargeStopCount);
+// Each event must insert BEFORE the reserve floor is breached: arrival SoC (AFTER
+// the top-up) must be at/above the reserve fraction, and energy/duration > 0.
+check('every charge event has positive duration', sim.ok && sim.events.every((e) => e.durationHours > 0));
+check('every charge event has positive energy', sim.ok && sim.events.every((e) => e.energyKwh > 0));
+check('every charge event arrives at/above the reserve floor (no pre-charge reserve breach)',
+  sim.ok && sim.events.every((e) => e.arrivalSocFraction >= SIM_DEFAULTS.RESERVE_FRACTION - 1e-9));
+// The running cost tally must EQUAL the hand-summed gridKwh*price over the
+// PRICED events (OP NOPRICE excluded), and costIsComplete must be false because
+// a no-price charger was used (never fabricated).
+const handCost = sim.ok
+  ? sim.events.filter((e) => e.costIsPriced).reduce((s, e) => s + e.gridKwh * e.pricePerKwh, 0) : NaN;
+check('totalCost equals the hand-summed gridKwh*price over PRICED events only',
+  sim.ok && approx(sim.totalCost, handCost, 1e-9));
+check('a no-price charger makes costIsComplete=false and is excluded from totalCost',
+  sim.ok && sim.events.some((e) => e.costIsPriced === false) && sim.costIsComplete === false);
+check('no priced event ever fabricates a price (pricePerKwh is null when unpriced)',
+  sim.ok && sim.events.every((e) => e.costIsPriced === (e.pricePerKwh != null)));
+check('detourKm and energyKwh are positive when a stop was inserted',
+  sim.ok && sim.detourKm > 0 && sim.energyKwh > 0 && sim.gridKwh > 0);
+// Honest degrade on missing/invalid inputs (never a fabricated plan).
+check('simulateChargingDetour degrades on missing spec', simulateChargingDetour({ routePolyline: longPoly, locations: simLocs }).ok === false);
+check('simulateChargingDetour degrades on missing polyline', simulateChargingDetour({ locations: simLocs, spec: simSpec }).ok === false);
+check('simulateChargingDetour degrades on a too-short polyline',
+  simulateChargingDetour({ routePolyline: [{ lat: 1.3, lon: 103.8 }], locations: simLocs, spec: simSpec }).ok === false);
+check('simulateChargingDetour degrades on missing locations',
+  simulateChargingDetour({ routePolyline: longPoly, locations: [], spec: simSpec }).ok === false);
+check('simulateChargingDetour degrades on non-positive battery',
+  simulateChargingDetour({ routePolyline: longPoly, locations: simLocs, spec: { batteryKwh: 0, kwhPerKm: 0.5 } }).ok === false);
+// A SHORT route well within one usable charge needs ZERO charge events, a 0
+// cost and a COMPLETE (not-flagged) tally.
+const shortPoly = [{ lat: 1.3500, lon: 103.8000 }, { lat: 1.3520, lon: 103.8050 }];
+const simShort = simulateChargingDetour({ routePolyline: shortPoly, locations: simLocs, spec: simSpec });
+check('short route needs ZERO charge events', simShort.ok && simShort.chargeStopCount === 0);
+check('short route totalCost is 0 and costIsComplete true', simShort.ok && simShort.totalCost === 0 && simShort.costIsComplete === true);
+// Determinism: identical inputs -> identical plan (same stop count, cost, order).
+const simRepeat = simulateChargingDetour({ routePolyline: longPoly, locations: simLocs, spec: simSpec });
+check('simulateChargingDetour is deterministic (repeat run identical)',
+  sim.ok && simRepeat.ok && sim.chargeStopCount === simRepeat.chargeStopCount &&
+  approx(sim.totalCost, simRepeat.totalCost, 1e-12) &&
+  JSON.stringify(sim.events.map((e) => [e.operator, e.atKm])) ===
+    JSON.stringify(simRepeat.events.map((e) => [e.operator, e.atKm])));
 
 // ---- (4) NO engine coupling guard ------------------------------------------
 // The module source must NOT import or call the frozen fleet-compute engine.
