@@ -384,6 +384,95 @@ checks.push(['prospect cards keep the conditional-savings caveat',
 checks.push(['prospect cards show n.a. (not a zero substitute)',
   pbodyBenefit.indexOf('n.a.') !== -1]);
 
+// ---- FEAT-002 prospect cards: exactly 2 columns desktop, 1 column mobile ----
+// User request: the prospect card grid is a fixed 2-up layout at desktop
+// (repeat(2,minmax(0,1fr))), collapsing to a single column at phone width via
+// the <=700px .prospect-cards{grid-template-columns:1fr} rule (kept). These are
+// SOURCE-LEVEL regex checks on the hand-written CSS (no runtime viewport).
+checks.push(['prospect-cards: desktop grid is exactly 2 columns (repeat(2,minmax(0,1fr)))',
+  /\.prospect-cards\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/.test(html)]);
+checks.push(['prospect-cards: mobile <=700px collapses to a single column (1fr retained)',
+  /\.matched-grid,\.prospect-cards\{grid-template-columns:1fr\}/.test(html) ||
+  /\.prospect-cards\{grid-template-columns:1fr\}/.test(html)]);
+
+// ---- FEAT-002 displayed Best EV plan = numerically-lowest Total EV plan ----
+// The prospect card's "Best EV plan" is now the DISPLAYED lowest-Total economic
+// TCO plan (ties -> Plan A), NOT scoreProspect's gate-aware pick. scoreProspect
+// and its ranking keys are UNCHANGED (sort order is not touched) - we assert
+// that separately above via orderFor(). Here we replicate the display rule
+// purely from the engine result object and assert that, for every seed where at
+// least one EV plan has a numeric Total, the rendered card names that plan.
+function lowestTotalLabel(out) {
+  const r = out.results;
+  let best = null; // {key,label,total}
+  ['plan_a', 'plan_b'].forEach((key) => {
+    const ev = r.evYear10 ? r.evYear10[key] : undefined;
+    const total = r.totalEconomicTco ? r.totalEconomicTco[key] : undefined;
+    const evN = typeof ev === 'number' && isFinite(ev);
+    const tN = typeof total === 'number' && isFinite(total);
+    if (evN && ev > 0 && tN) {
+      if (best === null || total < best.total) {
+        best = { key, label: key === 'plan_a' ? 'Plan A' : 'Plan B', total };
+      }
+    }
+  });
+  return best ? best.label : null;
+}
+// Extract each rendered card's "Best EV plan" cell text from #prospect-body.
+function cardBestPlan(innerHTML, name) {
+  const idx = innerHTML.indexOf(name);
+  if (idx === -1) return null;
+  const slice = innerHTML.slice(idx);
+  const m = slice.match(/Best EV plan<\/span><span class="pc-v">([^<]+)</);
+  return m ? m[1].trim() : null;
+}
+let bestPlanSeedsChecked = 0;
+let bestPlanTieChecked = 0;
+seeds.cases.forEach((c) => {
+  const out = windowObj.HSEngine.computeFleet(c.inputs);
+  const expected = lowestTotalLabel(out);
+  if (!expected) return; // neither EV plan numeric -> honest fallback, skip here
+  // Find the card by its rendered title; blank/template has no company fragment.
+  const name = c.name;
+  const shown = cardBestPlan(pbodyBenefit, name);
+  if (shown === null) return;
+  bestPlanSeedsChecked += 1;
+  checks.push(['best-plan: ' + c.id + ' card shows the lowest-Total EV plan (' + expected + ')',
+    shown === expected]);
+  // Verify the tie rule where the two EV Totals are equal -> Plan A.
+  const ta = out.results.totalEconomicTco.plan_a;
+  const tb = out.results.totalEconomicTco.plan_b;
+  if (typeof ta === 'number' && isFinite(ta) && ta === tb) {
+    bestPlanTieChecked += 1;
+    checks.push(['best-plan: ' + c.id + ' tie resolves to Plan A', shown === 'Plan A']);
+  }
+});
+checks.push(['best-plan: at least one seed exercised the lowest-Total display rule',
+  bestPlanSeedsChecked >= 1]);
+// Synthetic tie + ordering probe built directly on the engine result shape, so
+// the display rule is asserted even if no seed happens to tie. We derive a
+// real engine output and then overwrite ONLY the display-relevant fields to the
+// two configurations (A lower, B lower, and a tie) the renderer must handle.
+(function syntheticBestPlanProbe() {
+  const base = windowObj.HSEngine.computeFleet(seeds.cases[0].inputs);
+  function probe(aTotal, bTotal, evA, evB) {
+    const out = { results: {
+      evYear10: { plan_a: evA, plan_b: evB },
+      totalEconomicTco: { plan_a: aTotal, plan_b: bTotal },
+    } };
+    return lowestTotalLabel(out);
+  }
+  checks.push(['best-plan (synthetic): A lower Total -> Plan A', probe(100, 200, 1, 1) === 'Plan A']);
+  checks.push(['best-plan (synthetic): B lower Total -> Plan B', probe(300, 200, 1, 1) === 'Plan B']);
+  checks.push(['best-plan (synthetic): equal Totals tie -> Plan A', probe(200, 200, 1, 1) === 'Plan A']);
+  checks.push(['best-plan (synthetic): non-EV plan (evYear10<=0) is excluded',
+    probe(100, 200, 0, 1) === 'Plan B']);
+  checks.push(['best-plan (synthetic): neither EV numeric Total -> null (honest fallback)',
+    probe(NA, NA, 1, 1) === null || probe(undefined, undefined, 1, 1) === null]);
+  // Reference base to keep the lint happy / confirm the shim engine ran.
+  checks.push(['best-plan (synthetic): base engine output has results', !!base && !!base.results]);
+})();
+
 // ---- Confirmed-win assertion (review finding #2) ---------------------------
 // At least one seeded prospect must be a gate-passing confirmed win: gatePass
 // true, a numeric Total economic TCO (not n.a.), a positive saving, and it must
@@ -3095,6 +3184,48 @@ checks.push(['FEAT-002: cost counter renders running cost / charge time / stops 
   /Running charging cost/i.test(rsimCostHtml) && /charge time/i.test(rsimCostHtml) &&
   /Charging stop/i.test(rsimCostHtml) &&
   /not a quotation/i.test(rsimCostHtml)]);
+// ---- FEAT-003: live figures popped out as highlight STAT CARDS -------------
+// (a) The same counter strip now ALSO surfaces the other live route figures the
+// renderRoutingSim result already holds - route distance, charging-detour
+// distance, reachable public chargers, depot-charge margin - as .rc-metric
+// stat-card tiles ALONGSIDE the running cost / charge time / stops, so they move
+// in lock-step on every route edit. A route is placed here, so they render real
+// values (never a fabricated zero).
+checks.push(['FEAT-003: cost strip surfaces route km / detour km / reachable chargers / depot margin as stat cards',
+  /Route distance/i.test(rsimCostHtml) && /Charging-detour distance/i.test(rsimCostHtml) &&
+  /Reachable public chargers/i.test(rsimCostHtml) && /Depot-charge margin/i.test(rsimCostHtml)]);
+// (b) Every figure renders inside a .rc-metric card tile; with a route placed,
+// at least one live figure shows a real (non-n.a.) value - honest, not zeroed.
+checks.push(['FEAT-003: live figures render as .rc-metric card tiles with at least one real value when a route is placed',
+  (rsimCostHtml.match(/class="rc-metric/g) || []).length >= 7 &&
+  /class="rc-val">~[0-9]/.test(rsimCostHtml)]);
+// (c) The verbose multi-sentence caveat was trimmed to ONE concise honesty line
+// that still carries the diagnostic / not-a-quotation + coarse-screen signal.
+checks.push(['FEAT-003: cost-counter caveat trimmed to one concise diagnostic / not-a-quotation / coarse-screen line (present)',
+  /not a quotation/i.test(rsimCostHtml) && /coarse/i.test(rsimCostHtml) &&
+  // trimmed: the old long tail ('tops up at the nearest public charger ... reserve floor')
+  // no longer lives inline on the counter caveat.
+  !/tops up at the nearest public charger before the battery/i.test(rsimCostHtml)]);
+// (d) The stat-card CSS is present: a responsive auto-fit grid, bordered /
+// elevated .rc-metric tiles with a live accent, and a >=18px tabular value.
+checks.push(['FEAT-003: stat-card CSS present (auto-fit grid + bordered tile + live accent + >=18px value)',
+  /\.rsim-cost\s*\.rc-metrics\{[^}]*grid-template-columns:repeat\(auto-fit/.test(html) &&
+  /\.rsim-cost\s*\.rc-metric\{[^}]*border-left:3px solid var\(--accent\)/.test(html) &&
+  /\.rsim-cost\s*\.rc-metric\s*\.rc-val\{[^}]*font-size:2[0-9]px/.test(html)]);
+// (e) Honesty: with NO route placed the live figures show n.a. (muted card),
+// never a fabricated zero. Clear the route, recompute, and assert the n.a. cards.
+windowObj.__HS.rsimClearStops();
+windowObj.__HS.recompute();
+const rsimCostHtmlEmpty = byId['rsim-cost-counter'].innerHTML;
+checks.push(['FEAT-003: with no route placed the live figures honestly show n.a. (rc-metric-na), not a zero',
+  /rc-metric-na/.test(rsimCostHtmlEmpty) && /Route distance \(no route placed\)/i.test(rsimCostHtmlEmpty) &&
+  !/class="rc-val">0 km/.test(rsimCostHtmlEmpty)]);
+// Restore the map-placed route so later assertions see the same state as before.
+windowObj.__HS.__rsimSetStops([
+  { lat: 1.3330, lon: 103.7420, name: 'Jurong' },
+  { lat: 1.4200, lon: 104.0000, name: 'Far NE' },
+  { lat: 1.2840, lon: 103.8510, name: 'CBD' }]);
+windowObj.__HS.recompute();
 // Review fix (issue 2): the 'sector-level approximate' phrase must be GATED on
 // an approximate (postal-dropped) point actually being on the route. These
 // stops were map-placed (no approximate flag), so the phrase must be ABSENT.
@@ -3453,10 +3584,14 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
   checks.push(['simbrief: embedded brief carries grounding figure +26.51%', md.indexOf('+26.51%') !== -1]);
 
   // (c) The download path is a client-side Blob/object-URL, NOT a fetch. Scope
-  // the grep to the wireBriefDownload handler source so the assertion is
-  // precise and robust to unrelated code elsewhere.
+  // the grep to the download SUBSYSTEM source (FEAT-002: the shared
+  // downloadMarkdown() helper + the wireBriefDownload() wiring) so the assertion
+  // is precise and robust to unrelated code elsewhere. The Blob / object-URL
+  // mechanism now lives in downloadMarkdown(), which wireBriefDownload() calls;
+  // the no-fetch guarantee must hold across the whole subsystem.
+  const subsysM = html.match(/function downloadMarkdown\([\s\S]*?function wireBriefDownload\(\)\{[\s\S]*?\}\)\(\);/);
   const handlerM = html.match(/function wireBriefDownload\(\)\{[\s\S]*?\}\)\(\);/);
-  const handlerSrc = handlerM ? handlerM[0] : '';
+  const handlerSrc = subsysM ? subsysM[0] : '';
   checks.push(['download: handler wireBriefDownload present', !!handlerM]);
   checks.push(['download: handler reads window.HSSimBrief (bundled string, not a request)',
     /window\.HSSimBrief/.test(handlerSrc)]);
@@ -3468,6 +3603,100 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
   checks.push(['download: handler introduces NO fetch (offline)', !/\bfetch\s*\(/.test(handlerSrc)]);
   checks.push(['download: handler introduces NO XMLHttpRequest (offline)',
     !/XMLHttpRequest/.test(handlerSrc)]);
+
+  // (d) FEAT-002 LIVE REPORT: the Download analysis button now emits a
+  // generated-at-click-time snapshot of the CURRENT inputs + CURRENT TCO,
+  // built from the live state (window.__HS.state) + the live engine result
+  // (window.__HS.computeReframed()). The static window.HSSimBrief brief stays
+  // bundled and is appended as a Reference section, and no network is used.
+  const liveGenM = html.match(/function buildLiveAnalysisMarkdown\([\s\S]*?\n  \}/);
+  const liveGenSrc = liveGenM ? liveGenM[0] : '';
+  checks.push(['live-report: buildLiveAnalysisMarkdown generator present', !!liveGenM]);
+  checks.push(['live-report: handler builds markdown from the live state/engine result',
+    /computeReframed\(\)/.test(handlerSrc) && /buildLiveAnalysisMarkdown\(/.test(handlerSrc)]);
+  checks.push(['live-report: handler downloads with the current-snapshot filename',
+    /ev-truck-tco-current-analysis\.md/.test(handlerSrc)]);
+  checks.push(['live-report: generator reads only engine-result fields (out.results / state), recomputes nothing',
+    /out\s*&&\s*out\.results/.test(liveGenSrc) || /out\.results/.test(liveGenSrc)]);
+  checks.push(['live-report: generator appends the bundled all-models Reference brief',
+    /window\.HSSimBrief/.test(liveGenSrc) && /Reference: all-models/.test(liveGenSrc)]);
+  checks.push(['live-report: generator keeps the diagnostic / not-a-quotation caveat',
+    /not a quotation/i.test(liveGenSrc)]);
+  checks.push(['live-report: generator introduces NO fetch (offline)', !/\bfetch\s*\(/.test(liveGenSrc)]);
+  checks.push(['live-report: generator introduces NO XMLHttpRequest (offline)',
+    !/XMLHttpRequest/.test(liveGenSrc)]);
+
+  // (e) FEAT-002 LIVE REPORT - INVOCATION coverage (review v1 issue #1). The
+  // static greps above prove the generator EXISTS and references the right
+  // globals, but they would NOT fail if the body emitted wrong figures or if the
+  // live-result wiring were reverted. Here we INVOKE the generator via the
+  // display/test-only hook (window.__HS.__buildLiveAnalysisMarkdown) against the
+  // CURRENT live state the harness already drove (the sg-01 landing was loaded
+  // then the demo fixture via __HS.loadDemoFixture at the top of this file), and
+  // assert on the PRODUCED markdown so a regression in the report body fails.
+  checks.push(['live-report: __buildLiveAnalysisMarkdown test hook is exposed on window.__HS',
+    typeof windowObj.__HS.__buildLiveAnalysisMarkdown === 'function']);
+  const liveMd = (typeof windowObj.__HS.__buildLiveAnalysisMarkdown === 'function')
+    ? windowObj.__HS.__buildLiveAnalysisMarkdown() : '';
+  checks.push(['live-report: invoked generator returns a non-empty string', typeof liveMd === 'string' && liveMd.length > 0]);
+  // The key section headings the generator emits (in order) must all appear.
+  [ 'Current fleet & duty',
+    'Replacement plan',
+    'Energy & operating-cost inputs',
+    'Total cost of ownership (all four paths)',
+    'Decision',
+  ].forEach((h) => {
+    checks.push(['live-report: produced markdown contains the "' + h + '" section', liveMd.indexOf(h) !== -1]);
+  });
+  // The diagnostic / not-a-quotation caveat is present in the produced body.
+  checks.push(['live-report: produced markdown carries the diagnostic / not-a-quotation caveat',
+    /not a quotation/i.test(liveMd)]);
+  // LIVE-RESULT WIRING PROOF: the demo state the harness loaded produces a Keep
+  // ICE vehicle economic TCO that formats to S$2,081,781 (asserted on the engine
+  // + the on-screen results-body above). It MUST appear in the produced TCO
+  // table - this assertion FAILS if the generator emits wrong figures or if the
+  // live-result wiring (computeReframed -> out.results) were reverted to a static
+  // dump.
+  checks.push(['live-report: produced TCO table reflects the LIVE engine figure (Keep ICE S$2,081,781)',
+    liveMd.indexOf('S$2,081,781') !== -1]);
+  // HONEST n.a. PROPAGATION: the demo has n.a. Plan A/B Total economic TCO
+  // (netSiteCost.plan_a === NA upstream), so the produced report MUST print the
+  // literal n.a. - proving the report is built from the live result and never
+  // substitutes a fabricated zero.
+  checks.push(['live-report: produced markdown propagates n.a. (never a fabricated zero) from the live result',
+    liveMd.indexOf('n.a.') !== -1]);
+  // The Reference section (bundled all-models 5yr/10yr brief) is appended, and
+  // real brief content rides along (a grounding figure unique to the brief).
+  checks.push(['live-report: produced markdown appends the Reference all-models 5yr/10yr section',
+    /Reference: all-models 5yr\/10yr TCO & methodology/.test(liveMd)]);
+  checks.push(['live-report: appended Reference includes bundled brief content (grounding figure S$2,798,199)',
+    liveMd.indexOf('S$2,798,199') !== -1]);
+
+  // (f) Review v1 issue #2 (guard, generator behaviour unchanged): the report
+  // reads a few energy/operating-cost inputs POSITIONALLY - diesel = ecRow(7),
+  // electricity = ecRow(10), ICE fuel = ocRow(7), insurance = ocRow(29/30). Those
+  // indices are correct today but unlabelled; assert the live state's rows at
+  // those indices still carry the expected label (col A) so a future row-shift is
+  // caught here rather than silently mislabelling the report. Rows expose a label
+  // in col A; skip an individual guard only if that row/label is absent (so the
+  // check never becomes a false red on a legitimately trimmed state).
+  (function(){
+    const ecRows = (windowObj.__HS.state.energy_and_charging && windowObj.__HS.state.energy_and_charging.rows) || [];
+    const ocRows = (windowObj.__HS.state.operating_costs && windowObj.__HS.state.operating_costs.rows) || [];
+    const ecAt = (n) => ecRows.find((row) => row && row._row === n);
+    const ocAt = (n) => ocRows.find((row) => row && row._row === n);
+    const lab = (row) => String((row && (row.label != null ? row.label : row.A)) || '');
+    const diesel = ecAt(7), elec = ecAt(10), iceFuel = ocAt(7), iceIns = ocAt(29), evIns = ocAt(30);
+    checks.push(['live-report guard: ecRow(7) is the commercial diesel price (label mentions diesel/fuel)',
+      !diesel || /diesel|fuel/i.test(lab(diesel))]);
+    checks.push(['live-report guard: ecRow(10) is the depot electricity price (label mentions electricity/grid/kWh)',
+      !elec || /electric|grid|kwh/i.test(lab(elec))]);
+    checks.push(['live-report guard: ocRow(7) is the ICE fuel consumption (label mentions fuel/consumption/L/km)',
+      !iceFuel || /fuel|consumption|l\/km|litre/i.test(lab(iceFuel))]);
+    checks.push(['live-report guard: ocRow(29/30) are the insurance rows (label mentions insurance)',
+      (!iceIns || /insurance/i.test(lab(iceIns))) &&
+      (!evIns || /insurance/i.test(lab(evIns)))]);
+  })();
 })();
 
 // ---------------------------------------------------------------------------

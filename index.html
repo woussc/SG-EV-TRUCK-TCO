@@ -498,9 +498,12 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  * The prospects list is a responsive card grid (one card per prospect),
  * streamlined like the input cards. Essentials up top; ranking detail + the
  * case note collapse behind a per-card Details disclosure. */
-/* auto-FIT so a short or partial last row of prospect cards never leaves dead
-   track whitespace; the cards stretch to fill the overlay width instead. */
-.prospect-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:12px 0 0;align-items:stretch}
+/* Exactly TWO columns on desktop (user request): a fixed 2-up grid reads more
+   deliberately than an auto-fit flow and keeps each prospect card wide enough
+   for the metric rows. minmax(0,1fr) lets long names wrap instead of pushing
+   the track past the drawer width. Mobile (<=700px) collapses to 1 column via
+   the .prospect-cards{grid-template-columns:1fr} rule further below. */
+.prospect-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:12px 0 0;align-items:stretch}
 .prospect-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--paper);min-width:0;display:flex;flex-direction:column;gap:8px;transition:border-color .18s ease,transform .18s ease}
 /* Tasteful pointer-device hover affordance; the reduced-motion guard above
    (*{transition-duration:.001ms}) neutralises the lift when motion is reduced. */
@@ -661,11 +664,20 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
    charge time, charge-stop count) updated on every route change from the SAME
    deterministic simulateChargingDetour result that draws the detour line, so the
    number and the map always agree. Diagnostic-not-a-quotation caveat stays visible. */
-.rsim-cost{margin:10px 0 0;border:1px solid var(--line);border-radius:10px;background:var(--soft);padding:12px 14px}
-.rsim-cost .rc-metrics{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:flex-end}
-.rsim-cost .rc-metric{display:flex;flex-direction:column;gap:2px;min-width:0}
-.rsim-cost .rc-metric .rc-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
-.rsim-cost .rc-metric .rc-val.na{font-size:15px;font-style:italic;color:var(--muted)}
+/* FEAT-003: the live figures are presented as distinct highlight STAT CARDS so
+   a change on any route edit (add stop / postal drop / drag-end / return-to-depot
+   / DC-only toggle) pops at a glance. Each .rc-metric is a bordered, slightly
+   elevated card tile in a responsive auto-fit grid; the value is large
+   tabular-nums (>=18px), the label muted (>=12px). A subtle left accent bar is
+   the "live" cue. Cards stay legible at 1440px and stack to one column at
+   ~390px (mobile rule below). */
+.rsim-cost{margin:10px 0 0}
+.rsim-cost .rc-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px}
+.rsim-cost .rc-metric{display:flex;flex-direction:column;gap:3px;min-width:0;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;background:var(--paper);padding:11px 13px}
+.rsim-cost .rc-metric .rc-val{font-size:22px;line-height:1.15;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap;overflow-wrap:anywhere}
+.rsim-cost .rc-metric .rc-val.na{font-size:18px;font-style:italic;color:var(--muted)}
+/* An unavailable figure (n.a.) mutes the live accent so a real number stands out. */
+.rsim-cost .rc-metric.rc-metric-na{border-left-color:var(--line2);background:var(--soft)}
 .rsim-cost .rc-metric .rc-lab{font-size:13px;color:var(--muted)}
 .rsim-cost .rc-caveat{font-size:13px;color:var(--muted);margin:8px 0 0}
 .rsim-cost .rc-incomplete{color:var(--warn);font-weight:600}
@@ -791,10 +803,10 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  .rsim-maptools{flex-direction:column;align-items:flex-start;gap:10px}
  .rsim-zoom{align-self:flex-end}
  .rsim-zoom .rsim-btn-sm{padding:8px 12px;min-width:40px;font-size:14px}
- /* FEAT-002 Phone cost counter: let the metric tiles wrap to two columns so the
-    running cost, charge time and stop count stay legible at ~390px. */
- .rsim-cost .rc-metrics{gap:10px 18px}
- .rsim-cost .rc-metric{flex:1 1 40%}
+ /* FEAT-003 Phone stat cards: tighten the auto-fit floor so the highlight tiles
+    land two-per-row on a wider phone and stack to a single full-width column at
+    ~390px, staying legible. */
+ .rsim-cost .rc-metrics{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px}
  /* FEAT-007 Phone proposal/finance: the per-plan grids already stack at 860px;
     keep the per-plan finance block padding tidy at phone width. */
  .finance-plan-col{padding:12px 14px}
@@ -1247,7 +1259,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      network / API / map tile. A coarse planning aid, consolidated caveats in
      #charging-notes + the per-panel #rsim-caveat. -->
 <section class="charge-panel charge-panel-lead" id="charging-routing"><p class="block-title">Can the SRM cover the route? Depot charge, on-road sim &amp; public reach</p>
-<p class="small"><span class="coarse-label">Coarse planning aid &middot; not live availability</span> The <strong>Depot charging</strong> verdict below answers the core adoption question first: does the active <strong>SRM</strong> complete the real on-road route on a single depot charge, and by how much margin? The interactive map then shows public-charging reach for a fleet choosing <strong>not</strong> to install a depot charger. Computed in your browser from a dated public-charger snapshot over an <strong>approximate on-road route</strong> (OpenStreetMap, ODbL); it is <strong>not</strong> a live connection, not a turn-by-turn router. Where no road path is found a leg falls back to an <strong>approximate great-circle</strong> (straight-line) distance. Full caveats: <a href="#charging-notes">Methodology &amp; notes</a>.</p>
+<p class="small"><span class="coarse-label">Coarse planning aid &middot; not live availability</span> Browser-side over an <strong>approximate on-road route</strong> (not a live connection); legs with no road path fall back to an <strong>approximate great-circle</strong> distance. Full caveats: <a href="#charging-notes">Methodology &amp; notes</a>.</p>
 <div class="rsim-controls" id="rsim-controls">
   <label class="rsim-ctl" for="rsim-area">Add a stop (named SG area)
     <select id="rsim-area" aria-label="Named Singapore area to add as a route stop"></select>
@@ -1292,12 +1304,12 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      the conditions that must hold before adoption. Caveats consolidated into
      #charging-notes. -->
 <section class="charge-panel" id="charging"><p class="block-title">Depot site build-up, capacity screen &amp; adoption gates</p>
-<p class="small">The charging site is costed once per plan and shared across its EVs. A numeric site cost appears only once the completeness and access gates pass; otherwise the plan total stays <span class="na">n.a.</span> (never a substituted zero). Gate detail and the grant-ceiling formula are in <a href="#charging-notes">Methodology &amp; notes</a>.</p>
+<p class="small">A numeric site cost appears only once the gates pass; otherwise it stays <span class="na">n.a.</span> (never a substituted zero). Gate detail &amp; grant-ceiling formula: <a href="#charging-notes">Methodology &amp; notes</a>.</p>
 <div class="charge-readgrid" id="charge-site-read"></div>
 <div class="table-wrap"><table id="site-table"><thead><tr><th>Site build-up</th><th class="num">Plan A</th><th class="num">Plan B</th><th>Meaning</th></tr></thead><tbody id="site-body"></tbody></table></div>
 
 <p class="block-title" style="margin-top:18px">Conditions that must hold before adoption</p>
-<p class="small">A numeric range or payload pass is an <strong>assumed technical pass</strong>, not an evidence pass; no plan reaches an evidence pass while any verification flag reads No or Unconfirmed.</p>
+<p class="small">A range or payload pass is an <strong>assumed technical pass</strong>, not an evidence pass.</p>
 <div class="table-wrap"><table id="gates-table"><thead><tr><th>Gate</th><th>Plan A</th><th>Plan B</th><th>Evidence needed</th></tr></thead><tbody id="gates-body"></tbody></table></div>
 </section>
 
@@ -1305,7 +1317,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      window.HSChargingContext (compact build-time aggregates). Background
      evidence only; caveat consolidated into #charging-notes. -->
 <section class="charge-panel" id="charging-public"><p class="block-title">Singapore-wide public-charging density (by region &amp; operator)</p>
-<p class="small"><span class="coarse-label">Public context, not a routing recommendation</span> National aggregates from a dated Singapore-wide public-charger snapshot &mdash; background evidence that EV operation is well served nationally, not a depot-specific or per-truck recommendation.</p>
+<p class="small"><span class="coarse-label">Public context, not a routing recommendation</span> National aggregates from a dated public-charger snapshot.</p>
 <div class="charge-readgrid" id="charge-public-totals"></div>
 <p class="sub-title" style="margin-top:14px"><strong>Power bands</strong> (charging points by rated power)</p>
 <div class="charge-bands" id="charge-public-bands"></div>
@@ -1321,7 +1333,7 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
      caveats consolidated into #charging-notes. The coarse-label + the
      #charge-detour-note what-if framing are kept (harness asserts them). -->
 <section class="charge-panel" id="charging-detour"><p class="block-title">Detour, queue &amp; recovery &mdash; coarse screen</p>
-<p class="small"><span class="coarse-label">Coarse screen &middot; not an arrival-by-arrival scheduler</span> The engine&rsquo;s own public-top-up intermediates for the EV paths (visits/year and the detour energy they add). A feasibility screen only: it does not simulate arrival times, queueing, or charger availability.</p>
+<p class="small"><span class="coarse-label">Coarse screen &middot; not an arrival-by-arrival scheduler</span> The engine&rsquo;s own public-top-up intermediates (visits/year and the detour energy they add).</p>
 <div class="charge-readgrid" id="charge-detour-read"></div>
 <p class="caveat-line" id="charge-detour-note">&ldquo;Recovery&rdquo; is a what-if on the entered backup / substitute-service rate, not a measured outcome. A confirmed plan still needs a loaded route-and-charging trial with measured grid kWh.</p>
 </section>
@@ -6121,9 +6133,10 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
   // the tally is incomplete (a used charger had no published price) the cost is
   // shown as n.a. with the reason, never a fabricated number. The
   // diagnostic-not-a-quotation + sector-approximate caveats stay visible.
-  function renderRsimCostCounter(detour, prod, stops, routeIsOnRoad){
+  function renderRsimCostCounter(detour, prod, stops, routeIsOnRoad, extra){
     var box = el('rsim-cost-counter');
     if (!box) return;
+    extra = extra || {};
 
     function hhmm(hours){
       var mins = Math.round((isNum(hours) ? hours : 0) * 60);
@@ -6131,19 +6144,58 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       return (hh > 0 ? (hh + ' h ') : '') + mm + ' min';
     }
 
+    // FEAT-003: one stat-card tile. A real value renders large + tabular; an
+    // unavailable figure renders a muted 'n.a.' card (never a fabricated zero).
+    function statCard(val, lab, isNa){
+      return '<div class="rc-metric' + (isNa ? ' rc-metric-na' : '') + '">' +
+        '<span class="rc-val' + (isNa ? ' na' : '') + '">' + val + '</span>' +
+        '<span class="rc-lab">' + lab + '</span></div>';
+    }
+
+    // The sibling LIVE route figures, read straight from the route result the
+    // map was drawn from, so they move in lock-step with every route edit.
+    // Honesty: each shows n.a. when the figure is unavailable, never a zero.
+    function liveFigureCards(){
+      var cards = '';
+      // Route distance (on-road vs straight-line labelled).
+      if (isNum(extra.routeKm)){
+        cards += statCard('~' + extra.routeKm.toFixed(1) + ' km',
+          'Route distance (' + (extra.routeIsOnRoad ? 'on-road' : 'straight-line') + ')', false);
+      } else {
+        cards += statCard('n.a.', 'Route distance (no route placed)', true);
+      }
+      // Charging-detour distance.
+      if (isNum(extra.detourKm)){
+        cards += statCard('~' + extra.detourKm.toFixed(1) + ' km', 'Charging-detour distance', false);
+      } else {
+        cards += statCard('n.a.', 'Charging-detour distance', true);
+      }
+      // Reachable public chargers within the corridor.
+      if (isNum(extra.reachableCount)){
+        cards += statCard(String(extra.reachableCount), 'Reachable public chargers (~3 km)', false);
+      } else {
+        cards += statCard('n.a.', 'Reachable public chargers (~3 km)', true);
+      }
+      // Depot-feasibility margin (one depot charge vs this route).
+      if (isNum(extra.depotMarginKm)){
+        var mk = Math.round(extra.depotMarginKm * 10) / 10;
+        cards += statCard((mk >= 0 ? '+' : '') + mk.toFixed(1) + ' km',
+          'Depot-charge margin (' + (extra.depotFeasible ? 'feasible' : 'short') + ')', false);
+      } else {
+        cards += statCard('n.a.', 'Depot-charge margin', true);
+      }
+      return cards;
+    }
+
     // Only claim 'sector-level approximate' when an approximate (postal-dropped)
     // point is actually on the current route; stops carry approximate:true when
     // resolved from a postal code. Otherwise omit that phrase (keep the rest).
     var hasApprox = Array.isArray(stops) && stops.some(function(s){ return s && s.approximate; });
-    var approxPhrase = hasApprox
-      ? 'a <strong>sector-level approximate</strong> client-side simulation (a route point was placed from a postal code, so its location is a postal-sector centroid): '
-      : 'a client-side simulation: ';
-    var caveat = 'Diagnostic, <strong>not a quotation</strong>. Running cost, charge time and stops are ' +
-      approxPhrase + 'the SRM tops up at the nearest public charger ' +
-      'before the battery would hit the reserve floor (10% reserve, 10% charging loss), and the cost includes the ' +
-      'out-and-back detour energy to each charger. Detour chargers come from the ' +
-      '<strong>dated snapshot</strong> (not live availability); great-circle detour distances; charge times are at rated ' +
-      'power and ignore tapering / queueing. It does <strong>not</strong> feed the TCO engine.';
+    // FEAT-003: trimmed to one concise honesty line. The full methodology (dated
+    // snapshot, detour energy, no-TCO-feedback) lives once in #charging-notes;
+    // the sector-level-approximate flag is kept, gated on a postal point.
+    var approxPhrase = hasApprox ? ' Sector-level approximate (a route point is a postal-sector centroid).' : '';
+    var caveat = 'Diagnostic, <strong>not a quotation</strong>; a coarse client-side screen, not a live feed.' + approxPhrase;
 
     // Honest n.a. states (no fabricated zero): sim not run / not ok.
     if (!detour || !detour.ok){
@@ -6151,9 +6203,10 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
         : (!stops || stops.length < 2 ? 'place a depot/start and at least one route stop'
           : (detour && detour.reason ? detour.reason : 'route or charger data unavailable'));
       box.innerHTML = '<div class="rc-metrics">' +
-        '<div class="rc-metric"><span class="rc-val na">n.a.</span><span class="rc-lab">Running charging cost (S$)</span></div>' +
-        '<div class="rc-metric"><span class="rc-val na">n.a.</span><span class="rc-lab">Total charge time</span></div>' +
-        '<div class="rc-metric"><span class="rc-val na">n.a.</span><span class="rc-lab">Charging stops</span></div>' +
+        statCard('n.a.', 'Running charging cost (S$)', true) +
+        statCard('n.a.', 'Total charge time', true) +
+        statCard('n.a.', 'Charging stops', true) +
+        liveFigureCards() +
         '</div><p class="rc-caveat">n.a. (' + esc(why) + '). ' + caveat + '</p>';
       return;
     }
@@ -6172,6 +6225,8 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
       costCell = '<span class="rc-val na">n.a.</span><span class="rc-lab"><span class="rc-incomplete">cost incomplete</span>' +
         ' \u2014 a charger on this route has no published price' + esc(partial) + '</span>';
     }
+    // Mute the live accent on the cost card when the figure is n.a. (incomplete).
+    var costCardNa = (stopCount !== 0 && !(detour.costIsComplete && isNum(detour.totalCost)));
 
     var energyLab = isNum(detour.gridKwh) && detour.gridKwh > 0
       ? ('\u00b7 ~' + (Math.round(detour.gridKwh * 10) / 10) + ' kWh incl. loss') : '';
@@ -6193,10 +6248,11 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     }
 
     box.innerHTML = '<div class="rc-metrics">' +
-      '<div class="rc-metric">' + costCell + '</div>' +
+      '<div class="rc-metric' + (costCardNa ? ' rc-metric-na' : '') + '">' + costCell + '</div>' +
       '<div class="rc-metric"><span class="rc-val">' + hhmm(detour.totalChargeHours) + '</span><span class="rc-lab">Total charge time ' + energyLab + '</span></div>' +
       '<div class="rc-metric"><span class="rc-val">' + stopCount + '</span><span class="rc-lab">Charging stop' + (stopCount === 1 ? '' : 's') +
         (isNum(detour.detourKm) && detour.detourKm > 0 ? (' \u00b7 ~' + detour.detourKm.toFixed(1) + ' km detour') : '') + '</span></div>' +
+      liveFigureCards() +
       '</div>' + warnBanner + '<p class="rc-caveat">' + caveat + '</p>';
   }
 
@@ -6308,12 +6364,31 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     // Draw the geographic map from the current classification + route.
     renderRsimMap();
 
-    // Live cost counter: populate from the SAME detour result used to draw the
-    // map. Zoom does NOT change this (zoom calls renderRsimMap only); every
-    // route change (add stop, postal drop, drag-end, return-to-depot, DC-only
-    // toggle) runs recompute() -> renderRoutingSim() -> here, so the readout
-    // stays in lock-step with the drawn detour.
-    renderRsimCostCounter(detour, prod, stops, routeIsOnRoad);
+    // FEAT-003: depot-charge feasibility for the active SRM over this route,
+    // computed HERE (before the cost counter) from the SAME route/spec so the
+    // margin stat card below and the depot-feasibility panel further down read
+    // one identical result. depotFeasibility returns null (never a fake zero)
+    // when the spec or route distance is missing.
+    var depot = (prod && isNum(prod.D) && isNum(prod.E) && isNum(routeKm))
+      ? map.depotFeasibility({ batteryKwh: prod.D, kwhPerKm: prod.E, reserveFraction: 0.10 }, routeKm)
+      : null;
+
+    // Live cost counter + the sibling live-figure stat cards: populate from the
+    // SAME detour/route/reach/depot results used to draw the map. Zoom does NOT
+    // change this (zoom calls renderRsimMap only); every route change (add stop,
+    // postal drop, drag-end, return-to-depot, DC-only toggle) runs recompute()
+    // -> renderRoutingSim() -> here, so the readout stays in lock-step with the
+    // drawn detour. The extra figures (route km / detour km / reachable chargers
+    // / depot margin) are read from the live route result, never recomputed.
+    renderRsimCostCounter(detour, prod, stops, routeIsOnRoad, {
+      routeKm: routeKm,
+      routeIsOnRoad: routeIsOnRoad,
+      routeHasStops: stops.length >= 1,
+      reachableCount: (stops.length >= 1 && reach && isNum(reach.reachableCount)) ? reach.reachableCount : null,
+      detourKm: (detour && detour.ok && isNum(detour.detourKm)) ? detour.detourKm : null,
+      depotMarginKm: (depot && isNum(depot.marginKm)) ? depot.marginKm : null,
+      depotFeasible: depot ? depot.feasible : null
+    });
 
     // Origin note reflects the placed depot/start.
     if (originNote){
@@ -6358,10 +6433,8 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     var cards = '';
 
     // Panel A: DEPOT CHARGING. Can the SRM complete the route on one depot
-    // charge (usable range vs route distance)?
-    var depot = (prod && isNum(prod.D) && isNum(prod.E) && isNum(routeKm))
-      ? map.depotFeasibility({ batteryKwh: prod.D, kwhPerKm: prod.E, reserveFraction: 0.10 }, routeKm)
-      : null;
+    // charge (usable range vs route distance)? Reuses the `depot` result already
+    // computed above for the live stat card, so the panel and the card agree.
     if (depot && depot.feasible !== null){
       cards += '<div class="charge-read"><h4>Depot charging</h4>' +
         '<div class="cr-verdict ' + (depot.feasible ? 'ok' : 'warn') + '">' +
@@ -8431,10 +8504,45 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     } catch(e) { /* ignore */ }
   }
 
-  // Score one case: returns {case, score} using the shared engine.
+  // DISPLAYED "Best EV plan" by LOWEST Total economic TCO (user request).
+  // We reuse the SAME engine result already computed in scoreCase - no second
+  // computeFleet, no recomputation of economics. Among Plan A / Plan B that
+  // deploy EVs by year 10 (evYear10 numeric and > 0) AND have a numeric Total
+  // economic TCO, we pick the plan with the LOWEST Total; ties resolve to Plan A
+  // (plan_a is considered first). If neither EV plan has a numeric Total we fall
+  // back to scoreProspect's honest s.bestPlanLabel (diagnostic / vehicle-only).
+  //
+  // Correctness note: for a FIXED Keep-ICE baseline, the lowest Total economic
+  // TCO is also the largest saving vs Keep ICE, so this displayed pick normally
+  // coincides with scoreProspect's ranking pick. The two only diverge on the
+  // gate-excluded edge, where scoreProspect may sink a flagged plan while this
+  // purely numeric display still names the cheaper Total. scoreProspect, its
+  // ranking keys (benefitKey/accountKey) and gate flags are left untouched, so
+  // the sort order of the prospect list is unchanged.
+  function displayBestPlanLabel(out, fallback){
+    var r = out && out.results;
+    if (!r) return fallback;
+    var best = null; // {key,label,total}
+    ['plan_a','plan_b'].forEach(function(key){
+      var ev = r.evYear10 ? r.evYear10[key] : undefined;
+      var total = r.totalEconomicTco ? r.totalEconomicTco[key] : undefined;
+      if (isNum(ev) && ev > 0 && isNum(total)) {
+        // Strict '<' keeps the earlier (plan_a) entry on a tie.
+        if (best === null || total < best.total) {
+          best = { label: key === 'plan_a' ? 'Plan A' : 'Plan B', total: total };
+        }
+      }
+    });
+    return best ? best.label : fallback;
+  }
+
+  // Score one case: returns {case, score, displayBestPlan} using the shared
+  // engine. The score object (ranking keys, gate flags) is scoreProspect's
+  // output unchanged; displayBestPlan is the lowest-Total displayed label only.
   function scoreCase(c){
     var out = ENG.computeFleet(c.inputs);
-    return { c: c, s: ENG.scoreProspect(out) };
+    var s = ENG.scoreProspect(out);
+    return { c: c, s: s, displayBestPlan: displayBestPlanLabel(out, s.bestPlanLabel) };
   }
 
   var sortMode = 'benefit';
@@ -8486,7 +8594,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
         '<div class="pc-metric"><span class="pc-k">Saving % vs Keep ICE</span><span class="pc-v">' + pct(s.savingPct) + '</span></div>' +
         '<div class="pc-metric"><span class="pc-k">Absolute 10-yr saving</span><span class="pc-v">' + absSavingCell + '</span></div>' +
         '<div class="pc-metric"><span class="pc-k">Trucks</span><span class="pc-v">' + intFmt(s.truckCount) + '</span></div>' +
-        '<div class="pc-metric"><span class="pc-k">Best EV plan</span><span class="pc-v">' + txt(s.bestPlanLabel) + '</span></div>' +
+        '<div class="pc-metric"><span class="pc-k">Best EV plan</span><span class="pc-v">' + txt(row.displayBestPlan) + '</span></div>' +
         '<div class="pc-metric"><span class="pc-k">Account size (Total economic TCO)</span><span class="pc-v">' + money(s.totalEconomicTco) + '</span></div>' +
         '<div class="pc-metric"><span class="pc-k">Day-0 funding</span><span class="pc-v">' + money(s.day0Funding) + '</span></div>';
 
@@ -8746,44 +8854,239 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     try { if (window && window.addEventListener) window.addEventListener('keydown', onKeydown); } catch(e){}
   })();
 
-  // ---- Download the simulation-results brief (FEAT-003) ----
-  // PURELY CLIENT-SIDE, OFFLINE download of the planner-authored markdown
-  // brief that is bundled into the page as window.HSSimBrief (SIMBRIEF block,
-  // inlined by tools/build_index.js from docs/simulation-results-brief.md).
-  // There is NO fetch / XHR / network: the markdown string comes ONLY from the
-  // bundled global. We build a Blob and an object URL and click a synthetic
-  // <a download>, which works under file://. The object URL is revoked after
-  // the click to avoid leaking it.
+  // ---- Download analysis: LIVE current-state report (FEAT-002) ----
+  // The #download-brief button now PRIMARILY emits a generated-at-click-time
+  // snapshot of the CURRENT inputs + CURRENT four-path TCO, built ONLY from the
+  // live state (window.__HS.state) and the live engine result the UI already
+  // renders (window.__HS.computeReframed() - the two-state merged output). We
+  // never recompute economics: every figure is read straight off out.results.*,
+  // exactly the rows renderResults builds. The planner-authored all-models
+  // 5yr/10yr brief (window.HSSimBrief, SIMBRIEF block) is still bundled and is
+  // APPENDED verbatim as a clearly labelled Reference section, so the valuable
+  // static methodology is preserved. There is NO fetch / XHR / network: the
+  // report string is assembled in-page and downloaded as a Blob via a synthetic
+  // <a download> under file://; the object URL is revoked after the click.
+
+  // Plain-text report formatters: honest n.a. prints as the literal "n.a."
+  // (never a fabricated zero) and NEVER an HTML span, since this is markdown.
+  function rMoney(v){
+    if(v===NA||v==null||!isNum(v)) return 'n.a.';
+    var neg=v<0,a=Math.abs(v); var s='S$'+a.toLocaleString('en-SG',{maximumFractionDigits:0});
+    return neg?'-'+s:s;
+  }
+  function rPct(v){ if(v===NA||v==null||!isNum(v)) return 'n.a.'; return (v*100).toFixed(2)+'%'; }
+  function rInt(v){ if(v===NA||v==null||!isNum(v)) return 'n.a.'; return String(v); }
+  function rNum(v,dp){ if(v===NA||v==null||!isNum(v)) return 'n.a.'; return v.toFixed(dp==null?2:dp); }
+  function rTxt(v){ if(v===NA||v==null||v==='') return 'n.a.'; return String(v); }
+
+  // Resolve the LIVE plan labels exactly as the on-screen results table shows
+  // them (Plan A - SRM <variant> / Plan B - <competitor>), reusing the same
+  // effective-model resolver the chart/label refresher uses.
+  function livePlanLabel(key){
+    var H = window.__HS;
+    if (key==='keep_ice') return 'Keep ICE';
+    if (key==='all_new_ice') return 'All-new ICE now';
+    try {
+      if (key==='plan_a') return 'Plan A - ' + (H.effectivePlanAModel ? H.effectivePlanAModel() : 'SRM');
+      if (key==='plan_b') return 'Plan B - ' + (H.effectivePlanBModel ? H.effectivePlanBModel() : 'competitor');
+    } catch(e){}
+    return key;
+  }
+
+  // Lowest-Total EV plan (same rule as the prospect card): among plan_a/plan_b
+  // with numeric evYear10>0 AND numeric Total economic TCO, the lower Total;
+  // ties -> Plan A. For a fixed Keep-ICE baseline the lowest Total is also the
+  // largest saving vs Keep ICE, so the decision line and ranking normally agree.
+  function lowestTotalEvPlan(r){
+    var best=null;
+    ['plan_a','plan_b'].forEach(function(key){
+      var ev = r.evYear10 ? r.evYear10[key] : undefined;
+      var total = r.totalEconomicTco ? r.totalEconomicTco[key] : undefined;
+      if (isNum(ev) && ev>0 && isNum(total)){
+        if (best===null || total < best.total) best = { key:key, total:total };
+      }
+    });
+    return best;
+  }
+
+  // PURE generator: takes the live state + the live engine result and returns a
+  // non-empty Markdown string. Reads ONLY values off the engine result object
+  // and the live inputs; recomputes nothing.
+  function buildLiveAnalysisMarkdown(state, out){
+    var H = window.__HS;
+    var r = (out && out.results) || {};
+    var L = [];
+    var now = new Date();
+    L.push('# EV truck TCO - current-analysis snapshot');
+    L.push('');
+    L.push('_Generated ' + now.toISOString().replace('T',' ').slice(0,16) + ' from the current on-screen inputs._');
+    L.push('');
+    L.push('> **Diagnostic screen, not a quotation.** Every figure below is a');
+    L.push('> coarse diagnostic computed from the inputs entered on screen, not a');
+    L.push('> commercial offer. Where a required figure is missing it is shown as');
+    L.push('> `n.a.` and never substituted with a fabricated zero.');
+    L.push('');
+
+    // (2) Current fleet & duty inputs the user entered. Most-demanding across
+    // the INCLUDED fleet (col B === 1), matching the engine's gate; blanks print
+    // n.a. We read columns straight off the live state rows:
+    //   E = Work km/day, F = Days/year, G = Demanding-day route km, H = Peak cargo kg.
+    L.push('## Current fleet & duty');
+    var fr = (state.fleet_register && state.fleet_register.rows) || [];
+    var inc = fr.filter(function(row){ return row && row.B === 1; });
+    function maxCol(col){
+      var best=null;
+      inc.forEach(function(row){ var v=row[col]; if(isNum(v) && (best===null || v>best)) best=v; });
+      return best;
+    }
+    L.push('- Included trucks: ' + rInt(isNum(r.truckCount && r.truckCount.keep_ice) ? r.truckCount.keep_ice : inc.length));
+    L.push('- Work km/day (most demanding): ' + rNum(maxCol('E')));
+    L.push('- Days/year (most demanding): ' + rNum(maxCol('F')));
+    L.push('- Demanding-day route km: ' + rNum(maxCol('G')));
+    L.push('- Peak cargo per included truck (kg): ' + rNum(maxCol('H')));
+    L.push('');
+
+    // (3) Resolved Plan A (SRM) vs Plan B (competitor) model names + the live
+    // EV quotes the reframe pickers resolved (exactly what the labels show).
+    var rf = (H && H.reframe) ? H.reframe() : {};
+    L.push('## Replacement plan (as framed on screen)');
+    L.push('- Business intention: ' + rTxt(rf.intention));
+    L.push('- Plan A (SRM): ' + rTxt(H && H.effectivePlanAModel ? H.effectivePlanAModel() : rf.planAModel) +
+           ' @ ' + rMoney(rf.evPriceA) + ' (EV quote)');
+    L.push('- Plan B (competitor): ' + rTxt(H && H.effectivePlanBModel ? H.effectivePlanBModel() : rf.planBModel) +
+           ' @ ' + rMoney(rf.evPriceB) + ' (EV quote)');
+    L.push('');
+
+    // (4) Energy / operating-cost inputs the engine read. Row mapping per
+    // docs/input-sensitivity-findings.md: energy row 7 = commercial diesel
+    // price (SGD/litre), energy row 10 = depot electricity (SGD/grid kWh);
+    // operating-costs row 7 = ICE fuel consumption (L/km). EV kWh/km is a
+    // catalogue spec per model, surfaced n.a. here when not a direct input.
+    function ecB(n){ var row = (H && H.ecRow) ? H.ecRow(n) : null; return row && row.values ? row.values.B : undefined; }
+    function ocB(n){ var row = (H && H.ocRow) ? H.ocRow(n) : null; return row && row.values ? row.values.B : undefined; }
+    L.push('## Energy & operating-cost inputs');
+    L.push('- Commercial diesel price (SGD/litre): ' + rNum(ecB(7), 3));
+    L.push('- ICE fuel consumption (L/km): ' + rNum(ocB(7), 3));
+    L.push('- Depot electricity (SGD/grid kWh): ' + rNum(ecB(10), 3));
+    L.push('- EV insurance (SGD/yr): ' + rNum(ocB(30)));
+    L.push('- ICE insurance (SGD/yr): ' + rNum(ocB(29)));
+    L.push('');
+
+    // (5) Full four-path TCO table - exactly the rows renderResults builds,
+    // read straight off out.results keyed by keep_ice/all_new_ice/plan_a/plan_b.
+    var keys = ['keep_ice','all_new_ice','plan_a','plan_b'];
+    L.push('## Total cost of ownership (all four paths)');
+    L.push('| Metric | ' + keys.map(livePlanLabel).join(' | ') + ' |');
+    L.push('| --- | ' + keys.map(function(){ return '---'; }).join(' | ') + ' |');
+    function trow(label, field, fmt){
+      var f = (field && r[field]) ? r[field] : {};
+      var cells = keys.map(function(k){ return fmt(f[k]); });
+      L.push('| ' + label + ' | ' + cells.join(' | ') + ' |');
+    }
+    trow('Truck count', 'truckCount', rInt);
+    trow('Vehicle economic TCO', 'vehicleEconomicTco', rMoney);
+    trow('Net site ownership cost', 'netSiteCost', rMoney);
+    trow('Total economic TCO', 'totalEconomicTco', rMoney);
+    trow('Saving vs Keep ICE', 'savingVsKeep', rMoney);
+    trow('Saving %', 'savingPct', rPct);
+    trow('Target saving headroom', 'headroom15', rMoney);
+    trow('Day-0 funding before loans', 'day0Funding', rMoney);
+    trow('Cost per productive km', 'costPerKm', function(v){ return v===NA||v==null||!isNum(v) ? 'n.a.' : 'S$'+rNum(v,5); });
+    trow('Site completeness / access', 'siteStatus', rTxt);
+    trow('Vehicle service / evidence', 'vehicleStatus', rTxt);
+    trow('Saving claim status', 'savingClaimStatus', rTxt);
+    L.push('');
+
+    // (6) Decision line: committed saving target + best EV plan by LOWEST Total
+    // economic TCO (== largest saving vs the fixed Keep-ICE baseline) + its saving %.
+    var tgt = Number(state.savingTarget);
+    var tgtPct = (isFinite(tgt) && tgt>0 && tgt<1) ? (tgt*100).toFixed(2)+'%' : '15%';
+    var best = lowestTotalEvPlan(r);
+    L.push('## Decision');
+    L.push('- Committed saving target: ' + tgtPct);
+    if (best){
+      L.push('- Best EV plan (lowest Total economic TCO): ' + livePlanLabel(best.key) +
+             ' at ' + rMoney(best.total) + ' Total, saving ' + rPct(r.savingPct ? r.savingPct[best.key] : NA) + ' vs Keep ICE.');
+    } else {
+      L.push('- Best EV plan: n.a. (no plan has a numeric Total economic TCO in the current state).');
+    }
+    L.push('');
+
+    // Reference section: append the bundled all-models 5yr/10yr methodology
+    // brief verbatim so the static context is not lost.
+    L.push('---');
+    L.push('');
+    L.push('## Reference: all-models 5yr/10yr TCO & methodology');
+    L.push('');
+    var brief = window.HSSimBrief;
+    if (brief && typeof brief.markdown === 'string' && brief.markdown.length){
+      L.push(brief.markdown);
+    } else {
+      L.push('_(Reference brief unavailable in this build.)_');
+    }
+    return L.join('\n');
+  }
+
+  function downloadMarkdown(markdown, filename){
+    var url = null, a = null;
+    try {
+      var blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+      url = (window.URL || window.webkitURL).createObjectURL(blob);
+      a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.rel = 'noopener';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+    } catch (err) {
+      return;
+    } finally {
+      if (a && a.parentNode) a.parentNode.removeChild(a);
+      if (url) setTimeout(function(){ try { (window.URL || window.webkitURL).revokeObjectURL(url); } catch(e){} }, 0);
+    }
+  }
+
   (function wireBriefDownload(){
     var btn = el('download-brief');
     if (!btn) return;
     btn.addEventListener('click', function(){
+      var H = window.__HS;
+      // PRIMARY path: live current-state report. Guard against a missing
+      // __HS / engine so the button never no-ops - fall back to the bundled
+      // static brief string if the live state is unavailable.
+      try {
+        if (H && typeof H.computeReframed === 'function' && H.state){
+          var out = H.computeReframed();
+          var md = buildLiveAnalysisMarkdown(H.state, out);
+          if (md && md.length){
+            downloadMarkdown(md, 'ev-truck-tco-current-analysis.md');
+            return;
+          }
+        }
+      } catch (err) { /* fall through to the static brief */ }
       var brief = window.HSSimBrief;
       if (!brief || typeof brief.markdown !== 'string' || !brief.markdown.length) return;
-      var filename = brief.filename || 'ev-truck-tco-simulation-results.md';
-      var url = null;
-      var a = null;
-      try {
-        var blob = new Blob([brief.markdown], { type: 'text/markdown;charset=utf-8' });
-        url = (window.URL || window.webkitURL).createObjectURL(blob);
-        a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.rel = 'noopener';
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-      } catch (err) {
-        return;
-      } finally {
-        if (a && a.parentNode) a.parentNode.removeChild(a);
-        if (url) {
-          // Revoke after the click has been dispatched / handled.
-          setTimeout(function(){ try { (window.URL || window.webkitURL).revokeObjectURL(url); } catch(e){} }, 0);
-        }
-      }
+      downloadMarkdown(brief.markdown, brief.filename || 'ev-truck-tco-simulation-results.md');
     });
   })();
+
+  // Test hook (FEAT-002 review follow-up): expose the PURE live-report
+  // generator so the DOM-shim harness can INVOKE it against the current live
+  // state + the live engine result and assert on the produced markdown (table
+  // rows, n.a. propagation, Reference append). Display/test-only: it reads the
+  // same window.__HS.state + computeReframed() the click handler reads and
+  // changes no behaviour; the click handler keeps calling the generator
+  // directly and does NOT use this hook.
+  try {
+    if (window.__HS) {
+      window.__HS.__buildLiveAnalysisMarkdown = function(){
+        var H = window.__HS;
+        if (!(H && typeof H.computeReframed === 'function' && H.state)) return '';
+        return buildLiveAnalysisMarkdown(H.state, H.computeReframed());
+      };
+    }
+  } catch (e) {}
 
   render();
 })();
