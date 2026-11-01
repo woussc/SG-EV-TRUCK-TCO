@@ -498,9 +498,12 @@ input.amber,select.amber{background:var(--amber);border:1px solid var(--amberlin
  * The prospects list is a responsive card grid (one card per prospect),
  * streamlined like the input cards. Essentials up top; ranking detail + the
  * case note collapse behind a per-card Details disclosure. */
-/* auto-FIT so a short or partial last row of prospect cards never leaves dead
-   track whitespace; the cards stretch to fill the overlay width instead. */
-.prospect-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:12px 0 0;align-items:stretch}
+/* Exactly TWO columns on desktop (user request): a fixed 2-up grid reads more
+   deliberately than an auto-fit flow and keeps each prospect card wide enough
+   for the metric rows. minmax(0,1fr) lets long names wrap instead of pushing
+   the track past the drawer width. Mobile (<=700px) collapses to 1 column via
+   the .prospect-cards{grid-template-columns:1fr} rule further below. */
+.prospect-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:12px 0 0;align-items:stretch}
 .prospect-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--paper);min-width:0;display:flex;flex-direction:column;gap:8px;transition:border-color .18s ease,transform .18s ease}
 /* Tasteful pointer-device hover affordance; the reduced-motion guard above
    (*{transition-duration:.001ms}) neutralises the lift when motion is reduced. */
@@ -8431,10 +8434,45 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     } catch(e) { /* ignore */ }
   }
 
-  // Score one case: returns {case, score} using the shared engine.
+  // DISPLAYED "Best EV plan" by LOWEST Total economic TCO (user request).
+  // We reuse the SAME engine result already computed in scoreCase - no second
+  // computeFleet, no recomputation of economics. Among Plan A / Plan B that
+  // deploy EVs by year 10 (evYear10 numeric and > 0) AND have a numeric Total
+  // economic TCO, we pick the plan with the LOWEST Total; ties resolve to Plan A
+  // (plan_a is considered first). If neither EV plan has a numeric Total we fall
+  // back to scoreProspect's honest s.bestPlanLabel (diagnostic / vehicle-only).
+  //
+  // Correctness note: for a FIXED Keep-ICE baseline, the lowest Total economic
+  // TCO is also the largest saving vs Keep ICE, so this displayed pick normally
+  // coincides with scoreProspect's ranking pick. The two only diverge on the
+  // gate-excluded edge, where scoreProspect may sink a flagged plan while this
+  // purely numeric display still names the cheaper Total. scoreProspect, its
+  // ranking keys (benefitKey/accountKey) and gate flags are left untouched, so
+  // the sort order of the prospect list is unchanged.
+  function displayBestPlanLabel(out, fallback){
+    var r = out && out.results;
+    if (!r) return fallback;
+    var best = null; // {key,label,total}
+    ['plan_a','plan_b'].forEach(function(key){
+      var ev = r.evYear10 ? r.evYear10[key] : undefined;
+      var total = r.totalEconomicTco ? r.totalEconomicTco[key] : undefined;
+      if (isNum(ev) && ev > 0 && isNum(total)) {
+        // Strict '<' keeps the earlier (plan_a) entry on a tie.
+        if (best === null || total < best.total) {
+          best = { label: key === 'plan_a' ? 'Plan A' : 'Plan B', total: total };
+        }
+      }
+    });
+    return best ? best.label : fallback;
+  }
+
+  // Score one case: returns {case, score, displayBestPlan} using the shared
+  // engine. The score object (ranking keys, gate flags) is scoreProspect's
+  // output unchanged; displayBestPlan is the lowest-Total displayed label only.
   function scoreCase(c){
     var out = ENG.computeFleet(c.inputs);
-    return { c: c, s: ENG.scoreProspect(out) };
+    var s = ENG.scoreProspect(out);
+    return { c: c, s: s, displayBestPlan: displayBestPlanLabel(out, s.bestPlanLabel) };
   }
 
   var sortMode = 'benefit';
@@ -8486,7 +8524,7 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
         '<div class="pc-metric"><span class="pc-k">Saving % vs Keep ICE</span><span class="pc-v">' + pct(s.savingPct) + '</span></div>' +
         '<div class="pc-metric"><span class="pc-k">Absolute 10-yr saving</span><span class="pc-v">' + absSavingCell + '</span></div>' +
         '<div class="pc-metric"><span class="pc-k">Trucks</span><span class="pc-v">' + intFmt(s.truckCount) + '</span></div>' +
-        '<div class="pc-metric"><span class="pc-k">Best EV plan</span><span class="pc-v">' + txt(s.bestPlanLabel) + '</span></div>' +
+        '<div class="pc-metric"><span class="pc-k">Best EV plan</span><span class="pc-v">' + txt(row.displayBestPlan) + '</span></div>' +
         '<div class="pc-metric"><span class="pc-k">Account size (Total economic TCO)</span><span class="pc-v">' + money(s.totalEconomicTco) + '</span></div>' +
         '<div class="pc-metric"><span class="pc-k">Day-0 funding</span><span class="pc-v">' + money(s.day0Funding) + '</span></div>';
 
@@ -8746,42 +8784,220 @@ window.HSRoadRouter = { MAX_SNAP_KM: MAX_SNAP_KM, validateRoadsDoc: validateRoad
     try { if (window && window.addEventListener) window.addEventListener('keydown', onKeydown); } catch(e){}
   })();
 
-  // ---- Download the simulation-results brief (FEAT-003) ----
-  // PURELY CLIENT-SIDE, OFFLINE download of the planner-authored markdown
-  // brief that is bundled into the page as window.HSSimBrief (SIMBRIEF block,
-  // inlined by tools/build_index.js from docs/simulation-results-brief.md).
-  // There is NO fetch / XHR / network: the markdown string comes ONLY from the
-  // bundled global. We build a Blob and an object URL and click a synthetic
-  // <a download>, which works under file://. The object URL is revoked after
-  // the click to avoid leaking it.
+  // ---- Download analysis: LIVE current-state report (FEAT-002) ----
+  // The #download-brief button now PRIMARILY emits a generated-at-click-time
+  // snapshot of the CURRENT inputs + CURRENT four-path TCO, built ONLY from the
+  // live state (window.__HS.state) and the live engine result the UI already
+  // renders (window.__HS.computeReframed() - the two-state merged output). We
+  // never recompute economics: every figure is read straight off out.results.*,
+  // exactly the rows renderResults builds. The planner-authored all-models
+  // 5yr/10yr brief (window.HSSimBrief, SIMBRIEF block) is still bundled and is
+  // APPENDED verbatim as a clearly labelled Reference section, so the valuable
+  // static methodology is preserved. There is NO fetch / XHR / network: the
+  // report string is assembled in-page and downloaded as a Blob via a synthetic
+  // <a download> under file://; the object URL is revoked after the click.
+
+  // Plain-text report formatters: honest n.a. prints as the literal "n.a."
+  // (never a fabricated zero) and NEVER an HTML span, since this is markdown.
+  function rMoney(v){
+    if(v===NA||v==null||!isNum(v)) return 'n.a.';
+    var neg=v<0,a=Math.abs(v); var s='S$'+a.toLocaleString('en-SG',{maximumFractionDigits:0});
+    return neg?'-'+s:s;
+  }
+  function rPct(v){ if(v===NA||v==null||!isNum(v)) return 'n.a.'; return (v*100).toFixed(2)+'%'; }
+  function rInt(v){ if(v===NA||v==null||!isNum(v)) return 'n.a.'; return String(v); }
+  function rNum(v,dp){ if(v===NA||v==null||!isNum(v)) return 'n.a.'; return v.toFixed(dp==null?2:dp); }
+  function rTxt(v){ if(v===NA||v==null||v==='') return 'n.a.'; return String(v); }
+
+  // Resolve the LIVE plan labels exactly as the on-screen results table shows
+  // them (Plan A - SRM <variant> / Plan B - <competitor>), reusing the same
+  // effective-model resolver the chart/label refresher uses.
+  function livePlanLabel(key){
+    var H = window.__HS;
+    if (key==='keep_ice') return 'Keep ICE';
+    if (key==='all_new_ice') return 'All-new ICE now';
+    try {
+      if (key==='plan_a') return 'Plan A - ' + (H.effectivePlanAModel ? H.effectivePlanAModel() : 'SRM');
+      if (key==='plan_b') return 'Plan B - ' + (H.effectivePlanBModel ? H.effectivePlanBModel() : 'competitor');
+    } catch(e){}
+    return key;
+  }
+
+  // Lowest-Total EV plan (same rule as the prospect card): among plan_a/plan_b
+  // with numeric evYear10>0 AND numeric Total economic TCO, the lower Total;
+  // ties -> Plan A. For a fixed Keep-ICE baseline the lowest Total is also the
+  // largest saving vs Keep ICE, so the decision line and ranking normally agree.
+  function lowestTotalEvPlan(r){
+    var best=null;
+    ['plan_a','plan_b'].forEach(function(key){
+      var ev = r.evYear10 ? r.evYear10[key] : undefined;
+      var total = r.totalEconomicTco ? r.totalEconomicTco[key] : undefined;
+      if (isNum(ev) && ev>0 && isNum(total)){
+        if (best===null || total < best.total) best = { key:key, total:total };
+      }
+    });
+    return best;
+  }
+
+  // PURE generator: takes the live state + the live engine result and returns a
+  // non-empty Markdown string. Reads ONLY values off the engine result object
+  // and the live inputs; recomputes nothing.
+  function buildLiveAnalysisMarkdown(state, out){
+    var H = window.__HS;
+    var r = (out && out.results) || {};
+    var L = [];
+    var now = new Date();
+    L.push('# EV truck TCO - current-analysis snapshot');
+    L.push('');
+    L.push('_Generated ' + now.toISOString().replace('T',' ').slice(0,16) + ' from the current on-screen inputs._');
+    L.push('');
+    L.push('> **Diagnostic screen, not a quotation.** Every figure below is a');
+    L.push('> coarse diagnostic computed from the inputs entered on screen, not a');
+    L.push('> commercial offer. Where a required figure is missing it is shown as');
+    L.push('> `n.a.` and never substituted with a fabricated zero.');
+    L.push('');
+
+    // (2) Current fleet & duty inputs the user entered. Most-demanding across
+    // the INCLUDED fleet (col B === 1), matching the engine's gate; blanks print
+    // n.a. We read columns straight off the live state rows:
+    //   E = Work km/day, F = Days/year, G = Demanding-day route km, H = Peak cargo kg.
+    L.push('## Current fleet & duty');
+    var fr = (state.fleet_register && state.fleet_register.rows) || [];
+    var inc = fr.filter(function(row){ return row && row.B === 1; });
+    function maxCol(col){
+      var best=null;
+      inc.forEach(function(row){ var v=row[col]; if(isNum(v) && (best===null || v>best)) best=v; });
+      return best;
+    }
+    L.push('- Included trucks: ' + rInt(isNum(r.truckCount && r.truckCount.keep_ice) ? r.truckCount.keep_ice : inc.length));
+    L.push('- Work km/day (most demanding): ' + rNum(maxCol('E')));
+    L.push('- Days/year (most demanding): ' + rNum(maxCol('F')));
+    L.push('- Demanding-day route km: ' + rNum(maxCol('G')));
+    L.push('- Peak cargo per included truck (kg): ' + rNum(maxCol('H')));
+    L.push('');
+
+    // (3) Resolved Plan A (SRM) vs Plan B (competitor) model names + the live
+    // EV quotes the reframe pickers resolved (exactly what the labels show).
+    var rf = (H && H.reframe) ? H.reframe() : {};
+    L.push('## Replacement plan (as framed on screen)');
+    L.push('- Business intention: ' + rTxt(rf.intention));
+    L.push('- Plan A (SRM): ' + rTxt(H && H.effectivePlanAModel ? H.effectivePlanAModel() : rf.planAModel) +
+           ' @ ' + rMoney(rf.evPriceA) + ' (EV quote)');
+    L.push('- Plan B (competitor): ' + rTxt(H && H.effectivePlanBModel ? H.effectivePlanBModel() : rf.planBModel) +
+           ' @ ' + rMoney(rf.evPriceB) + ' (EV quote)');
+    L.push('');
+
+    // (4) Energy / operating-cost inputs the engine read. Row mapping per
+    // docs/input-sensitivity-findings.md: energy row 7 = commercial diesel
+    // price (SGD/litre), energy row 10 = depot electricity (SGD/grid kWh);
+    // operating-costs row 7 = ICE fuel consumption (L/km). EV kWh/km is a
+    // catalogue spec per model, surfaced n.a. here when not a direct input.
+    function ecB(n){ var row = (H && H.ecRow) ? H.ecRow(n) : null; return row && row.values ? row.values.B : undefined; }
+    function ocB(n){ var row = (H && H.ocRow) ? H.ocRow(n) : null; return row && row.values ? row.values.B : undefined; }
+    L.push('## Energy & operating-cost inputs');
+    L.push('- Commercial diesel price (SGD/litre): ' + rNum(ecB(7), 3));
+    L.push('- ICE fuel consumption (L/km): ' + rNum(ocB(7), 3));
+    L.push('- Depot electricity (SGD/grid kWh): ' + rNum(ecB(10), 3));
+    L.push('- EV insurance (SGD/yr): ' + rNum(ocB(30)));
+    L.push('- ICE insurance (SGD/yr): ' + rNum(ocB(29)));
+    L.push('');
+
+    // (5) Full four-path TCO table - exactly the rows renderResults builds,
+    // read straight off out.results keyed by keep_ice/all_new_ice/plan_a/plan_b.
+    var keys = ['keep_ice','all_new_ice','plan_a','plan_b'];
+    L.push('## Total cost of ownership (all four paths)');
+    L.push('| Metric | ' + keys.map(livePlanLabel).join(' | ') + ' |');
+    L.push('| --- | ' + keys.map(function(){ return '---'; }).join(' | ') + ' |');
+    function trow(label, field, fmt){
+      var f = (field && r[field]) ? r[field] : {};
+      var cells = keys.map(function(k){ return fmt(f[k]); });
+      L.push('| ' + label + ' | ' + cells.join(' | ') + ' |');
+    }
+    trow('Truck count', 'truckCount', rInt);
+    trow('Vehicle economic TCO', 'vehicleEconomicTco', rMoney);
+    trow('Net site ownership cost', 'netSiteCost', rMoney);
+    trow('Total economic TCO', 'totalEconomicTco', rMoney);
+    trow('Saving vs Keep ICE', 'savingVsKeep', rMoney);
+    trow('Saving %', 'savingPct', rPct);
+    trow('Target saving headroom', 'headroom15', rMoney);
+    trow('Day-0 funding before loans', 'day0Funding', rMoney);
+    trow('Cost per productive km', 'costPerKm', function(v){ return v===NA||v==null||!isNum(v) ? 'n.a.' : 'S$'+rNum(v,5); });
+    trow('Site completeness / access', 'siteStatus', rTxt);
+    trow('Vehicle service / evidence', 'vehicleStatus', rTxt);
+    trow('Saving claim status', 'savingClaimStatus', rTxt);
+    L.push('');
+
+    // (6) Decision line: committed saving target + best EV plan by LOWEST Total
+    // economic TCO (== largest saving vs the fixed Keep-ICE baseline) + its saving %.
+    var tgt = Number(state.savingTarget);
+    var tgtPct = (isFinite(tgt) && tgt>0 && tgt<1) ? (tgt*100).toFixed(2)+'%' : '15%';
+    var best = lowestTotalEvPlan(r);
+    L.push('## Decision');
+    L.push('- Committed saving target: ' + tgtPct);
+    if (best){
+      L.push('- Best EV plan (lowest Total economic TCO): ' + livePlanLabel(best.key) +
+             ' at ' + rMoney(best.total) + ' Total, saving ' + rPct(r.savingPct ? r.savingPct[best.key] : NA) + ' vs Keep ICE.');
+    } else {
+      L.push('- Best EV plan: n.a. (no plan has a numeric Total economic TCO in the current state).');
+    }
+    L.push('');
+
+    // Reference section: append the bundled all-models 5yr/10yr methodology
+    // brief verbatim so the static context is not lost.
+    L.push('---');
+    L.push('');
+    L.push('## Reference: all-models 5yr/10yr TCO & methodology');
+    L.push('');
+    var brief = window.HSSimBrief;
+    if (brief && typeof brief.markdown === 'string' && brief.markdown.length){
+      L.push(brief.markdown);
+    } else {
+      L.push('_(Reference brief unavailable in this build.)_');
+    }
+    return L.join('\n');
+  }
+
+  function downloadMarkdown(markdown, filename){
+    var url = null, a = null;
+    try {
+      var blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+      url = (window.URL || window.webkitURL).createObjectURL(blob);
+      a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.rel = 'noopener';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+    } catch (err) {
+      return;
+    } finally {
+      if (a && a.parentNode) a.parentNode.removeChild(a);
+      if (url) setTimeout(function(){ try { (window.URL || window.webkitURL).revokeObjectURL(url); } catch(e){} }, 0);
+    }
+  }
+
   (function wireBriefDownload(){
     var btn = el('download-brief');
     if (!btn) return;
     btn.addEventListener('click', function(){
+      var H = window.__HS;
+      // PRIMARY path: live current-state report. Guard against a missing
+      // __HS / engine so the button never no-ops - fall back to the bundled
+      // static brief string if the live state is unavailable.
+      try {
+        if (H && typeof H.computeReframed === 'function' && H.state){
+          var out = H.computeReframed();
+          var md = buildLiveAnalysisMarkdown(H.state, out);
+          if (md && md.length){
+            downloadMarkdown(md, 'ev-truck-tco-current-analysis.md');
+            return;
+          }
+        }
+      } catch (err) { /* fall through to the static brief */ }
       var brief = window.HSSimBrief;
       if (!brief || typeof brief.markdown !== 'string' || !brief.markdown.length) return;
-      var filename = brief.filename || 'ev-truck-tco-simulation-results.md';
-      var url = null;
-      var a = null;
-      try {
-        var blob = new Blob([brief.markdown], { type: 'text/markdown;charset=utf-8' });
-        url = (window.URL || window.webkitURL).createObjectURL(blob);
-        a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.rel = 'noopener';
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-      } catch (err) {
-        return;
-      } finally {
-        if (a && a.parentNode) a.parentNode.removeChild(a);
-        if (url) {
-          // Revoke after the click has been dispatched / handled.
-          setTimeout(function(){ try { (window.URL || window.webkitURL).revokeObjectURL(url); } catch(e){} }, 0);
-        }
-      }
+      downloadMarkdown(brief.markdown, brief.filename || 'ev-truck-tco-simulation-results.md');
     });
   })();
 

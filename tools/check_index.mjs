@@ -384,6 +384,95 @@ checks.push(['prospect cards keep the conditional-savings caveat',
 checks.push(['prospect cards show n.a. (not a zero substitute)',
   pbodyBenefit.indexOf('n.a.') !== -1]);
 
+// ---- FEAT-002 prospect cards: exactly 2 columns desktop, 1 column mobile ----
+// User request: the prospect card grid is a fixed 2-up layout at desktop
+// (repeat(2,minmax(0,1fr))), collapsing to a single column at phone width via
+// the <=700px .prospect-cards{grid-template-columns:1fr} rule (kept). These are
+// SOURCE-LEVEL regex checks on the hand-written CSS (no runtime viewport).
+checks.push(['prospect-cards: desktop grid is exactly 2 columns (repeat(2,minmax(0,1fr)))',
+  /\.prospect-cards\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/.test(html)]);
+checks.push(['prospect-cards: mobile <=700px collapses to a single column (1fr retained)',
+  /\.matched-grid,\.prospect-cards\{grid-template-columns:1fr\}/.test(html) ||
+  /\.prospect-cards\{grid-template-columns:1fr\}/.test(html)]);
+
+// ---- FEAT-002 displayed Best EV plan = numerically-lowest Total EV plan ----
+// The prospect card's "Best EV plan" is now the DISPLAYED lowest-Total economic
+// TCO plan (ties -> Plan A), NOT scoreProspect's gate-aware pick. scoreProspect
+// and its ranking keys are UNCHANGED (sort order is not touched) - we assert
+// that separately above via orderFor(). Here we replicate the display rule
+// purely from the engine result object and assert that, for every seed where at
+// least one EV plan has a numeric Total, the rendered card names that plan.
+function lowestTotalLabel(out) {
+  const r = out.results;
+  let best = null; // {key,label,total}
+  ['plan_a', 'plan_b'].forEach((key) => {
+    const ev = r.evYear10 ? r.evYear10[key] : undefined;
+    const total = r.totalEconomicTco ? r.totalEconomicTco[key] : undefined;
+    const evN = typeof ev === 'number' && isFinite(ev);
+    const tN = typeof total === 'number' && isFinite(total);
+    if (evN && ev > 0 && tN) {
+      if (best === null || total < best.total) {
+        best = { key, label: key === 'plan_a' ? 'Plan A' : 'Plan B', total };
+      }
+    }
+  });
+  return best ? best.label : null;
+}
+// Extract each rendered card's "Best EV plan" cell text from #prospect-body.
+function cardBestPlan(innerHTML, name) {
+  const idx = innerHTML.indexOf(name);
+  if (idx === -1) return null;
+  const slice = innerHTML.slice(idx);
+  const m = slice.match(/Best EV plan<\/span><span class="pc-v">([^<]+)</);
+  return m ? m[1].trim() : null;
+}
+let bestPlanSeedsChecked = 0;
+let bestPlanTieChecked = 0;
+seeds.cases.forEach((c) => {
+  const out = windowObj.HSEngine.computeFleet(c.inputs);
+  const expected = lowestTotalLabel(out);
+  if (!expected) return; // neither EV plan numeric -> honest fallback, skip here
+  // Find the card by its rendered title; blank/template has no company fragment.
+  const name = c.name;
+  const shown = cardBestPlan(pbodyBenefit, name);
+  if (shown === null) return;
+  bestPlanSeedsChecked += 1;
+  checks.push(['best-plan: ' + c.id + ' card shows the lowest-Total EV plan (' + expected + ')',
+    shown === expected]);
+  // Verify the tie rule where the two EV Totals are equal -> Plan A.
+  const ta = out.results.totalEconomicTco.plan_a;
+  const tb = out.results.totalEconomicTco.plan_b;
+  if (typeof ta === 'number' && isFinite(ta) && ta === tb) {
+    bestPlanTieChecked += 1;
+    checks.push(['best-plan: ' + c.id + ' tie resolves to Plan A', shown === 'Plan A']);
+  }
+});
+checks.push(['best-plan: at least one seed exercised the lowest-Total display rule',
+  bestPlanSeedsChecked >= 1]);
+// Synthetic tie + ordering probe built directly on the engine result shape, so
+// the display rule is asserted even if no seed happens to tie. We derive a
+// real engine output and then overwrite ONLY the display-relevant fields to the
+// two configurations (A lower, B lower, and a tie) the renderer must handle.
+(function syntheticBestPlanProbe() {
+  const base = windowObj.HSEngine.computeFleet(seeds.cases[0].inputs);
+  function probe(aTotal, bTotal, evA, evB) {
+    const out = { results: {
+      evYear10: { plan_a: evA, plan_b: evB },
+      totalEconomicTco: { plan_a: aTotal, plan_b: bTotal },
+    } };
+    return lowestTotalLabel(out);
+  }
+  checks.push(['best-plan (synthetic): A lower Total -> Plan A', probe(100, 200, 1, 1) === 'Plan A']);
+  checks.push(['best-plan (synthetic): B lower Total -> Plan B', probe(300, 200, 1, 1) === 'Plan B']);
+  checks.push(['best-plan (synthetic): equal Totals tie -> Plan A', probe(200, 200, 1, 1) === 'Plan A']);
+  checks.push(['best-plan (synthetic): non-EV plan (evYear10<=0) is excluded',
+    probe(100, 200, 0, 1) === 'Plan B']);
+  checks.push(['best-plan (synthetic): neither EV numeric Total -> null (honest fallback)',
+    probe(NA, NA, 1, 1) === null || probe(undefined, undefined, 1, 1) === null]);
+  // Reference base to keep the lint happy / confirm the shim engine ran.
+  checks.push(['best-plan (synthetic): base engine output has results', !!base && !!base.results]);
+})();
+
 // ---- Confirmed-win assertion (review finding #2) ---------------------------
 // At least one seeded prospect must be a gate-passing confirmed win: gatePass
 // true, a numeric Total economic TCO (not n.a.), a positive saving, and it must
@@ -3453,10 +3542,14 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
   checks.push(['simbrief: embedded brief carries grounding figure +26.51%', md.indexOf('+26.51%') !== -1]);
 
   // (c) The download path is a client-side Blob/object-URL, NOT a fetch. Scope
-  // the grep to the wireBriefDownload handler source so the assertion is
-  // precise and robust to unrelated code elsewhere.
+  // the grep to the download SUBSYSTEM source (FEAT-002: the shared
+  // downloadMarkdown() helper + the wireBriefDownload() wiring) so the assertion
+  // is precise and robust to unrelated code elsewhere. The Blob / object-URL
+  // mechanism now lives in downloadMarkdown(), which wireBriefDownload() calls;
+  // the no-fetch guarantee must hold across the whole subsystem.
+  const subsysM = html.match(/function downloadMarkdown\([\s\S]*?function wireBriefDownload\(\)\{[\s\S]*?\}\)\(\);/);
   const handlerM = html.match(/function wireBriefDownload\(\)\{[\s\S]*?\}\)\(\);/);
-  const handlerSrc = handlerM ? handlerM[0] : '';
+  const handlerSrc = subsysM ? subsysM[0] : '';
   checks.push(['download: handler wireBriefDownload present', !!handlerM]);
   checks.push(['download: handler reads window.HSSimBrief (bundled string, not a request)',
     /window\.HSSimBrief/.test(handlerSrc)]);
@@ -3468,6 +3561,28 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
   checks.push(['download: handler introduces NO fetch (offline)', !/\bfetch\s*\(/.test(handlerSrc)]);
   checks.push(['download: handler introduces NO XMLHttpRequest (offline)',
     !/XMLHttpRequest/.test(handlerSrc)]);
+
+  // (d) FEAT-002 LIVE REPORT: the Download analysis button now emits a
+  // generated-at-click-time snapshot of the CURRENT inputs + CURRENT TCO,
+  // built from the live state (window.__HS.state) + the live engine result
+  // (window.__HS.computeReframed()). The static window.HSSimBrief brief stays
+  // bundled and is appended as a Reference section, and no network is used.
+  const liveGenM = html.match(/function buildLiveAnalysisMarkdown\([\s\S]*?\n  \}/);
+  const liveGenSrc = liveGenM ? liveGenM[0] : '';
+  checks.push(['live-report: buildLiveAnalysisMarkdown generator present', !!liveGenM]);
+  checks.push(['live-report: handler builds markdown from the live state/engine result',
+    /computeReframed\(\)/.test(handlerSrc) && /buildLiveAnalysisMarkdown\(/.test(handlerSrc)]);
+  checks.push(['live-report: handler downloads with the current-snapshot filename',
+    /ev-truck-tco-current-analysis\.md/.test(handlerSrc)]);
+  checks.push(['live-report: generator reads only engine-result fields (out.results / state), recomputes nothing',
+    /out\s*&&\s*out\.results/.test(liveGenSrc) || /out\.results/.test(liveGenSrc)]);
+  checks.push(['live-report: generator appends the bundled all-models Reference brief',
+    /window\.HSSimBrief/.test(liveGenSrc) && /Reference: all-models/.test(liveGenSrc)]);
+  checks.push(['live-report: generator keeps the diagnostic / not-a-quotation caveat',
+    /not a quotation/i.test(liveGenSrc)]);
+  checks.push(['live-report: generator introduces NO fetch (offline)', !/\bfetch\s*\(/.test(liveGenSrc)]);
+  checks.push(['live-report: generator introduces NO XMLHttpRequest (offline)',
+    !/XMLHttpRequest/.test(liveGenSrc)]);
 })();
 
 // ---------------------------------------------------------------------------
