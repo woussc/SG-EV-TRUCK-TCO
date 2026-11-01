@@ -255,26 +255,40 @@ export function chargeTimeHours(params) {
  *   usableFloorKwh = batteryKwh * reserveFraction          (never dip below this)
  *   Starting from socKwh = batteryKwh * startSocFraction, for each polyline leg:
  *     legEnergy = legKm * kwhPerKm
- *     if (socKwh - legEnergy < usableFloorKwh):   // would breach reserve
+ *     WHILE completing the leg from the current SoC would breach the reserve
+ *     floor (socKwh - legEnergy < usableFloorKwh):   // honest, conservative
  *       pick nearest charger to the CURRENT vertex (nearestChargers limit:1)
- *       refillKwh = batteryKwh*(1-reserveFraction) - (socKwh - usableFloorKwh)
- *                 = capacity back up to full usable, measured into the pack
- *       ct = chargeTimeHours({battery,kwhPerKm,distanceKm,chargerKw}) sized so
- *            deliverKwh == refillKwh (we pass distanceKm = refillKwh/kwhPerKm)
- *       socKwh += ct.deliverKwh ; accumulate duration, energy, cost, detour
+ *       the out-and-back DETOUR itself burns energy FIRST:
+ *         detourEnergy = detourKm * kwhPerKm           (deducted from SoC)
+ *       refill back up to the usable ceiling, sized so the refill covers the
+ *       detour energy we just spent PLUS progress along the leg:
+ *         ct = chargeTimeHours({battery,kwhPerKm,distanceKm,chargerKw})
+ *       the refill's grid energy is costed at the charger tariff; the DETOUR
+ *       energy is costed too (detourKm*kwhPerKm/(1-loss)*price) for priced
+ *       chargers, and excluded from the tally for no-price chargers.
+ *       If no charger is reachable OR none has usable power (and no fallback),
+ *       the leg CANNOT be served on public charging: set infeasible=true with a
+ *       reason and stop looping (SoC is allowed to fall below the floor so the
+ *       breach is visible, never silently masked). The WHILE guards against a
+ *       single over-long leg exceeding one usable charge: it inserts as many
+ *       stops as the leg needs, or flags it infeasible, never a silent breach.
  *     socKwh -= legEnergy
  *
  * Returns:
  *   { ok:true,
  *     events: [ { atKm, lat, lon, operator, powerKw, pricePerKwh|null,
  *                 energyKwh, gridKwh, durationHours, arrivalSocFraction,
- *                 detourKm, costIsPriced } ],
+ *                 detourKm, detourEnergyKwh, detourCost|null, costIsPriced } ],
  *     totalChargeHours, chargeStopCount, energyKwh (battery kWh delivered),
- *     gridKwh (incl. loss), totalCost|null, costIsComplete, detourKm, routeKm }
+ *     gridKwh (incl. loss), totalCost|null, costIsComplete, detourKm, routeKm,
+ *     infeasible, reserveBreached, minSocFraction, reason? }
  * Honest degrade: { ok:false, reason } when spec / polyline / locations are
  * missing or non-positive. A charger with NO published price still contributes
  * energy + time (so the schedule is honest) but its cost is EXCLUDED from
- * totalCost and costIsComplete is set false (a price is NEVER fabricated).
+ * totalCost and costIsComplete is set false (a price is NEVER fabricated). When
+ * a leg cannot be topped up on public charging (no reachable charger / no usable
+ * power), infeasible is true with a reason and the SoC breach is surfaced via
+ * reserveBreached + minSocFraction rather than hidden.
  * Deterministic: the nearest-charger tie-break is nearestChargers' (distance,
  * operator, lat, lon), so the same inputs always yield the same plan.
  */
@@ -312,6 +326,9 @@ export function simulateChargingDetour(params) {
   let costIsComplete = true;   // false once any used charger has no price
   let detourKm = 0;            // great-circle out-and-back distance to chargers
   let routeKm = 0;             // cumulative on-route distance walked
+  let infeasible = false;      // true when a leg cannot be topped up on public charging
+  let infeasibleReason = null; // human-readable reason for infeasibility
+  let minSocFraction = startSocFraction; // lowest SoC fraction reached (can go < reserve)
 
   // Pick the nearest charger to a point and resolve its headline power/price.
   function pickCharger(lat, lon) {
@@ -328,62 +345,119 @@ export function simulateChargingDetour(params) {
     };
   }
 
-  for (let i = 1; i < poly.length; i++) {
+  for (let i = 1; i < poly.length && !infeasible; i++) {
     const a = poly[i - 1], b = poly[i];
     if (!a || !b || !isNum(a.lat) || !isNum(a.lon) || !isNum(b.lat) || !isNum(b.lon)) continue;
     const legKm = haversineKm(a.lat, a.lon, b.lat, b.lon);
     if (legKm == null) continue;
     const legEnergy = legKm * kwhPerKm;
 
-    // BEFORE the leg: would completing it drop SoC below the reserve floor?
-    if (socKwh - legEnergy < floorKwh - 1e-9) {
-      // Refill, from the CURRENT point, back up to the usable ceiling.
+    // BEFORE/DURING the leg: keep topping up WHILE completing it (from the
+    // current SoC) would drop below the reserve floor. The WHILE (not a single
+    // if) means a leg longer than one usable charge inserts MULTIPLE stops
+    // instead of silently driving SoC negative. A guard stops the loop if a
+    // top-up ever fails to raise SoC, so it cannot spin forever.
+    let guard = 0;
+    while (socKwh - legEnergy < floorKwh - 1e-9) {
+      if (++guard > poly.length * 50 + 50) { // defensive: never spin forever
+        infeasible = true;
+        infeasibleReason = 'could not top up enough on public charging to cover a leg';
+        break;
+      }
+      const socBefore = socKwh;
+      const charger = pickCharger(a.lat, a.lon);
+      if (!charger || !isNum(charger.powerKw) || charger.powerKw <= 0) {
+        // No reachable charger (or none with usable power and no fallback): the
+        // corridor cannot be served by public charging. Flag it honestly and
+        // let the remaining legs run so the SoC breach is visible downstream.
+        infeasible = true;
+        infeasibleReason = charger
+          ? 'nearest charger on this corridor has no usable power (and no fallback)'
+          : 'no public charger reachable within the detour radius on this corridor';
+        break;
+      }
+
+      // The out-and-back DETOUR to the charger burns energy FIRST (the truck
+      // must drive there and back): deduct it from SoC before the refill. This
+      // makes SoC and the stop count honest/conservative, never optimistic.
+      const legDetourKm = isNum(charger.distanceKm) ? (charger.distanceKm * 2) : 0; // out + back
+      const detourEnergyKwh = legDetourKm * kwhPerKm;
+      socKwh -= detourEnergyKwh;
+
+      // Refill from the (post-detour) SoC back up to the usable ceiling.
       const refillKwh = usableKwh - (socKwh - floorKwh);
-      if (refillKwh > 1e-9) {
-        const charger = pickCharger(a.lat, a.lon);
-        if (charger && isNum(charger.powerKw) && charger.powerKw > 0) {
-          // Size chargeTimeHours so deliverKwh == refillKwh (distance proxy).
-          const distanceProxyKm = refillKwh / kwhPerKm;
-          const ct = chargeTimeHours({
-            batteryKwh: batteryKwh, kwhPerKm: kwhPerKm,
-            distanceKm: distanceProxyKm, chargerKw: charger.powerKw,
-            reserveFraction: reserveFraction, chargeLossFraction: chargeLossFraction,
-          });
-          if (ct && ct.hours > 0 && ct.deliverKwh > 0) {
-            const legDetourKm = isNum(charger.distanceKm) ? (charger.distanceKm * 2) : 0; // out + back
-            const priced = isNum(charger.pricePerKwh);
-            const eventCost = priced ? (ct.gridKwh * charger.pricePerKwh) : null;
-            socKwh += ct.deliverKwh;
-            totalChargeHours += ct.hours;
-            energyKwh += ct.deliverKwh;
-            gridKwh += ct.gridKwh;
-            detourKm += legDetourKm;
-            if (priced) totalCost += eventCost; else costIsComplete = false;
-            events.push({
-              atKm: Math.round(routeKm * 100) / 100,
-              lat: charger.lat, lon: charger.lon,
-              operator: charger.operator,
-              powerKw: charger.powerKw,
-              pricePerKwh: priced ? charger.pricePerKwh : null,
-              energyKwh: ct.deliverKwh,
-              gridKwh: ct.gridKwh,
-              durationHours: ct.hours,
-              arrivalSocFraction: socKwh / batteryKwh,
-              detourKm: legDetourKm,
-              costIsPriced: priced,
-            });
-          }
-        }
-        // If no charger is reachable (or none has usable power), we cannot top
-        // up here; the walk simply continues and SoC may dip below reserve. The
-        // schedule stays honest (no fabricated stop); the UI shows the reserve
-        // breach via the depot-feasibility panel.
+      if (refillKwh <= 1e-9) {
+        // Nothing meaningful to refill even though the leg still breaches: this
+        // leg alone exceeds a full usable charge AND the detour cost it. Flag
+        // infeasible rather than loop with no progress.
+        socKwh += detourEnergyKwh; // undo the speculative detour burn
+        infeasible = true;
+        infeasibleReason = 'a single leg exceeds one usable charge on public charging';
+        break;
+      }
+      // Size chargeTimeHours so deliverKwh == refillKwh (distance proxy).
+      const distanceProxyKm = refillKwh / kwhPerKm;
+      const ct = chargeTimeHours({
+        batteryKwh: batteryKwh, kwhPerKm: kwhPerKm,
+        distanceKm: distanceProxyKm, chargerKw: charger.powerKw,
+        reserveFraction: reserveFraction, chargeLossFraction: chargeLossFraction,
+      });
+      if (!ct || !(ct.hours > 0) || !(ct.deliverKwh > 0)) {
+        socKwh += detourEnergyKwh; // undo the speculative detour burn
+        infeasible = true;
+        infeasibleReason = 'could not size a usable top-up at the reachable charger';
+        break;
+      }
+
+      const priced = isNum(charger.pricePerKwh);
+      // The DETOUR energy also has to be bought at the same tariff: grid energy
+      // = detourEnergyKwh / (1-loss); its cost = that * price (priced chargers
+      // only, excluded from the tally like the refill for no-price chargers).
+      const detourGridKwh = detourEnergyKwh / (1 - chargeLossFraction);
+      const detourCost = priced ? (detourGridKwh * charger.pricePerKwh) : null;
+      const refillCost = priced ? (ct.gridKwh * charger.pricePerKwh) : null;
+      const eventGridKwh = ct.gridKwh + detourGridKwh;
+      const eventCost = priced ? (refillCost + detourCost) : null;
+
+      socKwh += ct.deliverKwh;
+      totalChargeHours += ct.hours;
+      energyKwh += ct.deliverKwh;        // battery kWh delivered into the pack
+      gridKwh += eventGridKwh;           // grid kWh incl. loss (refill + detour)
+      detourKm += legDetourKm;
+      if (priced) totalCost += eventCost; else costIsComplete = false;
+      events.push({
+        atKm: Math.round(routeKm * 100) / 100,
+        lat: charger.lat, lon: charger.lon,
+        operator: charger.operator,
+        powerKw: charger.powerKw,
+        pricePerKwh: priced ? charger.pricePerKwh : null,
+        energyKwh: ct.deliverKwh,
+        gridKwh: eventGridKwh,
+        durationHours: ct.hours,
+        arrivalSocFraction: socKwh / batteryKwh,
+        detourKm: legDetourKm,
+        detourEnergyKwh: detourEnergyKwh,
+        detourCost: detourCost,
+        costIsPriced: priced,
+      });
+
+      // Progress guard: if the top-up did not raise SoC, bail to avoid a loop.
+      if (socKwh <= socBefore + 1e-9) {
+        infeasible = true;
+        infeasibleReason = 'top-up made no net progress on this leg';
+        break;
       }
     }
 
     socKwh -= legEnergy;
     routeKm += legKm;
+    const socFrac = socKwh / batteryKwh;
+    if (socFrac < minSocFraction) minSocFraction = socFrac;
   }
+
+  // A reserve breach occurred if the lowest SoC dipped below the reserve floor
+  // (within a small tolerance). Surfaced so the counter can be honest.
+  const reserveBreached = minSocFraction < reserveFraction - 1e-9;
 
   return {
     ok: true,
@@ -392,13 +466,21 @@ export function simulateChargingDetour(params) {
     chargeStopCount: events.length,
     energyKwh: energyKwh,
     gridKwh: gridKwh,
-    // totalCost is ALWAYS the hand-summable sum over PRICED events (S$); an
-    // unpriced charger's energy/time is counted but its cost is excluded and
-    // costIsComplete is false (never fabricated). Zero events -> 0, complete.
+    // totalCost is ALWAYS the hand-summable sum over PRICED events (S$) and now
+    // INCLUDES each priced event's detour-driving energy at that tariff; an
+    // unpriced charger's energy/time (refill + detour) is counted but its cost
+    // is excluded and costIsComplete is false (never fabricated). Zero events
+    // -> 0, complete.
     totalCost: totalCost,
     costIsComplete: costIsComplete,
     detourKm: Math.round(detourKm * 100) / 100,
     routeKm: Math.round(routeKm * 100) / 100,
+    // Honesty flags: infeasible (a leg could not be served on public charging)
+    // and reserveBreached (SoC dipped below the reserve floor at some point).
+    infeasible: infeasible,
+    reserveBreached: reserveBreached,
+    minSocFraction: minSocFraction,
+    reason: infeasible ? infeasibleReason : undefined,
   };
 }
 

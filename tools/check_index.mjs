@@ -3094,7 +3094,28 @@ const rsimCostHtml = byId['rsim-cost-counter'].innerHTML;
 checks.push(['FEAT-002: cost counter renders running cost / charge time / stops labels + diagnostic caveat',
   /Running charging cost/i.test(rsimCostHtml) && /charge time/i.test(rsimCostHtml) &&
   /Charging stop/i.test(rsimCostHtml) &&
-  /not a quotation/i.test(rsimCostHtml) && /sector-level approximate/i.test(rsimCostHtml)]);
+  /not a quotation/i.test(rsimCostHtml)]);
+// Review fix (issue 2): the 'sector-level approximate' phrase must be GATED on
+// an approximate (postal-dropped) point actually being on the route. These
+// stops were map-placed (no approximate flag), so the phrase must be ABSENT.
+checks.push(['FEAT-002: no sector-approximate wording when NO approximate point is on the route',
+  !/sector-level approximate/i.test(rsimCostHtml)]);
+// With a postal-dropped (approximate) stop present, the phrase MUST appear. Drop
+// one via the resolver so the stop carries approximate:true, then recompute.
+const sectorPt = windowObj.HSSgMap.resolvePostalCode('608000', windowObj.HSPostalSectors);
+windowObj.__HS.__rsimSetStops([
+  { lat: sectorPt.lat, lon: sectorPt.lon, name: 'postal', approximate: true },
+  { lat: 1.4200, lon: 104.0000, name: 'Far NE' }]);
+windowObj.__HS.recompute();
+const rsimCostHtmlApprox = byId['rsim-cost-counter'].innerHTML;
+checks.push(['FEAT-002: sector-approximate wording PRESENT when an approximate postal point is on the route',
+  /sector-level approximate/i.test(rsimCostHtmlApprox) && /not a quotation/i.test(rsimCostHtmlApprox)]);
+// Restore the map-placed route for the map/consistency assertions below.
+windowObj.__HS.__rsimSetStops([
+  { lat: 1.3330, lon: 103.7420, name: 'Jurong' },
+  { lat: 1.4200, lon: 104.0000, name: 'Far NE' },
+  { lat: 1.2840, lon: 103.8510, name: 'CBD' }]);
+windowObj.__HS.recompute();
 // The detour line + charge pins must draw on the map for this route (a real EV
 // over a long corridor needs at least one top-up) OR, if the landing SRM range
 // covers it, the counter honestly shows zero stops. Assert consistency either way.

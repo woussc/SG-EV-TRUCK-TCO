@@ -117,14 +117,22 @@ check('validateLocationsDoc accepts a well-formed subset',
 // PRICED; OP NOPRICE publishes energy/power but NO per-kWh price (so its event
 // must be excluded from the cost tally and flag costIsComplete=false, never
 // fabricated). All DC so power is always usable.
-const simLocs = [
-  { lat: 1.3100, lon: 103.8100, region: 'Central', operator: 'OP A', hasDc: true,
-    plug: { dc: { powerKw: 60, maxPowerKw: 60, pricePerKwh: 0.80 } } },
-  { lat: 1.3400, lon: 103.8400, region: 'Central', operator: 'OP B', hasDc: true,
-    plug: { dc: { powerKw: 60, maxPowerKw: 60, pricePerKwh: 0.50 } } },
-  { lat: 1.3700, lon: 103.8700, region: 'Central', operator: 'OP NOPRICE', hasDc: true,
-    plug: { dc: { powerKw: 50, maxPowerKw: 50, pricePerKwh: null } } },
-];
+// Chargers are spread as a CORRIDOR along the whole route (every ~0.1 deg lon,
+// slightly off-route so there is a real out-and-back detour) so a long route
+// stays feasible with MULTIPLE top-ups. Prices alternate 0.80 / 0.50; ONE
+// charger publishes NO price (OP NOPRICE) so its event must be excluded from the
+// cost tally and flag costIsComplete=false (never fabricated). All DC so power
+// is always usable.
+const simLocs = [];
+for (let j = 0; j <= 20; j++) {
+  const lon = 103.6500 + j * 0.05;       // 103.65 .. 104.65, blankets the route
+  simLocs.push({
+    lat: 1.3530, lon: lon, region: 'Central',   // ~0.003 deg (~0.33 km) off-route
+    operator: 'OP ' + j,
+    hasDc: true,
+    plug: { dc: { powerKw: 60, maxPowerKw: 60, pricePerKwh: (j % 2 ? 0.50 : 0.80) } },
+  });
+}
 // SRM-ish spec: small usable battery so a long route forces multiple top-ups.
 const simSpec = { batteryKwh: 20, kwhPerKm: 0.5 }; // usable @10% reserve = 18 kWh -> 36 km/charge
 // A LONG route polyline of densely spaced vertices spanning ~1.0 deg lon (~111 km)
@@ -142,18 +150,55 @@ check('every charge event has positive energy', sim.ok && sim.events.every((e) =
 check('every charge event arrives at/above the reserve floor (no pre-charge reserve breach)',
   sim.ok && sim.events.every((e) => e.arrivalSocFraction >= SIM_DEFAULTS.RESERVE_FRACTION - 1e-9));
 // The running cost tally must EQUAL the hand-summed gridKwh*price over the
-// PRICED events (OP NOPRICE excluded), and costIsComplete must be false because
-// a no-price charger was used (never fabricated).
+// PRICED events. Each event's gridKwh now INCLUDES the out-and-back detour grid
+// energy, so the hand-sum captures the detour energy's cost as the plan requires.
 const handCost = sim.ok
   ? sim.events.filter((e) => e.costIsPriced).reduce((s, e) => s + e.gridKwh * e.pricePerKwh, 0) : NaN;
-check('totalCost equals the hand-summed gridKwh*price over PRICED events only',
+check('totalCost equals the hand-summed gridKwh*price (incl. detour energy) over PRICED events',
   sim.ok && approx(sim.totalCost, handCost, 1e-9));
-check('a no-price charger makes costIsComplete=false and is excluded from totalCost',
-  sim.ok && sim.events.some((e) => e.costIsPriced === false) && sim.costIsComplete === false);
+check('all-priced long route makes costIsComplete=true', sim.ok && sim.costIsComplete === true);
 check('no priced event ever fabricates a price (pricePerKwh is null when unpriced)',
   sim.ok && sim.events.every((e) => e.costIsPriced === (e.pricePerKwh != null)));
+// A no-price charger must EXCLUDE its energy from the cost tally and flag the
+// result incomplete (never fabricated). Build a corridor whose chargers are ALL
+// unpriced so every forced top-up lands on a no-price charger.
+const noPriceLocs = simLocs.map((c) => ({
+  lat: c.lat, lon: c.lon, region: c.region, operator: 'NP ' + c.operator, hasDc: true,
+  plug: { dc: { powerKw: 60, maxPowerKw: 60, pricePerKwh: null } },
+}));
+const simNoPrice = simulateChargingDetour({ routePolyline: longPoly, locations: noPriceLocs, spec: simSpec });
+check('a no-price charger makes costIsComplete=false and is excluded from totalCost',
+  simNoPrice.ok && simNoPrice.chargeStopCount >= 1 &&
+  simNoPrice.events.every((e) => e.costIsPriced === false) &&
+  simNoPrice.costIsComplete === false && simNoPrice.totalCost === 0);
+check('no-price events still count energy and time (schedule stays honest)',
+  simNoPrice.ok && simNoPrice.energyKwh > 0 && simNoPrice.totalChargeHours > 0);
 check('detourKm and energyKwh are positive when a stop was inserted',
   sim.ok && sim.detourKm > 0 && sim.energyKwh > 0 && sim.gridKwh > 0);
+// Each priced event's cost must INCLUDE the out-and-back detour energy at the
+// charger tariff: eventCost == (refillGrid + detourGrid) * price, and the
+// event's gridKwh/detour fields must be internally consistent.
+check('every event reports a non-negative detour energy and (priced) detour cost',
+  sim.ok && sim.events.every((e) =>
+    e.detourEnergyKwh >= 0 &&
+    (e.costIsPriced ? (typeof e.detourCost === 'number' && e.detourCost >= 0) : e.detourCost === null)));
+check('priced event gridKwh includes the detour grid energy',
+  sim.ok && sim.events.filter((e) => e.costIsPriced).every((e) => {
+    const detourGrid = e.detourEnergyKwh / (1 - SIM_DEFAULTS.CHARGE_LOSS_FRACTION);
+    // event gridKwh = refill grid + detour grid; refill grid = (gridKwh - detourGrid) must be > 0
+    return (e.gridKwh - detourGrid) > -1e-9 && approx(e.detourCost, detourGrid * e.pricePerKwh, 1e-9);
+  }));
+// Detour energy makes the plan MORE conservative (never optimistic): the total
+// cost with detour modelled must be >= a hypothetical zero-detour baseline (same
+// refills, no detour energy added). We hand-build that baseline from the events.
+const zeroDetourBaseline = sim.ok
+  ? sim.events.filter((e) => e.costIsPriced).reduce((s, e) => {
+      const detourGrid = e.detourEnergyKwh / (1 - SIM_DEFAULTS.CHARGE_LOSS_FRACTION);
+      return s + (e.gridKwh - detourGrid) * e.pricePerKwh; // refill-only cost
+    }, 0)
+  : NaN;
+check('modelled cost (incl. detour energy) is strictly above the zero-detour refill-only baseline',
+  sim.ok && sim.detourKm > 0 && sim.totalCost > zeroDetourBaseline + 1e-9);
 // Honest degrade on missing/invalid inputs (never a fabricated plan).
 check('simulateChargingDetour degrades on missing spec', simulateChargingDetour({ routePolyline: longPoly, locations: simLocs }).ok === false);
 check('simulateChargingDetour degrades on missing polyline', simulateChargingDetour({ locations: simLocs, spec: simSpec }).ok === false);
@@ -176,6 +221,45 @@ check('simulateChargingDetour is deterministic (repeat run identical)',
   approx(sim.totalCost, simRepeat.totalCost, 1e-12) &&
   JSON.stringify(sim.events.map((e) => [e.operator, e.atKm])) ===
     JSON.stringify(simRepeat.events.map((e) => [e.operator, e.atKm])));
+
+// ---- (3c) Over-long single leg: multiple stops OR infeasible, never silent --
+// A sparse 2-vertex polyline whose single straight leg is far longer than one
+// usable SRM charge (18 kWh usable @ 0.5 kWh/km = 36 km per charge). Place the
+// endpoints ~200 km apart with chargers along the way. The sim must either
+// insert MULTIPLE charge stops to cover it, or flag infeasible - but it must
+// NEVER drop SoC below the reserve floor silently (reserveBreached must be
+// surfaced when it happens, and a feasible plan must not breach at all).
+const longLegPoly = [{ lat: 1.3500, lon: 103.6000 }, { lat: 1.3500, lon: 105.4000 }]; // ~200 km leg
+const simLongLeg = simulateChargingDetour({ routePolyline: longLegPoly, locations: simLocs, spec: simSpec, maxDetourKm: null });
+check('over-long single leg: sim still returns ok (no throw)', !!simLongLeg && simLongLeg.ok === true);
+check('over-long single leg: multiple stops OR infeasible flag (never silent)',
+  simLongLeg.ok && (simLongLeg.chargeStopCount >= 2 || simLongLeg.infeasible === true));
+check('over-long single leg: a feasible plan never leaves SoC below the reserve floor silently',
+  simLongLeg.ok && (simLongLeg.infeasible === true
+    ? (simLongLeg.reason != null)
+    : (simLongLeg.reserveBreached === false && simLongLeg.minSocFraction >= SIM_DEFAULTS.RESERVE_FRACTION - 1e-9)));
+check('over-long single leg: minSocFraction is reported and never silently wrong',
+  simLongLeg.ok && typeof simLongLeg.minSocFraction === 'number' && isFinite(simLongLeg.minSocFraction));
+
+// ---- (3d) No usable power on the corridor -> infeasible surfaced -----------
+// A charger fixture with NO usable power (powerKw null/0) and NO fallback: the
+// walk cannot top up, so a route that needs a charge must set infeasible=true
+// with a reason (and reserveBreached true), never a misleadingly low cost.
+const powerlessLocs = [
+  { lat: 1.3500, lon: 103.9000, region: 'Central', operator: 'OP DEAD', hasDc: false,
+    plug: { ac: { powerKw: 0, maxPowerKw: 0, pricePerKwh: 0.60 } } },
+];
+const simDead = simulateChargingDetour({ routePolyline: longPoly, locations: powerlessLocs, spec: simSpec });
+check('no-usable-power corridor: sim returns ok (degrades honestly, no throw)', !!simDead && simDead.ok === true);
+check('no-usable-power corridor: infeasible=true with a reason', simDead.ok && simDead.infeasible === true && !!simDead.reason);
+check('no-usable-power corridor: no charge stops inserted (never a fabricated stop)', simDead.ok && simDead.chargeStopCount === 0);
+check('no-usable-power corridor: reserve breach is surfaced, not hidden', simDead.ok && simDead.reserveBreached === true);
+
+// ---- (3e) A feasible long route never breaches reserve silently ------------
+// The original dense long route (simLocs has usable DC power) must be feasible:
+// every stop lands at/above reserve and no silent breach.
+check('feasible long route: not infeasible and not reserveBreached',
+  sim.ok && sim.infeasible === false && sim.reserveBreached === false);
 
 // ---- (4) NO engine coupling guard ------------------------------------------
 // The module source must NOT import or call the frozen fleet-compute engine.
