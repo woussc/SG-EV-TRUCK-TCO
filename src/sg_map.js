@@ -131,6 +131,56 @@ export function unproject(x, y, viewport) {
 }
 
 /*
+ * resolvePostalCode(code, sectorTable) -> { lat, lon, sector, label, approximate }
+ * or null. Offline, deterministic postal-code resolution (Option C).
+ * -----------------------------------------------------------------------------
+ * Singapore's 6-digit postal code's FIRST TWO DIGITS are its postal SECTOR. We
+ * do NOT bundle a full 6-digit building geocoder; instead we resolve the code to
+ * its SECTOR's APPROXIMATE centroid (sectorTable.sectors['NN'] = {lat,lon,label})
+ * and always flag it approximate:true so the UI labels it "sector-level
+ * approximate". The user can still nudge the dropped marker precisely on the map.
+ *   code         must be EXACTLY 6 digits (string or number), else null
+ *   sectorTable  the bundled window.HSPostalSectors doc { sectors: {...} }
+ * Returns null for a malformed code (not 6 digits) or an unknown/unassigned
+ * sector - never a fabricated coordinate. No DOM, no network.
+ */
+export function resolvePostalCode(code, sectorTable) {
+  if (code == null) return null;
+  const str = String(code).trim();
+  if (!/^[0-9]{6}$/.test(str)) return null;
+  if (!sectorTable || !sectorTable.sectors) return null;
+  const sector = str.slice(0, 2);
+  const hit = sectorTable.sectors[sector];
+  if (!hit || !isNum(hit.lat) || !isNum(hit.lon)) return null;
+  return {
+    lat: hit.lat,
+    lon: hit.lon,
+    sector,
+    label: (hit.label != null) ? String(hit.label) : ('Sector ' + sector),
+    approximate: true,
+  };
+}
+
+/*
+ * markerScale(viewBoxW, baseViewW) -> zoom factor k used to keep map marker /
+ * label / stroke sizes legible as the viewBox pan/zoom model shrinks.
+ * -----------------------------------------------------------------------------
+ * The map draws into an SVG viewBox whose width shrinks as the user zooms IN
+ * (a smaller viewBox over the same pixel surface magnifies geometry). To keep a
+ * charger dot, a stop pin, a label glyph or a route stroke at a roughly CONSTANT
+ * on-screen size, the drawing code divides its nominal size by this factor:
+ *   k = baseViewW / viewBoxW
+ * so k == 1 at full extent (viewBoxW == baseViewW) and k > 1 when zoomed in
+ * (viewBoxW < baseViewW). Pure, deterministic, no DOM. Guards bad input by
+ * returning 1 (neutral scale) rather than throwing / NaN.
+ */
+export function markerScale(viewBoxW, baseViewW) {
+  if (!isNum(viewBoxW) || viewBoxW <= 0) return 1;
+  if (!isNum(baseViewW) || baseViewW <= 0) return 1;
+  return baseViewW / viewBoxW;
+}
+
+/*
  * routeDistanceKm(stops) -> total great-circle route length in KILOMETRES.
  * ------------------------------------------------------------------------
  * Sums haversineKm over consecutive stop legs. `stops` is an ordered array of
@@ -278,4 +328,5 @@ export function depotFeasibility(spec, routeKm) {
 export default {
   SG_BBOX, SG_AREAS, project, unproject, routeDistanceKm,
   distanceToRouteKm, reachableChargers, depotFeasibility,
+  resolvePostalCode, markerScale,
 };

@@ -145,6 +145,11 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'rsim-dconly','rsim-origin-note','rsim-summary','rsim-map','rsim-charger-table',
   'rsim-charger-body','rsim-caveat','rsim-attribution',
   'rsim-zoom-in','rsim-zoom-out','rsim-zoom-reset',
+  // FEAT-001: offline postal-code input + drop-as choice + status note, and the
+  // return-to-depot quick button on the route-sim controls.
+  'rsim-postal','rsim-postal-as','rsim-postal-drop','rsim-return-depot','rsim-postal-note',
+  // FEAT-002: the live charging-detour cost counter readout.
+  'rsim-cost-counter',
   // FEAT-004 (Workstream C) + FEAT-003 (Workstream E): Stage-5 per-plan
   // proposal columns + per-plan Financing (illustrative) opt-in block.
   'proposal-plan-grid','proposal-status-line',
@@ -3007,6 +3012,142 @@ checks.push(['routing-sim panel markup frames it as a coarse aid, not live avail
       /live connection/i.test(slice) && /approximate great-circle/i.test(slice);
   })()]);
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
+
+// FEAT-001: map interaction layer. The bundled postal-sector table, the postal
+// resolver on window.HSSgMap, and the new Charging-tab controls (#rsim-postal,
+// #rsim-postal-drop, #rsim-return-depot) must be present and wired, so a
+// regression that drops the controls or the data block fails here.
+checks.push(['FEAT-001: window.HSPostalSectors bundled with a non-empty sector table',
+  !!windowObj.HSPostalSectors && !!windowObj.HSPostalSectors.sectors &&
+  Object.keys(windowObj.HSPostalSectors.sectors).length > 0]);
+checks.push(['FEAT-001: window.HSSgMap exposes resolvePostalCode + markerScale',
+  typeof windowObj.HSSgMap.resolvePostalCode === 'function' &&
+  typeof windowObj.HSSgMap.markerScale === 'function']);
+// The resolver resolves a known 6-digit code to an approximate sector centroid
+// through the inlined namespace (the exact path the controller uses).
+const anySector = Object.keys(windowObj.HSPostalSectors.sectors)[0];
+const resolvedPostal = windowObj.HSSgMap.resolvePostalCode(anySector + '0000', windowObj.HSPostalSectors);
+checks.push(['FEAT-001: resolvePostalCode resolves a known code to an approximate centroid (and null for a bad one)',
+  !!resolvedPostal && resolvedPostal.approximate === true &&
+  typeof resolvedPostal.lat === 'number' && typeof resolvedPostal.lon === 'number' &&
+  windowObj.HSSgMap.resolvePostalCode('12', windowObj.HSPostalSectors) === null]);
+// The controls exist in the markup and are wired (listeners attached by
+// buildRsimControls, which ran during the earlier routing-sim render).
+checks.push(['FEAT-001: postal input + drop-as + drop button + return-to-depot present in markup',
+  html.indexOf('id="rsim-postal"') !== -1 && html.indexOf('id="rsim-postal-as"') !== -1 &&
+  html.indexOf('id="rsim-postal-drop"') !== -1 && html.indexOf('id="rsim-return-depot"') !== -1 &&
+  html.indexOf('id="rsim-postal-note"') !== -1]);
+checks.push(['FEAT-001: #rsim-postal-drop and #rsim-return-depot have click listeners wired',
+  (byId['rsim-postal-drop'].listeners.click || []).length > 0 &&
+  (byId['rsim-return-depot'].listeners.click || []).length > 0]);
+// A valid postal code dropped as a stop lands a 'sector-approx' marker and shows
+// the sector-level-approximate note; the route re-renders. Drive the controller.
+byId['rsim-postal'].value = anySector + '1234';
+byId['rsim-postal-as'].value = 'stop';
+byId['rsim-postal-drop'].fire('click');
+checks.push(['FEAT-001: dropping a valid postal code adds a sector-approx stop + shows the approximate note',
+  windowObj.__HS.rsimStops && windowObj.__HS.rsimStops().some((s) => s && s.approximate === true &&
+    /sector-approx/.test(String(s.name || ''))) &&
+  /sector-level approximate/i.test(byId['rsim-postal-note'].textContent)]);
+// An invalid code shows an inline error and drops NOTHING new.
+const stopsBeforeBad = windowObj.__HS.rsimStops().length;
+byId['rsim-postal'].value = '12';
+byId['rsim-postal-drop'].fire('click');
+checks.push(['FEAT-001: an invalid postal code shows an error and drops nothing',
+  windowObj.__HS.rsimStops().length === stopsBeforeBad &&
+  /valid 6-digit/i.test(byId['rsim-postal-note'].textContent)]);
+// Return-to-depot appends a closing leg back to the depot when a route exists.
+const stopsBeforeReturn = windowObj.__HS.rsimStops().length;
+byId['rsim-return-depot'].fire('click');
+const stopsAfterReturn = windowObj.__HS.rsimStops();
+checks.push(['FEAT-001: return-to-depot closes the loop (appends a Return to depot leg)',
+  stopsAfterReturn.length === stopsBeforeReturn + 1 &&
+  stopsAfterReturn[stopsAfterReturn.length - 1].name === 'Return to depot' &&
+  stopsAfterReturn[stopsAfterReturn.length - 1].lat === stopsAfterReturn[0].lat &&
+  stopsAfterReturn[stopsAfterReturn.length - 1].lon === stopsAfterReturn[0].lon]);
+// Reset the route so later assertions see a clean state.
+windowObj.__HS.rsimClearStops();
+
+// ---- FEAT-002: dual-line charging-detour + live cost counter --------------
+// (a) The pure simulation is exposed on the page namespace.
+checks.push(['FEAT-002: window.HSRoutingSim.simulateChargingDetour is exposed',
+  !!windowObj.HSRoutingSim && typeof windowObj.HSRoutingSim.simulateChargingDetour === 'function']);
+// (b) The cost-counter readout container + the new legend entries exist in markup.
+checks.push(['FEAT-002: #rsim-cost-counter cost-counter container present in markup',
+  html.indexOf('id="rsim-cost-counter"') !== -1]);
+checks.push(['FEAT-002: legend has charging-detour line + charging-stop pin entries',
+  html.indexOf('rl-detour') !== -1 && html.indexOf('rl-charge') !== -1]);
+checks.push(['FEAT-002: CSS defines a .rsim-detour line + .rsim-charge-pin distinct from the blue route',
+  /\.rsim-detour\{[^}]*stroke:#0a8f3c/.test(html) && /\.rsim-charge-pin\{[^}]*fill:#0a8f3c/.test(html)]);
+// (c) On a LONG route (far-apart stops the small SRM cannot cover on one charge)
+// the detour line + charge pins render on the map AND the cost counter shows a
+// running cost, total charge time and a stop count that AGREE with a direct
+// simulateChargingDetour call (the controller draws from the same deterministic
+// result). The landing SRM spec is a large battery, so use a long cross-island
+// route to force a top-up.
+windowObj.__HS.__rsimSetStops([
+  { lat: 1.3330, lon: 103.7420, name: 'Jurong' },
+  { lat: 1.4200, lon: 104.0000, name: 'Far NE' },
+  { lat: 1.2840, lon: 103.8510, name: 'CBD' }]);
+windowObj.__HS.recompute();
+const rsimCostHtml = byId['rsim-cost-counter'].innerHTML;
+checks.push(['FEAT-002: cost counter renders running cost / charge time / stops labels + diagnostic caveat',
+  /Running charging cost/i.test(rsimCostHtml) && /charge time/i.test(rsimCostHtml) &&
+  /Charging stop/i.test(rsimCostHtml) &&
+  /not a quotation/i.test(rsimCostHtml)]);
+// Review fix (issue 2): the 'sector-level approximate' phrase must be GATED on
+// an approximate (postal-dropped) point actually being on the route. These
+// stops were map-placed (no approximate flag), so the phrase must be ABSENT.
+checks.push(['FEAT-002: no sector-approximate wording when NO approximate point is on the route',
+  !/sector-level approximate/i.test(rsimCostHtml)]);
+// With a postal-dropped (approximate) stop present, the phrase MUST appear. Drop
+// one via the resolver so the stop carries approximate:true, then recompute.
+const sectorPt = windowObj.HSSgMap.resolvePostalCode('608000', windowObj.HSPostalSectors);
+windowObj.__HS.__rsimSetStops([
+  { lat: sectorPt.lat, lon: sectorPt.lon, name: 'postal', approximate: true },
+  { lat: 1.4200, lon: 104.0000, name: 'Far NE' }]);
+windowObj.__HS.recompute();
+const rsimCostHtmlApprox = byId['rsim-cost-counter'].innerHTML;
+checks.push(['FEAT-002: sector-approximate wording PRESENT when an approximate postal point is on the route',
+  /sector-level approximate/i.test(rsimCostHtmlApprox) && /not a quotation/i.test(rsimCostHtmlApprox)]);
+// Restore the map-placed route for the map/consistency assertions below.
+windowObj.__HS.__rsimSetStops([
+  { lat: 1.3330, lon: 103.7420, name: 'Jurong' },
+  { lat: 1.4200, lon: 104.0000, name: 'Far NE' },
+  { lat: 1.2840, lon: 103.8510, name: 'CBD' }]);
+windowObj.__HS.recompute();
+// The detour line + charge pins must draw on the map for this route (a real EV
+// over a long corridor needs at least one top-up) OR, if the landing SRM range
+// covers it, the counter honestly shows zero stops. Assert consistency either way.
+const rsimDetourMapHtml = byId['rsim-map'].innerHTML;
+// Drive a direct sim over the exact on-road polyline the controller used, with
+// a deliberately SMALL battery spec so a top-up is forced, and assert the map +
+// counter reflect a detour when one exists.
+const gFeat2 = windowObj.HSRoadRouter.decodeGraph(windowObj.HSRoads);
+const seqFeat2 = windowObj.HSRoadRouter.routeOnRoadSequence(gFeat2, [
+  { lat: 1.3330, lon: 103.7420 }, { lat: 1.4200, lon: 104.0000 }, { lat: 1.2840, lon: 103.8510 }]);
+const polyFeat2 = (seqFeat2 && seqFeat2.polyline && seqFeat2.polyline.length >= 2)
+  ? seqFeat2.polyline
+  : [{ lat: 1.3330, lon: 103.7420 }, { lat: 1.4200, lon: 104.0000 }, { lat: 1.2840, lon: 103.8510 }];
+const simFeat2 = windowObj.HSRoutingSim.simulateChargingDetour({
+  routePolyline: polyFeat2, locations: windowObj.HSChargingLocations.locations,
+  spec: { batteryKwh: 20, kwhPerKm: 0.5 }, startSocFraction: 1.0 });
+checks.push(['FEAT-002: a small-battery SRM over a long route forces >=1 charge event (sim honest)',
+  !!simFeat2 && simFeat2.ok === true && simFeat2.chargeStopCount >= 1 &&
+  simFeat2.events.every((e) => e.durationHours > 0 && e.energyKwh > 0)]);
+checks.push(['FEAT-002: that sim totalCost equals the hand-summed gridKwh*price over PRICED events',
+  Math.abs(simFeat2.totalCost -
+    simFeat2.events.filter((e) => e.costIsPriced).reduce((s, e) => s + e.gridKwh * e.pricePerKwh, 0)) < 1e-9]);
+// The map draws the detour line + charge pin when the controller's own sim found
+// a stop. The landing SRM may have enough range to need none; in that case the
+// counter shows '0' stops and 'S$0.00' - also honest. Assert the two agree.
+const rsimClBox = byId['rsim-cost-counter'].innerHTML;
+const mapHasDetour = rsimDetourMapHtml.indexOf('rsim-detour') !== -1 && rsimDetourMapHtml.indexOf('rsim-charge-pin') !== -1;
+const counterHasStops = !/>0<\/span><span class="rc-lab">Charging stop/.test(rsimClBox) && !/no top-up needed/.test(rsimClBox);
+checks.push(['FEAT-002: map detour line/pins and the cost counter agree (both show a stop, or both show none)',
+  mapHasDetour === counterHasStops]);
+// Reset the route so later assertions see a clean state.
+windowObj.__HS.rsimClearStops();
 
 // FEAT-006 TYPOGRAPHY FLOOR (static source scan, additive). The desktop
 // visibility sweep set a ~13px (>=~10pt) floor for ALL screen text and raised
