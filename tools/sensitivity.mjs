@@ -29,27 +29,27 @@ const seeds = JSON.parse(readFileSync(resolve(here, 'fixtures/prospect_seeds.jso
 function clone(x) { return JSON.parse(JSON.stringify(x)); }
 function isNum(v) { return typeof v === 'number' && isFinite(v); }
 
-/* ---- Scenario: the fully-specified illustrative case that clears gates --- *
- * The 'wins' case is the fully-specified illustrative confirmed-win set: its
- * Total economic TCO and Saving % are numeric and respond to inputs, which is
- * exactly what a sensitivity sweep needs. (It is the honest operational
- * break-even archetype that replaced the old price-tuned 'best' preset; it is
- * the same fully-specified gate-passing input set, now at honest fixed prices
- * and a 30-truck high-utilisation fleet.) */
-const baseline = seeds.cases.find(c => c.id === 'wins');
-const SCENARIO = { id: 'wins', label: 'Wins case (fully specified, gates pass)', inputs: baseline.inputs };
+/* ---- Scenario: the fully-specified real-company case that clears gates --- *
+ * The 'sg-01-gls-fairprice' prospect (#1 GLS / FairPrice Group, '#1 EV wins')
+ * is the fully-specified high-utilisation confirmed-win set: its Total economic
+ * TCO and Saving % are numeric and respond to inputs, which is exactly what a
+ * sensitivity sweep needs. It is a real-company CONTEXT profile (10 EV-action
+ * trucks within a 100-truck register, SRM T3EV+ on Plan A at honest fixed
+ * prices); its archetype traces to the frozen engine, not a customer claim. */
+const baseline = seeds.cases.find(c => c.id === 'sg-01-gls-fairprice');
+const SCENARIO = { id: 'sg-01-gls-fairprice', label: 'GLS (FairPrice Group) #1 EV-wins case (fully specified, SRM on Plan A)', inputs: baseline.inputs };
 
 /* ---- Output extractor: the SRM (Plan A) scenario ------------------------- *
- * FEAT-003: the 'wins' preset demonstrates the SRM T3EV+ on PLAN A (the SRM
+ * FEAT-003: the sg-01 prospect demonstrates the SRM T3EV+ on PLAN A (the SRM
  * plan) and an honest competitor on Plan B. The frozen engine binds ONE col-B
  * model per truck row, so a raw computeFleet on the preset would evaluate SRM on
  * BOTH slots and could report the Plan B SRM-on-both-slots artifact as "wins".
  * This sweep is about the SRM business case, so it baselines on the SRM scenario
  * EXACTLY as the live tool does: the two-state Plan A run (slot O keeps the
  * preset col B = SRM + col D = SRM quote). That keeps the sensitivity baseline
- * identical to the headline SRM figure quoted in docs/preset-profiles.md and the
- * brief (Total ~S$7,867,090, Saving ~29.43%). No engine change; input wiring
- * only. */
+ * identical to the headline SRM figure verified by tools/verify_gemini_prospects.mjs
+ * (Plan A Total ~S$2,798,199, Saving ~26.51% vs Keep ICE). No engine change;
+ * input wiring only. */
 // Included-truck rule: an inclusive "row is in play" heuristic (B===1 OR any
 // data in cols C-M). Mirrors index.html's syncReframeFromPreset; it is NOT
 // byte-identical to buildPlanState / effectivePlanModel (cols C-Q, no B check),

@@ -5,9 +5,10 @@ the calculation variables and conditions, which of them actually move the
 answer, the threshold for a sensible ICE-to-EV conversion, and the client
 profiles that realistically accept the quantitative case. Every figure quoted
 below is produced by the frozen simulation engine (`src/engine.js`,
-`computeFleet` + `scoreProspect`) on the shipped illustrative presets, or by the
-deterministic sensitivity sweep (`tools/sensitivity.mjs`). Nothing here is a
-generic EV-adoption claim and nothing here is a customer quote._
+`computeFleet` + `scoreProspect`) on the shipped Gemini real-company prospect
+profiles, or by the deterministic sensitivity sweep (`tools/sensitivity.mjs`).
+Company context is user-supplied; the archetype figures are engine-verified.
+Nothing here is a generic EV-adoption claim and nothing here is a customer quote._
 
 > **How to read this document.** It is a diagnostic companion, not a quotation.
 > The simulation compares ownership paths over a fixed 120-month (10-year)
@@ -112,17 +113,19 @@ The simulation refuses to fabricate a number it cannot support:
   so any loaded payload figure always carries an explicit Unconfirmed caveat and
   no model can read as a clean "Best fit" until that status is confirmed.
 - The tool is a **diagnostic, not a quotation**. The SRM is the primary
-  recommendation; all preset figures are illustrative.
+  recommendation; preset archetype figures are engine-verified and the company
+  context is user-supplied, not a customer savings claim.
 
 ---
 
 ## 2. Which variables matter most
 
 The deterministic tornado sweep (`tools/sensitivity.mjs`) perturbs each driver
-±10% around the fully-specified **wins** scenario (baseline best-plan Total
-economic TCO **S$7,867,090**, saving **29.43%** vs Keep ICE **S$11,148,680**, a
-30-truck high-utilisation fleet at honest fixed prices) and measures the swing
-in Total TCO and in Saving %. Ranked by business impact:
+±10% around the fully-specified **sg-01 GLS (FairPrice Group)** `#1 EV wins`
+scenario (baseline best-plan Plan A Total economic TCO **S$2,798,199**, saving
+**26.51%** vs Keep ICE **S$3,807,527**, a 10-truck high-utilisation fleet at
+honest fixed prices) and measures the swing in Total TCO and in Saving %. Ranked
+by business impact:
 
 | Rank | Driver | Group | Impact |
 |---:|---|---|---:|
@@ -180,32 +183,46 @@ A conversion is "sensible" in this tool only when **both** of these hold:
    public-charging arrangement exists; service/evidence is confirmed; and a
    complete site quote exists so the Total is numeric rather than n.a.
 
-**Prices are held fixed and honest.** Every profile uses the **same** vehicle
-quotes — **SRM T3EV+ S$193,000** on Plan A and **ChengLong L2EV S$205,000** on
-Plan B — so no profile ever shows a model cost above the vehicle's own input
-price. The question this section answers is therefore not "how high can we push
-the price," but the operator's real question: **at honest prices, which
-operational intensity (km/day × days/year) and how many trucks does a company
-need before EV genuinely saves?** Plan A carries the SRM scenario; Plan B carries
-the honest like-for-like ChengLong competitor (via the two-state projection, SRM
-on slot O and ChengLong on slot R, exactly as the live tool computes it). The
-depot charging site is sized to the fleet (one AC11 charger + plug per truck), so
-every figure below is a real frozen-engine result with the capacity gate passing.
+**Prices are held fixed and honest per model.** Every profile uses each named
+vehicle's own **fixed input-field price** (catalogue base + 93,000 COE + 33,200
+body/reg): **SRM T3EV S$190,000** or **SRM T3EV+ S$193,000** on Plan A, and the
+named competitor's own fixed price on Plan B (for example ChengLong L2EV
+S$205,000, BYD T35 S$199,200, JAC N40EV S$194,200). No profile ever shows a model
+cost above the vehicle's own input price. The question this section answers is
+therefore not "how high can we push the price," but the operator's real question:
+**at honest prices, which operational intensity (km/day × days/year) and how many
+trucks does a company need before EV genuinely saves?** Plan A carries the SRM
+scenario; Plan B carries the honest like-for-like competitor (via the two-state
+projection, SRM on slot O and the competitor on slot R, exactly as the live tool
+computes it). The depot charging site is sized to the fleet (one AC11 charger +
+plug per truck), so every figure below is a real frozen-engine result.
 
-### The three shipped archetypes (fixed prices, engine-verified)
+### The 10 shipped Gemini real-company prospects (fixed prices, engine-verified)
 
-| Archetype | Fleet size | Intensity (km/day × days/yr) | Plan A — SRM Total | Plan A — SRM Saving % vs Keep ICE | Plan B — ChengLong Saving % | Verdict (SRM) |
-|---|---:|---|---:|---:|---:|---|
-| **wins** | 30 trucks | 120 × 300 | S$7,867,090 | **+29.43%** (+S$3,281,590) | +23.35% | Clears 15% comfortably — EV genuinely wins |
-| **breakeven** | 4 trucks | 60 × 200 | S$972,937 | **+13.83%** (+S$156,208) | +8.89% | Positive but **below** 15% — the marginal "is it worth it?" case |
-| **loses** | 1 truck | 20 × 100 | S$248,754 | **−0.65%** (−S$1,615) | −5.19% | **Not a fit** — a single barely-used truck cannot repay the EV premium |
+The 10 prospect profiles below replace the earlier illustrative archetypes. Each
+is a real-company **context** profile (user-supplied provenance; the archetype
+claim traces to the frozen engine, verified by `tools/verify_gemini_prospects.mjs`
+and re-asserted by `tools/check_presets.mjs`). The Plan A (SRM) saving % is the
+two-state engine result:
 
-Keep-ICE baselines: wins S$11,148,680, breakeven S$1,129,145, loses S$247,139.
-The SRM / Plan A saving keeps the intended ordering: **+29.43% > +13.83% >
-−0.65%**. The ONLY things that change between the three profiles are **fleet
-size** and **operational intensity** — the vehicle prices are identical in all
-three. `breakeven` is the default landing case (the honest "is it worth it for
-us?" conversation).
+| Prospect | Fleet | Plan A — SRM Total | Plan A — SRM Saving % vs Keep ICE | Archetype band |
+|---|---:|---:|---:|---|
+| **sg-01 GLS (FairPrice Group)** | 10 | S$2,798,199 | **+26.51%** (+S$1,009,328) | #1 EV wins |
+| **sg-02 RichLand Logistics** | 5 | S$1,370,844 | **+23.90%** (+S$430,554) | #1 EV wins |
+| **sg-03 Neo Group** | 8 | S$2,084,843 | **+28.11%** (+S$815,388) | #1 EV wins |
+| **sg-04 SingPost Bulky Parcel** | 10 | S$2,597,886 | **+26.77%** (+S$949,907) | #1 EV wins |
+| **sg-05 Ninja Van Singapore** | 6 | S$1,778,040 | **+22.73%** (+S$523,075) | #1 EV wins |
+| **sg-06 FarEastFlora.com** | 4 | S$1,042,034 | **+28.78%** (+S$421,082) | #1 EV wins |
+| **sg-07 Chye Thiam Maintenance** | 6 | S$1,527,662 | **+22.49%** (+S$443,332) | #1 EV wins / break-even |
+| **sg-08 Move Move Movers** | 4 | S$1,116,040 | **+11.76%** (+S$148,692) | #2 break-even |
+| **sg-09 ISOTeam Ltd** | 4 | S$986,159 | **+13.61%** (+S$155,382) | #2 break-even |
+| **sg-10 Relo Singapore** | 2 | S$583,611 | **−3.68%** (−S$20,737) | #3 EV not a fit |
+
+The SRM / Plan A saving keeps the archetype ordering: the six `#1 EV wins`
+prospects (and the dual-labelled sg-07) clear the 15% target comfortably; the two
+break-even cases (sg-08, sg-09) sit positive but below 15%; and the sg-10 control
+is negative. The default landing case is **sg-01 GLS (FairPrice Group)** — a
+compelling engine-verified SRM-wins story.
 
 ### Break-even grid: SRM saving % across operational intensity
 
@@ -284,7 +301,8 @@ Translating the thresholds above into real operator profiles:
 - **High-mileage urban distribution fleets** — parcel, e-commerce, food and
   beverage, laundry, retail replenishment — running **high daily km on repeating
   routes**. High utilisation multiplies the electricity-vs-diesel gap, exactly the
-  **wins** archetype (30 trucks at 120 km/day × 300 days, +29.43%).
+  `#1 EV wins` prospects (for example sg-01 GLS / FairPrice Group, 10 trucks at
+  135 km/day × 310 days, +26.51%).
 - **Depot-based operators** who can install overnight charging in a window that
   comfortably refills the day's energy. This clears the charging gate without
   paying public-charging detour/queue penalties, and lets the model produce a
@@ -300,21 +318,21 @@ Translating the thresholds above into real operator profiles:
 
 ### The marginal case (right on the frontier)
 
-- **Mid-sized fleets at moderate utilisation.** A handful of trucks at ~60 km/day
-  × ~200 days sits just below the 15% target (the **breakeven** archetype: 4
-  trucks, +13.83%). The economics are genuinely positive but marginal, so the
-  decision turns on softer factors — brand, grant timing, residual-value
-  confidence — rather than a clear-cut payback. This is the honest "is it worth it
-  for us?" conversation, and it is the default landing case.
+- **Mid-sized fleets at moderate utilisation.** A handful of trucks at lighter
+  daily km sits just below the 15% target (the `#2 break-even` prospects: sg-08
+  Move Move Movers +11.76% and sg-09 ISOTeam Ltd +13.61%). The economics are
+  genuinely positive but marginal, so the decision turns on softer factors —
+  brand, grant timing, residual-value confidence — rather than a clear-cut
+  payback. This is the honest "is it worth it for us?" conversation.
 
 ### Who does not win yet (the case is negative)
 
 - **Low-mileage / occasional-use operators.** Light utilisation cannot repay the
   EV acquisition premium; the running-cost saving is simply too small once the
-  truck barely works. A single truck at 20 km/day × 100 days is slightly negative
-  (the **loses** archetype, −0.65%) **even though its price is the same honest
-  S$193k as the winning fleet** — the sign is set by how the truck is used, not by
-  the quote.
+  truck barely works. The sg-10 Relo Singapore control (2 trucks, public-charging
+  only, light ad-hoc duty) is negative (the `#3 EV not a fit` band, −3.68%)
+  **even though its SRM T3EV price is the same honest S$190k as the winning
+  fleets** — the sign is set by how the truck is used, not by the quote.
 - **Operators with no depot-charging access** who must rely on public charging,
   absorbing detour, queue and time penalties — and who may not reach a numeric
   Total at all without a feasible site.
@@ -349,10 +367,12 @@ Translating the thresholds above into real operator profiles:
 - **The SRM is the primary recommendation.** Plan A is framed around it;
   competitor EVs (Plan B) are compared on the same duty, and every competitor
   carries an Unconfirmed body-fit caveat until confirmed.
-- **All preset figures are illustrative.** wins / breakeven / loses are
-  engine-verified demonstrations of the operational break-even frontier at honest
-  fixed prices, not real customers, and the default landing case is the
-  **breakeven** archetype.
+- **Preset figures are engine-verified; company context is user-supplied.** The
+  10 sg-* prospects are real-company CONTEXT profiles (user-supplied provenance),
+  whose archetype claims are engine-verified against the frozen engine at honest
+  fixed prices; they are not customer savings claims. The default landing case is
+  the **sg-01 GLS (FairPrice Group)** `#1 EV wins` prospect, and the `blank`
+  template remains for entering a fresh client.
 - **Fallbacks are not quotes.** A blank EV price uses the catalogue list +
   shared COE assumption; a blank battery uses the unconfirmed archived capacity.
   Enter verified overrides before presenting a customer result.
@@ -365,9 +385,10 @@ This table reports, for **every one of the 12 portfolio models**, both the
 (`src/engine.js`, `computeFleet`) under ONE held-constant scenario so the
 per-model comparison is apples-to-apples.
 
-**Held-constant scenario.** The shipped **Wins** illustrative preset is used as the
-single fixed base and is held identical across all 12 models: the same fleet size
-and composition (30 EV-action trucks within a 100-truck register), the same duty
+**Held-constant scenario.** The shipped **GLS (FairPrice Group)** `#1 EV wins`
+real-company prospect (`sg-01-gls-fairprice`) is used as the single fixed base and is
+held identical across all 12 models: the same fleet size and composition (10
+EV-action trucks within a 100-truck register), the same duty
 (work km/day and days/year), the same energy prices (commercial diesel and depot
 electricity), the same depot charging-site build-up, and the same EV purchase quote
 (col D). The **only** input that changes between rows is which catalogue model is
@@ -385,26 +406,27 @@ model gates out for the scenario the cell shows **n.a.**, never a substituted ze
 
 | Portfolio model | 5-year Total economic TCO | 10-year Total economic TCO |
 |---|---:|---:|
-| Farizon F3E | S$7,662,876 | S$8,071,502 |
-| SRM T3EV | S$7,560,670 | S$7,867,090 |
-| ChengLong L2EV | S$7,754,610 | S$8,254,970 |
-| Farizon H5E | S$7,857,136 | S$8,460,021 |
-| **SRM T3EV+** (primary) | S$7,560,670 | S$7,867,090 |
-| Farizon H9E 14ft | S$8,023,047 | S$8,791,845 |
-| Farizon H9E 20ft | S$8,043,517 | S$8,832,784 |
-| BYD T35 Electric Light-Duty | S$7,647,250 | S$8,040,250 |
-| Foton eMiler | S$7,764,250 | S$8,274,250 |
-| Forland S1 EV | S$7,782,250 | S$8,310,250 |
-| JAC N40EV | S$7,929,850 | S$8,605,450 |
-| Qingling EQ2 | S$7,965,850 | S$8,677,450 |
+| Farizon F3E | S$2,659,139 | S$2,911,529 |
+| SRM T3EV | S$2,602,474 | S$2,798,199 |
+| ChengLong L2EV | S$2,701,875 | S$2,997,001 |
+| Farizon H5E | S$2,766,920 | S$3,127,090 |
+| **SRM T3EV+** (primary) | S$2,602,474 | S$2,798,199 |
+| Farizon H9E 14ft | S$2,858,540 | S$3,310,331 |
+| Farizon H9E 20ft | S$2,864,578 | S$3,322,406 |
+| BYD T35 Electric Light-Duty | S$2,631,833 | S$2,856,917 |
+| Foton eMiler | S$2,686,808 | S$2,966,865 |
+| Forland S1 EV | S$2,698,470 | S$2,990,189 |
+| JAC N40EV | S$2,783,118 | S$3,159,486 |
+| Qingling EQ2 | S$2,787,452 | S$3,168,153 |
 
 **Caveats (unchanged honesty signals).** These figures are a **diagnostic, not a
 quotation**. The **SRM is the primary recommendation** (SRM T3EV+ on Plan A);
 competitor models are shown on the same held-constant duty for a like-for-like
 comparison. Catalogue **body-fit / payload status is Unconfirmed** for every model,
 so no row reads as a clean "best fit" until that status is confirmed with a real
-quote. All preset figures are **illustrative** (the Wins preset is an
-engine-verified demonstration, not a real customer). Regenerate this table
+quote. The engine **TCO figures are engine-verified** against the frozen engine; the
+company provenance (GLS / FairPrice Group) is user-supplied real-world context and
+the quote remains a diagnostic, not a binding offer. Regenerate this table
 deterministically with `node tools/build_simbrief_models.mjs` and re-embed it with
 `node tools/build_index.js`.
 <!-- SIMBRIEF-MODELS:END -->
