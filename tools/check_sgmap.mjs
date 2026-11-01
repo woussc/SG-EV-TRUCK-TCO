@@ -27,6 +27,7 @@ import { dirname, resolve } from 'node:path';
 import {
   SG_BBOX, SG_AREAS, project, unproject, routeDistanceKm,
   distanceToRouteKm, reachableChargers, depotFeasibility,
+  resolvePostalCode, markerScale,
 } from '../src/sg_map.js';
 import { haversineKm } from '../src/routing_sim.js';
 
@@ -136,6 +137,42 @@ check('every SG area has a name + in-bbox coords',
     a.lon >= SG_BBOX.lonMin && a.lon <= SG_BBOX.lonMax));
 check('SG_AREAS includes Tuas / CBD / Changi anchors',
   ['Tuas', 'CBD', 'Changi'].every((k) => SG_AREAS.some((a) => a.name.indexOf(k) !== -1)));
+
+// ---- (4b) postal-code resolver + marker-scale helper (FEAT-001) ------------
+const postal = JSON.parse(readFileSync(resolve(repoRoot, 'tools/fixtures/sg_postal_sectors.json'), 'utf8'));
+check('postal sector table is non-empty', postal && postal.sectors && Object.keys(postal.sectors).length > 0);
+check('postal table carries attribution + sector-level-approximate note',
+  typeof postal.attribution === 'string' && postal.attribution.length > 0 &&
+  /sector-level approximate/i.test(postal.note || ''));
+check('every postal sector centroid is within SG_BBOX',
+  Object.keys(postal.sectors).every((s) => {
+    const c = postal.sectors[s];
+    return c && typeof c.lat === 'number' && typeof c.lon === 'number' &&
+      c.lat >= SG_BBOX.latMin && c.lat <= SG_BBOX.latMax &&
+      c.lon >= SG_BBOX.lonMin && c.lon <= SG_BBOX.lonMax && typeof c.label === 'string';
+  }));
+// A KNOWN 6-digit code (sector 60 = Jurong/District 22) resolves to an in-bbox
+// centroid flagged approximate:true.
+const knownSector = Object.keys(postal.sectors)[0];
+const knownCode = knownSector + '0000';
+const rp = resolvePostalCode(knownCode, postal);
+check('resolvePostalCode returns an in-bbox centroid for a known 6-digit code',
+  rp && rp.approximate === true && rp.sector === knownSector &&
+  rp.lat >= SG_BBOX.latMin && rp.lat <= SG_BBOX.latMax &&
+  rp.lon >= SG_BBOX.lonMin && rp.lon <= SG_BBOX.lonMax);
+check('resolvePostalCode flags the result sector-level approximate (approximate:true)', rp && rp.approximate === true);
+check('resolvePostalCode returns null for a malformed code (not 6 digits)',
+  resolvePostalCode('123', postal) === null && resolvePostalCode('1234567', postal) === null &&
+  resolvePostalCode('12ab56', postal) === null && resolvePostalCode(null, postal) === null);
+// An unknown/unassigned sector (e.g. '99', which is not in the general register)
+// returns null, never a fabricated coordinate.
+check('resolvePostalCode returns null for an unknown sector',
+  resolvePostalCode('999999', postal) === null);
+// markerScale: >1 when zoomed in (viewBox narrower than base), ~1 at full extent.
+check('markerScale ~1 at full extent', approx(markerScale(760, 760), 1, 1e-9));
+check('markerScale > 1 when zoomed in (viewBox narrower than base)', markerScale(380, 760) > 1);
+check('markerScale guards bad input by returning 1',
+  markerScale(0, 760) === 1 && markerScale(760, 0) === 1 && markerScale(NaN, 760) === 1);
 
 // ---- (5) basemap well-formedness -------------------------------------------
 const basemap = JSON.parse(readFileSync(resolve(repoRoot, 'tools/fixtures/sg_basemap.json'), 'utf8'));

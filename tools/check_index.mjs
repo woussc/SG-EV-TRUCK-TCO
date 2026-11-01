@@ -145,6 +145,9 @@ const ids = ['decision-cards','decision-lead','decision-notice','results-body','
   'rsim-dconly','rsim-origin-note','rsim-summary','rsim-map','rsim-charger-table',
   'rsim-charger-body','rsim-caveat','rsim-attribution',
   'rsim-zoom-in','rsim-zoom-out','rsim-zoom-reset',
+  // FEAT-001: offline postal-code input + drop-as choice + status note, and the
+  // return-to-depot quick button on the route-sim controls.
+  'rsim-postal','rsim-postal-as','rsim-postal-drop','rsim-return-depot','rsim-postal-note',
   // FEAT-004 (Workstream C) + FEAT-003 (Workstream E): Stage-5 per-plan
   // proposal columns + per-plan Financing (illustrative) opt-in block.
   'proposal-plan-grid','proposal-status-line',
@@ -3007,6 +3010,61 @@ checks.push(['routing-sim panel markup frames it as a coarse aid, not live avail
       /live connection/i.test(slice) && /approximate great-circle/i.test(slice);
   })()]);
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(false);
+
+// FEAT-001: map interaction layer. The bundled postal-sector table, the postal
+// resolver on window.HSSgMap, and the new Charging-tab controls (#rsim-postal,
+// #rsim-postal-drop, #rsim-return-depot) must be present and wired, so a
+// regression that drops the controls or the data block fails here.
+checks.push(['FEAT-001: window.HSPostalSectors bundled with a non-empty sector table',
+  !!windowObj.HSPostalSectors && !!windowObj.HSPostalSectors.sectors &&
+  Object.keys(windowObj.HSPostalSectors.sectors).length > 0]);
+checks.push(['FEAT-001: window.HSSgMap exposes resolvePostalCode + markerScale',
+  typeof windowObj.HSSgMap.resolvePostalCode === 'function' &&
+  typeof windowObj.HSSgMap.markerScale === 'function']);
+// The resolver resolves a known 6-digit code to an approximate sector centroid
+// through the inlined namespace (the exact path the controller uses).
+const anySector = Object.keys(windowObj.HSPostalSectors.sectors)[0];
+const resolvedPostal = windowObj.HSSgMap.resolvePostalCode(anySector + '0000', windowObj.HSPostalSectors);
+checks.push(['FEAT-001: resolvePostalCode resolves a known code to an approximate centroid (and null for a bad one)',
+  !!resolvedPostal && resolvedPostal.approximate === true &&
+  typeof resolvedPostal.lat === 'number' && typeof resolvedPostal.lon === 'number' &&
+  windowObj.HSSgMap.resolvePostalCode('12', windowObj.HSPostalSectors) === null]);
+// The controls exist in the markup and are wired (listeners attached by
+// buildRsimControls, which ran during the earlier routing-sim render).
+checks.push(['FEAT-001: postal input + drop-as + drop button + return-to-depot present in markup',
+  html.indexOf('id="rsim-postal"') !== -1 && html.indexOf('id="rsim-postal-as"') !== -1 &&
+  html.indexOf('id="rsim-postal-drop"') !== -1 && html.indexOf('id="rsim-return-depot"') !== -1 &&
+  html.indexOf('id="rsim-postal-note"') !== -1]);
+checks.push(['FEAT-001: #rsim-postal-drop and #rsim-return-depot have click listeners wired',
+  (byId['rsim-postal-drop'].listeners.click || []).length > 0 &&
+  (byId['rsim-return-depot'].listeners.click || []).length > 0]);
+// A valid postal code dropped as a stop lands a 'sector-approx' marker and shows
+// the sector-level-approximate note; the route re-renders. Drive the controller.
+byId['rsim-postal'].value = anySector + '1234';
+byId['rsim-postal-as'].value = 'stop';
+byId['rsim-postal-drop'].fire('click');
+checks.push(['FEAT-001: dropping a valid postal code adds a sector-approx stop + shows the approximate note',
+  windowObj.__HS.rsimStops && windowObj.__HS.rsimStops().some((s) => s && s.approximate === true &&
+    /sector-approx/.test(String(s.name || ''))) &&
+  /sector-level approximate/i.test(byId['rsim-postal-note'].textContent)]);
+// An invalid code shows an inline error and drops NOTHING new.
+const stopsBeforeBad = windowObj.__HS.rsimStops().length;
+byId['rsim-postal'].value = '12';
+byId['rsim-postal-drop'].fire('click');
+checks.push(['FEAT-001: an invalid postal code shows an error and drops nothing',
+  windowObj.__HS.rsimStops().length === stopsBeforeBad &&
+  /valid 6-digit/i.test(byId['rsim-postal-note'].textContent)]);
+// Return-to-depot appends a closing leg back to the depot when a route exists.
+const stopsBeforeReturn = windowObj.__HS.rsimStops().length;
+byId['rsim-return-depot'].fire('click');
+const stopsAfterReturn = windowObj.__HS.rsimStops();
+checks.push(['FEAT-001: return-to-depot closes the loop (appends a Return to depot leg)',
+  stopsAfterReturn.length === stopsBeforeReturn + 1 &&
+  stopsAfterReturn[stopsAfterReturn.length - 1].name === 'Return to depot' &&
+  stopsAfterReturn[stopsAfterReturn.length - 1].lat === stopsAfterReturn[0].lat &&
+  stopsAfterReturn[stopsAfterReturn.length - 1].lon === stopsAfterReturn[0].lon]);
+// Reset the route so later assertions see a clean state.
+windowObj.__HS.rsimClearStops();
 
 // FEAT-006 TYPOGRAPHY FLOOR (static source scan, additive). The desktop
 // visibility sweep set a ~13px (>=~10pt) floor for ALL screen text and raised

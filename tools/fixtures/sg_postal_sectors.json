@@ -1,0 +1,419 @@
+{
+  "schemaVersion": 1,
+  "attribution": "Singapore general postal-district register (public reference: SingPost / URA postal districts). Centroids are coarse district anchors, not exact addresses.",
+  "license": "Public reference data (postal-district composition).",
+  "note": "sector-level approximate centroids; first two digits of the SG 6-digit postal code",
+  "bounds": {
+    "latMin": 1.266,
+    "latMax": 1.442,
+    "lonMin": 103.7,
+    "lonMax": 103.981
+  },
+  "sectors": {
+    "10": {
+      "lat": 1.266,
+      "lon": 103.822,
+      "label": "District 4 · Telok Blangah, Harbourfront, Sentosa"
+    },
+    "11": {
+      "lat": 1.295,
+      "lon": 103.785,
+      "label": "District 5 · Pasir Panjang, Hong Leong Garden, Clementi New Town"
+    },
+    "12": {
+      "lat": 1.295,
+      "lon": 103.785,
+      "label": "District 5 · Pasir Panjang, Hong Leong Garden, Clementi New Town"
+    },
+    "13": {
+      "lat": 1.295,
+      "lon": 103.785,
+      "label": "District 5 · Pasir Panjang, Hong Leong Garden, Clementi New Town"
+    },
+    "14": {
+      "lat": 1.287,
+      "lon": 103.83,
+      "label": "District 3 · Queenstown, Tiong Bahru, Alexandra"
+    },
+    "15": {
+      "lat": 1.287,
+      "lon": 103.83,
+      "label": "District 3 · Queenstown, Tiong Bahru, Alexandra"
+    },
+    "16": {
+      "lat": 1.287,
+      "lon": 103.83,
+      "label": "District 3 · Queenstown, Tiong Bahru, Alexandra"
+    },
+    "17": {
+      "lat": 1.29,
+      "lon": 103.852,
+      "label": "District 6 · High Street, Beach Road (City Hall)"
+    },
+    "18": {
+      "lat": 1.301,
+      "lon": 103.856,
+      "label": "District 7 · Middle Road, Golden Mile, Bugis"
+    },
+    "19": {
+      "lat": 1.301,
+      "lon": 103.856,
+      "label": "District 7 · Middle Road, Golden Mile, Bugis"
+    },
+    "20": {
+      "lat": 1.311,
+      "lon": 103.856,
+      "label": "District 8 · Little India, Farrer Park"
+    },
+    "21": {
+      "lat": 1.311,
+      "lon": 103.856,
+      "label": "District 8 · Little India, Farrer Park"
+    },
+    "22": {
+      "lat": 1.306,
+      "lon": 103.83,
+      "label": "District 9 · Orchard, Cairnhill, River Valley"
+    },
+    "23": {
+      "lat": 1.306,
+      "lon": 103.83,
+      "label": "District 9 · Orchard, Cairnhill, River Valley"
+    },
+    "24": {
+      "lat": 1.308,
+      "lon": 103.808,
+      "label": "District 10 · Tanglin, Holland, Bukit Timah"
+    },
+    "25": {
+      "lat": 1.308,
+      "lon": 103.808,
+      "label": "District 10 · Tanglin, Holland, Bukit Timah"
+    },
+    "26": {
+      "lat": 1.308,
+      "lon": 103.808,
+      "label": "District 10 · Tanglin, Holland, Bukit Timah"
+    },
+    "27": {
+      "lat": 1.308,
+      "lon": 103.808,
+      "label": "District 10 · Tanglin, Holland, Bukit Timah"
+    },
+    "28": {
+      "lat": 1.325,
+      "lon": 103.832,
+      "label": "District 11 · Watten Estate, Novena, Thomson"
+    },
+    "29": {
+      "lat": 1.325,
+      "lon": 103.832,
+      "label": "District 11 · Watten Estate, Novena, Thomson"
+    },
+    "30": {
+      "lat": 1.325,
+      "lon": 103.832,
+      "label": "District 11 · Watten Estate, Novena, Thomson"
+    },
+    "31": {
+      "lat": 1.327,
+      "lon": 103.862,
+      "label": "District 12 · Balestier, Toa Payoh, Serangoon"
+    },
+    "32": {
+      "lat": 1.327,
+      "lon": 103.862,
+      "label": "District 12 · Balestier, Toa Payoh, Serangoon"
+    },
+    "33": {
+      "lat": 1.327,
+      "lon": 103.862,
+      "label": "District 12 · Balestier, Toa Payoh, Serangoon"
+    },
+    "34": {
+      "lat": 1.333,
+      "lon": 103.883,
+      "label": "District 13 · Macpherson, Braddell"
+    },
+    "35": {
+      "lat": 1.333,
+      "lon": 103.883,
+      "label": "District 13 · Macpherson, Braddell"
+    },
+    "36": {
+      "lat": 1.333,
+      "lon": 103.883,
+      "label": "District 13 · Macpherson, Braddell"
+    },
+    "37": {
+      "lat": 1.333,
+      "lon": 103.883,
+      "label": "District 13 · Macpherson, Braddell"
+    },
+    "38": {
+      "lat": 1.319,
+      "lon": 103.892,
+      "label": "District 14 · Geylang, Eunos"
+    },
+    "39": {
+      "lat": 1.319,
+      "lon": 103.892,
+      "label": "District 14 · Geylang, Eunos"
+    },
+    "40": {
+      "lat": 1.319,
+      "lon": 103.892,
+      "label": "District 14 · Geylang, Eunos"
+    },
+    "41": {
+      "lat": 1.319,
+      "lon": 103.892,
+      "label": "District 14 · Geylang, Eunos"
+    },
+    "42": {
+      "lat": 1.306,
+      "lon": 103.905,
+      "label": "District 15 · Katong, Joo Chiat, Amber Road"
+    },
+    "43": {
+      "lat": 1.306,
+      "lon": 103.905,
+      "label": "District 15 · Katong, Joo Chiat, Amber Road"
+    },
+    "44": {
+      "lat": 1.306,
+      "lon": 103.905,
+      "label": "District 15 · Katong, Joo Chiat, Amber Road"
+    },
+    "45": {
+      "lat": 1.306,
+      "lon": 103.905,
+      "label": "District 15 · Katong, Joo Chiat, Amber Road"
+    },
+    "46": {
+      "lat": 1.324,
+      "lon": 103.93,
+      "label": "District 16 · Bedok, Upper East Coast, Siglap"
+    },
+    "47": {
+      "lat": 1.324,
+      "lon": 103.93,
+      "label": "District 16 · Bedok, Upper East Coast, Siglap"
+    },
+    "48": {
+      "lat": 1.324,
+      "lon": 103.93,
+      "label": "District 16 · Bedok, Upper East Coast, Siglap"
+    },
+    "49": {
+      "lat": 1.348,
+      "lon": 103.981,
+      "label": "District 17 · Loyang, Changi"
+    },
+    "50": {
+      "lat": 1.348,
+      "lon": 103.981,
+      "label": "District 17 · Loyang, Changi"
+    },
+    "51": {
+      "lat": 1.354,
+      "lon": 103.945,
+      "label": "District 18 · Tampines, Pasir Ris"
+    },
+    "52": {
+      "lat": 1.354,
+      "lon": 103.945,
+      "label": "District 18 · Tampines, Pasir Ris"
+    },
+    "53": {
+      "lat": 1.37,
+      "lon": 103.897,
+      "label": "District 19 · Serangoon Garden, Hougang, Punggol"
+    },
+    "54": {
+      "lat": 1.37,
+      "lon": 103.897,
+      "label": "District 19 · Serangoon Garden, Hougang, Punggol"
+    },
+    "55": {
+      "lat": 1.37,
+      "lon": 103.897,
+      "label": "District 19 · Serangoon Garden, Hougang, Punggol"
+    },
+    "56": {
+      "lat": 1.362,
+      "lon": 103.847,
+      "label": "District 20 · Bishan, Ang Mo Kio"
+    },
+    "57": {
+      "lat": 1.362,
+      "lon": 103.847,
+      "label": "District 20 · Bishan, Ang Mo Kio"
+    },
+    "58": {
+      "lat": 1.34,
+      "lon": 103.776,
+      "label": "District 21 · Upper Bukit Timah, Clementi Park, Ulu Pandan"
+    },
+    "59": {
+      "lat": 1.34,
+      "lon": 103.776,
+      "label": "District 21 · Upper Bukit Timah, Clementi Park, Ulu Pandan"
+    },
+    "60": {
+      "lat": 1.333,
+      "lon": 103.742,
+      "label": "District 22 · Jurong, Boon Lay, Tuas"
+    },
+    "61": {
+      "lat": 1.333,
+      "lon": 103.742,
+      "label": "District 22 · Jurong, Boon Lay, Tuas"
+    },
+    "62": {
+      "lat": 1.333,
+      "lon": 103.742,
+      "label": "District 22 · Jurong, Boon Lay, Tuas"
+    },
+    "63": {
+      "lat": 1.333,
+      "lon": 103.742,
+      "label": "District 22 · Jurong, Boon Lay, Tuas"
+    },
+    "64": {
+      "lat": 1.333,
+      "lon": 103.742,
+      "label": "District 22 · Jurong, Boon Lay, Tuas"
+    },
+    "65": {
+      "lat": 1.37,
+      "lon": 103.764,
+      "label": "District 23 · Hillview, Dairy Farm, Bukit Panjang, Choa Chu Kang"
+    },
+    "66": {
+      "lat": 1.37,
+      "lon": 103.764,
+      "label": "District 23 · Hillview, Dairy Farm, Bukit Panjang, Choa Chu Kang"
+    },
+    "67": {
+      "lat": 1.37,
+      "lon": 103.764,
+      "label": "District 23 · Hillview, Dairy Farm, Bukit Panjang, Choa Chu Kang"
+    },
+    "68": {
+      "lat": 1.37,
+      "lon": 103.764,
+      "label": "District 23 · Hillview, Dairy Farm, Bukit Panjang, Choa Chu Kang"
+    },
+    "69": {
+      "lat": 1.39,
+      "lon": 103.7,
+      "label": "District 24 · Lim Chu Kang, Tengah"
+    },
+    "70": {
+      "lat": 1.39,
+      "lon": 103.7,
+      "label": "District 24 · Lim Chu Kang, Tengah"
+    },
+    "71": {
+      "lat": 1.39,
+      "lon": 103.7,
+      "label": "District 24 · Lim Chu Kang, Tengah"
+    },
+    "72": {
+      "lat": 1.436,
+      "lon": 103.786,
+      "label": "District 25 · Kranji, Woodgrove, Woodlands"
+    },
+    "73": {
+      "lat": 1.436,
+      "lon": 103.786,
+      "label": "District 25 · Kranji, Woodgrove, Woodlands"
+    },
+    "75": {
+      "lat": 1.442,
+      "lon": 103.825,
+      "label": "District 27 · Yishun, Sembawang"
+    },
+    "76": {
+      "lat": 1.442,
+      "lon": 103.825,
+      "label": "District 27 · Yishun, Sembawang"
+    },
+    "77": {
+      "lat": 1.39,
+      "lon": 103.815,
+      "label": "District 26 · Upper Thomson, Springleaf"
+    },
+    "78": {
+      "lat": 1.39,
+      "lon": 103.815,
+      "label": "District 26 · Upper Thomson, Springleaf"
+    },
+    "79": {
+      "lat": 1.396,
+      "lon": 103.872,
+      "label": "District 28 · Seletar, Punggol"
+    },
+    "80": {
+      "lat": 1.396,
+      "lon": 103.872,
+      "label": "District 28 · Seletar, Punggol"
+    },
+    "81": {
+      "lat": 1.348,
+      "lon": 103.981,
+      "label": "District 17 · Loyang, Changi"
+    },
+    "82": {
+      "lat": 1.37,
+      "lon": 103.897,
+      "label": "District 19 · Serangoon Garden, Hougang, Punggol"
+    },
+    "01": {
+      "lat": 1.282,
+      "lon": 103.851,
+      "label": "District 1 · Raffles Place, Cecil, Marina, People’s Park"
+    },
+    "02": {
+      "lat": 1.282,
+      "lon": 103.851,
+      "label": "District 1 · Raffles Place, Cecil, Marina, People’s Park"
+    },
+    "03": {
+      "lat": 1.282,
+      "lon": 103.851,
+      "label": "District 1 · Raffles Place, Cecil, Marina, People’s Park"
+    },
+    "04": {
+      "lat": 1.282,
+      "lon": 103.851,
+      "label": "District 1 · Raffles Place, Cecil, Marina, People’s Park"
+    },
+    "05": {
+      "lat": 1.282,
+      "lon": 103.851,
+      "label": "District 1 · Raffles Place, Cecil, Marina, People’s Park"
+    },
+    "06": {
+      "lat": 1.282,
+      "lon": 103.851,
+      "label": "District 1 · Raffles Place, Cecil, Marina, People’s Park"
+    },
+    "07": {
+      "lat": 1.277,
+      "lon": 103.844,
+      "label": "District 2 · Anson, Tanjong Pagar"
+    },
+    "08": {
+      "lat": 1.277,
+      "lon": 103.844,
+      "label": "District 2 · Anson, Tanjong Pagar"
+    },
+    "09": {
+      "lat": 1.266,
+      "lon": 103.822,
+      "label": "District 4 · Telok Blangah, Harbourfront, Sentosa"
+    }
+  }
+}

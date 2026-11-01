@@ -41,6 +41,7 @@ const fixturePath = resolve(repoRoot, 'tools/fixtures/demo_case.json');
 const seedsPath = resolve(repoRoot, 'tools/fixtures/prospect_seeds.json');
 const chargingPath = resolve(repoRoot, 'tools/fixtures/charging_context.json');
 const chargingLocationsPath = resolve(repoRoot, 'tools/fixtures/charging_locations.json');
+const postalSectorsPath = resolve(repoRoot, 'tools/fixtures/sg_postal_sectors.json');
 const simBriefPath = resolve(repoRoot, 'docs/simulation-results-brief.md');
 const indexPath = resolve(repoRoot, 'index.html');
 
@@ -71,6 +72,17 @@ const charging = JSON.parse(chargingRaw);
 // network / map-API call. Re-generate with `node tools/build_charging_data.mjs`.
 const chargingLocationsRaw = readFileSync(chargingLocationsPath, 'utf8');
 const chargingLocations = JSON.parse(chargingLocationsRaw);
+
+// Compact Singapore postal-SECTOR -> approximate-centroid table
+// (tools/fixtures/sg_postal_sectors.json), generated at build time by
+// tools/build_postal_sectors.mjs from the PUBLIC general postal-district
+// register. A few-KB bundled asset, inlined so the Charging-tab postal-code
+// input resolves 6-digit codes to a "sector-level approximate" centroid with NO
+// runtime network / geocoder. It is NOT a full 6-digit building geocoder. The
+// resolver that reads it is src/sg_map.js resolvePostalCode (window.HSSgMap).
+// Re-generate with `node tools/build_postal_sectors.mjs` if the register changes.
+const postalSectorsRaw = readFileSync(postalSectorsPath, 'utf8');
+const postalSectors = JSON.parse(postalSectorsRaw);
 
 // Planner-authored decision brief on the simulation results
 // (docs/simulation-results-brief.md). Read verbatim as a UTF-8 string and
@@ -167,7 +179,8 @@ let inlineSgMap = sgMapSrc
 inlineSgMap += '\nwindow.HSSgMap = { ' +
   'SG_BBOX: SG_BBOX, SG_AREAS: SG_AREAS, project: project, unproject: unproject, ' +
   'routeDistanceKm: routeDistanceKm, distanceToRouteKm: distanceToRouteKm, ' +
-  'reachableChargers: reachableChargers, depotFeasibility: depotFeasibility };\n';
+  'reachableChargers: reachableChargers, depotFeasibility: depotFeasibility, ' +
+  'resolvePostalCode: resolvePostalCode, markerScale: markerScale };\n';
 
 // Strip ES-module syntax from the ADDITIVE on-road router module the same way
 // and expose its API on a window namespace. Like sg_map.js, this is NEW
@@ -249,6 +262,11 @@ const chargingLocationsBlock =
   `<!-- CHARGING_LOCATIONS:BEGIN  generated from tools/fixtures/charging_locations.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
   `<script>\nwindow.HSChargingLocations = ${JSON.stringify(chargingLocations)};\n</script>\n` +
   `<!-- CHARGING_LOCATIONS:END -->`;
+
+const postalBlock =
+  `<!-- POSTAL:BEGIN  generated from tools/fixtures/sg_postal_sectors.json by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
+  `<script>\nwindow.HSPostalSectors = ${JSON.stringify(postalSectors)};\n</script>\n` +
+  `<!-- POSTAL:END -->`;
 
 const simBriefBlock =
   `<!-- SIMBRIEF:BEGIN  generated from docs/simulation-results-brief.md by tools/build_index.js  DO NOT EDIT BY HAND -->\n` +
@@ -354,6 +372,13 @@ html = replaceBlock(
 );
 html = replaceBlock(
   html,
+  /<!-- POSTAL:BEGIN[\s\S]*?-->/,
+  /<!-- POSTAL:END -->/,
+  'POSTAL',
+  postalBlock,
+);
+html = replaceBlock(
+  html,
   /<!-- SIMBRIEF:BEGIN[\s\S]*?-->/,
   /<!-- SIMBRIEF:END -->/,
   'SIMBRIEF',
@@ -402,6 +427,7 @@ console.log(`  charging: tools/fixtures/charging_context.json (${(Buffer.byteLen
 console.log(`  routing : src/routing_sim.js (${routingSrc.length} bytes, sha256 ${routingHash.slice(0, 16)}...)`);
 console.log(`  finance : src/finance.js (${financeSrc.length} bytes, sha256 ${financeHash.slice(0, 16)}...)`);
 console.log(`  locations: tools/fixtures/charging_locations.json (${(Buffer.byteLength(chargingLocationsRaw) / 1024).toFixed(2)} KB location subset) embedded`);
+console.log(`  postal  : tools/fixtures/sg_postal_sectors.json (${(Buffer.byteLength(postalSectorsRaw) / 1024).toFixed(2)} KB, ${Object.keys(postalSectors.sectors).length} sectors) embedded as window.HSPostalSectors`);
 console.log(`  simbrief: docs/simulation-results-brief.md (${Buffer.byteLength(simBriefMarkdown)} bytes markdown) embedded as window.HSSimBrief`);
 console.log(`  basemap : tools/fixtures/sg_basemap.json (${(Buffer.byteLength(basemapRaw) / 1024).toFixed(2)} KB, ${basemap.polygons.length} polygons) embedded as window.HSBasemap`);
 console.log(`  sg_map  : src/sg_map.js (${sgMapSrc.length} bytes, sha256 ${sgMapHash.slice(0, 16)}...)`);
