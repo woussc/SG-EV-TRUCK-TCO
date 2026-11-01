@@ -18,7 +18,7 @@
  *      window.HSSimBrief.markdown) contains the same table + all 12 models, so
  *      the downloadable brief is in sync with the source doc.
  *   5. The honesty caveats survive (diagnostic-not-a-quote, SRM primary,
- *      Unconfirmed body-fit, illustrative) and n.a. is never rendered as a zero.
+ *      Unconfirmed body-fit, engine-verified) and n.a. is never rendered as a zero.
  *
  * It changes NOTHING; it only reads the fixture, the brief and index.html and
  * clones inputs in memory to recompute.
@@ -152,7 +152,7 @@ ok('embedded brief contains all 12 model names',
 ok('section keeps the diagnostic-not-a-quotation caveat', /diagnostic, not a/i.test(section));
 ok('section keeps the SRM-primary caveat', /SRM is the primary/i.test(section));
 ok('section keeps the Unconfirmed body-fit caveat', /Unconfirmed/i.test(section));
-ok('section keeps the illustrative caveat', /illustrative/i.test(section));
+ok('section keeps the engine-verified honesty caveat', /engine-verified/i.test(section));
 
 // ---- report ----------------------------------------------------------------
 console.log('Model'.padEnd(30) + '5-year'.padStart(16) + '10-year'.padStart(16));

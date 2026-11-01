@@ -200,42 +200,43 @@ checks.push(['Truck count 6', r.truckCount.keep_ice === 6]);
 checks.push(['Plan A net site n.a.', r.netSiteCost.plan_a === NA]);
 checks.push(['Review duty coverage PASS', out.review.dutyCoverage.status === 'PASS']);
 
-// ---- FEAT-002 (map/demo/portfolio): DEFAULT LANDING is the BREAKEVEN case ---
+// ---- Gemini prospects: DEFAULT LANDING is the sg-01 #1 EV-wins prospect ----
 // The user-facing ChengLong DEMONSTRATION prospect was removed; the app's
-// landing state is now the BREAKEVEN (SRM) illustrative archetype, inlined as
-// window.HSLandingCase and read by the controller's freshInputs(). The
-// break-even case is the honest default: a marginal 4-truck SRM fleet (fixed
-// S$193,000 quote) running moderate intensity, so the landing deliberately
-// shows the "is it worth it for us?" case rather than a rigged win. Assert the
-// landing source is present, is the breakeven case, names an SRM model on an EV
-// plan, and that the controller actually rendered the breakeven landing on
-// first load (4 included trucks, an SRM model surfaced) BEFORE we drive the
+// landing state is now the sg-01-gls-fairprice '#1 EV wins' real-company
+// prospect (GLS / FairPrice Group), inlined as window.HSLandingCase and read by
+// the controller's freshInputs(). The landing opens on a compelling
+// engine-verified SRM-wins story: a 10-truck SRM T3EV+ fleet (fixed S$193,000
+// quote) at high utilisation (+26.51% Plan A saving vs Keep ICE). Assert the
+// landing source is present, is the sg-01 case, names an SRM model on an EV
+// plan, and that the controller actually rendered the sg-01 landing on first
+// load (10 included trucks, an SRM model surfaced) BEFORE we drive the
 // controller to the demonstration case for the long-standing demo-specific DOM
 // assertions below.
 const landing = windowObj.HSLandingCase;
 checks.push(['landing case embedded (window.HSLandingCase.inputs present)',
   !!landing && !!landing.inputs && typeof landing.inputs === 'object']);
-checks.push(['landing case is the breakeven (SRM) case', !!landing && landing.id === 'breakeven']);
+checks.push(['landing case is the sg-01-gls-fairprice (SRM) case', !!landing && landing.id === 'sg-01-gls-fairprice']);
 const landingIncluded = (landing && landing.inputs.fleet_register.rows || [])
   .filter((rw) => rw.B === 1);
-checks.push(['landing breakeven case includes 4 trucks', landingIncluded.length === 4]);
+checks.push(['landing sg-01 case includes 10 trucks', landingIncluded.length === 10]);
 const landingSrmEvRows = (landing && landing.inputs.replacement_plan.rows || [])
   .filter((rw) => rw.A != null && typeof rw.B === 'string' && rw.B.indexOf('SRM') !== -1 &&
     (rw.O === 'EV' || rw.R === 'EV'));
-checks.push(['landing breakeven case names an SRM model on an EV plan (activeEv resolves to SRM)',
+checks.push(['landing sg-01 case names an SRM model on an EV plan (activeEv resolves to SRM)',
   landingSrmEvRows.length >= 1]);
-// The controller rendered the breakeven landing on first load: the fleet-card
-// stack shows exactly the 4 breakeven-case truck IDs (EL-01..EL-04), proving
-// freshInputs() reads the breakeven landing, not the old 6-truck demonstration
-// case.
+// The controller rendered the sg-01 landing on first load: the fleet-card stack
+// shows exactly the 10 sg-01 truck IDs (EL-01..EL-10), proving freshInputs()
+// reads the sg-01 landing, not the old 6-truck demonstration case.
 function truckCardsNow() {
   return toArr(byId['fleet-cards'].children).filter(
     (c) => (c.attributes && c.attributes['data-truck-id'] != null));
 }
+const LANDING_TRUCK_IDS = ['EL-01', 'EL-02', 'EL-03', 'EL-04', 'EL-05',
+  'EL-06', 'EL-07', 'EL-08', 'EL-09', 'EL-10'];
 const landingCardIds = truckCardsNow().map((c) => c.attributes['data-truck-id']);
-checks.push(['default landing renders the 4 breakeven (SRM) truck cards', landingCardIds.length === 4]);
-checks.push(['default landing truck cards carry the breakeven fleet IDs (EL-01..EL-04)',
-  ['EL-01', 'EL-02', 'EL-03', 'EL-04'].every((id) => landingCardIds.indexOf(id) !== -1)]);
+checks.push(['default landing renders the 10 sg-01 (SRM) truck cards', landingCardIds.length === 10]);
+checks.push(['default landing truck cards carry the sg-01 fleet IDs (EL-01..EL-10)',
+  LANDING_TRUCK_IDS.every((id) => landingCardIds.indexOf(id) !== -1)]);
 // The controller's live landing state names SRM on an EV plan, so the Charging
 // tab's active EV resolves to SRM by default.
 const landingReplNow = windowObj.__HS.state.replacement_plan.rows
@@ -245,15 +246,20 @@ checks.push(['controller landing state surfaces SRM on an EV plan',
   landingReplNow.length >= 1]);
 
 // The user-facing prospect SEED SET no longer contains the demonstration case:
-// it is exactly wins / breakeven / loses / blank. (demo_case.json lives on only
-// as the untouched validate.py Excel-parity fixture, still embedded as
+// it is exactly the 10 sg-* Gemini prospects + blank. (demo_case.json lives on
+// only as the untouched validate.py Excel-parity fixture, still embedded as
 // HSDemoCase.)
+const PROSPECT_IDS = ['sg-01-gls-fairprice', 'sg-02-richland-logistics',
+  'sg-03-neo-group-catering', 'sg-04-singpost-bulky', 'sg-05-ninjavan-restock',
+  'sg-06-fareastflora', 'sg-07-chye-thiam-maintenance', 'sg-08-move-move-movers',
+  'sg-09-isoteam-ltd', 'sg-10-relo-charter-control'];
+const SEED_IDS = [...PROSPECT_IDS, 'blank'];
 const seedsEarly = windowObj.HSProspectSeeds;
-checks.push(['prospect seed set excludes the demo case (wins/breakeven/loses/blank only)',
+checks.push(['prospect seed set excludes the demo case (10 sg-* prospects + blank only)',
   !!seedsEarly && Array.isArray(seedsEarly.cases) &&
-  seedsEarly.cases.length === 4 &&
+  seedsEarly.cases.length === 11 &&
   !seedsEarly.cases.some((c) => c.id === 'demo') &&
-  ['wins', 'breakeven', 'loses', 'blank'].every((id) => seedsEarly.cases.some((c) => c.id === id))]);
+  SEED_IDS.every((id) => seedsEarly.cases.some((c) => c.id === id))]);
 
 // Drive the live controller to the DEMONSTRATION 6-truck case so the extensive
 // long-standing demo-specific DOM assertions below (6 truck cards, Keep ICE
@@ -300,21 +306,21 @@ checks.push(['sensitivity table removed (no #sens-table / #sens-body in markup)'
 
 // ---- Prospects view checks -------------------------------------------------
 const seeds = windowObj.HSProspectSeeds;
-// FEAT-003: the Yong Wen / Venus reconstructions were replaced by four honest
-// operational archetypes (wins / breakeven / loses / blank) at FIXED vehicle
-// prices, varying only fleet size + operational intensity. FEAT-001 (loophole
-// fixes) removed the misleading named 'evergreen' seed (the 'wins' case is the
-// same fully-specified confirmed-win input set).
-// FEAT-002 (map/demo/portfolio): the user-facing ChengLong DEMONSTRATION
-// prospect was removed from the seed set too, so the user-facing seeds are now
-// exactly FOUR cases: wins, breakeven, loses, blank. (demo_case.json survives
-// only as the untouched validate.py Excel-parity fixture, embedded as
+// The illustrative wins/breakeven/loses archetypes were REPLACED by the 10
+// Gemini real-company prospects (sg-01 .. sg-10), each engine-verified against
+// its claimed archetype at honest fixed per-model prices; 'blank' is kept as
+// the fresh-client template. The Yong Wen / Venus / Evergreen named seeds and
+// the ChengLong DEMONSTRATION prospect remain removed, so the user-facing seeds
+// are now exactly ELEVEN cases: the 10 sg-* prospects + blank. (demo_case.json
+// survives only as the untouched validate.py Excel-parity fixture, embedded as
 // HSDemoCase.)
-checks.push(['prospect seeds embedded (4)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 4]);
+checks.push(['prospect seeds embedded (11)', !!seeds && Array.isArray(seeds.cases) && seeds.cases.length === 11]);
 checks.push(['no yong_wen/venus seeds remain',
   !!seeds && !seeds.cases.some((c) => c.id === 'yong_wen' || c.id === 'venus')]);
 checks.push(['no evergreen named-customer seed remains',
   !!seeds && !seeds.cases.some((c) => c.id === 'evergreen')]);
+checks.push(['no legacy wins/breakeven/loses seeds remain',
+  !!seeds && !seeds.cases.some((c) => ['wins', 'breakeven', 'loses'].indexOf(c.id) !== -1)]);
 checks.push(['no demo seed in the user-facing set',
   !!seeds && !seeds.cases.some((c) => c.id === 'demo')]);
 checks.push(['scoreProspect exposed', typeof windowObj.HSEngine.scoreProspect === 'function']);
@@ -337,18 +343,35 @@ checks.push(['prospect does NOT name Evergreen Logistics', pbodyBenefit.indexOf(
 checks.push(['prospect does NOT list the DEMONSTRATION case',
   pbodyBenefit.indexOf('DEMONSTRATION 6-truck case') === -1 &&
   pbodyBenefit.indexOf('DEMONSTRATION') === -1]);
-// The four illustrative archetypes must each render in the table.
-checks.push(['prospect lists wins case', pbodyBenefit.indexOf('EV wins (illustrative, high-utilisation large fleet)') !== -1]);
-checks.push(['prospect lists breakeven case', pbodyBenefit.indexOf('Break-even (illustrative, marginal - is it worth it for us?)') !== -1]);
-checks.push(['prospect lists loses case', pbodyBenefit.indexOf('EV not a fit (illustrative, small lightly-used fleet)') !== -1]);
+// The 10 Gemini real-company prospects + blank must each render in the list.
+// Match on the stable company-name fragment of each card title (the names carry
+// an em-dash separator that survives rendering; matching the company fragment
+// is robust and unambiguous).
+const PROSPECT_NAME_FRAGMENTS = {
+  'sg-01-gls-fairprice': 'GLS (FairPrice Group)',
+  'sg-02-richland-logistics': 'RichLand Logistics',
+  'sg-03-neo-group-catering': 'Neo Group Limited',
+  'sg-04-singpost-bulky': 'SingPost Bulky Parcel',
+  'sg-05-ninjavan-restock': 'Ninja Van Singapore',
+  'sg-06-fareastflora': 'FarEastFlora.com',
+  'sg-07-chye-thiam-maintenance': 'Chye Thiam Maintenance',
+  'sg-08-move-move-movers': 'Move Move Movers',
+  'sg-09-isoteam-ltd': 'ISOTeam Ltd',
+  'sg-10-relo-charter-control': 'Relo Singapore',
+};
+for (const id of PROSPECT_IDS) {
+  const frag = PROSPECT_NAME_FRAGMENTS[id];
+  checks.push(['prospect lists ' + id + ' (' + frag + ')', pbodyBenefit.indexOf(frag) !== -1]);
+}
 checks.push(['prospect lists Blank profile', pbodyBenefit.indexOf('Blank profile (start a fresh client)') !== -1]);
 checks.push(['prospect cards expose ranking components (in Details)',
   pbodyBenefit.indexOf('Account key') !== -1 && pbodyBenefit.indexOf('Benefit key') !== -1]);
-// A6: the honesty tags (Illustrative/Assumption) survive on the cards, the Load
-// action keeps its data-load hook, and n.a. is shown (never zeroed). The demo
-// case Total is n.a. for the EV plans, so an n.a. appears in the rendered cards.
-checks.push(['prospect cards keep the Illustrative/Assumption honesty tags',
-  pbodyBenefit.indexOf('tag illustrative') !== -1 || pbodyBenefit.indexOf('tag assumption') !== -1]);
+// The honesty tags survive on the cards: the 10 real-company prospects carry a
+// 'Real-company context' tag and the blank template carries an 'Assumption'
+// tag; the Load action keeps its data-load hook, and n.a. is shown (never
+// zeroed). The blank case Total is n.a. for the EV plans, so an n.a. appears.
+checks.push(['prospect cards keep the Real-company-context / Assumption honesty tags',
+  pbodyBenefit.indexOf('tag real-company-context') !== -1 && pbodyBenefit.indexOf('tag assumption') !== -1]);
 checks.push(['prospect cards keep the Load-into-editor action (data-load)',
   pbodyBenefit.indexOf('data-load=') !== -1]);
 checks.push(['prospect cards keep the conditional-savings caveat',
@@ -369,15 +392,16 @@ const confirmedWins = scoredSeeds.filter((x) =>
   typeof x.s.savingAbs === 'number' && x.s.savingAbs > 0 &&
   typeof x.s.savingPct === 'number' && x.s.savingPct > 0);
 checks.push(['at least one confirmed-win seed', confirmedWins.length >= 1]);
-// The confirmed win is now the 'wins' archetype (a fully-specified,
-// gate-passing, high-utilisation 30-truck fleet at honest fixed prices).
-// Assertions are unchanged in strength.
-checks.push(['confirmed win is Wins case', confirmedWins.some((x) => x.id === 'wins')]);
-const bestWin = scoredSeeds.find((x) => x.id === 'wins');
-checks.push(['Wins case gatePass true', bestWin && bestWin.s.gatePass === true]);
-checks.push(['Wins case numeric Total', bestWin && typeof bestWin.s.totalEconomicTco === 'number']);
-checks.push(['Wins case positive saving S$', bestWin && bestWin.s.savingAbs > 0]);
-checks.push(['Wins case meets 15% target label', bestWin && bestWin.s.fifteenTargetMet === 'Meets entered 15% target']);
+// The canonical confirmed win is the sg-04-singpost-bulky '#1 EV wins'
+// prospect: a fully-specified, gate-passing, high-utilisation 10-truck fleet at
+// honest fixed prices whose raw score clears every gate (Meets entered 15%
+// target). Assertions are unchanged in strength.
+checks.push(['confirmed win is the sg-04-singpost-bulky case', confirmedWins.some((x) => x.id === 'sg-04-singpost-bulky')]);
+const bestWin = scoredSeeds.find((x) => x.id === 'sg-04-singpost-bulky');
+checks.push(['sg-04 case gatePass true', bestWin && bestWin.s.gatePass === true]);
+checks.push(['sg-04 case numeric Total', bestWin && typeof bestWin.s.totalEconomicTco === 'number']);
+checks.push(['sg-04 case positive saving S$', bestWin && bestWin.s.savingAbs > 0]);
+checks.push(['sg-04 case meets 15% target label', bestWin && bestWin.s.fifteenTargetMet === 'Meets entered 15% target']);
 
 // Direct score check on the seeds through the inlined engine.
 function orderFor(mode) {
@@ -394,50 +418,38 @@ function orderFor(mode) {
 }
 const accountOrder = orderFor('account');
 const benefitOrder = orderFor('benefit');
-// The confirmed-win illustrative WINS case leads BOTH sort modes: with the
-// vehicle prices held FIXED across archetypes, its large high-utilisation fleet
-// (30 trucks @ 120 km/day x 300 days) produces the largest absolute saving
-// (~+30.06%) and the only strong gate-passing benefit figure. (Formerly the
-// removed 'evergreen' seed led and 'best' followed; the honest redesign renames
-// that fully-specified confirmed-win input set to 'wins', so it leads directly.)
-checks.push(['account order wins first', accountOrder[0] === 'wins']);
-checks.push(['benefit order wins first', benefitOrder[0] === 'wins']);
-// The illustrative archetypes rank by their engine-verified saving, which is
-// now driven purely by fleet size + operational intensity at FIXED prices:
-// wins (+30.06%) > breakeven (+14.67%) > loses (-0.05%) in the benefit
-// (saving %) order. This replaces the removed yong_wen > venus ordering
-// assertions with equivalent coverage on the new honest archetypes.
-checks.push(['benefit order wins before breakeven before loses',
-  benefitOrder.indexOf('wins') < benefitOrder.indexOf('breakeven') &&
-  benefitOrder.indexOf('breakeven') < benefitOrder.indexOf('loses')]);
-// The marginal BREAKEVEN still gate-passes with a positive saving, so it
-// outranks the negative-saving LOSES in account order too.
-checks.push(['account order breakeven before loses',
-  accountOrder.indexOf('breakeven') < accountOrder.indexOf('loses')]);
+// The account key is the absolute Total economic TCO saving S$; the largest
+// high-utilisation fleet leads it. sg-01 (10 trucks @ 135 km/day x 310 days)
+// produces the largest absolute saving, so it leads the account order. The
+// benefit key is the gate-passing saving % (null for cases flagged diagnostic
+// by the engine's demanding-day range screen), so the highest gate-passing
+// saving % leads the benefit order: sg-06 (+29.28%). This replaces the removed
+// wins/breakeven/loses ordering assertions with equivalent coverage keyed to
+// the engine-verified Gemini prospects.
+checks.push(['account order sg-01 first (largest absolute saving)', accountOrder[0] === 'sg-01-gls-fairprice']);
+checks.push(['benefit order sg-06 first (highest gate-passing saving %)', benefitOrder[0] === 'sg-06-fareastflora']);
+// The not-a-fit control (sg-10, negative saving) must rank below every
+// positive-saving prospect in the account order, just above blank.
+checks.push(['account order ranks the not-a-fit sg-10 below the break-even cases',
+  accountOrder.indexOf('sg-10-relo-charter-control') > accountOrder.indexOf('sg-08-move-move-movers') &&
+  accountOrder.indexOf('sg-10-relo-charter-control') > accountOrder.indexOf('sg-09-isoteam-ltd')]);
 // Non-numeric ranking keys sort last: the honest-blank preset (Total n.a., no
-// EV plan) sinks to the bottom of BOTH sort modes, and the loses case (negative
-// saving) sits below the gate-passing winners.
+// EV plan) sinks to the bottom of BOTH sort modes, and the negative-saving
+// not-a-fit control sits below every gate-passing winner.
 checks.push(['blank sinks to the bottom (both modes)',
   accountOrder[accountOrder.length - 1] === 'blank' &&
   benefitOrder[benefitOrder.length - 1] === 'blank']);
-checks.push(['loses outranks only blank in benefit order',
-  benefitOrder.indexOf('loses') < benefitOrder.indexOf('blank')]);
+checks.push(['not-a-fit sg-10 outranks only blank in account order',
+  accountOrder.indexOf('sg-10-relo-charter-control') === accountOrder.length - 2]);
 
 // Toggle the live sort control and confirm the rendered order follows the
-// selected mode. After removing the demonstration prospect the four remaining
-// illustrative archetypes happen to rank in the SAME order under both the
-// benefit and account keys (wins > breakeven > loses > blank), so the rendered
-// markup does not necessarily differ between modes. This assertion is therefore
-// made STRICTLY STRONGER than the old 'the HTML differs' check: it fires the
-// control and asserts the rendered card order EXACTLY matches the
-// engine-computed account order (a precise ordering contract, independent of
-// whether the two modes coincide), proving the sort control re-renders in the
-// selected order.
+// selected mode. This asserts the rendered card order EXACTLY matches the
+// engine-computed account order (a precise ordering contract), proving the sort
+// control re-renders in the selected order. Each card is located by its stable
+// company-name fragment.
 const sel = byId['prospect-sort'];
 const caseName = {
-  wins: 'EV wins (illustrative, high-utilisation large fleet)',
-  breakeven: 'Break-even (illustrative, marginal - is it worth it for us?)',
-  loses: 'EV not a fit (illustrative, small lightly-used fleet)',
+  ...PROSPECT_NAME_FRAGMENTS,
   blank: 'Blank profile (start a fresh client)',
 };
 sel.value = 'account';
@@ -447,18 +459,16 @@ const renderedAccountOrder = accountOrder.map((id) => afterHtml.indexOf(caseName
 checks.push(['sort control renders cards in the selected (account) order',
   renderedAccountOrder.every((pos) => pos !== -1) &&
   renderedAccountOrder.every((pos, i) => i === 0 || renderedAccountOrder[i - 1] < pos)]);
-// In account order the confirmed-win WINS case leads the rendered table, ahead
-// of the marginal BREAKEVEN case, and the honest-blank preset is rendered last.
-// (The demonstration case is no longer a user-facing prospect, so wins is now
-// compared against the next-ranked illustrative case, breakeven.)
-checks.push(['account sort puts wins case on top',
-  afterHtml.indexOf('EV wins (illustrative, high-utilisation large fleet)') <
-    afterHtml.indexOf('Break-even (illustrative, marginal - is it worth it for us?)')]);
+// In account order the largest-saving sg-01 prospect leads the rendered list,
+// ahead of the not-a-fit sg-10 control, and the honest-blank preset is last.
+checks.push(['account sort puts sg-01 (largest saving) on top',
+  afterHtml.indexOf(caseName['sg-01-gls-fairprice']) <
+    afterHtml.indexOf(caseName['sg-10-relo-charter-control'])]);
 checks.push(['account sort renders Blank profile last',
-  afterHtml.indexOf('Blank profile (start a fresh client)') >
-    afterHtml.indexOf('EV wins (illustrative, high-utilisation large fleet)') &&
-  afterHtml.indexOf('Blank profile (start a fresh client)') >
-    afterHtml.indexOf('Break-even (illustrative, marginal - is it worth it for us?)')]);
+  afterHtml.indexOf(caseName['blank']) >
+    afterHtml.indexOf(caseName['sg-01-gls-fairprice']) &&
+  afterHtml.indexOf(caseName['blank']) >
+    afterHtml.indexOf(caseName['sg-10-relo-charter-control'])]);
 
 // ---- Live inline-SVG charts (FEAT-003) ------------------------------------
 // The Charts module renders inline SVG strings into the chart containers from
@@ -670,7 +680,7 @@ checks.push(['saving-target defaults to 0.15',
 // With the default target the engine still emits the exact legacy claim label.
 const defaultTargetOut = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
 // (state.savingTarget is still unset here -> engine defaults to 0.15.)
-const evForLabel = scoredSeeds.find((x) => x.id === 'wins');
+const evForLabel = scoredSeeds.find((x) => x.id === 'sg-04-singpost-bulky');
 checks.push(['default target still yields Meets entered 15% target',
   evForLabel && evForLabel.s.fifteenTargetMet === 'Meets entered 15% target']);
 // Moving the target changes the rendered headroom row + the claim label. Drive
@@ -694,14 +704,14 @@ checks.push(['moving target moves the cumulative saving-target marker (25%)',
 // The 'Meets/Below entered X% target' claim label is conditional (never an
 // adoption probability) and only renders for a gate-passing case. Prove the
 // label reflects the committed target through the engine on the gate-passing
-// WINS seed: at the default 0.15 it reads 'Meets entered 15% target'; at a
+// sg-04 prospect: at the default 0.15 it reads 'Meets entered 15% target'; at a
 // higher 0.35 target the SAME case flips to 'Below entered 35% target'. (The
-// high target is 0.35 - clearly above the wins-case saving, which after the
-// honest redesign sits in the ~30% band - so the conditional-label property is
-// proved robustly regardless of the exact wins-case figure.)
+// high target is 0.35 - clearly above the sg-04 saving, which sits in the ~27%
+// band - so the conditional-label property is proved robustly regardless of the
+// exact sg-04 figure.)
 const everAtDefault = windowObj.HSEngine.scoreProspect(
-  windowObj.HSEngine.computeFleet(seeds.cases.find((c) => c.id === 'wins').inputs));
-const everInputsHi = JSON.parse(JSON.stringify(seeds.cases.find((c) => c.id === 'wins').inputs));
+  windowObj.HSEngine.computeFleet(seeds.cases.find((c) => c.id === 'sg-04-singpost-bulky').inputs));
+const everInputsHi = JSON.parse(JSON.stringify(seeds.cases.find((c) => c.id === 'sg-04-singpost-bulky').inputs));
 everInputsHi.savingTarget = 0.35;
 const everAtHi = windowObj.HSEngine.scoreProspect(windowObj.HSEngine.computeFleet(everInputsHi));
 checks.push(['claim label reflects committed target (default 15% met)',
@@ -1270,16 +1280,16 @@ checks.push(['Removed fleet row is an excluded blank placeholder',
 const outAfterRemove = windowObj.HSEngine.computeFleet(windowObj.__HS.state);
 checks.push(['computeFleet valid after remove', !!outAfterRemove &&
   outAfterRemove.results.truckCount.keep_ice === cardsAfterRemove]);
-// FEAT-002: Reset restores the DEFAULT LANDING case, which is now the BREAKEVEN
-// (SRM) illustrative case (4 trucks EL-01..EL-04), NOT the old 6-truck
+// Reset restores the DEFAULT LANDING case, which is now the sg-01-gls-fairprice
+// '#1 EV wins' prospect (10 trucks EL-01..EL-10), NOT the old 6-truck
 // demonstration. This genuinely exercises the Reset button's freshInputs() ->
-// breakeven landing path.
+// sg-01 landing path.
 byId['reset-btn'].fire('click');
 const resetCardIds = truckCards().map((c) => c.attributes['data-truck-id']);
-checks.push(['Reset restores the 4-truck breakeven (SRM) landing card set', resetCardIds.length === 4]);
-checks.push(['Reset restores the breakeven landing fleet IDs (EL-01..EL-04)',
-  ['EL-01', 'EL-02', 'EL-03', 'EL-04'].every((id) => resetCardIds.indexOf(id) !== -1)]);
-checks.push(['Reset re-renders the money view for the breakeven landing (Vehicle economic TCO + a currency figure)',
+checks.push(['Reset restores the 10-truck sg-01 (SRM) landing card set', resetCardIds.length === 10]);
+checks.push(['Reset restores the sg-01 landing fleet IDs (EL-01..EL-10)',
+  LANDING_TRUCK_IDS.every((id) => resetCardIds.indexOf(id) !== -1)]);
+checks.push(['Reset re-renders the money view for the sg-01 landing (Vehicle economic TCO + a currency figure)',
   byId['results-body'].innerHTML.indexOf('Vehicle economic TCO') !== -1 &&
   /S\$[\d,]/.test(byId['results-body'].innerHTML)]);
 // Restore the demonstration fixture for the remaining demo-specific DOM
@@ -1428,12 +1438,12 @@ checks.push(['prospects view nested inside the hover overlay wrapper',
 const stateSnapshot = JSON.parse(JSON.stringify(windowObj.__HS.state));
 pxToggle.fire('click');
 checks.push(['prospects overlay open before load', hasOpen(pxCol)]);
-byId['prospect-body'].fire('click', { target: { getAttribute: (k) => (k === 'data-load' ? 'wins' : null), parentNode: byId['prospect-body'] } });
+byId['prospect-body'].fire('click', { target: { getAttribute: (k) => (k === 'data-load' ? 'sg-04-singpost-bulky' : null), parentNode: byId['prospect-body'] } });
 checks.push(['loading a prospect dismisses the hover screen',
   pxToggle.getAttribute('aria-expanded') === 'false' &&
   pxCol.getAttribute('aria-hidden') === 'true' && !hasOpen(pxCol)]);
 // Restore the demo state so downstream assertions (confidence badge, etc.) run
-// against the original demonstration case rather than the loaded 'wins' case.
+// against the original demonstration case rather than the loaded sg-04 case.
 Object.keys(windowObj.__HS.state).forEach((k) => { delete windowObj.__HS.state[k]; });
 Object.keys(stateSnapshot).forEach((k) => { windowObj.__HS.state[k] = stateSnapshot[k]; });
 if (windowObj.__HS.rebuildInputs) windowObj.__HS.rebuildInputs();
@@ -2174,8 +2184,12 @@ checks.push(['breakdown bar renders a matching saving-target tick',
 // 'Mixed' marker when included EV trucks resolve to different models). This
 // drives the SAME rf map + recompute the picker callback drives.
 (() => {
-  // Operate on the breakeven (SRM) landing: it has 4 included EV-action trucks.
-  windowObj.__HS.loadCase('breakeven');
+  // Operate on the sg-09-isoteam-ltd prospect: it has 4 included EV-action
+  // trucks with SRM T3EV+ on Plan A, so picking the other SRM variant (SRM
+  // T3EV) gives a label whose stale form ('Plan A - SRM T3EV+') is NOT a
+  // substring of the new label ('Plan A - SRM T3EV'), keeping the exact-label
+  // boundary check unambiguous.
+  windowObj.__HS.loadCase('sg-09-isoteam-ltd');
   // loadCase replaces H.state wholesale, so the reframe blob is a NEW object:
   // fetch it AFTER the load (a reference taken before would be stale).
   const rf = windowObj.__HS.reframe();
@@ -2234,24 +2248,24 @@ checks.push(['breakdown bar renders a matching saving-target tick',
 // per-truck picks. The labels/sliders then match the loaded preset.
 (() => {
   const isNum = (v) => typeof v === 'number' && isFinite(v);
-  // The honest redesign: 'wins' puts the SRM scenario on Plan A (col B SRM
-  // T3EV+ + col D quote 193000) and a NON-SRM competitor on Plan B (ChengLong
-  // L2EV via the preset's _planB_model, quote 205000 via _planB_price). loadCase
-  // must derive planAModel = SRM, planBModel = the competitor (NOT SRM),
-  // evPriceA = 193000 (preset col D) and evPriceB = 205000 (preset _planB_price),
-  // none of them the REFRAME_DEFAULTS (SRM T3EV+ / ChengLong L2EV / 234000 /
-  // 171800).
-  windowObj.__HS.loadCase('wins');
+  // The sg-04-singpost-bulky '#1 EV wins' prospect puts the SRM scenario on
+  // Plan A (col B SRM T3EV + col D fixed quote 190000) and a NON-SRM competitor
+  // on Plan B (JAC N40EV via the preset's _planB_model, quote 194200 via
+  // _planB_price). loadCase must derive planAModel = SRM, planBModel = the
+  // competitor (NOT SRM), evPriceA = 190000 (preset col D) and evPriceB = 194200
+  // (preset _planB_price), none of them the REFRAME_DEFAULTS (SRM T3EV+ /
+  // ChengLong L2EV / 234000 / 171800).
+  windowObj.__HS.loadCase('sg-04-singpost-bulky');
   const rfBest = windowObj.__HS.reframe();
-  checks.push(['loadCase(wins) sets reframe plan models from the preset (SRM on Plan A, competitor on Plan B)',
+  checks.push(['loadCase(sg-04) sets reframe plan models from the preset (SRM on Plan A, competitor on Plan B)',
     /SRM/i.test(rfBest.planAModel) &&
     typeof rfBest.planBModel === 'string' && rfBest.planBModel !== '' &&
     rfBest.planBModel.indexOf('SRM') !== 0]);
-  checks.push(['loadCase(wins) sets EV-cost sliders from the preset (Plan A col-D 193000, Plan B competitor 205000)',
-    isNum(rfBest.evPriceA) && rfBest.evPriceA === 193000 &&
-    isNum(rfBest.evPriceB) && rfBest.evPriceB === 205000 &&
+  checks.push(['loadCase(sg-04) sets EV-cost sliders from the preset (Plan A col-D 190000, Plan B competitor 194200)',
+    isNum(rfBest.evPriceA) && rfBest.evPriceA === 190000 &&
+    isNum(rfBest.evPriceB) && rfBest.evPriceB === 194200 &&
     rfBest.evPriceA !== 234000 && rfBest.evPriceB !== 171800]);
-  checks.push(['loadCase(wins) clears stale per-truck Plan A/B picks',
+  checks.push(['loadCase(sg-04) clears stale per-truck Plan A/B picks',
     rfBest.planA && Object.keys(rfBest.planA).length === 0 &&
     rfBest.planB && Object.keys(rfBest.planB).length === 0]);
   // The slider getters read the loaded reframe values (clamped to 120000-300000).
@@ -2259,20 +2273,20 @@ checks.push(['breakdown bar renders a matching saving-target tick',
     rfBest.evPriceA >= 120000 && rfBest.evPriceA <= 300000]);
   // The rendered labels match the loaded preset model.
   const thBestA = byId['results-th-plan_a'].textContent || '';
-  checks.push(['loadCase(wins) relabels the results header to the preset Plan A model',
+  checks.push(['loadCase(sg-04) relabels the results header to the preset Plan A model',
     thBestA.indexOf(rfBest.planAModel) !== -1]);
-  // The WHOLE POINT of the honest redesign: the vehicle price is HELD FIXED
-  // across every archetype (SRM T3EV+ at S$193,000), varying only fleet size +
-  // operational intensity. So loading the 'loses' archetype must leave the
-  // EV-cost slider / input-field quote at the SAME fixed 193000 that 'wins'
-  // derived - NOT a per-case price-tuned figure (the old rig that derived a
-  // different 284000 quote per case is gone). This proves the loaded-profile
-  // model cost tracks the input-field price (they are equal) rather than
-  // drifting above it, which was the misleading behaviour this task removes.
-  windowObj.__HS.loadCase('loses');
+  // The honest fixed-price contract: a loaded profile's Plan A quote is the
+  // model's fixed input-field price, never a per-case rig. The sg-04 and sg-10
+  // prospects both run SRM T3EV on Plan A at the SAME fixed S$190,000, varying
+  // only fleet size + operational intensity. So loading the sg-10 not-a-fit
+  // control must leave the EV-cost slider / input-field quote at that SAME fixed
+  // 190000 that sg-04 derived - NOT a per-case price-tuned figure. This proves
+  // the loaded-profile model cost tracks the input-field price (they are equal)
+  // rather than drifting above it.
+  windowObj.__HS.loadCase('sg-10-relo-charter-control');
   const rfBad = windowObj.__HS.reframe();
-  checks.push(['loadCase(loses) holds the EV-cost slider at the FIXED preset quote 193000 (same as wins, no per-case price rig)',
-    isNum(rfBad.evPriceA) && rfBad.evPriceA === 193000 && rfBad.evPriceA === rfBest.evPriceA]);
+  checks.push(['loadCase(sg-10) holds the EV-cost slider at the FIXED SRM T3EV quote 190000 (same as sg-04, no per-case price rig)',
+    isNum(rfBad.evPriceA) && rfBad.evPriceA === 190000 && rfBad.evPriceA === rfBest.evPriceA]);
   // And the loaded-profile Plan A model cost the engine uses equals that
   // input-field quote (the slider/input price IS the model cost - no hidden
   // premium above the entered figure).
@@ -2285,8 +2299,8 @@ checks.push(['breakdown bar renders a matching saving-target tick',
     const evRow = st.replacement_plan.rows.find((rp) => rp && rp.A != null && inc[rp.A] && rp.O === 'EV');
     return evRow ? evRow.D : null;
   })();
-  checks.push(['loadCase(loses) model cost equals the input-field quote (193000) - cost tracks the price, not above it',
-    isNum(losesModelCost) && losesModelCost === 193000 && losesModelCost === rfBad.evPriceA]);
+  checks.push(['loadCase(sg-10) model cost equals the input-field quote (190000) - cost tracks the price, not above it',
+    isNum(losesModelCost) && losesModelCost === 190000 && losesModelCost === rfBad.evPriceA]);
   // 'blank' has no EV-action truck: keeps a sensible default, renders n.a.
   // without crashing.
   let blankThrew = false;
@@ -2676,21 +2690,22 @@ checks.push(['Financing block is hidden in print when the toggle is OFF (prints 
   /#proposal-finance-block:not\(\.finance-on\)\s*\{[^}]*display\s*:\s*none/i.test(html)]);
 
 // (5) CONFIRMED case -> flips the PER-PLAN badges. Loading the gate-passing
-// 'wins' seed (numeric Total, gates pass, saving claim met) must flip the
-// recommended plan's badge to pb-confirmed and read as a confirmed quotation,
-// proving each plan badge reads directly from that plan's live status (not a
-// frozen literal). Snapshot + restore the demo state around the load.
+// sg-04-singpost-bulky prospect (numeric Total, gates pass, saving claim met)
+// must flip the recommended plan's badge to pb-confirmed and read as a
+// confirmed quotation, proving each plan badge reads directly from that plan's
+// live status (not a frozen literal). Snapshot + restore the demo state around
+// the load.
 const propSnapshot = JSON.parse(JSON.stringify(windowObj.__HS.state));
 if (typeof windowObj.__HS.setSyncRecompute === 'function') windowObj.__HS.setSyncRecompute(true);
-byId['prospect-body'].fire('click', { target: { getAttribute: (k) => (k === 'data-load' ? 'wins' : null), parentNode: byId['prospect-body'] } });
+byId['prospect-body'].fire('click', { target: { getAttribute: (k) => (k === 'data-load' ? 'sg-04-singpost-bulky' : null), parentNode: byId['prospect-body'] } });
 windowObj.__HS.recompute();
 const bestScore = windowObj.HSEngine.scoreProspect(windowObj.HSEngine.computeFleet(windowObj.__HS.state));
-checks.push(['loaded wins case is a gate-passing confirmed win (precondition)',
+checks.push(['loaded sg-04 case is a gate-passing confirmed win (precondition)',
   bestScore.gatePass === true &&
   typeof bestScore.totalEconomicTco === 'number' && isFinite(bestScore.totalEconomicTco) &&
   bestScore.fifteenTargetMet === 'Meets entered 15% target']);
 // At least one plan column flips to a CONFIRMED quotation for the cleared case.
-checks.push(['A proposal plan badge flips to CONFIRMED quotation for the cleared wins case',
+checks.push(['A proposal plan badge flips to CONFIRMED quotation for the cleared sg-04 case',
   (/(^|\s)pb-confirmed(\s|$)/.test(byId['proposal-badge-plan_a'].className || '') &&
    byId['proposal-badge-plan_a'].innerHTML.indexOf('Confirmed quotation') !== -1) ||
   (/(^|\s)pb-confirmed(\s|$)/.test(byId['proposal-badge-plan_b'].className || '') &&
@@ -3288,13 +3303,13 @@ checks.push(['scatter: extreme X tick labels are inward-anchored (start/end), ne
   sections.forEach((h) => {
     checks.push(['simbrief: embedded brief contains section "' + h + '"', md.indexOf(h) !== -1]);
   });
-  // Grounding figures from the honest-redesign brief: the wins archetype's
-  // engine-verified SRM (Plan A) Total economic TCO (S$7,867,090) and its
-  // +29.43% saving vs Keep ICE. These are real frozen-engine results for the
-  // shipped presets at FIXED vehicle prices, so they anchor the brief to the
-  // engine rather than to prose.
-  checks.push(['simbrief: embedded brief carries grounding figure S$7,867,090', md.indexOf('S$7,867,090') !== -1]);
-  checks.push(['simbrief: embedded brief carries grounding figure +29.43%', md.indexOf('+29.43%') !== -1]);
+  // Grounding figures from the brief: the sg-01 GLS (FairPrice Group) prospect's
+  // engine-verified SRM (Plan A) Total economic TCO (S$2,798,199) and its
+  // +26.51% saving vs Keep ICE. These are real frozen-engine results for the
+  // shipped Gemini prospects at honest fixed prices, so they anchor the brief to
+  // the engine rather than to prose.
+  checks.push(['simbrief: embedded brief carries grounding figure S$2,798,199', md.indexOf('S$2,798,199') !== -1]);
+  checks.push(['simbrief: embedded brief carries grounding figure +26.51%', md.indexOf('+26.51%') !== -1]);
 
   // (c) The download path is a client-side Blob/object-URL, NOT a fetch. Scope
   // the grep to the wireBriefDownload handler source so the assertion is
