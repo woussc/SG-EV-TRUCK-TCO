@@ -3184,6 +3184,48 @@ checks.push(['FEAT-002: cost counter renders running cost / charge time / stops 
   /Running charging cost/i.test(rsimCostHtml) && /charge time/i.test(rsimCostHtml) &&
   /Charging stop/i.test(rsimCostHtml) &&
   /not a quotation/i.test(rsimCostHtml)]);
+// ---- FEAT-003: live figures popped out as highlight STAT CARDS -------------
+// (a) The same counter strip now ALSO surfaces the other live route figures the
+// renderRoutingSim result already holds - route distance, charging-detour
+// distance, reachable public chargers, depot-charge margin - as .rc-metric
+// stat-card tiles ALONGSIDE the running cost / charge time / stops, so they move
+// in lock-step on every route edit. A route is placed here, so they render real
+// values (never a fabricated zero).
+checks.push(['FEAT-003: cost strip surfaces route km / detour km / reachable chargers / depot margin as stat cards',
+  /Route distance/i.test(rsimCostHtml) && /Charging-detour distance/i.test(rsimCostHtml) &&
+  /Reachable public chargers/i.test(rsimCostHtml) && /Depot-charge margin/i.test(rsimCostHtml)]);
+// (b) Every figure renders inside a .rc-metric card tile; with a route placed,
+// at least one live figure shows a real (non-n.a.) value - honest, not zeroed.
+checks.push(['FEAT-003: live figures render as .rc-metric card tiles with at least one real value when a route is placed',
+  (rsimCostHtml.match(/class="rc-metric/g) || []).length >= 7 &&
+  /class="rc-val">~[0-9]/.test(rsimCostHtml)]);
+// (c) The verbose multi-sentence caveat was trimmed to ONE concise honesty line
+// that still carries the diagnostic / not-a-quotation + coarse-screen signal.
+checks.push(['FEAT-003: cost-counter caveat trimmed to one concise diagnostic / not-a-quotation / coarse-screen line (present)',
+  /not a quotation/i.test(rsimCostHtml) && /coarse/i.test(rsimCostHtml) &&
+  // trimmed: the old long tail ('tops up at the nearest public charger ... reserve floor')
+  // no longer lives inline on the counter caveat.
+  !/tops up at the nearest public charger before the battery/i.test(rsimCostHtml)]);
+// (d) The stat-card CSS is present: a responsive auto-fit grid, bordered /
+// elevated .rc-metric tiles with a live accent, and a >=18px tabular value.
+checks.push(['FEAT-003: stat-card CSS present (auto-fit grid + bordered tile + live accent + >=18px value)',
+  /\.rsim-cost\s*\.rc-metrics\{[^}]*grid-template-columns:repeat\(auto-fit/.test(html) &&
+  /\.rsim-cost\s*\.rc-metric\{[^}]*border-left:3px solid var\(--accent\)/.test(html) &&
+  /\.rsim-cost\s*\.rc-metric\s*\.rc-val\{[^}]*font-size:2[0-9]px/.test(html)]);
+// (e) Honesty: with NO route placed the live figures show n.a. (muted card),
+// never a fabricated zero. Clear the route, recompute, and assert the n.a. cards.
+windowObj.__HS.rsimClearStops();
+windowObj.__HS.recompute();
+const rsimCostHtmlEmpty = byId['rsim-cost-counter'].innerHTML;
+checks.push(['FEAT-003: with no route placed the live figures honestly show n.a. (rc-metric-na), not a zero',
+  /rc-metric-na/.test(rsimCostHtmlEmpty) && /Route distance \(no route placed\)/i.test(rsimCostHtmlEmpty) &&
+  !/class="rc-val">0 km/.test(rsimCostHtmlEmpty)]);
+// Restore the map-placed route so later assertions see the same state as before.
+windowObj.__HS.__rsimSetStops([
+  { lat: 1.3330, lon: 103.7420, name: 'Jurong' },
+  { lat: 1.4200, lon: 104.0000, name: 'Far NE' },
+  { lat: 1.2840, lon: 103.8510, name: 'CBD' }]);
+windowObj.__HS.recompute();
 // Review fix (issue 2): the 'sector-level approximate' phrase must be GATED on
 // an approximate (postal-dropped) point actually being on the route. These
 // stops were map-placed (no approximate flag), so the phrase must be ABSENT.
